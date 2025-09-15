@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ahlers Arcade Challenge!</title>
+    <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Press+Start+2P&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            color: #fff;
+            font-family: 'Press Start 2P', cursive;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            text-align: center;
+            padding: 20px;
+        }
+        .container {
+            background: rgba(0, 0, 0, 0.4);
+            border: 5px solid #ff007f;
+            border-radius: 40px;
+            padding: 50px;
+            box-shadow: 0 0 30px rgba(255, 0, 127, 0.5);
+            max-width: 90%;
+            width: 100%;
+            position: relative;
+        }
+        #fullscreen-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid #fff;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            font-size: 24px;
+            cursor: pointer;
+            z-index: 1000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        h1 {
+            font-family: 'Bangers', cursive;
+            font-size: 7vw;
+            text-shadow: 5px 5px 0 #00ffff;
+            margin-bottom: 40px;
+        }
+        #qrcode-container {
+            margin-top: 50px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+        #qrcode {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+        }
+        #qrcode-text {
+            font-size: 2vw;
+            color: #fff;
+        }
+        #leaderboard-display {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        #leaderboard-title {
+            font-family: 'Bangers', cursive;
+            font-size: 4vw;
+            color: #ff007f;
+            text-shadow: 3px 3px 0 #302b63;
+        }
+        #leaderboard-list {
+            list-style-type: none;
+            padding: 0;
+            font-family: 'Press Start 2P', cursive;
+            font-size: 1.8vw;
+            width: 100%;
+        }
+        #leaderboard-list li {
+            padding: 15px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <button id="fullscreen-btn">📺</button>
+        <div id="main-display">
+            <h1 id="main-title">Ahlers Arcade Challenge!</h1>
+            <div id="content-container">
+                <div id="idle-display" style="display: flex; flex-direction: column; align-items: center;">
+                    <p id="idle-text" style="font-size: 3vw;">Your Adventure Awaits!</p>
+                    <div id="qrcode-container">
+                        <p id="qrcode-text">Scan to join the game!</p>
+                        <div id="qrcode"></div>
+                    </div>
+                </div>
+                <div id="leaderboard-display" style="display: none;">
+                    <p id="leaderboard-title"></p>
+                    <ul id="leaderboard-list"></ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/qrcode-generator/qrcode.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const sheetyUrl = "https://script.google.com/macros/s/AKfycbwkMcdFFFHnfB6OdUmOPT0mYuSc6Up94qyh0X_ixT95JM1EwfxGfos3ICBfVgHmgQza/exec";
+            const leaderboardDisplay = document.getElementById('leaderboard-display');
+            const leaderboardTitle = document.getElementById('leaderboard-title');
+            const leaderboardList = document.getElementById('leaderboard-list');
+            const qrCodeDiv = document.getElementById('qrcode');
+            const idleDisplay = document.getElementById('idle-display');
+            const fullscreenBtn = document.getElementById('fullscreen-btn');
+            let isShowingLeaderboard = false;
+
+            const generateQrCode = (url) => {
+                try {
+                    const qr = qrcode(0, 'L');
+                    qr.addData(url);
+                    qr.make();
+                    qrCodeDiv.innerHTML = qr.createImgTag(7);
+                } catch (e) {
+                    qrCodeDiv.innerHTML = "Error generating QR code.";
+                    console.error(e);
+                }
+            };
+            
+            const playerPageUrl = "https://ajersj-cmyk.github.io/arcade-challenge/player.html";
+            generateQrCode(playerPageUrl);
+
+            const fetchAndDisplayLeaderboard = async () => {
+                try {
+                    const response = await fetch(sheetyUrl);
+                    if (!response.ok) throw new Error('Failed to fetch data');
+                    const data = await response.json();
+                    const scores = data.sheet1 || [];
+                    const playerTotals = {};
+
+                    scores.forEach(entry => {
+                        const name = entry.playername;
+                        const score = Number(entry.score) || 0;
+                        if (name) {
+                            playerTotals[name] = (playerTotals[name] || 0) + score;
+                        }
+                    });
+
+                    const sortedPlayers = Object.entries(playerTotals)
+                        .map(([name, totalScore]) => ({ playername: name, score: totalScore }))
+                        .sort((a, b) => b.score - a.score);
+
+                    leaderboardTitle.textContent = "High Score Board";
+                    leaderboardList.innerHTML = '';
+                    if (sortedPlayers.length === 0) {
+                        leaderboardList.innerHTML = '<li>No scores yet!</li>';
+                    } else {
+                        sortedPlayers.slice(0, 10).forEach((player, index) => {
+                            const li = document.createElement('li');
+                            li.innerHTML = `<span>${index + 1}. ${player.playername}</span><span>${player.score} pts</span>`;
+                            leaderboardList.appendChild(li);
+                        });
+                    }
+                } catch (error) {
+                    console.error('Failed to fetch leaderboard:', error);
+                    leaderboardList.innerHTML = `<li>Error loading scores.</li>`;
+                }
+            };
+            
+            const cycleDisplay = () => {
+                if (isShowingLeaderboard) {
+                    idleDisplay.style.display = 'flex';
+                    leaderboardDisplay.style.display = 'none';
+                    isShowingLeaderboard = false;
+                } else {
+                    idleDisplay.style.display = 'none';
+                    leaderboardDisplay.style.display = 'flex';
+                    fetchAndDisplayLeaderboard();
+                    isShowingLeaderboard = true;
+                }
+            };
+            
+            fullscreenBtn.addEventListener('click', () => {
+                if (!document.fullscreenElement) {
+                    document.documentElement.requestFullscreen();
+                } else if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                }
+            });
+            
+            cycleDisplay();
+            setInterval(cycleDisplay, 10000);
+        });
+    </script>
+</body>
+</html>
