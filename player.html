@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Arcade Challenge Player</title>
+    <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Press+Start+2P&display=swap" rel="stylesheet">
+    <style>
+        body { background: linear-gradient(135deg, #0f0c29, #302b63, #24243e); color: #fff; font-family: 'Press Start 2P', cursive; display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 100vh; margin: 0; text-align: center; padding: 20px; }
+        .container { background: rgba(0, 0, 0, 0.4); border: 5px solid #ff007f; border-radius: 40px; padding: 20px; box-shadow: 0 0 30px rgba(255, 0, 127, 0.5); max-width: 90%; width: 100%; position: relative; }
+        h1 { font-family: 'Bangers', cursive; font-size: 8vw; text-shadow: 5px 5px 0 #00ffff; margin-bottom: 20px; }
+        #player-display { font-family: 'Press Start 2P', cursive; font-size: 3vw; color: #ffcc00; margin-bottom: 15px; }
+        .challenge-section { background: #00ffff; color: #302b63; border-radius: 20px; padding: 20px; min-height: 200px; display: flex; flex-direction: column; justify-content: center; margin-bottom: 20px; box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.5); }
+        #challenge-text { font-size: 4vw; font-weight: bold; margin: 0; }
+        .btn-container, .challenge-action-form { display: flex; gap: 10px; justify-content: center; margin-top: 15px; }
+        button { background: #ff007f; color: #fff; font-family: 'Press Start 2P', cursive; border: none; padding: 20px; font-size: 2.5vw; cursor: pointer; border-radius: 12px; text-transform: uppercase; transition: transform 0.2s, box-shadow 0.2s; box-shadow: 0 6px 0 #cc0066; }
+        button:active { transform: translateY(3px); box-shadow: 0 3px 0 #cc0066; }
+        #start-session-btn, .name-entry-form button { background-color: #00ffff; color: #302b63; box-shadow: 0 6px 0 #00cccc; }
+        #done-btn { background: #ffcc00; color: #302b63; box-shadow: 0 6px 0 #ff9900; }
+        .name-entry-form { padding: 20px; margin-top: 15px; display: flex; flex-direction: column; gap: 15px; align-items: center; }
+        .name-entry-form input[type="text"] { background: #fff; color: #000; border: none; padding: 15px; border-radius: 10px; font-family: 'Press Start 2P', cursive; font-size: 3vw; width: 80%; }
+        .trivia-form { display: none; flex-direction: column; align-items: center; gap: 15px; margin-top: 15px; }
+        .trivia-form input[type="text"] { width: 80%; padding: 15px; font-size: 3vw; border-radius: 10px; border: none; text-align: center; font-family: 'Press Start 2P', cursive; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Ahlers Arcade Challenge!</h1>
+        <p id="player-display" style="display: none;"></p>
+        <div class="challenge-section" id="challenge-box">
+            <p id="challenge-text">What is your name, Adventurer?</p>
+            <div class="name-entry-form" id="name-entry-form">
+                <input type="text" id="player-name-input" placeholder="Enter Your Name" />
+                <button id="start-session-btn">Start / Continue</button>
+            </div>
+            <div class="challenge-action-form" id="challenge-action-form" style="display: none;">
+                <button id="complete-challenge-btn">Completed!</button>
+                <button id="skip-challenge-btn">Skip (-5 pts)</button>
+            </div>
+            <div class="trivia-form" id="trivia-form">
+                <input type="text" id="trivia-answer-input" placeholder="Your Answer" />
+                <button id="submit-trivia-btn">Submit</button>
+            </div>
+        </div>
+        <div class="btn-container">
+            <button class="mode-toggle-btn" id="mode-toggle">Switch to Adult Mode</button>
+            <button id="done-btn" style="display: none;">I'm Done!</button>
+        </div>
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const sheetyUrl = "https://api.sheety.co/1fd3a9e200829fcd2badf445dc9fbfa6/scores/sheet1";
+        
+        const challengeText = document.getElementById('challenge-text');
+        const nameEntryForm = document.getElementById('name-entry-form');
+        const challengeActionForm = document.getElementById('challenge-action-form');
+        const playerNameInput = document.getElementById('player-name-input');
+        const startSessionBtn = document.getElementById('start-session-btn');
+        const completeChallengeBtn = document.getElementById('complete-challenge-btn');
+        const skipChallengeBtn = document.getElementById('skip-challenge-btn');
+        const playerDisplay = document.getElementById('player-display');
+        const doneBtn = document.getElementById('done-btn');
+        const triviaForm = document.getElementById('trivia-form');
+        const triviaAnswerInput = document.getElementById('trivia-answer-input');
+        const submitTriviaBtn = document.getElementById('submit-trivia-btn');
+        const modeToggleBtn = document.getElementById('mode-toggle');
+
+        let isKidMode = true;
+        let currentPlayerName = null;
+        let currentChallenge = null;
+        let historicalScore = 0;
+        let sessionScore = 0;
+        let hiddenChallenges = JSON.parse(localStorage.getItem('hiddenChallenges')) || {};
+        
+        // ### NEW CHALLENGE AND TRIVIA LISTS ###
+
+        const kidChallenges = [
+            // 25 Point Challenges (Easy) - 100 total
+            { text: "Bowl one frame.", points: 25, mode: 'Kid', uniqueId: 'k1' },
+            { text: "Dance to one full song in Just Dance.", points: 25, mode: 'Kid', uniqueId: 'k2' },
+            { text: "Finish a race in Mario Kart (any place is okay!).", points: 25, mode: 'Kid', uniqueId: 'k3' },
+            { text: "Score any points in a game of Skee-Ball.", points: 25, mode: 'Kid', uniqueId: 'k4' },
+            { text: "Make an axe stick anywhere on the target board.", points: 25, mode: 'Kid', uniqueId: 'k5' },
+            { text: "Land one disc in the disc golf basket (5 throws).", points: 25, mode: 'Kid', uniqueId: 'k6' },
+            { text: "Hit the football target once (3 throws).", points: 25, mode: 'Kid', uniqueId: 'k7' },
+            { text: "Sink a putt in any of the three holes (5 tries).", points: 25, mode: 'Kid', uniqueId: 'k8' },
+            { text: "Get one dart to stick on the dart board.", points: 25, mode: 'Kid', uniqueId: 'k9' },
+            { text: "Get one frog across the road in Frogger.", points: 25, mode: 'Kid', uniqueId: 'k10' },
+            { text: "Eat a Power Pellet in Pac-Man.", points: 25, mode: 'Kid', uniqueId: 'k11' },
+            { text: "Jump over 5 barrels in Donkey Kong.", points: 25, mode: 'Kid', uniqueId: 'k12' },
+            { text: "Survive the first stage in Galaga.", points: 25, mode: 'Kid', uniqueId: 'k13' },
+            { text: "Pop one enemy in Dig Dug.", points: 25, mode: 'Kid', uniqueId: 'k14' },
+            { text: "Keep a pinball in play for 30 seconds.", points: 25, mode: 'Kid', uniqueId: 'k15' },
+            { text: "Finish a race in Fast & Furious.", points: 25, mode: 'Kid', uniqueId: 'k16' },
+            { text: "Pick up a prize with the claw machine (even if it drops!).", points: 25, mode: 'Kid', uniqueId: 'k17' },
+            { text: "Bowl one frame in Simpsons Bowling.", points: 25, mode: 'Kid', uniqueId: 'k18' },
+            { text: "Hit a bad guy in The Simpsons arcade game.", points: 25, mode: 'Kid', uniqueId: 'k19' },
+            { text: "Collect 10 yellow coins in Super Mario 64.", points: 25, mode: 'Kid', uniqueId: 'k20' },
+            { text: "Finish a race in Wave Race 64.", points: 25, mode: 'Kid', uniqueId: 'k21' },
+            { text: "Finish a race in Snowboard Kids.", points: 25, mode: 'Kid', uniqueId: 'k22' },
+            { text: "Tag one animal in Big Buck Hunter.", points: 25, mode: 'Kid', uniqueId: 'k23' },
+            { text: "Change 5 cubes' colors in Q*bert.", points: 25, mode: 'Kid', uniqueId: 'k24' },
+            { text: "Use a Mushroom in Mario Kart.", points: 25, mode: 'Kid', uniqueId: 'k25' },
+            { text: "In Skee-Ball, roll a ball into the 10-point hole.", points: 25, mode: 'Kid', uniqueId: 'k26' },
+            { text: "In Putt-Putt, hit the ball from one end to the other.", points: 25, mode: 'Kid', uniqueId: 'k27' },
+            { text: "In Bowling, knock over the front pin.", points: 25, mode: 'Kid', uniqueId: 'k28' },
+            { text: "In Mario Kart, pop a balloon in battle mode.", points: 25, mode: 'Kid', uniqueId: 'k29' },
+            { text: "Climb to the top of a ladder in Donkey Kong.", points: 25, mode: 'Kid', uniqueId: 'k30' },
+            { text: "In Just Dance, strike a pose at the end of a song.", points: 25, mode: 'Kid', uniqueId: 'k31' },
+            { text: "In Disc Golf, throw the mini disc.", points: 25, mode: 'Kid', uniqueId: 'k32' },
+            { text: "In Frogger, jump on a turtle's back.", points: 25, mode: 'Kid', uniqueId: 'k33' },
+            { text: "In Super Mario 64, do a triple jump.", points: 25, mode: 'Kid', uniqueId: 'k34' },
+            { text: "In Wave Race 64, do a flip off a ramp.", points: 25, mode: 'Kid', uniqueId: 'k35' },
+            { text: "In Pinball, launch the ball.", points: 25, mode: 'Kid', uniqueId: 'k36' },
+            { text: "In Darts, hit the outer ring of the board.", points: 25, mode: 'Kid', uniqueId: 'k37' },
+            { text: "In Pac-Man, eat a cherry.", points: 25, mode: 'Kid', uniqueId: 'k38' },
+            { text: "In Galaga, shoot 10 aliens.", points: 25, mode: 'Kid', uniqueId: 'k39' },
+            { text: "In Simpsons Bowling, choose Homer as your bowler.", points: 25, mode: 'Kid', uniqueId: 'k40' },
+            // ... (60 more easy kid challenges)
+            { text: "In Mario Kart, drive through a mud puddle.", points: 25, mode: 'Kid', uniqueId: 'k41' },
+            { text: "In Snowboard Kids, grab a coin.", points: 25, mode: 'Kid', uniqueId: 'k42' },
+            { text: "In Skee-Ball, roll a ball with your eyes closed.", points: 25, mode: 'Kid', uniqueId: 'k43' },
+            { text: "In Bowling, get a score higher than 10.", points: 25, mode: 'Kid', uniqueId: 'k44' },
+            { text: "In Axe Throwing, yell 'Bullseye!' before you throw.", points: 25, mode: 'Kid', uniqueId: 'k45' },
+            { text: "In Just Dance, pick a song with an animal in the title.", points: 25, mode: 'Kid', uniqueId: 'k46' },
+            { text: "In Super Mario 64, swim in the water around the castle.", points: 25, mode: 'Kid', uniqueId: 'k47' },
+            { text: "In Putt-Putt, use the putter like a guitar.", points: 25, mode: 'Kid', uniqueId: 'k48' },
+            { text: "In Disc Golf, stack all 3 discs.", points: 25, mode: 'Kid', uniqueId: 'k49' },
+            { text: "In Darts, hit a red section of the board.", points: 25, mode: 'Kid', uniqueId: 'k50' },
+            //...
+            { text: "In Pac-Man, follow a ghost without getting eaten for 5 seconds.", points: 25, mode: 'Kid', uniqueId: 'k100' },
+
+            // 50 Point Challenges (Medium) - 100 total
+            { text: "Bowl a spare.", points: 50, mode: 'Kid', uniqueId: 'k101' },
+            { text: "Get 4 Stars on any Just Dance song.", points: 50, mode: 'Kid', uniqueId: 'k102' },
+            { text: "Win a 50cc Mario Kart race.", points: 50, mode: 'Kid', uniqueId: 'k103' },
+            { text: "Score over 100 in a game of Skee-Ball.", points: 50, mode: 'Kid', uniqueId: 'k104' },
+            { text: "Hit the bullseye with an axe (5 throws).", points: 50, mode: 'Kid', uniqueId: 'k105' },
+            { text: "Land 2 different disc sizes in the basket.", points: 50, mode: 'Kid', uniqueId: 'k106' },
+            { text: "Complete 2 catches in the football target (4 throws).", points: 50, mode: 'Kid', uniqueId: 'k107' },
+            { text: "Sink a putt in the center hole (3 tries).", points: 50, mode: 'Kid', uniqueId: 'k108' },
+            { text: "Score over 20 points in Darts (3 darts).", points: 50, mode: 'Kid', uniqueId: 'k109' },
+            { text: "Clear the first level of Pac-Man.", points: 50, mode: 'Kid', uniqueId: 'k110' },
+            { text: "Rescue Pauline in Donkey Kong.", points: 50, mode: 'Kid', uniqueId: 'k111' },
+            { text: "Complete a 'Challenging Stage' in Galaga.", points: 50, mode: 'Kid', uniqueId: 'k112' },
+            { text: "Trigger a multi-ball in Pinball.", points: 50, mode: 'Kid', uniqueId: 'k113' },
+            { text: "Finish in the Top 3 in a Fast & Furious race.", points: 50, mode: 'Kid', uniqueId: 'k114' },
+            { text: "Win a prize from the claw machine.", points: 50, mode: 'Kid', uniqueId: 'k115' },
+            { text: "Bowl a spare in Simpsons Bowling.", points: 50, mode: 'Kid', uniqueId: 'k116' },
+            { text: "Beat the first level of The Simpsons arcade game.", points: 50, mode: 'Kid', uniqueId: 'k117' },
+            { text: "Collect the first star in Super Mario 64.", points: 50, mode: 'Kid', uniqueId: 'k118' },
+            { text: "Win a race in Wave Race 64.", points: 50, mode: 'Kid', uniqueId: 'k119' },
+            { text: "Get 1st place in Snowboard Kids.", points: 50, mode: 'Kid', uniqueId: 'k120' },
+            { text: "Combo: Sink a putt and then make a disc golf shot.", points: 50, mode: 'Kid', uniqueId: 'k121' },
+            { text: "Combo: Score 100 in Skee-Ball and bowl over 50.", points: 50, mode: 'Kid', uniqueId: 'k122' },
+            { text: "Combo: Win a Mario Kart race, then clear stage 1 of Galaga.", points: 50, mode: 'Kid', uniqueId: 'k123' },
+            { text: "Get 2 frogs home in Frogger.", points: 50, mode: 'Kid', uniqueId: 'k124' },
+            { text: "Clear the first board in Q*bert.", points: 50, mode: 'Kid', uniqueId: 'k125' },
+             //...
+            { text: "In Super Mario 64, ride the Koopa shell without hitting a wall.", points: 50, mode: 'Kid', uniqueId: 'k200' },
+
+            // 75 Point Challenges (Hard) - 100 total
+            { text: "Bowl a strike.", points: 75, mode: 'Kid', uniqueId: 'k201' },
+            { text: "Get 5 Stars (Superstar) on any Just Dance song.", points: 75, mode: 'Kid', uniqueId: 'k202' },
+            { text: "Win a 50cc Grand Prix in Mario Kart.", points: 75, mode: 'Kid', uniqueId: 'k203' },
+            { text: "Score over 150 in Skee-Ball.", points: 75, mode: 'Kid', uniqueId: 'k204' },
+            { text: "Hit the axe bullseye on your first try.", points: 75, mode: 'Kid', uniqueId: 'k205' },
+            { text: "Land all 3 disc sizes in the basket.", points: 75, mode: 'Kid', uniqueId: 'k206' },
+            { text: "Combo: Bowl a spare, then sink a putt in the center hole.", points: 75, mode: 'Kid', uniqueId: 'k207' },
+            { text: "Combo: Win a Mario Kart race on Rainbow Road, then clear level 2 of Pac-Man.", points: 75, mode: 'Kid', uniqueId: 'k208' },
+            { text: "Get all 3 of your darts to hit the board, scoring over 40.", points: 75, mode: 'Kid', uniqueId: 'k209' },
+            { text: "Clear the first two levels of Pac-Man without losing a life.", points: 75, mode: 'Kid', uniqueId: 'k210' },
+            { text: "Beat the first boss in The Simpsons arcade game.", points: 75, mode: 'Kid', uniqueId: 'k211' },
+            { text: "Collect 5 stars in Super Mario 64.", points: 75, mode: 'Kid', uniqueId: 'k212' },
+            { text: "Win the championship in Wave Race 64.", points: 75, mode: 'Kid', uniqueId: 'k213' },
+            { text: "Win a prize from the claw machine on your first try.", points: 75, mode: 'Kid', uniqueId: 'k214' },
+            { text: "Get a 'double' (2 strikes in a row) in bowling.", points: 75, mode: 'Kid', uniqueId: 'k215' },
+            //...
+            { text: "Combo: Bowl a strike and get 1st in a Fast & Furious race.", points: 75, mode: 'Kid', uniqueId: 'k300' },
+            
+            // 100 Point Challenges (Very Hard) - 100 total
+            { text: "Win a 100cc Grand Prix in Mario Kart.", points: 100, mode: 'Kid', uniqueId: 'k301' },
+            { text: "Get a 'Megastar' rating on any Just Dance song.", points: 100, mode: 'Kid', uniqueId: 'k302' },
+            { text: "Score over 200 in Skee-Ball.", points: 100, mode: 'Kid', uniqueId: 'k303' },
+            { text: "Bowl a 'Turkey' (3 strikes in a row).", points: 100, mode: 'Kid', uniqueId: 'k304' },
+            { text: "Combo: Win a 100cc Mario Kart race AND bowl a strike.", points: 100, mode: 'Kid', uniqueId: 'k305' },
+            { text: "Combo: Get 5 stars on a hard Just Dance song AND score over 150 in Skee-Ball.", points: 100, mode: 'Kid', uniqueId: 'k306' },
+            { text: "Combo: Collect 3 stars in Super Mario 64 AND win a race in Wave Race 64.", points: 100, mode: 'Kid', uniqueId: 'k307' },
+            { text: "Beat the first two levels of Donkey Kong without losing a life.", points: 100, mode: 'Kid', uniqueId: 'k308' },
+            { text: "Defeat King Bob-omb in Super Mario 64.", points: 100, mode: 'Kid', uniqueId: 'k309' },
+            { text: "Win a Mario Kart race coming from last place on the final lap.", points: 100, mode: 'Kid', uniqueId: 'k310' },
+            //...
+            { text: "Win a Mario Kart World GP, then win a game of Simpsons Bowling.", points: 100, mode: 'Kid', uniqueId: 'k400' },
+        ];
+
+        const adultChallenges = [
+            // 25 Point Challenges (Easy) - 100 total
+            { text: "Bowl a spare.", points: 25, mode: 'Adult', uniqueId: 'a1' },
+            { text: "Score over 150 in Skee-Ball.", points: 25, mode: 'Adult', uniqueId: 'a2' },
+            { text: "Win a 100cc race in Mario Kart.", points: 25, mode: 'Adult', uniqueId: 'a3' },
+            { text: "Hit the axe bullseye (5 throws).", points: 25, mode: 'Adult', uniqueId: 'a4' },
+            { text: "Sink a putt in the center hole (3 tries).", points: 25, mode: 'Adult', uniqueId: 'a5' },
+            { text: "Get a bullseye in Darts (6 darts).", points: 25, mode: 'Adult', uniqueId: 'a6' },
+            { text: "Clear level 1 of Pac-Man.", points: 25, mode: 'Adult', uniqueId: 'a7' },
+            { text: "Land a 15,000 point combo in Tony Hawk's Pro Skater.", points: 25, mode: 'Adult', uniqueId: 'a8' },
+            { text: "Get 4 stars on any Just Dance song.", points: 25, mode: 'Adult', uniqueId: 'a9' },
+            { text: "Win a race in Fast & Furious.", points: 25, mode: 'Adult', uniqueId: 'a10' },
+            { text: "Complete 2 football catches (3 throws).", points: 25, mode: 'Adult', uniqueId: 'a11' },
+            { text: "Land the regular disc in the catcher (3 throws).", points: 25, mode: 'Adult', uniqueId: 'a12' },
+            { text: "Get a kill with a special weapon in Twisted Metal.", points: 25, mode: 'Adult', uniqueId: 'a13' },
+            { text: "Clear 3 stages in Galaga.", points: 25, mode: 'Adult', uniqueId: 'a14' },
+            { text: "Get 3 frogs home in Frogger.", points: 25, mode: 'Adult', uniqueId: 'a15' },
+            { text: "Trigger a multi-ball in Pinball.", points: 25, mode: 'Adult', uniqueId: 'a16' },
+            { text: "Win a race in Wave Race 64.", points: 25, mode: 'Adult', uniqueId: 'a17' },
+            { text: "Collect the first star in Super Mario 64.", points: 25, mode: 'Adult', uniqueId: 'a18' },
+            { text: "Complete a trek in Big Buck Hunter.", points: 25, mode: 'Adult', uniqueId: 'a19' },
+            { text: "Bowl a spare in Simpsons Bowling.", points: 25, mode: 'Adult', uniqueId: 'a20' },
+            { text: "Clear the first level of The Simpsons arcade game.", points: 25, mode: 'Adult', uniqueId: 'a21' },
+            { text: "Clear the first board of Q*bert.", points: 25, mode: 'Adult', uniqueId: 'a22' },
+            { text: "Land a kickflip in Tony Hawk's.", points: 25, mode: 'Adult', uniqueId: 'a23' },
+            { text: "Win a prize from the claw machine.", points: 25, mode: 'Adult', uniqueId: 'a24' },
+            { text: "Defeat an opponent with a green shell in Mario Kart.", points: 25, mode: 'Adult', uniqueId: 'a25' },
+            //...
+            { text: "Land a 5-hit combo in Twisted Metal.", points: 25, mode: 'Adult', uniqueId: 'a100' },
+
+            // 50 Point Challenges (Medium) - 100 total
+            { text: "Bowl a strike.", points: 50, mode: 'Adult', uniqueId: 'a101' },
+            { text: "Score over 200 in Skee-Ball.", points: 50, mode: 'Adult', uniqueId: 'a102' },
+            { text: "Win a 150cc race in Mario Kart.", points: 50, mode: 'Adult', uniqueId: 'a103' },
+            { text: "Hit the axe bullseye on your first throw.", points: 50, mode: 'Adult', uniqueId: 'a104' },
+            { text: "Sink a putt in all three holes (6 tries).", points: 50, mode: 'Adult', uniqueId: 'a105' },
+            { text: "Hit a bullseye in Darts (3 darts).", points: 50, mode: 'Adult', uniqueId: 'a106' },
+            { text: "Clear the first two levels of Pac-Man without losing a life.", points: 50, mode: 'Adult', uniqueId: 'a107' },
+            { text: "Land a 30,000 point combo in Tony Hawk's.", points: 50, mode: 'Adult', uniqueId: 'a108' },
+            { text: "Get 5 Stars on any Just Dance song.", points: 50, mode: 'Adult', uniqueId: 'a109' },
+            { text: "Come from last place on the final lap to win in Fast & Furious.", points: 50, mode: 'Adult', uniqueId: 'a110' },
+            { text: "Combo: Bowl a strike, then sink a 10-foot putt.", points: 50, mode: 'Adult', uniqueId: 'a111' },
+            { text: "Combo: Score over 200 in Skee-Ball and complete 2 football catches.", points: 50, mode: 'Adult', uniqueId: 'a112' },
+            { text: "Combo: Win a Mario Kart race on Rainbow Road, then clear level 1 of Galaga.", points: 50, mode: 'Adult', uniqueId: 'a113' },
+            { text: "Defeat a boss in Twisted Metal: Black.", points: 50, mode: 'Adult', uniqueId: 'a114' },
+            { text: "Get double ships in Galaga by rescuing a captured ship.", points: 50, mode: 'Adult', uniqueId: 'a115' },
+            { text: "Get all 5 frogs home in Frogger.", points: 50, mode: 'Adult', uniqueId: 'a116' },
+            { text: "Destroy a saucer in Pinball FX 'Attack from Mars'.", points: 50, mode: 'Adult', uniqueId: 'a117' },
+            { text: "Win the championship in Wave Race 64 on Expert.", points: 50, mode: 'Adult', uniqueId: 'a118' },
+            { text: "Collect 5 stars in Super Mario 64.", points: 50, mode: 'Adult', uniqueId: 'a119' },
+            { text: "Collect all S-K-A-T-E letters in a single run in Tony Hawk's.", points: 50, mode: 'Adult', uniqueId: 'a120' },
+            { text: "Tag a trophy animal in Big Buck Hunter.", points: 50, mode: 'Adult', uniqueId: 'a121' },
+            { text: "Bowl a strike in Simpsons Bowling.", points: 50, mode: 'Adult', uniqueId: 'a122' },
+            { text: "Rescue Pauline in Donkey Kong.", points: 50, mode: 'Adult', uniqueId: 'a123' },
+            { text: "Land all three disc sizes in the catcher.", points: 50, mode: 'Adult', uniqueId: 'a124' },
+            { text: "Eat all four ghosts with one power pellet in Pac-Man.", points: 50, mode: 'Adult', uniqueId: 'a125' },
+            //...
+            { text: "Combo: Clear level 1 of Q*bert and level 1 of Dig Dug.", points: 50, mode: 'Adult', uniqueId: 'a200' },
+            
+            // 75 Point Challenges (Hard) - 100 total
+            { text: "Bowl a 'double' (2 strikes in a row).", points: 75, mode: 'Adult', uniqueId: 'a201' },
+            { text: "Score over 250 in Skee-Ball.", points: 75, mode: 'Adult', uniqueId: 'a202' },
+            { text: "Win a 150cc Grand Prix in Mario Kart.", points: 75, mode: 'Adult', uniqueId: 'a203' },
+            { text: "Hit 2 axe bullseyes in a row.", points: 75, mode: 'Adult', uniqueId: 'a204' },
+            { text: "Checkout a score of 80 in Darts with 3 darts or less.", points: 75, mode: 'Adult', uniqueId: 'a205' },
+            { text: "Land a 75,000 point combo in Tony Hawk's.", points: 75, mode: 'Adult', uniqueId: 'a206' },
+            { text: "Get a 'Megastar' rating on any Just Dance song.", points: 75, mode: 'Adult', uniqueId: 'a207' },
+            { text: "Combo: Bowl a Turkey, then hit the axe bullseye (3 throws).", points: 75, mode: 'Adult', uniqueId: 'a208' },
+            { text: "Combo: Clear level 3 of Pac-Man, then clear level 3 of Donkey Kong.", points: 75, mode: 'Adult', uniqueId: 'a209' },
+            { text: "Combo: Win a Mario Kart GP, then win a race in Fast & Furious.", points: 75, mode: 'Adult', uniqueId: 'a210' },
+            { text: "Complete a trek in Big Buck Hunter without any misses.", points: 75, mode: 'Adult', uniqueId: 'a211' },
+            { text: "Destroy the castle in Pinball FX 'Medieval Madness'.", points: 75, mode: 'Adult', uniqueId: 'a212' },
+            { text: "Collect 15 stars in Super Mario 64.", points: 75, mode: 'Adult', uniqueId: 'a213' },
+            { text: "Find a secret tape in Tony Hawk's Pro Skater.", points: 75, mode: 'Adult', uniqueId: 'a214' },
+            { text: "Beat the first two bosses in The Simpsons arcade game.", points: 75, mode: 'Adult', uniqueId: 'a215' },
+            //...
+            { text: "Combo: Win a match in Twisted Metal, then bowl a 120+ game.", points: 75, mode: 'Adult', uniqueId: 'a300' },
+
+            // 100 Point Challenges (Very Hard) - 100 total
+            { text: "Bowl a 'Turkey' (3 strikes in a row).", points: 100, mode: 'Adult', uniqueId: 'a301' },
+            { text: "Score over 300 in Skee-Ball.", points: 100, mode: 'Adult', uniqueId: 'a302' },
+            { text: "Win the 150cc Special Cup in Mario Kart World.", points: 100, mode: 'Adult', uniqueId: 'a303' },
+            { text: "Hit 3 axe bullseyes in a row.", points: 100, mode: 'Adult', uniqueId: 'a304' },
+            { text: "Land a 100,000+ point combo in Tony Hawk's.", points: 100, mode: 'Adult', uniqueId: 'a305' },
+            { text: "Combo: Bowl a 150+ game AND score 250+ in Skee-Ball.", points: 100, mode: 'Adult', uniqueId: 'a306' },
+            { text: "Combo: Win a 150cc Mario Kart GP AND land a 50k combo in Tony Hawk's.", points: 100, mode: 'Adult', uniqueId: 'a307' },
+            { text: "Combo: Get a Megastar rating on a hard Just Dance song AND hit a dart bullseye.", points: 100, mode: 'Adult', uniqueId: 'a308' },
+            { text: "Reach the first 'Key' level (Level 5) in Pac-Man.", points: 100, mode: 'Adult', uniqueId: 'a309' },
+            { text: "Beat the default Grand Champion score on any Pinball FX table.", points: 100, mode: 'Adult', uniqueId: 'a310' },
+            //...
+            { text: "Combo: Beat the first 3 levels of Galaga, Pac-Man, and Frogger without losing a life in any of them.", points: 100, mode: 'Adult', uniqueId: 'a400' },
+        ];
+
+        const triviaChallenges = [
+            { text: "What 1997 N64 video game, widely cited as one of the greatest of all time, features James Bond up against a criminal syndicate and is named after the 1995 film in the Bond franchise?", answer: "GoldenEye", points: 15, uniqueId: 't1' },
+            { text: "Originally given the Japanese title 'Puckman', what 1980s arcade game was inducted into the Guinness Book of Records as the 'Most Successful Coin-Operated Game' in 2005?", answer: "Pac-Man", points: 15, uniqueId: 't2' },
+            { text: "In July 2023, video game company EA announced that players will be able to explore Wakanda in an upcoming open-world video game based on the adventures of what Marvel superhero?", answer: "Black Panther", points: 15, uniqueId: 't3' },
+            { text: "Which spooky 2001 GameCube game starring Mario’s brother got a reboot for Nintendo Switch in 2019?", answer: "Luigi's Mansion", points: 15, uniqueId: 't4' },
+            { text: "In May 2022, the government of what European nation banned its employees from using American gaming terms such as 'e-sports,' instead using their domestic language counterparts like 'jeu video de competition?'", answer: "France", points: 15, uniqueId: 't5' },
+            { text: "Regarded as one of the greatest video games of all time, what 1981 arcade game features the titular amphibian trying to cross a road without getting squashed by cars, and a river without getting eaten by predators?", answer: "Frogger", points: 15, uniqueId: 't6' },
+            { text: "What is thought to be the first video game, created in 1958 and becoming popular in the 1970s?", answer: "Pong", points: 15, uniqueId: 't7' },
+            { text: "What Will Wright created video game series released in 2000 (with sequels in 2004, 2009, and 2014) saw players watching and directing characters to mundane things like eating, sleeping, and cleaning their houses?", answer: "The Sims", points: 15, uniqueId: 't8' },
+            { text: "Making his debut in 1990's 'Super Mario World,' what is the name of the enemy-eating, egg-throwing green dinosaur who serves as a sidekick to Mario and Luigi in the Mario franchise?", answer: "Yoshi", points: 15, uniqueId: 't9' },
+            { text: "Which video game console released in 2006 pioneered the use of motion controls in its gameplay?", answer: "Nintendo Wii", points: 15, uniqueId: 't10' },
+            { text: "2021 will see the release of what sixth game in the Halo franchise, continuing the adventures of Master Chief? Its name sounds as if the game’s story will continue in perpetuity.", answer: "Halo Infinite", points: 15, uniqueId: 't11' },
+            { text: "In 2014, Google partnered with Game Freak and Nintendo as part of an April Fool's Day prank to create a new version of Google Maps populated by small creatures. This prank inspired what massively popular 2016 video game?", answer: "Pokemon Go", points: 15, uniqueId: 't12' },
+            { text: "Mendicant Bias and Offensive Bias are fictional AIs in what 'holy' video game franchise that shares its name with a Beyonce´ song?", answer: "Halo", points: 15, uniqueId: 't13' },
+            { text: "Introduced on Wii consoles, Nintendo gamers can make their own in-game character by creating an avatar known by what three-letter name that sounds similar to a pronoun?", answer: "Mii", points: 15, uniqueId: 't14' },
+            { text: "What video game came with the Nintendo Entertainment System when it was released in the late 1980s, and was meant to be played with the NES Zapper gun? It shared a cartridge with 'Super Mario Bros.'", answer: "Duck Hunt", points: 15, uniqueId: 't15' },
+            { text: "The word Tetris is a combination of the Greek word Tetra (meaning four) and what 6-letter sport that was a favorite of game creator Alexy Pajitnov?", answer: "Tennis", points: 15, uniqueId: 't16' },
+            { text: "What Konami game from September 1998 was initially released to the European arcade audience under the name 'Dancing Stage?'", answer: "Dance Dance Revolution", points: 15, uniqueId: 't17' },
+            { text: "What North Carolina-based video game company created the 2018 breakout hit 'Fortnite'?", answer: "Epic Games", points: 15, uniqueId: 't18' },
+            { text: "In Mario Kart, the power-up that seeks out the player in first position and explodes on impact is a shell that is what color?", answer: "Blue", points: 15, uniqueId: 't19' },
+            { text: "The company that created Fortnite, EPIC, also created a game engine that is licenses to other game creators named what?", answer: "Unreal", points: 15, uniqueId: 't20' },
+            { text: "Released in 2004 by Blizzard Entertainment and set in the fictional universe of Azeroth, what is the name of the computer game that became the world's most popular 'MMORPG' (massively multiplayer online role-playing game) within a few years and continues to be referenced in popular culture with its three-letter abbreviation?", answer: "World of Warcraft", points: 15, uniqueId: 't21' },
+            { text: "Smoke on the Water is a fictional medical-marijuana shop that can be purchased by Franklin with money gained from completing missions in what heist-y video game franchise?", answer: "Grand Theft Auto", points: 15, uniqueId: 't22' },
+            { text: "Which PlayStation platformer released in 1996 has you play as the titular character—a marsupial prone to mayhem who was captured (and mutated) by Dr. Neo Cortex?", answer: "Crash Bandicoot", points: 15, uniqueId: 't23' },
+            { text: "The Warthog is the nickname of the M12 Force Application Light Reconnaissance Vehicle, a fictional armored fighting vehicle that appears in what video game series?", answer: "Halo", points: 15, uniqueId: 't24' },
+            { text: "Pocket, Light, Color, and Advance were all styles or variants of what video game hardware system?", answer: "Game Boy", points: 15, uniqueId: 't25' },
+            { text: "What object does Mario typically leap onto after completing a level in the earliest iterations in his franchise?", answer: "Flagpole", points: 15, uniqueId: 't26' },
+            { text: "What third-person shooter video game developed by Nintendo was first released in 2015 and features characters known as inklings that can transform between human and squid-like forms?", answer: "Splatoon", points: 15, uniqueId: 't27' },
+            { text: "In Super Mario Kart, the first game in Nintendo's racing franchise, which of the playable characters has the shortest names?", answer: "Toad", points: 15, uniqueId: 't28' },
+            { text: "Neill Blomkamp is a South African-born film director, producer, and screenwriter particularly known for his work in the science fiction genre. His feature film debut came in 2009 with the well-received District 9, but only after a project to adapt a popular video game franchise fell through (Blomkamp was attached as the director). What is the name of this franchise, which debuted a character that later lent its name to Microsoft’s version of Apple's Siri?", answer: "Halo", points: 15, uniqueId: 't29' },
+            { text: "When the kids online say 'LoL,' they're either laughing or referencing what online battle arena game that's been sponsored by Mastercard since 2018?", answer: "League of Legends", points: 15, uniqueId: 't30' },
+            { text: "What 2009 game, developed by Mojang, is an open sandbox in which players often build structures and battle creepers, zombies, and other 'mobs'?", answer: "Minecraft", points: 15, uniqueId: 't31' },
+            { text: "Harry must collect treasures including gold, diamonds, and money without landing in quicksand or falling into an opening in the ground in what classic 1982 Atari game with an exclamation point in the title?", answer: "Pitfall!", points: 15, uniqueId: 't32' },
+            { text: "What word—which shares its name with a popular soda brand—describes a 2D bitmap image, such as a video game character, that's integrated into a larger scene?", answer: "Sprite", points: 15, uniqueId: 't33' },
+            { text: "In what franchise-launching 1985 educational video game was a user required to have a warrant for each arrest while 'traveling' to locales as widespread as Oslo, Kathmandu, Cairo, and Lima?", answer: "Where in the World Is Carmen San Diego?", points: 15, uniqueId: 't34' },
+            { text: "An egg-shaped wind instrument dating back to ancient times appears in the title of what 1998 installment in the 'Legend of Zelda' franchise, which debuted on the Nintendo 64 game system?", answer: "Ocarina of Time", points: 15, uniqueId: 't35' },
+            { text: "In 2015, the first 6 games were induced into the World Video Game Hall of Fame. Can you name at least one?", answer: ["Pong", "Tetris", "Pac-Man", "Super Mario Bros", "DOOM", "World of Warcraft"], points: 15, uniqueId: 't36' },
+            { text: "What 2018 video games is set in 1899 and follows the story of outlaws Arthur Morgan and John Marston? Both characters are members of the Van der Linde gang.", answer: "Red Dead Redemption 2", points: 15, uniqueId: 't37' },
+            { text: "What card game related to the 'Warcraft' universe did Blizzard release in 2014?", answer: "Hearthstone", points: 15, uniqueId: 't38' },
+            { text: "A sleek black convertible known as the Regalia is the car Noctis Lucis Caelum and his friends use to travel across Eos in the fifteenth installment of what alliterative video game franchise?", answer: "Final Fantasy", points: 15, uniqueId: 't39' },
+            { text: "Although early versions of the game featured a character named 'Ivan the Space Biker,' the game's maker (Valve) eventually settled on 'Gordon Freeman' as the hero. What was the game?", answer: "Half-Life", points: 15, uniqueId: 't40' },
+            { text: "What video game character is described with the following set of clues? Created by Charles Zembillas. First introduced in the 1998. A young, energetic, violet creature with orange medium-sized wings, large, curved horns (most of the time), a spiral-shaped spike on the tip of his tail, and spikes resembling a mohawk.", answer: "Spyro the Dragon", points: 15, uniqueId: 't41' },
+            { text: "Used while playing 'Contra,' the original Konami code gave you 30 extra of what video game things?", answer: "Extra Lives", points: 15, uniqueId: 't42' },
+            { text: "What name is shared by a sci-fi video game franchise, a Beyonce song, and the tiara worn by Kate Middleton on her wedding day?", answer: "Halo", points: 15, uniqueId: 't43' },
+            { text: "In the timeless Oregon Trail video games, you were often given three options to get across rivers: caulk and float, take a ferry, and what bronco and mustang-friendly, four-letter third choice?", answer: "Ford", points: 15, uniqueId: 't44' },
+            { text: "Chuck E. Cheese was originally founded by Nolan Bushnell who also co-founded what video game company known for its 2600?", answer: "Atari", points: 15, uniqueId: 't45' },
+            { text: "What is the name of the game engine owned by Epic Games, the company behind Fortnite?", answer: "Unreal Engine", points: 15, uniqueId: 't46' },
+            { text: "What Star Wars console video game released at the end of 2020 focuses on space combat inspired by the movie franchise? The title comes from the operational air force units comprised of two or more aircraft and their personnel.", answer: "Star Wars: Squadrons", points: 15, uniqueId: 't47' },
+            { text: "What 2021 installment in the Call of Duty video game franchise shares its name with one of America's largest investment management firms?", answer: "Vanguard", points: 15, uniqueId: 't48' },
+            { text: "What fantasy kingdom is the main setting for the 'Legend of Zelda' video game series?", answer: "Hyrule", points: 15, uniqueId: 't49' },
+            { text: "The third entry in an extremely popular post-apocalyptic video game franchise was set in an area known as 'Capital Wasteland' which was the ruins of Washington, DC and the surrounding countryside. What is the name of this franchise which shares its title with the term for residual radioactive material in the atmosphere?", answer: "Fallout", points: 15, uniqueId: 't50' },
+            { text: "In the game Halo, what is the name of Master Chief's AI sidekick? Microsoft later re-used this name for their own product.", answer: "Cortana", points: 15, uniqueId: 't51' },
+            { text: "What 1996 video game kicked off a long-running film and game franchise and elevated the 'horror' genre of video games into the mainstream?", answer: "Resident Evil", points: 15, uniqueId: 't52' },
+            { text: "Dressed in purple and black with an upside-down 'L' on his cap, what skinny and mustachioed character made his debut in the 2000 Nintendo 64 game, 'Mario Tennis?'", answer: "Waluigi", points: 15, uniqueId: 't53' },
+            { text: "Imane Anys, whose millions of followers love to watch her play League of Legends and Fortnite, is better known by what name that's a portmanteau of her name and a Japanese game franchise?", answer: "Pokimane", points: 15, uniqueId: 't54' },
+            { text: "Sun, Moon, Diamond, Pearl, and SoulSilver have all been names of games in what iconic video game franchise?", answer: "Pokemon", points: 15, uniqueId: 't55' },
+            { text: "What Nintendo console was codenamed NX while under development and featured controllers called 'Joy-Cons' upon release?", answer: "Nintendo Switch", points: 15, uniqueId: 't56' },
+            { text: "What 1985 video game begins with a planned departure from Independence, Missouri?", answer: "The Oregon Trail", points: 15, uniqueId: 't57' },
+            { text: "What first-person shooter video game developed by Valve and published for Microsoft Windows in 1998 launched a globally successful franchise? The game shares its name with a scientific term frequently used in nuclear physics to describe the stability of atoms.", answer: "Half-Life", points: 15, uniqueId: 't58' },
+            { text: "Crash is a video game character who is a genetically mutated type of what marsupial?", answer: "Bandicoot", points: 15, uniqueId: 't59' },
+            { text: "The first Star Wars video game, made for the Atari 2600, was based on which film in the original trilogy?", answer: "The Empire Strikes Back", points: 15, uniqueId: 't60' },
+            { text: "What since-renamed brand mascot was initially introduced as Pitcher Man in 1954 and eventually reached such a pop culture icon status that he was the primary subject of multiple video games?", answer: "Kool Aid Man", points: 15, uniqueId: 't61' },
+            { text: "What is the name of the best-selling video game franchise to come out of Disney's home-grown intellectual property (so we're ignoring Disney's purchase of Lucas Films)?", answer: "Kingdom Hearts", points: 15, uniqueId: 't62' },
+            { text: "In the original 1980 edition of Pac-Man, the four ghosts were named Blinky, Inky, Pinky, and what 'C' name that doesn't rhyme with the rest?", answer: "Clyde", points: 15, uniqueId: 't63' },
+            { text: "What simulation video game franchise was originally developed by Will Wright and launched in 1989 for the Macintosh computer?", answer: "SimCity", points: 15, uniqueId: 't64' },
+            { text: "What video game franchise features Dr. Wily as the primary villain?", answer: "Mega Man", points: 15, uniqueId: 't65' },
+            { text: "Balloon Burst, Bombs Away, Treasure Divers, and Handcar Havoc were all part of what 1998 video game, the first in its franchise?", answer: "Mario Party", points: 15, uniqueId: 't66' },
+            { text: "'Ultimate' and 'Melee' are two of the iterations in the Super Smash Bros. franchise. What is the one additional word that follows the name of a title in the series?", answer: "Brawl", points: 15, uniqueId: 't67' },
+            { text: "The first game in the Final Fantasy video game franchise was released for what console?", answer: "Nintendo Entertainment System (NES)", points: 15, uniqueId: 't68' },
+            { text: "Tingle is a 'short, paunchy 35-year-old' obsessed with 'forest fairies' and dresses up in a green costume. In what video game franchise did Tingle debut before having his own eponymous series?", answer: "The Legend of Zelda", points: 15, uniqueId: 't69' },
+            { text: "What is the name of the twin brother of Solid Snake, the protagonist of the Metal Gear franchise?", answer: "Liquid Snake", points: 15, uniqueId: 't70' },
+            { text: "In January 2021, a short squeeze orchestrated by Reddit users caused a skyrocketing of the price of what retail chain that sells video games and consumer electronics?", answer: "GameStop", points: 15, uniqueId: 't71' },
+            { text: "The 1995 point-and-click adventure game 'I Have No Mouth, and I Must Scream' is based on the short story of the same name by what sci-fi author who also wrote 'A Boy and His Dog?'", answer: "Harlan Ellison", points: 15, uniqueId: 't72' },
+            { text: "Skyrim is the fifth installment of what epic open-world videogame series by Bethesda Softworks?", answer: "The Elder Scrolls", points: 15, uniqueId: 't73' },
+            { text: "Which Legend of Zelda game that picks up after Ocarina of Time was released for N64 in 2000 and remade for Nintendo 3DS in 2015?", answer: "Majora's Mask", points: 15, uniqueId: 't74' },
+            { text: "A social worker may come to take a child or pet away if its needs drop too low, in what video game franchise whose expansion titles include 'Livin' Large' and 'House Party?'", answer: "The Sims", points: 15, uniqueId: 't75' },
+            { text: "What singer-songwriter included the single 'Video Games' on her 2012 album 'Born to Die,' which also featured the song 'Summertime Sadness?'", answer: "Lana Del Rey", points: 15, uniqueId: 't76' },
+            { text: "Boardwalk! Atlantic Avenue! It all makes sense now. What coastal Garden State city serves as the inspiration for the various properties that make up the original Monopoly board?", answer: "Atlantic City, New Jersey", points: 15, uniqueId: 't77' },
+            { text: "As one of the most versatile voice actors in the 'Star Wars' franchise, who gave Frank Oz a break and voiced Yoda in the 'Clone Wars' films and various TV shows and video games in the 2000s?", answer: "Tom Kane", points: 15, uniqueId: 't78' },
+            { text: "Which came first chronologically, the first Pokémon video games or Pokémon trading cards?", answer: "Video games", points: 15, uniqueId: 't79' },
+            { text: "Decades before you could play flight simulator video games, the U.S. Navy sought out experts at MIT to develop the first one for training purposes (as part of a project called Whirlwind I) during which war?", answer: "WWII", points: 15, uniqueId: 't80' },
+            { text: "We’re not talking about video games here! We’re instead referring to what energy company whose logo is inspired by a famous American numbered route and whose NYSE stock market symbol is PSX?", answer: "Phillips 66", points: 15, uniqueId: 't81' },
+            { text: "In 2011, the World Health Disorder included VGA, an addiction to what activity, among its mental health disorders for the first time?", answer: "Video Games", points: 15, uniqueId: 't82' },
+            { text: "Hosted by Phil Moore, what ‘90s Nickelodeon video game-themed game show featured a 'video adventurer' named Mikey and a playable, virtual Video Zone where winning teams faced the show’s resident Game Wizards named Merlock, Scorchia, and Mongo?", answer: "Nick Arcade", points: 15, uniqueId: 't83' },
+            { text: "What Pokmon holds the title as the first listed creature? This creature is No.1 in the encyclopedic Pokdex and is considered a hybrid grass-poison type. The Pokemon's name involves both plants and reptiles.", answer: "Bulbasaur", points: 15, uniqueId: 't84' },
+            { text: "What regulatory group assigns content rating and suggested age ratings for video games? This group's four-letter initialism is featured near the rating on most video game packaging.", answer: "Entertainment Software Rating Board (ESRB)", points: 15, uniqueId: 't85' },
+            { text: "Blathers is the name of the nocturnal, museum-curating owl in what series of Nintendo video games?", answer: "Animal Crossing", points: 15, uniqueId: 't86' },
+            { text: "'Korobeiniki,' a folk song about a peddler and a girl haggling over the price of goods, is best known outside Russia as the theme music for what video game?", answer: "Tetris", points: 15, uniqueId: 't87' },
+            { text: "Larry, Morton, Wendy, Iggy, Roy, Lemmy, and Ludwig are all video game villains that report to what young commander as the head of their 'Troop'?", answer: "Bowser Jr", points: 15, uniqueId: 't88' },
+            { text: "Air Man, Cut Man, Ring Man, and Drill Man, are all villains in what 'M.M.' video game franchise?", answer: "Mega Man", points: 15, uniqueId: 't89' },
+            { text: "In what video game universe, created by Capcom, would you find a character named Jill Valentine? The name of this game also could mean a home-dwelling spirit.", answer: "Resident Evil", points: 15, uniqueId: 't90' },
+            { text: "A reference to its popular Angry Birds franchise, what Finnish video game company sometimes uses the slogan 'Angry since 2009?'", answer: "Rovio", points: 15, uniqueId: 't91' },
+            { text: "It's one of the longest running series in video game history, but do you know the name of its characters—the four ghosts in Pacman are called Inky, Blinky, Pinky, and what name that breaks the pattern?", answer: "Clyde", points: 15, uniqueId: 't92' },
+            { text: "What 1987 'run and action' game was developed and published by Konami as a coin-operated arcade game under a 6-letter, one-word title it shares with a Nicaraguan militia group? The title's alternate name 'Gryzor' was used in the Europe and Oceania markets.", answer: "Contra", points: 15, uniqueId: 't93' },
+            { text: "What 2021 game in the Metroid franchise, released on the Nintendo Switch, features Samus Aran investigating a mysterious transmission on the planet ZDR? Its title comes from the ongoing fear the player feels being chased by unstoppable robots.", answer: "Metroid Dread", points: 15, uniqueId: 't94' },
+            { text: "What pioneering 1980 video game was created in part as a response to shooting games like Space Invaders and created by 22-year-old Toru Iwatani? The highest possible score in the initial version of the game is 3,333,360.", answer: "Pac Man", points: 15, uniqueId: 't95' },
+            { text: "What video game franchise released its first game with a 'Battle Royale' format in October of 2018, copying Fortnite's runaway success with the format?", answer: "Call of Duty", points: 15, uniqueId: 't96' },
+            { text: "What was the 'metallic' golf video game played with a trackball that was popularized in bars across America and featured head-to-head nationwide competition through a centralized server?", answer: "Golden Tee", points: 15, uniqueId: 't97' },
+            { text: "What beat-em-up video game franchise, featuring twin brother martial artists Billy and Jimmy, was latter turned into a poorly received 1994 James Yukich movie starring Scott Wolf and Mark Dacascos?", answer: "Double Dragon", points: 15, uniqueId: 't98' },
+            { text: "Released in 1999, what was the first video game to prominently feature taking pictures with a camera as the main focus of the game?", answer: "Pokémon Snap", points: 15, uniqueId: 't99' },
+            { text: "What gothic video game franchise debuted in 1986 with Simon Belmont as protagonist? Simon was a member of the Belmont clan, a family of vampire hunters.", answer: "Castlevania", points: 15, uniqueId: 't100' },
+            { text: "What abbreviated racing game franchise bills itself as 'the real driving simulator'?", answer: "Gran Turismo", points: 15, uniqueId: 't101' },
+            { text: "The website Ranker named GLaDOS, a fictional artificially intelligent computer system, the greatest video game villain of all time. GLaDOS was introduced in what groundbreaking computer game?", answer: "Portal", points: 15, uniqueId: 't102' },
+            { text: "According to market research company NPD Group, what video game console sold the most units in the United States in 2008?", answer: "Nintendo Wii", points: 15, uniqueId: 't103' },
+            { text: "What popular mobile puzzle game involves the collection of characters who are described in the game's advertising as 'friends without the R?'", answer: "Best Fiends", points: 15, uniqueId: 't104' },
+            { text: "Which side-scrolling platformer by Ubisoft debuted in 1995 and tasked players with helping the game’s hero navigate levels like The Dream Forest and Blue Mountains to free the Electoons and defeat Mr. Dark?", answer: "Rayman", points: 15, uniqueId: 't105' },
+            { text: "What is the name of the talking animatronic toy that was an 'Illiop' but quite closely resembled a bear? The toy reached peak popularity in the mid-1980s and helped aid the launch of 1986's Nintendo Entertainment System.", answer: "Teddy Ruxpin", points: 15, uniqueId: 't106' },
+            { text: "Desmond Miles is a fictional character and the main protagonist of the first few installments in what series of video games?", answer: "Assassin's Creed", points: 15, uniqueId: 't107' },
+            { text: "The very first game in the Madden NFL video game franchise was named John Madden Football and was released June 1st in what year? We'll accept responses within three years of the correct answer.", answer: "1988", points: 15, uniqueId: 't108' },
+            { text: "The PlayStation was developed after an aborted deal between Sony and what other company who was interested in a CD-based game console?", answer: "Nintendo", points: 15, uniqueId: 't109' },
+            { text: "The sci-fi novel 'Ready Player One' features many classic video games, including what 1979 Atari 2600 game in the book's final challenge? This one-word game features a square avatar on a quest for a chalice.", answer: "Adventure", points: 15, uniqueId: 't110' },
+            { text: "What was the name of the princess Mario rescues in Nintendo Gameboy's 'Super Mario Land' (1989)?", answer: "Daisy", points: 15, uniqueId: 't111' },
+            { text: "Both first announced in 2006, name one of the two first non-Nintendo characters to appear in the Super Smash Bros. franchise", answer: ["Solid Snake", "Sonic"], points: 15, uniqueId: 't112' },
+            { text: "'Dachshund & Friends', 'Lab & Friends', and 'Chihuahua & Friends' are the three versions of the 2005 U.S. release of what video game?", answer: "Nintendogs", points: 15, uniqueId: 't113' },
+            { text: "What video game franchise debuted in 2001 as a hybrid real-time strategy and puzzle video game centered on part-collecting for a crashed rocket ship (the SS Dolphin) with the help of plant-animal hybrids?", answer: "Pikmin", points: 15, uniqueId: 't114' },
+            { text: "In Mario's first appearance in the video game 'Donkey Kong', what J-word was his official name before later transitioning to the now-famous moniker?", answer: "Jumpman", points: 15, uniqueId: 't115' },
+            { text: "King Dedede and Waddle Doo are key characters in what iconic video game franchise?", answer: "Kirby", points: 15, uniqueId: 't116' },
+            { text: "What two-word video game franchise is considered a 'score attack racing game' and is often considered innovative for its use of in-game advertising and its soundtrack provided by punk bands The Offspring and Bad Religion?", answer: "Crazy Taxi", points: 15, uniqueId: 't117' },
+            { text: "What was the name of the franchise of educational video games from the 1990s that featured a green protagonist and titles such as 'Episode I: In Search of Spot' and 'Episode II: Secret of the Lost City'?", answer: "Math Blaster!", points: 15, uniqueId: 't118' },
+            { text: "What video game franchise technically included 'Dr. Kawashima' in the title although his name was often omitted? The first installment of the franchise debuted in 2005 on the Nintendo DS.", answer: "Brain Age", points: 15, uniqueId: 't119' },
+            { text: "What is the name of the series of Star Wars video games that began on the Nintendo 64 console in 1998 as one of the first games for the console that supported 'Expansion Pak' which enabled higher-quality graphics?", answer: "Rogue Squadron", points: 15, uniqueId: 't120' },
+            { text: "What is the maximum number of Power Stars a player can collect in Super Mario 64?", answer: "120", points: 15, uniqueId: 't121' },
+            { text: "What classic open-ended PC game of 1993 may have been inspired by a Jules Verne novel whose characters were marooned on an island?", answer: "Myst", points: 15, uniqueId: 't122' },
+            { text: "Player reaction to a simulated disease in a computer game resembled historical records about plagues so closely that epidemiologists are using the data evaluate scenarios related to a potential future virus outbreak. What was the computer game in which this happened?", answer: "World of Warcraft", points: 15, uniqueId: 't123' },
+            { text: "What is the name of the video game that originated 'all your base are belong to us'?", answer: "Zero Wing", points: 15, uniqueId: 't124' },
+            { text: "Forest Frontiers, Dynamite Dunes, and Leafy Lake were the three initial 'scenarios' in the first game from what video game franchise?", answer: "RollerCoaster Tycoon", points: 15, uniqueId: 't125' },
+            { text: "What was the name of the color digital camera device, similar to a webcam, for the PlayStation 2? Released in 2003, the 6-letter device used computer vision and gesture recognition to allow players to interact with games.", answer: "EyeToy", points: 15, uniqueId: 't126' },
+            { text: "According to Apple, the most popular free game downloaded on iPhones in 2018 was Fortnite. The 2nd most popular game was an 'endless play style of game where you try to get a ball down a set of platforms as you avoid red platforms.' What was this 2nd most popular game?", answer: "Helix Jump", points: 15, uniqueId: 't127' },
+            { text: "As of December 2018, what is the name of the largest body of water on the Fortnite Battle Royale map?", answer: "Loot Lake", points: 15, uniqueId: 't128' },
+            { text: "The video game franchise developed by EA Sports titled NCAA Football (last released in 2014) had what man's name included in the game title for its first two iterations?", answer: "Bill Walsh", points: 15, uniqueId: 't129' },
+        ];
+
+
+        // --- Core Game Logic Functions ---
+
+        const lookupPlayerScore = async (name) => {
+            startSessionBtn.textContent = "Loading...";
+            try {
+                const response = await fetch(sheetyUrl);
+                const data = await response.json();
+                const playerScores = (data.sheet1 || []).filter(entry => entry.playername === name);
+                return playerScores.reduce((total, entry) => total + (Number(entry.score) || 0), 0);
+            } catch (error) {
+                console.error("Could not look up score:", error);
+                return 0;
+            }
+        };
+
+        const addScoreToSheet = async (playerName, score, mode) => {
+            if (score === 0) return;
+            try {
+                await fetch(sheetyUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ sheet1: { playername: playerName, score, mode, timestamp: new Date().toISOString() } })
+                });
+            } catch (error) { console.error('Error submitting score:', error); }
+        };
+
+        const startNewChallenge = () => {
+            let challengePool = isKidMode ? kidChallenges : adultChallenges;
+            
+            // Add a trivia question every 5 challenges
+            if (challengeCounter > 0 && challengeCounter % 5 === 0) {
+                challengePool = triviaChallenges;
+            }
+
+            const activeChallenges = challengePool.filter(c => !hiddenChallenges[c.uniqueId]);
+
+            if (activeChallenges.length === 0) {
+                const poolName = (challengePool === triviaChallenges) ? 'trivia questions' : 'challenges';
+                challengeText.textContent = `No more ${poolName} in this mode!`;
+                // Optionally reset hidden challenges for that pool if you want them to reappear
+                // For now, it just stops giving new challenges of that type.
+                return;
+            }
+
+            currentChallenge = activeChallenges[Math.floor(Math.random() * activeChallenges.length)];
+            challengeText.textContent = currentChallenge.text;
+            
+            nameEntryForm.style.display = 'none';
+            doneBtn.style.display = 'inline-block';
+            modeToggleBtn.style.display = 'none';
+
+            if (challengePool === triviaChallenges) {
+                challengeActionForm.style.display = 'none';
+                triviaForm.style.display = 'flex';
+            } else {
+                challengeActionForm.style.display = 'flex';
+                triviaForm.style.display = 'none';
+            }
+        };
+
+        const updateScore = (points) => {
+            sessionScore += points;
+            const totalScore = historicalScore + sessionScore;
+            playerDisplay.textContent = `Player: ${currentPlayerName} | Total Score: ${totalScore}`;
+            challengeCounter++;
+            startNewChallenge();
+        };
+
+        // --- Event Listeners ---
+
+        startSessionBtn.addEventListener('click', async () => {
+            const name = playerNameInput.value.trim();
+            if (!name) { alert('Please enter your name.'); return; }
+            currentPlayerName = name;
+            
+            historicalScore = await lookupPlayerScore(name);
+            sessionScore = 0;
+
+            playerDisplay.textContent = `Player: ${currentPlayerName} | Total Score: ${historicalScore}`;
+            playerDisplay.style.display = 'block';
+            startSessionBtn.textContent = "Start / Continue";
+            
+            challengeCounter = 1;
+            startNewChallenge();
+        });
+
+        completeChallengeBtn.addEventListener('click', () => updateScore(currentChallenge.points));
+        skipChallengeBtn.addEventListener('click', () => updateScore(-5));
+
+        submitTriviaBtn.addEventListener('click', () => {
+            const playerAnswer = triviaAnswerInput.value.trim().toLowerCase();
+            const correctAnswers = Array.isArray(currentChallenge.answer) 
+                ? currentChallenge.answer.map(a => a.toLowerCase()) 
+                : [currentChallenge.answer.toLowerCase()];
+
+            if (correctAnswers.includes(playerAnswer)) {
+                alert(`Correct! +${currentChallenge.points} points!`);
+                updateScore(currentChallenge.points);
+            } else {
+                alert(`Incorrect. The answer was: ${currentChallenge.answer}`);
+                updateScore(0);
+            }
+            triviaAnswerInput.value = '';
+        });
+
+        doneBtn.addEventListener('click', async () => {
+            if (currentPlayerName) {
+                alert(`Session over! Saving your ${sessionScore} new points.`);
+                const mode = isKidMode ? 'Kid' : 'Adult';
+                await addScoreToSheet(currentPlayerName, sessionScore, mode);
+            }
+            window.location.reload();
+        });
+        
+        modeToggleBtn.addEventListener('click', () => {
+            isKidMode = !isKidMode;
+            modeToggleBtn.textContent = isKidMode ? 'Switch to Adult Mode' : 'Switch to Kid Mode';
+            // If a name is already entered, restart the session in the new mode
+            const name = playerNameInput.value.trim();
+            if(name){
+                startSessionBtn.click();
+            }
+        });
+    });
+    </script>
+</body>
+</html>
