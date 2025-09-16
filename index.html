@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ahlers Arcade Challenge!</title>
+    <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Press+Start+2P&display=swap" rel="stylesheet">
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #fff;
+            font-family: 'Press Start 2P', cursive;
+            min-height: 100vh;
+            margin: 0;
+            text-align: center;
+            padding: 20px;
+            overflow: hidden;
+            box-sizing: border-box;
+        }
+        #bg-video {
+            position: fixed;
+            right: 0;
+            bottom: 0;
+            min-width: 100%;
+            min-height: 100%;
+            z-index: -2;
+            object-fit: cover;
+        }
+        .video-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(15, 12, 41, 0.7);
+            z-index: -1;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            align-items: center;
+            background: rgba(0, 0, 0, 0.6);
+            border: 5px solid #ff007f;
+            border-radius: 40px;
+            padding: 40px;
+            box-shadow: 0 0 30px rgba(255, 0, 127, 0.5);
+            max-width: 90%;
+            width: 100%;
+            height: 90vh;
+            position: relative;
+        }
+        #fullscreen-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid #fff;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            font-size: 24px;
+            cursor: pointer;
+            z-index: 1000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        #main-content {
+            display: flex;
+            flex-direction: row;
+            justify-content: space-between;
+            align-items: flex-start;
+            width: 100%;
+            gap: 20px;
+            margin-top: 15vh;
+        }
+        .content-column {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+        #left-column { flex-basis: 25%; }
+        #center-column { 
+            flex-basis: 40%; 
+            /* UPDATED: Raised the center column by 15% of its own height */
+            transform: translateY(-15%);
+        }
+        #right-column { flex-basis: 35%; }
+
+        #center-column img {
+            max-width: 100%;
+            height: auto;
+        }
+
+        #qr-container {
+            margin-top: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+        #qr-code {
+            background: white;
+            padding: 10px;
+            border-radius: 10px;
+        }
+        #qr-text {
+            font-size: 1vw;
+            color: #fff;
+            font-weight: bold;
+        }
+        #adventure-text {
+            font-size: 1.5vw;
+        }
+        
+        #leaderboard-title {
+            font-family: 'Bangers', cursive;
+            font-size: 3vw;
+            color: #ff007f;
+            text-shadow: 3px 3px 0 #302b63;
+            margin-bottom: 20px;
+            animation: purple-pulse 5s ease-in-out infinite alternate; 
+        }
+
+        .leaderboard-scroller {
+            width: 100%;
+            max-height: 65vh;
+            overflow: hidden;
+        }
+        #scores-list {
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+            font-family: 'Press Start 2P', cursive;
+            font-size: 1.5vw;
+        }
+        #scores-list li {
+            padding: 15px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            text-align: left;
+            width: 100%;
+            color: #ff007f;
+            animation: purple-pulse 5s ease-in-out infinite alternate; 
+        }
+        #scores-list li > span:first-child {
+            margin-left: 0;
+        }
+
+        @keyframes wheel-scroll-up {
+            from { transform: translateY(0%); }
+            to { transform: translateY(-50%); }
+        }
+
+        @keyframes purple-pulse {
+            from {
+                text-shadow: 0 0 5px #ff007f, 0 0 10px #ff007f;
+            }
+            to {
+                text-shadow: 0 0 8px #9400D3, 0 0 15px #9400D3, 0 0 20px #9400D3;
+            }
+        }
+        
+        .ticker-wrap {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background-color: #000;
+            border-top: 3px solid #ff007f;
+            padding: 10px 0;
+            overflow: hidden;
+        }
+        .ticker {
+            display: inline-block;
+            white-space: nowrap;
+            animation: scroll-ticker 200s linear infinite;
+        }
+        .ticker-item {
+            display: inline-block;
+            padding: 0 2rem;
+            color: #00ffff;
+            font-size: 1.5vw;
+        }
+        @keyframes scroll-ticker {
+            0% { transform: translateX(100vw); }
+            100% { transform: translateX(-100%); }
+        }
+    </style>
+</head>
+<body>
+    <div class="video-overlay"></div>
+    <video autoplay loop muted playsinline id="bg-video">
+        <source src="https://raw.githubusercontent.com/ajersj-cmyk/arcade-challenge/main/background.mp4" type="video/mp4">
+        Your browser does not support the video tag.
+    </video>
+    <div class="container">
+        <button id="fullscreen-btn">📺</button>
+        
+        <div id="main-content">
+            <div id="left-column" class="content-column">
+                <p id="adventure-text">Your Adventure Awaits!</p>
+                <div id="qr-container">
+                    <div id="qr-code"></div>
+                    <p id="qr-text">Scan to Begin Your Adventure!</p>
+                </div>
+            </div>
+            <div id="center-column" class="content-column">
+                 <img src="https://raw.githubusercontent.com/ajersj-cmyk/arcade-challenge/main/header.PNG" alt="Ahlers Arcade Challenge">
+            </div>
+            <div id="right-column" class="content-column">
+                <p id="leaderboard-title">High Score Board</p>
+                <div class="leaderboard-scroller">
+                    <ul id="scores-list"></ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="ticker-wrap">
+        <div class="ticker" id="ticker-content"></div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/qrcode-generator/qrcode.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const scoresApiUrl = "https://script.google.com/macros/s/AKfycbzVzQirgLxs7Pse85u7RStzQFL-yJz8ZD9-PuVrfko9wBCm7lKbS9N5dQxZSvXj_eMW/exec";
+            const scoresList = document.getElementById('scores-list');
+            const qrCodeDiv = document.getElementById('qr-code');
+            const fullscreenBtn = document.getElementById('fullscreen-btn');
+            const tickerContent = document.getElementById('ticker-content');
+
+            const tickerMessages = [ "Scan the code to get started!", "Take on our Arcade Challenge to climb the leaderboards!", "Ahlers Arcade Welcomes you! Scan the code, enter your name and get started racking up points!" ];
+            let tickerHTML = '';
+            for (let i = 0; i < 5; i++) { tickerMessages.forEach(msg => { tickerHTML += `<div class="ticker-item">${msg}</div>`; }); }
+            tickerContent.innerHTML = tickerHTML;
+
+            const generateQrCode = (url) => {
+                try {
+                    const qr = qrcode(0, 'L');
+                    qr.addData(url);
+                    qr.make();
+                    qrCodeDiv.innerHTML = qr.createImgTag(4); 
+                } catch (e) {
+                    qrCodeDiv.innerHTML = "Error.";
+                    console.error(e);
+                }
+            };
+            
+            const playerPageUrl = "https://ajersj-cmyk.github.io/arcade-challenge/player.html";
+            generateQrCode(playerPageUrl);
+
+            const fetchAndDisplayLeaderboard = async () => {
+                try {
+                    const response = await fetch(scoresApiUrl);
+                    if (!response.ok) throw new Error('Failed to fetch data');
+                    const data = await response.json();
+                    const scores = data.sheet1 || [];
+                    const playerTotals = {};
+                    scores.forEach(entry => { const name = entry.playername; const score = Number(entry.score) || 0; if (name) { playerTotals[name] = (playerTotals[name] || 0) + score; } });
+                    const sortedPlayers = Object.entries(playerTotals).map(([name, totalScore]) => ({ playername: name, score: totalScore })).sort((a, b) => b.score - a.score);
+                    
+                    scoresList.innerHTML = '';
+                    scoresList.style.animation = 'none';
+                    
+                    if (sortedPlayers.length === 0) {
+                        scoresList.innerHTML = '<li>No scores yet!</li>';
+                    } else {
+                        sortedPlayers.forEach((player, index) => {
+                            const li = document.createElement('li');
+                            let playerName = player.playername;
+                            if (index === 0) { playerName = `👑 ${playerName}`; }
+                            
+                            li.innerHTML = `<span>${index + 1}. ${playerName}</span><span>${player.score} pts</span>`;
+                            scoresList.appendChild(li);
+                        });
+
+                        if (scoresList.scrollHeight > scoresList.parentElement.clientHeight) {
+                            scoresList.innerHTML += scoresList.innerHTML;
+                            const itemCount = sortedPlayers.length;
+                            const pixelsPerSecond = 24;
+                            const listHeight = itemCount * 55;
+                            const duration = listHeight / pixelsPerSecond;
+                            scoresList.style.animation = `wheel-scroll-up ${duration}s linear infinite`;
+                        }
+                    }
+                } catch (error) {
+                    console.error('Failed to fetch leaderboard:', error);
+                    scoresList.innerHTML = `<li>Error loading scores.</li>`;
+                }
+            };
+            
+            fullscreenBtn.addEventListener('click', () => { if (!document.fullscreenElement) { document.documentElement.requestFullscreen(); } else if (document.exitFullscreen) { document.exitFullscreen(); } });
+            
+            fetchAndDisplayLeaderboard();
+            setInterval(fetchAndDisplayLeaderboard, 30000);
+        });
+    </script>
+</body>
+</html>
