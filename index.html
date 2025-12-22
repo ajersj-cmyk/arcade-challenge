@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>4K Master Cinema & Arcade Elite</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Press+Start+2P&family=Inter:wght@300;400;700;900&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/qrcode-generator/qrcode.js"></script>
+    <style>
+        /* MASTER RESPONSIVE FIX:
+           We set the base font size to 1.5% of the Viewport Height (vh).
+        */
+        :root {
+            --ticker-height: 12vh; /* Defines the height for ticker calculation */
+        }
+
+        body, html { 
+            margin: 0; padding: 0; width: 100vw; height: 100vh; 
+            background: black; overflow: hidden; color: white; 
+            font-family: 'Arial Black', sans-serif; cursor: none;
+            font-size: 1.6vh; /* SCALING MAGIC */
+        }
+        
+        /* --- VIEW MODES --- */
+        body.remote-active .tv-wrapper,
+        body.remote-active #remote-qr-trigger,
+        body.remote-active #manual-badge,
+        body.remote-active .gear-icon,
+        body.remote-active #settings-panel { display: none !important; }
+        
+        body:not(.remote-active) #remote-controller { display: none !important; }
+
+        /* --- TV INTERFACE --- */
+        .tv-wrapper { position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; display: flex; justify-content: center; align-items: center; overflow: hidden; }
+
+        #poster { width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity 1.5s; z-index: 1; }
+        .fade-in { opacity: 1 !important; }
+
+        /* FILM INFO - NO BACKGROUND SHADE */
+        #film-info { 
+            position: absolute; 
+            bottom: var(--ticker-height); /* Sits exactly on top of ticker */
+            left: 0; 
+            width: 55vw; /* Slightly wider since there is no box constraint */
+            max-height: 65vh; 
+            /* REMOVED BACKGROUND GRADIENT HERE */
+            background: transparent;
+            z-index: 10; 
+            display: flex; 
+            flex-direction: column; 
+            justify-content: flex-end; 
+            padding: 3vh 4vw; 
+            transition: opacity 1.2s ease-in-out; 
+            opacity: 0; 
+        }
+        .info-visible { opacity: 1 !important; }
+        
+        #clear-logo { 
+            max-width: 100%; 
+            max-height: 22vh; /* Logo size */
+            object-fit: contain; 
+            object-position: left bottom;
+            margin-bottom: 2vh; 
+            /* Stronger shadow for logo since bg is gone */
+            filter: drop-shadow(0 0.5vh 0.5vh rgba(0,0,0,0.8)) drop-shadow(0 0 2vh rgba(0,0,0,0.8)); 
+        }
+        
+        .meta-row { 
+            display: flex; gap: 2vw; 
+            font-family: sans-serif; font-weight: 900; 
+            color: #facc15; margin-bottom: 2vh; 
+            font-size: 1.5rem; letter-spacing: 0.1vw; 
+            text-shadow: 0.2vh 0.2vh 0 #000, 0 0 2vh #000; /* Outlined text */
+        }
+
+        #synopsis { 
+            font-family: 'Inter', sans-serif; 
+            font-size: 1.6rem; 
+            line-height: 1.4; 
+            color: #ffffff; 
+            font-weight: 500; /* Slightly bolder for readability without bg */
+            /* Heavy text shadow to ensure readability on bright backgrounds */
+            text-shadow: 0.2vh 0.2vh 0.2vh #000, 0 0 2vh #000, 0 0 4vh #000; 
+            display: -webkit-box;
+            -webkit-line-clamp: 6;
+            -webkit-box-orient: vertical;  
+            overflow: hidden;
+        }
+
+        /* SPORTS TICKER */
+        #sports-ticker { 
+            position: absolute; bottom: 0; left: 0; width: 100%; 
+            height: var(--ticker-height); 
+            background: rgba(0,0,0,0.95); backdrop-filter: blur(20px); 
+            border-top: 0.4vh solid #ff007f; z-index: 100; 
+            display: flex; align-items: center;
+            overflow: hidden; white-space: nowrap; 
+            box-shadow: 0 -1vh 3vh rgba(255, 0, 127, 0.6); 
+        }
+        #ticker-track { display: inline-flex; animation: scrollTicker 2000s linear infinite; padding-left: 100%; height: 100%; align-items: center; } 
+        
+        .ticker-section-head { display: inline-flex; align-items: center; justify-content: center; padding: 0 3vw; height: 100%; color: #ff007f; font-size: 1.8rem; letter-spacing: 0.3vw; font-weight: 900; background: transparent; border: none; vertical-align: middle; }
+        .score-item, .news-item { display: inline-flex; align-items: center; padding: 0 4vw; border: none; height: 100%; vertical-align: middle; }
+        .news-item { color: #00ffff; font-family: 'Inter', sans-serif; font-size: 1.8rem; font-weight: 700; }
+        .news-tag { color: #ff007f; margin-right: 1.5vw; font-size: 1.2rem; border: 0.1vh solid #ff007f; padding: 0.2vh 0.5vw; border-radius: 0.5vh; }
+        
+        .team-box { display: flex; align-items: center; flex-wrap: nowrap; }
+        .team-logo { width: 4vh; height: 4vh; object-fit: contain; margin-right: 1vw; flex-shrink: 0; } 
+        .team-score { font-size: 2.2rem; line-height: 1; color: #00ffff; text-shadow: 0 0 1.5vh #00ffff; font-family: 'Press Start 2P', cursive; margin-right: 0.5vw; }
+        .vs-label { color: #444; font-size: 1.2rem; margin: 0 2vw; font-weight: bold; }
+        .game-status { margin-left: 1.5vw; color: #facc15; font-size: 1.2rem; text-transform: uppercase; letter-spacing: 0.1vw; }
+        .game-stats { margin-left: 3vw; display: flex; flex-direction: row; gap: 2vw; align-items: center; color: #aaa; font-size: 1.4rem; border-left: 0.2vh solid #333; padding-left: 1.5vw; }
+        .stat-cat { color: #facc15; font-weight: 800; text-transform: uppercase; font-size: 1rem; margin-right: 0.5vw; }
+        @keyframes scrollTicker { 0% { transform: translateX(0); } 100% { transform: translateX(-100%); } }
+
+        /* SCREENS & ARCADE */
+        #arcade-screen { position: absolute; inset: 0; z-index: 50; display: none; flex-direction: column; justify-content: center; align-items: center; font-family: 'Press Start 2P', cursive; background: black; }
+        #arcade-video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: -2; }
+        
+        .arcade-container { 
+            background: rgba(0, 0, 0, 0.6); 
+            border: 0.5vh solid #ff007f; 
+            border-radius: 4vh; 
+            padding: 4vh; 
+            box-shadow: 0 0 3vh rgba(255, 0, 127, 0.5); 
+            width: 90vw; 
+            height: 70vh; 
+            display: flex; 
+            flex-direction: column; 
+            margin-bottom: var(--ticker-height); 
+            position: relative; 
+        }
+        #scores-list { list-style: none; padding: 0; font-size: 1.5vw; color: #ff007f; }
+        #scores-list li { padding: 1vh 0; display: flex; justify-content: space-between; }
+        #clock { font-size: 4rem; font-weight: 900; color: white; position: absolute; top: 5vh; right: 5vw; z-index: 15; display: block; text-shadow: 0 0 1vh black; }
+        #schedule-screen { position: absolute; inset: 0; background: radial-gradient(circle, #1a1a1a 0%, #000 100%); z-index: 60; display: none; flex-direction: column; overflow: hidden; }
+
+        /* --- SETTINGS SIDEBAR --- */
+        #settings-panel { position: fixed; top: 0; right: -30vw; width: 30vw; min-width: 320px; height: 100%; background: #0a0a0a; transition: right 0.4s; z-index: 200; border-left: 1px solid #333; display: flex; flex-direction: column; font-family: sans-serif; cursor: default; }
+        #settings-panel.open { right: 0; }
+        .tab-bar { display: flex; background: #111; border-bottom: 1px solid #333; height: 6vh; }
+        .tab-btn { flex: 1; display:flex; align-items:center; justify-content: center; font-size: 1.2rem; font-weight: bold; cursor: pointer; color: #555; text-transform: uppercase; }
+        .tab-btn.active { color: #00d4ff; border-bottom: 0.3vh solid #00d4ff; background: #1a1a1a; }
+        .panel-body { flex: 1; overflow-y: auto; padding: 2vh; }
+        
+        /* GEAR ICON */
+        .gear-icon { position: fixed; top: 3vh; right: 3vh; font-size: 5vh; cursor: pointer; z-index: 201; opacity: 0.5; transition: opacity 0.3s; }
+        .gear-icon:hover { opacity: 1; text-shadow: 0 0 1vh white; }
+
+        /* --- REMOTE CONTROLLER --- */
+        #remote-controller { 
+            position: fixed; inset: 0; z-index: 9999; 
+            background: #000; display: flex; flex-direction: column; 
+            font-family: 'Inter', sans-serif; color: white;
+            cursor: default; overflow: hidden;
+            font-size: 16px; 
+        }
+        .remote-header { background: #111; padding: 20px; text-align: center; border-bottom: 1px solid #333; font-weight: 900; letter-spacing: 1px; color: #00ffff; text-transform: uppercase; }
+        .remote-content { flex: 1; overflow-y: auto; padding: 20px; background: #050505; }
+        .r-group { margin-bottom: 25px; }
+        .r-group-title { color: #666; font-size: 12px; font-weight: 800; text-transform: uppercase; margin-bottom: 10px; padding-left: 5px; }
+        .r-btn { width: 100%; padding: 16px; margin-bottom: 10px; background: #1a1a1a; border: 1px solid #333; color: #eee; border-radius: 12px; text-align: left; font-size: 16px; font-weight: 600; display: flex; justify-content: space-between; align-items: center; }
+        .r-btn:active { background: #333; transform: scale(0.98); }
+        .r-btn::after { content: '›'; color: #555; font-size: 24px; }
+        .r-btn-primary { background: #0044cc; border-color: #0055ff; color: white; text-align: center; justify-content: center; }
+        .r-btn-primary::after { content: ''; }
+        .r-btn-danger { background: #cc0000; border-color: #ff0000; color: white; text-align: center; justify-content: center; }
+        .r-btn-danger::after { content: ''; }
+        .remote-tab-bar { display: flex; background: #111; border-top: 1px solid #333; padding-bottom: 20px; }
+        .r-tab { flex: 1; padding: 20px 0; text-align: center; color: #444; font-size: 12px; font-weight: bold; text-transform: uppercase; }
+        .r-tab.active { color: #00ffff; background: #161616; border-top: 3px solid #00ffff; }
+
+        /* --- REMOTE QR (SETTINGS) --- */
+        #remote-qr-trigger { 
+            position: fixed; bottom: 18vh; right: 3vw; z-index: 500; 
+            display: flex; flex-direction: column; align-items: center; 
+        }
+        #qr-canvas { 
+            width: 8vh; height: 8vh; 
+            background: white; 
+            padding: 0.5vh;
+            border-radius: 0.5vh; box-shadow: 0 0 2vh rgba(0,0,0,0.8);
+        }
+        #qr-canvas img { width: 100%; height: 100%; display: block; }
+        .qr-label { 
+            color: #fff; font-size: 1.2vh; font-weight: bold; 
+            font-family: 'Press Start 2P', cursive; margin-top: 1vh; 
+            text-transform: uppercase; text-shadow: 0 0 0.5vh #ff007f;
+            animation: neonPulse 1.5s infinite alternate;
+        }
+        @keyframes neonPulse { 0% { opacity: 0.7; } 100% { opacity: 1; text-shadow: 0 0 1.5vh #ff007f; } }
+        
+        .manual-indicator { position: fixed; top: 3vh; left: 50%; transform: translateX(-50%); background: #ff0000; color: white; padding: 0.5vh 2vw; border-radius: 2vh; z-index: 150; font-family: sans-serif; font-weight: bold; font-size: 2vh; display: none; }
+        
+        .list-btn { width: 100%; text-align: left; padding: 1.5vh; margin-bottom: 0.5vh; border-radius: 0.5vh; background: #161616; border: 1px solid #333; font-size: 1.4rem; color: white; }
+    </style>
+</head>
+<body onmousemove="showCursor()">
+
+    <div class="gear-icon" onclick="toggleSettings()">⚙️</div>
+
+    <div id="settings-panel">
+        <div class="tab-bar">
+            <div class="tab-btn active" id="t1" onclick="switchTab(1)">Explore</div>
+            <div class="tab-btn" id="t2" onclick="switchTab(2)">Playlists</div>
+            <div class="tab-btn" id="t3" onclick="switchTab(3)">Marquee</div>
+        </div>
+        <div class="panel-body">
+            <div id="v1">
+                <div class="mb-4 space-y-2 border-b border-zinc-800 pb-4">
+                    <button class="list-btn !bg-blue-700" onclick="toggleFullscreen()">Fullscreen Toggle</button>
+                    <button class="list-btn !bg-yellow-600 !text-black" onclick="toggleMarqueeManual()">Toggle Schedule</button>
+                </div>
+                <button class="list-btn" onclick="setPlaylist('movie/now_playing')">Now Playing (US)</button>
+                <button class="list-btn" onclick="setPlaylist('movie/upcoming')">Upcoming</button>
+                <div id="movie-genre-list" class="grid grid-cols-2 gap-1 mt-4"></div>
+                <div id="tv-genre-list" class="grid grid-cols-2 gap-1 mt-4"></div>
+            </div>
+            <div id="v2" class="hidden">
+                <input type="text" id="new-list-name-local" placeholder="Playlist Name..." class="w-full bg-zinc-900 p-2 text-sm rounded mb-2 text-white">
+                <button onclick="createNewPlaylist()" class="w-full bg-blue-600 p-2 rounded mb-4 text-white font-bold">+</button>
+                <div id="user-playlists-local"></div>
+                <div id="editor-view-local" class="hidden mt-4 p-2 bg-zinc-900/40 border border-zinc-800 rounded">
+                    <input type="text" id="movie-search-local" placeholder="Search movies..." class="w-full bg-black p-2 text-sm rounded mb-2 text-white">
+                    <div id="search-results-local"></div>
+                    <div id="playlist-contents-local" class="mt-2"></div>
+                </div>
+            </div>
+            <div id="v3" class="hidden">
+                 <input type="text" id="m-search" placeholder="Search for banner..." class="w-full bg-zinc-900 p-2 text-sm rounded mb-2 text-white">
+                 <div id="m-results"></div>
+                 <div id="m-items" class="mt-4"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="remote-qr-trigger">
+        <div id="qr-canvas"></div>
+        <span class="qr-label">Remote</span>
+    </div>
+
+    <div class="manual-indicator" id="manual-badge">MANUAL MODE ACTIVE</div>
+
+    <div class="tv-wrapper" id="main-wrapper">
+        <div id="clock">12:00</div>
+        <img id="poster" src="">
+        <div id="film-info">
+            <img id="clear-logo" src="" alt="">
+            <div class="meta-row"><span id="year"></span><span id="duration"></span><span id="rating">★★★★★</span></div>
+            <div id="synopsis"></div>
+        </div>
+
+        <div id="arcade-screen">
+            <video loop muted id="arcade-video"><source src="https://raw.githubusercontent.com/ajersj-cmyk/arcade-challenge/main/background.mp4" type="video/mp4"></video>
+            <div class="arcade-container">
+                <div class="flex flex-row justify-between w-full mt-10 gap-10 h-full">
+                    <div class="flex flex-col items-center basis-1/4 justify-center">
+                        <div id="qr-code" class="bg-white p-2 rounded"></div>
+                        <p class="text-[1.5vh] mt-4 text-white">Scan to Begin!</p>
+                    </div>
+                    <div class="basis-1/2 flex items-center justify-center -translate-y-10"><img src="https://raw.githubusercontent.com/ajersj-cmyk/arcade-challenge/main/header.PNG" class="max-w-full max-h-[20vh]"></div>
+                    <div class="basis-1/4 flex flex-col items-center">
+                        <p class="text-pink-500 text-[3vh] font-bold mb-4">HIGH SCORES</p>
+                        <div class="leaderboard-scroller w-full"><ul id="scores-list"></ul></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="schedule-screen">
+            <div class="marquee-header py-10 text-[5vh] text-center font-bold text-yellow-500 uppercase tracking-widest">Showtimes</div>
+            <div id="schedule-viewport" class="flex-1 overflow-hidden relative"><div id="schedule-list"></div></div>
+        </div>
+        <div id="sports-ticker"><div id="ticker-track"></div></div>
+    </div>
+
+    <div id="remote-controller">
+        <div class="remote-header">Master Control</div>
+        <div class="remote-content" id="rb-general">
+            <div class="r-group">
+                <div class="r-group-title">Display Settings</div>
+                <button class="r-btn" onclick="bcSend('toggleFullscreen')">Toggle Fullscreen</button>
+            </div>
+            <div class="r-group">
+                <div class="r-group-title">Modes</div>
+                <button class="r-btn" onclick="bcSend('toggleMarqueeManual')">Toggle Schedule</button>
+            </div>
+            <div class="r-group">
+                <div class="r-group-title">Quick Cast</div>
+                <button class="r-btn" onclick="bcSend('setPlaylist', 'movie/now_playing')">Now Playing Movies</button>
+                <button class="r-btn" onclick="bcSend('setPlaylist', 'movie/upcoming')">Upcoming Movies</button>
+                <button class="r-btn" onclick="bcSend('setPlaylist', 'tv/top_rated')">Top Rated TV</button>
+            </div>
+        </div>
+        <div class="remote-content hidden" id="rb-manual">
+            <div class="r-group">
+                <div class="r-group-title">Manual Override</div>
+                <input type="text" id="manual-search-input" placeholder="Search for content..." class="w-full bg-zinc-800 border border-zinc-700 p-4 rounded-lg mb-4 text-white outline-none text-base">
+                <div id="manual-results" class="space-y-2"></div>
+            </div>
+            <button class="r-btn r-btn-danger mt-4" onclick="bcSend('exitManualMode')">Stop Manual Mode</button>
+        </div>
+        <div class="remote-content hidden" id="rb-lists">
+            <div class="r-group">
+                <div class="r-group-title">Create Playlist</div>
+                <input type="text" id="new-list-name" placeholder="Playlist Name" class="w-full bg-zinc-800 border border-zinc-700 p-3 rounded-lg mb-2 text-white text-base">
+                <button onclick="createNewPlaylist()" class="r-btn r-btn-primary">Create New List</button>
+            </div>
+            <div class="r-group-title">My Playlists</div>
+            <div id="user-playlists" class="space-y-2"></div>
+            <div id="editor-view" class="hidden mt-6 pt-6 border-t border-zinc-800">
+                <p class="text-sm text-blue-400 mb-2 font-bold" id="edit-list-title">Editing...</p>
+                <input type="text" id="movie-search" placeholder="Add content..." class="w-full bg-zinc-800 border border-zinc-700 p-3 rounded-lg mb-2 text-white text-base">
+                <div id="search-results" class="mb-2"></div>
+                <div id="playlist-contents" class="space-y-2"></div>
+            </div>
+        </div>
+        <div class="remote-tab-bar">
+            <div class="r-tab active" onclick="switchRemoteTab('general', this)">Controls</div>
+            <div class="r-tab" onclick="switchRemoteTab('manual', this)">Manual</div>
+            <div class="r-tab" onclick="switchRemoteTab('lists', this)">Lists</div>
+        </div>
+    </div>
+
+    <script>
+        // --- BROADCAST CHANNEL ---
+        const bc = new BroadcastChannel('cinema_channel');
+        
+        // --- CORE VARIABLES ---
+        const API_KEY = '18df6697af27bed3979b320eb66138fc';
+        const IMG_BASE = 'https://image.tmdb.org/t/p/original';
+        const THUMB = 'https://image.tmdb.org/t/p/w500';
+        const scoresApiUrl = "https://script.google.com/macros/s/AKfycbzVzQirgLxs7Pse85u7RStzQFL-yJz8ZD9-PuVrfko9wBCm7lKbS9N5dQxZSvXj_eMW/exec";
+
+        let movies = [], currentIndex = 0, slideCounter = 0, cycleTimer, cursorTimer, activeListName = '';
+        let isMarqueeActive = false, isArcadeActive = false, isManualMode = false;
+        
+        // --- MODE DETECTION ---
+        function checkMode() {
+            if (window.location.hash === '#remote') {
+                document.body.classList.add('remote-active');
+                document.body.style.cursor = 'default';
+            } else {
+                document.body.classList.remove('remote-active');
+            }
+        }
+        window.addEventListener('hashchange', checkMode);
+        window.addEventListener('load', checkMode);
+
+        // --- REMOTE SENDER/RECEIVER ---
+        function bcSend(action, ...args) {
+            if (document.body.classList.contains('remote-active')) {
+                bc.postMessage({ action, args });
+            } else {
+                executeLocal(action, args);
+            }
+        }
+        bc.onmessage = (ev) => {
+            if (!document.body.classList.contains('remote-active')) {
+                executeLocal(ev.data.action, ev.data.args);
+            }
+        };
+        function executeLocal(action, args) {
+            if (action === 'toggleFullscreen') toggleFullscreen();
+            if (action === 'toggleMarqueeManual') toggleMarqueeManual();
+            if (action === 'setPlaylist') setPlaylist(args[0]);
+            if (action === 'exitManualMode') exitManualMode();
+            if (action === 'engageManualMode') engageManualMode(args[0], args[1], args[2]);
+            if (action === 'playCustom') playCustom(args[0]);
+        }
+
+        // --- UI LOGIC ---
+        function toggleSettings() { document.getElementById('settings-panel').classList.toggle('open'); }
+        function switchTab(n) { [1,2,3].forEach(i=>{ document.getElementById('v'+i).classList.toggle('hidden',i!==n); document.getElementById('t'+i).classList.toggle('active',i===n);}); }
+        function switchRemoteTab(id, tabEl) {
+            document.querySelectorAll('.remote-content').forEach(el => el.classList.add('hidden'));
+            document.getElementById('rb-'+id).classList.remove('hidden');
+            document.querySelectorAll('.r-tab').forEach(el => el.classList.remove('active'));
+            tabEl.classList.add('active');
+        }
+
+        // --- SEARCH INPUTS ---
+        document.getElementById('manual-search-input').addEventListener('input', async (e) => {
+            if (e.target.value.length < 3) return;
+            const d = await (await fetch(`https://api.themoviedb.org/3/search/multi?api_key=${API_KEY}&query=${e.target.value}`)).json();
+            document.getElementById('manual-results').innerHTML = d.results.slice(0, 5).map(m => `<div class="flex items-center gap-3 bg-zinc-800 p-3 rounded-lg" onclick="bcSend('engageManualMode', '${m.id}', '${m.media_type}', '${(m.title||m.name).replace(/'/g,"")}')"><img src="${THUMB}${m.poster_path}" class="w-10 h-14 object-cover rounded"><div><div class="font-bold text-white text-sm">${m.title||m.name}</div><div class="text-gray-400 text-xs uppercase">${m.media_type}</div></div></div>`).join('');
+        });
+
+        // --- PLAYLIST LOGIC ---
+        function getStore() { return JSON.parse(localStorage.getItem('theaterPlaylists') || '{}'); }
+        function saveStore(s) { localStorage.setItem('theaterPlaylists', JSON.stringify(s)); renderPlaylists(); }
+        function renderPlaylists() { 
+            const html = Object.keys(getStore()).map(n => `<div class="flex gap-2"><button class="r-btn flex-1 !mb-0" onclick="bcSend('playCustom', '${n}')">▶ ${n}</button><button class="bg-zinc-800 px-4 rounded-lg text-xs font-bold" onclick="manageList('${n}')">EDIT</button><button class="bg-red-900 px-3 rounded-lg text-xs font-bold" onclick="deletePlaylist('${n}')">✕</button></div>`).join('');
+            document.getElementById('user-playlists').innerHTML = html;
+            if(document.getElementById('user-playlists-local')) document.getElementById('user-playlists-local').innerHTML = Object.keys(getStore()).map(n => `<div class="flex gap-1 mb-1"><button class="list-btn flex-1" onclick="playCustom('${n}')">▶ ${n}</button><button class="bg-zinc-800 px-3 rounded text-[1.2rem]" onclick="manageList('${n}')">EDIT</button></div>`).join('');
+        }
+        function deletePlaylist(n) { let s=getStore(); delete s[n]; saveStore(s); }
+        function createNewPlaylist() { 
+            let n = document.getElementById('new-list-name').value.trim() || document.getElementById('new-list-name-local').value.trim(); 
+            if(!n) return; let s=getStore(); s[n]=[]; saveStore(s); manageList(n); 
+            document.getElementById('new-list-name').value=''; if(document.getElementById('new-list-name-local')) document.getElementById('new-list-name-local').value='';
+        }
+        function manageList(n) { 
+            activeListName = n; 
+            document.getElementById('edit-list-title').innerText = "Editing: " + n;
+            document.getElementById('editor-view').classList.remove('hidden'); 
+            let s=getStore();
+            const contentHtml = s[n].map((m,i)=>`<div class="flex items-center gap-2 bg-zinc-900 p-2 rounded mb-1 text-xs"><img src="${THUMB}${m.path}" class="h-8 rounded"><span>${m.title}</span><button onclick="remL(${i})" class="ml-auto text-red-500 font-bold px-2">✕</button></div>`).join('');
+            document.getElementById('playlist-contents').innerHTML = contentHtml;
+            if(document.getElementById('editor-view-local')) {
+                document.getElementById('editor-view-local').classList.remove('hidden');
+                document.getElementById('playlist-contents-local').innerHTML = contentHtml;
+            }
+        }
+        function remL(i) { let s=getStore(); s[activeListName].splice(i,1); saveStore(s); manageList(activeListName); }
+        
+        const searchHandler = async (e) => { 
+            if (!activeListName || e.target.value.length < 3) return; 
+            const d=await (await fetch(`https://api.themoviedb.org/3/search/multi?api_key=${API_KEY}&query=${e.target.value}`)).json(); 
+            const html = d.results.slice(0,3).map(m=>`<div class="flex justify-between p-2 bg-zinc-800 text-xs mb-1 rounded"><span>${m.title||m.name}</span><button onclick="addActive('${m.id}','${(m.title||m.name).replace(/'/g,"")}','${m.poster_path}','${m.backdrop_path}','${m.media_type}')" class="text-blue-400 font-bold">+</button></div>`).join(''); 
+            document.getElementById('search-results').innerHTML = html;
+            if(document.getElementById('search-results-local')) document.getElementById('search-results-local').innerHTML = html;
+        };
+        document.getElementById('movie-search').addEventListener('input', searchHandler);
+        if(document.getElementById('movie-search-local')) document.getElementById('movie-search-local').addEventListener('input', searchHandler);
+        function addActive(id,t,p,b,type) { let s=getStore(); s[activeListName].push({id,title:t,path:p,backdrop:b,media_type:type}); saveStore(s); manageList(activeListName); document.getElementById('search-results').innerHTML=''; if(document.getElementById('search-results-local')) document.getElementById('search-results-local').innerHTML=''; }
+
+        // --- MARQUEE MANAGER ---
+        function getM() { return JSON.parse(localStorage.getItem('theaterMarquee') || '[]'); }
+        function saveM(l) { localStorage.setItem('theaterMarquee', JSON.stringify(l)); renderMEditor(); }
+        function renderMEditor() { if(!document.getElementById('m-items')) return; document.getElementById('m-items').innerHTML = getM().map((m, i) => `<div class="bg-zinc-900 p-2 rounded flex items-center gap-2 mb-1 border border-zinc-800 text-[10px]"><img src="${THUMB}${m.path}" class="h-8 w-12 object-cover"><input type="text" value="${m.time}" onchange="updateM(${i},this.value)" class="bg-black w-20 text-yellow-500 p-1 border border-zinc-700"><div class="flex-1 truncate">${m.title}</div><button onclick="removeM(${i})" class="text-red-500 font-bold px-1">X</button></div>`).join(''); }
+        function updateM(i,v) { let l=getM(); l[i].time=v; saveM(l); }
+        function removeM(i) { let l=getM(); l.splice(i,1); saveM(l); }
+        document.getElementById('m-search').addEventListener('input', async (e) => { if (e.target.value.length < 3) return; const d = await (await fetch(`https://api.themoviedb.org/3/search/multi?api_key=${API_KEY}&query=${e.target.value}`)).json(); document.getElementById('m-results').innerHTML = d.results.slice(0,3).map(m => `<div class="flex justify-between p-2 bg-zinc-800 text-xs mb-1"><span>${m.title||m.name}</span><button onclick="addM('${(m.title||m.name).replace(/'/g,"")}','${m.backdrop_path||m.poster_path}')" class="text-blue-400 font-bold">+</button></div>`).join(''); });
+        function addM(t,p) { let l=getM(); l.push({title:t, path:p, time:'7:00 PM'}); saveM(l); document.getElementById('m-results').innerHTML=''; }
+
+        // --- TV / MANUAL / ARCADE LOGIC ---
+        function toggleFullscreen() { if (!document.fullscreenElement) document.documentElement.requestFullscreen(); else document.exitFullscreen(); }
+        
+        async function engageManualMode(id, type, title) {
+            isManualMode = true; clearTimeout(cycleTimer);
+            document.getElementById('manual-badge').style.display = 'block';
+            document.getElementById('arcade-screen').style.display = 'none';
+            document.getElementById('schedule-screen').style.display = 'none';
+            if(document.getElementById('settings-panel')) document.getElementById('settings-panel').classList.remove('open');
+            
+            const d = await (await fetch(`https://api.themoviedb.org/3/${type}/${id}?api_key=${API_KEY}&append_to_response=images`)).json();
+            let m = { idx: 0, media_type: type, ...d }; 
+            const poster = document.getElementById('poster'), info = document.getElementById('film-info');
+            poster.classList.remove('fade-in'); info.classList.remove('info-visible');
+            setTimeout(() => {
+                let imgs = d.images.backdrops.filter(b => b.width >= 1920);
+                if (!imgs.length) imgs = [{file_path: d.backdrop_path || d.poster_path}];
+                poster.src = `${IMG_BASE}${imgs[0].file_path}`;
+
+                const l = d.images.logos.filter(lg => lg.iso_639_1 === 'en');
+                document.getElementById('clear-logo').src = l.length ? `${IMG_BASE}${l[0].file_path}` : '';
+                document.getElementById('year').innerText = (d.release_date || d.first_air_date || '').split('-')[0];
+                document.getElementById('duration').innerText = d.runtime ? `${d.runtime} MIN` : (d.number_of_seasons ? `${d.number_of_seasons} SEASONS` : '');
+                document.getElementById('synopsis').innerText = d.overview;
+
+                poster.onload = () => { poster.classList.add('fade-in'); setTimeout(() => info.classList.add('info-visible'), 1000); };
+            }, 500);
+        }
+
+        function exitManualMode() {
+            isManualMode = false;
+            document.getElementById('manual-badge').style.display = 'none';
+            showNext();
+        }
+
+        async function showNext() {
+            if (isArcadeActive || isMarqueeActive || isManualMode) return;
+            clearTimeout(cycleTimer);
+            
+            // Arcade Check
+            if (slideCounter > 0 && slideCounter % 5 === 0) { showArcade(); return; }
+            
+            slideCounter++;
+            const poster = document.getElementById('poster'), info = document.getElementById('film-info');
+            poster.classList.remove('fade-in'); info.classList.remove('info-visible');
+            setTimeout(async () => {
+                if (!movies.length) return;
+                if (!movies[currentIndex]) currentIndex = 0;
+                const m = movies[currentIndex];
+                const d = await (await fetch(`https://api.themoviedb.org/3/${m.media_type || 'movie'}/${m.id}?api_key=${API_KEY}&append_to_response=images`)).json();
+                let imgs = d.images.backdrops.filter(b => b.width >= 1920);
+                if (!imgs.length) imgs = [{file_path: d.backdrop_path || d.poster_path}];
+                m.idx = (m.idx + 1) % imgs.length || 0;
+                poster.src = `${IMG_BASE}${imgs[m.idx].file_path}`;
+
+                const l = d.images.logos.filter(lg => lg.iso_639_1 === 'en');
+                document.getElementById('clear-logo').src = l.length ? `${IMG_BASE}${l[0].file_path}` : '';
+                document.getElementById('year').innerText = (d.release_date || d.first_air_date || '').split('-')[0];
+                document.getElementById('duration').innerText = d.runtime ? `${d.runtime} MIN` : (d.number_of_seasons ? `${d.number_of_seasons} SEASONS` : '');
+                document.getElementById('synopsis').innerText = d.overview;
+
+                poster.onload = () => { poster.classList.add('fade-in'); setTimeout(() => info.classList.add('info-visible'), 1000); };
+                currentIndex = (currentIndex + 1) % movies.length;
+                cycleTimer = setTimeout(showNext, 18000);
+            }, 1500);
+        }
+        
+        async function loadGenres() {
+           const m = await (await fetch(`https://api.themoviedb.org/3/genre/movie/list?api_key=${API_KEY}`)).json();
+           const t = await (await fetch(`https://api.themoviedb.org/3/genre/tv/list?api_key=${API_KEY}`)).json();
+           if(document.getElementById('movie-genre-list')) document.getElementById('movie-genre-list').innerHTML = m.genres.map(g => `<button class="list-btn !text-[1.2rem]" onclick="setGenre(${g.id},'movie')">${g.name}</button>`).join('');
+           if(document.getElementById('tv-genre-list')) document.getElementById('tv-genre-list').innerHTML = t.genres.map(g => `<button class="list-btn !text-[1.2rem]" onclick="setGenre(${g.id},'tv')">${g.name}</button>`).join('');
+        }
+        async function setGenre(id, type) { if(document.getElementById('settings-panel')) document.getElementById('settings-panel').classList.remove('open'); const res = await fetch(`https://api.themoviedb.org/3/discover/${type}?api_key=${API_KEY}&with_genres=${id}`); const d = await res.json(); movies = d.results.map(m => ({...m, idx:0, media_type:type})); currentIndex=0; slideCounter=0; showNext(); }
+
+        // --- TICKER & EXTERNAL DATA ---
+        async function updateSportsTicker() { 
+            const now = new Date(), tomorrow = new Date(now.getTime() + 86400000);
+            const todayStr = now.toISOString().split('T')[0];
+            const configs = [ { l: 'nhl', s: 'hockey' }, { l: 'nfl', s: 'football' }, { l: 'nba', s: 'basketball' }, { l: 'mlb', s: 'baseball' }, { l: 'college-football', s: 'football', g: 80 }, { l: 'mens-college-basketball', s: 'basketball' } ];
+            let liveContent = [], scheduledContent = [], newsContent = [];
+            try { const res = await fetch(`https://site.api.espn.com/apis/site/v2/sports/news`); const data = await res.json(); newsContent.push(`<span class="ticker-section-head">TOP HEADLINES</span>`); data.articles.slice(0, 10).forEach(art => { newsContent.push(`<span class="news-item"><span class="news-tag">STORY</span> ${art.headline}</span>`); }); } catch(e) {}
+            for (const c of configs) { try { let url = `https://site.api.espn.com/apis/site/v2/sports/${c.s}/${c.l}/scoreboard${c.g?'?groups='+c.g:''}`; const d = await (await fetch(url)).json(); let leagueLive = [], leagueSched = [];
+                d.events.forEach(ev => { const comp = ev.competitions[0], gTime = new Date(ev.date), status = comp.status.type; const gameDayStr = ev.date.split('T')[0]; let shouldShow = false; if (c.l === 'nhl') { if (gameDayStr === todayStr || status.state === 'in') shouldShow = true; } else { if (status.state === 'in' || status.state === 'post' || (gTime > now && gTime < tomorrow)) shouldShow = true; }
+                    if (shouldShow) { const h = comp.competitors[0], a = comp.competitors[1]; if (status.state === 'in' || status.state === 'post') { let st = ""; if (comp.leaders) { let cats = []; comp.leaders.forEach(cat => { if(cat.leaders) cats.push(`<span><span class="stat-cat">${cat.shortDisplayName}</span> ${cat.leaders[0].athlete.shortName} (${cat.leaders[0].displayValue})</span>`); }); st = `<div class="game-stats">${cats.join('')}</div>`; } leagueLive.push(`<span class="score-item"><div class="team-box"><img class="team-logo" src="${a.team.logo}"><span class="team-score">${a.score||'0'}</span></div><span class="vs-label">@</span><div class="team-box"><img class="team-logo" src="${h.team.logo}"><span class="team-score">${h.score||'0'}</span></div><span class="game-status">${comp.status.type.shortDetail}</span>${st}</span>`); } else { const spr = comp.odds ? comp.odds[0].details : "LINE TBD"; leagueSched.push(`<span class="score-item"><div class="team-box"><img class="team-logo" src="${a.team.logo}"></div><span class="vs-label">vs</span><div class="team-box"><img class="team-logo" src="${h.team.logo}"></div><span class="game-status" style="color:#00ffff;">${spr} • ${gTime.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</span></span>`); } } });
+                if (leagueLive.length) liveContent.push(`<span class="ticker-section-head">${c.l.toUpperCase()} LIVE</span>`, ...leagueLive); if (leagueSched.length) scheduledContent.push(`<span class="ticker-section-head">${c.l.toUpperCase()} UPCOMING</span>`, ...leagueSched); } catch(e) {} }
+            const final = [...liveContent, ...newsContent, ...scheduledContent]; if (final.length) document.getElementById('ticker-track').innerHTML = final.join('') + final.join('');
+        }
+        setInterval(updateSportsTicker, 300000); updateSportsTicker();
+
+        async function fetchLeaderboard() { try { const res = await fetch(scoresApiUrl); const data = await res.json(); const scores = data.sheet1 || []; const totals = {}; scores.forEach(e => { if (e.playername) totals[e.playername] = (totals[e.playername]||0) + (Number(e.score)||0); }); const sorted = Object.entries(totals).map(([name, score]) => ({ name, score })).sort((a,b) => b.score - a.score); const list = document.getElementById('scores-list'); list.innerHTML = sorted.map((p, i) => `<li><span>${i+1}. ${i===0?'👑':''} ${p.name}</span><span>${p.score} pts</span></li>`).join(''); if (list.scrollHeight > list.parentElement.clientHeight) { list.innerHTML += list.innerHTML; list.style.animation = `wheel-scroll-up ${sorted.length * 2.1}s linear infinite`; } } catch(e) {} }
+        function showArcade() { if(isManualMode) return; isArcadeActive = true; document.getElementById('arcade-screen').style.display = 'flex'; document.getElementById('arcade-video').play(); fetchLeaderboard(); document.getElementById('film-info').classList.remove('info-visible'); document.getElementById('poster').classList.remove('fade-in'); cycleTimer = setTimeout(() => { document.getElementById('arcade-screen').style.display = 'none'; document.getElementById('arcade-video').pause(); isArcadeActive = false; slideCounter = 0; showNext(); }, 120000); }
+        async function setPlaylist(e) { if(document.getElementById('settings-panel')) document.getElementById('settings-panel').classList.remove('open'); exitManualMode(); const d = await (await fetch(`https://api.themoviedb.org/3/${e}?api_key=${API_KEY}`)).json(); movies = d.results.map(m => ({...m, idx: 0, media_type: e.startsWith('tv') ? 'tv' : 'movie'})); currentIndex=0; slideCounter=0; showNext(); }
+        function playCustom(n) { if(document.getElementById('settings-panel')) document.getElementById('settings-panel').classList.remove('open'); exitManualMode(); movies=getStore()[n].map(m=>({id:m.id, path:m.path, backdrop:m.backdrop, title:m.title, media_type:m.media_type, idx: 0})); currentIndex=0; slideCounter=0; showNext(); }
+        function toggleMarqueeManual() { if(document.getElementById('settings-panel')) document.getElementById('settings-panel').classList.remove('open'); isMarqueeActive = !isMarqueeActive; if (isMarqueeActive) { clearTimeout(cycleTimer); showMarquee(); } else { document.getElementById('schedule-screen').style.display = 'none'; showNext(); } }
+        function showMarquee() { if(isManualMode) return; const list = document.getElementById('schedule-list'), sched = document.getElementById('schedule-screen'); const items = getM(); if (!items.length) { isMarqueeActive = false; showNext(); return; } list.innerHTML = items.map(m => `<div class="flex items-center gap-4 bg-zinc-900/80 p-6 mb-4 rounded-xl border-l-4 border-yellow-500"><img class="w-32 h-20 object-cover rounded" src="${IMG_BASE}${m.path}"><div class="flex-1 text-[2vh] font-bold text-white">${m.title}</div><div class="text-[2vh] text-yellow-500 font-bold">${m.time}</div></div>`).join(''); sched.style.display = 'flex'; const vh = document.getElementById('schedule-viewport').clientHeight; if (list.scrollHeight > vh) { list.style.setProperty('--scroll-end', `${vh - list.scrollHeight - 40}px`); list.style.animation = `scrollMarquee ${items.length * 3.5}s linear infinite alternate`; } }
+        function updateClock() { document.getElementById('clock').innerText = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }); } setInterval(updateClock, 1000); updateClock();
+        function showCursor() { document.body.style.cursor = 'default'; clearTimeout(cursorTimer); cursorTimer = setTimeout(()=>document.body.style.cursor='none', 3000); }
+
+        // --- INIT QR CODES ---
+        window.onload = () => {
+            // ARCADE
+            const arcadeQr = qrcode(0, 'L'); 
+            arcadeQr.addData("https://ajersj-cmyk.github.io/arcade-challenge/player.html"); 
+            arcadeQr.make();
+            document.getElementById('qr-code').innerHTML = arcadeQr.createImgTag(6);
+            
+            // SETTINGS / REMOTE
+            const remoteQr = qrcode(0, 'L');
+            remoteQr.addData(window.location.href.split('#')[0] + "#remote");
+            remoteQr.make();
+            document.getElementById('qr-canvas').innerHTML = remoteQr.createImgTag(2);
+        };
+
+        renderPlaylists(); renderMEditor(); loadGenres(); setPlaylist('movie/now_playing');
+    </script>
+</body>
+</html>
