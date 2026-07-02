@@ -33,11 +33,11 @@
         #ticker-track { display: inline-flex; animation: scrollTicker 80s linear infinite; height: 100%; align-items: center; width: max-content; will-change: transform; } 
         @keyframes scrollTicker { 0% { transform: translate3d(0, 0, 0); } 100% { transform: translate3d(-50%, 0, 0); } }
 
-        /* TICKER ITEMS */
+        /* TICKER ITEMS - SQUARES REMOVED FROM LOGOS */
         .ticker-section-head { display: inline-flex; align-items: center; justify-content: center; padding: 0 3vw; height: 100%; color: #ff007f; font-size: 4rem; letter-spacing: 0.3vw; font-weight: 900; vertical-align: middle; }
         .score-item { display: inline-flex !important; flex-direction: row !important; align-items: center !important; padding: 0 5vw; height: 100%; vertical-align: middle; flex-wrap: nowrap !important; }
         .team-box { display: flex !important; flex-direction: row !important; align-items: center !important; flex-wrap: nowrap !important; }
-        .team-logo { width: 11vh; height: 11vh; object-fit: cover; object-position: top; margin-right: 1.5vw; flex-shrink: 0; border-radius: 1vh; background:#000; border:1px solid #333;} 
+        .team-logo { width: 11vh; height: 11vh; object-fit: contain; margin-right: 1.5vw; flex-shrink: 0; } 
         .team-score { font-size: 4.8rem; line-height: 1; color: #00ffff; margin-right: 0.8vw; font-weight: 900; transition: color 0.3s ease; }
         
         /* SCORE FLASH */
@@ -71,7 +71,7 @@
 
         .card-row { display: flex !important; flex-direction: row !important; justify-content: space-between !important; align-items: center !important; margin-bottom: 1.5vh; width: 100%; }
         .card-team { display: flex; align-items: center; gap: 2vh; font-size: 5.2vh; font-weight: 900; color: white; text-transform: uppercase; } 
-        .card-team img { width: 8.2vh; height: 8.2vh; object-fit: cover; object-position: top; border-radius: 1vh; background: #000; border:1px solid #333;} 
+        .card-team img { width: 8.2vh; height: 8.2vh; object-fit: contain; } /* Removed background and border to fix PNG squares */
         .card-val-lg { font-weight: 900; color: #facc15; font-size: 5.7vh; } 
         .card-meta { display: flex; justify-content: space-between; border-bottom: 2px solid #004444; padding-bottom: 1vh; margin-bottom: 1.5vh; font-size: 3.5vh; color: #00aaaa; font-weight: 900; text-transform: uppercase; }
         .card-footer { margin-top: auto; padding-top: 1.2vh; border-top: 2px dashed #004444; display: flex; justify-content: space-between; align-items: center; color: #aaa; font-size: 3.5vh; text-transform: uppercase; }
@@ -357,7 +357,6 @@
             var saved = localStorage.getItem('ahlersArcadeSettings');
             if (saved) settings = JSON.parse(saved);
             
-            // Failsafe parameter injection
             if (typeof settings.leaders === 'undefined') settings.leaders = true;
             if (typeof settings.command === 'undefined') settings.command = true;
             if (typeof settings.pga === 'undefined') settings.pga = true;
@@ -368,7 +367,6 @@
             if (typeof settings.showATP === 'undefined') settings.showATP = true;
             if (typeof settings.showWTA === 'undefined') settings.showWTA = true;
             
-            // Auto-correct to Carolina Hurricanes to avoid Miami CFB bug
             if (settings.mySquadTeams === "Hurricanes, Duke, ECU, East Carolina" || settings.mySquadTeams === "Hurricanes, Duke, ECU") {
                 settings.mySquadTeams = "Carolina Hurricanes, Duke, ECU, East Carolina";
             }
@@ -687,6 +685,7 @@
                             var aScoreStr = (status.state === 'in' || status.state === 'post') ? a.score : '';
                             var timeStr = (status.state === 'pre') ? new Date(ev.date).toLocaleDateString([],{weekday:'short'}) + ' ' + new Date(ev.date).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}) : statusText;
 
+                            // TV CARDS - Added onerror fallback to remove broken images cleanly
                             newRawGames.push({
                                 searchString: gameSearchString,
                                 html: '<div class="squad-game-card' + extraClass + '"><div class="card-meta"><span>' + displayLeague + '</span><span style="color:#00ff00">' + tv + '</span></div><div class="card-row"><div class="card-team"><img src="' + aLogo + '" onerror="this.src=\'' + aFallback + '\'; this.onerror=null;">' + aName + '</div><div class="card-val-lg">' + aScoreStr + '</div></div><div class="card-row"><div class="card-team"><img src="' + hLogo + '" onerror="this.src=\'' + hFallback + '\'; this.onerror=null;">' + hName + '</div><div class="card-val-lg">' + hScoreStr + '</div></div><div class="card-footer" style="justify-content:center; color:#39ff14;">' + timeStr + '</div></div>'
@@ -730,13 +729,13 @@
                          '</div>' +
                          '<div style="display:flex; justify-content:space-between; align-items:center;">' +
                              '<div style="display:flex; align-items:center; gap: 1vh;">' +
-                                 '<img src="' + g.aLogo + '" style="width:4.5vh; height:4.5vh; object-fit:cover; border-radius:0.5vh; background:#000;" onerror="this.src=\'' + g.aFallback + '\'; this.onerror=null;">' +
+                                 '<img src="' + g.aLogo + '" style="width:4.5vh; height:4.5vh; object-fit:contain;" onerror="this.src=\'' + g.aFallback + '\'; this.onerror=null;">' +
                                  '<span style="color:white; font-size:2.8vh; font-weight:900;">' + g.aName + '</span>' +
                              '</div>' +
                              '<span style="color:#ff6600; font-size:2vh; font-weight:900; font-style:italic;">VS</span>' +
                              '<div style="display:flex; align-items:center; gap: 1vh;">' +
                                  '<span style="color:white; font-size:2.8vh; font-weight:900;">' + g.hName + '</span>' +
-                                 '<img src="' + g.hLogo + '" style="width:4.5vh; height:4.5vh; object-fit:cover; border-radius:0.5vh; background:#000;" onerror="this.src=\'' + g.hFallback + '\'; this.onerror=null;">' +
+                                 '<img src="' + g.hLogo + '" style="width:4.5vh; height:4.5vh; object-fit:contain;" onerror="this.src=\'' + g.hFallback + '\'; this.onerror=null;">' +
                              '</div>' +
                          '</div>' +
                          '<div style="display:flex; justify-content:space-between; align-items:center; margin-top: 0.5vh;">' +
@@ -862,7 +861,6 @@
                 var track = document.getElementById('ufc-grid-track');
                 track.innerHTML = fights.map(function(f) {
                     
-                    // ORIGINAL USER UFC ID FALLBACK RESTORED
                     var f1Img = (f.f1.athlete && f.f1.athlete.headshot && f.f1.athlete.headshot.href) ? f.f1.athlete.headshot.href : 'https://a.espncdn.com/combiner/i?img=/i/headshots/mma/players/full/' + f.f1.id + '.png&h=150&w=150&scale=crop';
                     var f2Img = (f.f2.athlete && f.f2.athlete.headshot && f.f2.athlete.headshot.href) ? f.f2.athlete.headshot.href : 'https://a.espncdn.com/combiner/i?img=/i/headshots/mma/players/full/' + f.f2.id + '.png&h=150&w=150&scale=crop';
                     
@@ -908,8 +906,11 @@
                             var gameTime = new Date(ev.date).getTime();
                             var diffHours = (gameTime - nowTime) / (1000 * 60 * 60);
                             
-                            // 24 Hour Constraint
-                            if ((comp.status.type.state === 'in' || comp.status.type.state === 'post') || (comp.status.type.state === 'pre' && diffHours >= 0 && diffHours <= 24)) {
+                            var isLive = (comp.status.type.state === 'in');
+                            var isUpcoming24h = (comp.status.type.state === 'pre' && diffHours >= 0 && diffHours <= 24);
+                            var isRecent24h = (comp.status.type.state === 'post' && diffHours >= -24 && diffHours <= 0);
+
+                            if (isLive || isUpcoming24h || isRecent24h) {
                                 var h = comp.competitors[0], a = comp.competitors[1];
                                 var hLogo = (h.team && h.team.logo) ? h.team.logo : 'https://a.espncdn.com/combiner/i?img=/i/teamlogos/default-team-logo-500.png';
                                 var aLogo = (a.team && a.team.logo) ? a.team.logo : 'https://a.espncdn.com/combiner/i?img=/i/teamlogos/default-team-logo-500.png';
@@ -938,6 +939,89 @@
             } catch(e) { rotationStep++; nextSlide(); }
         }
 
+        async function showMySquad() {
+            if(!settings.mySquad || !settings.mySquadTeams) { rotationStep++; nextSlide(); return; }
+            var teams = settings.mySquadTeams.split(',').map(function(t) { return t.trim().toLowerCase(); }).filter(function(t) { return t; });
+            document.querySelectorAll('.slide-screen').forEach(function(el) { el.style.display = 'none'; });
+            document.getElementById('mysquad-screen').style.display = 'flex';
+
+            var gamesHtml = "";
+            globalRawGames.forEach(function(g) { 
+                for(var i=0; i<teams.length; i++) {
+                    if(g.searchString.indexOf(teams[i]) > -1) { gamesHtml += g.html; break; }
+                }
+            });
+            document.getElementById('squad-games-track').innerHTML = gamesHtml || '<div style="text-align:center; color:#aaa; font-size:3vh; margin-top:5vh; border: 2px dashed #333; padding: 4vh; border-radius: 1vh;">NO ACTIVE/UPCOMING GAMES</div>';
+
+            var newsHtml = "";
+            try {
+                var combinedNews = [];
+                for (var i=0; i<teams.length; i++) {
+                    var team = teams[i];
+                    var rssUrl = 'https://news.google.com/rss/search?q=' + encodeURIComponent(team + ' sports') + '&hl=en-US&gl=US&ceid=US:en';
+                    var res = await fetch('https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent(rssUrl));
+                    var data = await res.json();
+                    if (data.status === 'ok' && data.items) {
+                        data.items.slice(0, 2).forEach(function(item) {
+                            combinedNews.push({ title: item.title, teamTag: team.toUpperCase() });
+                        });
+                    }
+                }
+                newsHtml = combinedNews.map(function(n) { return '<div class="squad-news-card"><div style="color:#39ff14; font-size:2vh; font-weight:900; margin-bottom:0.5vh;">' + n.teamTag + ' HIGHLIGHT</div><div style="color:white; font-size:2.8vh; font-weight:700; line-height:1.2;">' + n.title + '</div></div>'; }).join('');
+                document.getElementById('squad-news-track').innerHTML = newsHtml || '<div style="text-align:center; color:#aaa; font-size:3vh; margin-top:5vh;">NO SQUAD HEADLINES</div>';
+            } catch(e) { document.getElementById('squad-news-track').innerHTML = '<div style="text-align:center; color:red;">FEED ERR</div>'; }
+
+            var vH = document.getElementById('mysquad-viewport').clientHeight;
+            var maxH = Math.max(document.getElementById('squad-games-track').scrollHeight, document.getElementById('squad-news-track').scrollHeight);
+            if (maxH > vH) { var sD = maxH - vH + 120; document.getElementById('squad-games-track').style.setProperty('--scroll-end', '-' + sD + 'px'); document.getElementById('squad-news-track').style.setProperty('--scroll-end', '-' + sD + 'px'); document.getElementById('squad-games-track').style.animation = 'scrollVerticalOnePass ' + (sD/30) + 's linear forwards'; document.getElementById('squad-news-track').style.animation = 'scrollVerticalOnePass ' + (sD/30) + 's linear forwards'; slideTimer = setTimeout(nextSlide, (sD/30 * 1000) + 4000); } else { slideTimer = setTimeout(nextSlide, 15000); }
+        }
+
+        async function showNews() {
+            try {
+                var sources = [{ url: 'https://api.rss2json.com/v1/api.json?rss_url=https%3A%2F%2Fsports.yahoo.com%2Frss%2F', name: 'YAHOO SPORTS' }, { url: 'https://api.rss2json.com/v1/api.json?rss_url=https%3A%2F%2Fwww.cbssports.com%2Frss%2Fheadlines%2F', name: 'CBS SPORTS' }];
+                var combinedNews = [];
+                for (var i=0; i<sources.length; i++) {
+                    var src = sources[i];
+                    try {
+                        var res = await fetch(src.url);
+                        var data = await res.json();
+                        if (data.status === 'ok') {
+                            data.items.forEach(function(item) {
+                                var img = item.thumbnail || (item.enclosure && item.enclosure.link) || '';
+                                combinedNews.push({ title: item.title, img: img, source: src.name, time: new Date(item.pubDate.replace(/-/g, '/')).getTime() });
+                            });
+                        }
+                    } catch(e) {}
+                }
+                if (combinedNews.length === 0) { rotationStep++; nextSlide(); return; }
+                combinedNews.sort(function(a,b) { return b.time - a.time; });
+                
+                document.querySelectorAll('.slide-screen').forEach(function(el) { el.style.display = 'none'; });
+                document.getElementById('news-screen').style.display = 'flex';
+                var track = document.getElementById('news-list-track');
+                track.innerHTML = combinedNews.slice(0, 10).map(function(item) {
+                    var imgHtml = item.img ? '<img class="news-thumb" src="' + item.img + '" onerror="this.style.display=\'none\'">' : '<div class="news-thumb" style="display:flex;align-items:center;justify-content:center;color:#ff007f;font-weight:900;font-size:3vh;">NEWS</div>';
+                    return '<div class="news-row">' + imgHtml + '<div class="news-content"><div class="news-title">' + item.title + '</div><div class="news-source">' + item.source + '</div></div></div>';
+                }).join('');
+                
+                var vH = document.getElementById('news-viewport').clientHeight, fH = track.scrollHeight;
+                if (fH > vH) { var sD = fH - vH + 120; track.style.setProperty('--scroll-end', '-' + sD + 'px'); track.style.animation = 'scrollVerticalOnePass ' + (sD/40) + 's linear forwards'; slideTimer = setTimeout(nextSlide, (sD/40 * 1000) + 3000); } else { slideTimer = setTimeout(nextSlide, 15000); }
+            } catch(e) { rotationStep++; nextSlide(); }
+        }
+
+        function showTVGuide() {
+            if(!settings.tvGuide || globalTVGuideData.length === 0) { rotationStep++; nextSlide(); return; }
+            document.querySelectorAll('.slide-screen').forEach(function(el) { el.style.display = 'none'; });
+            document.getElementById('tvguide-screen').style.display = 'flex';
+            var sorted = [].concat(globalTVGuideData).sort(function(a,b) { return a.timestamp - b.timestamp; });
+            var track = document.getElementById('tvguide-track');
+            track.innerHTML = sorted.map(function(g) { 
+                return '<div class="tv-row"><div class="tv-channel">' + getNetworkLogo(g.network) + '</div><div class="tv-program"><div class="tv-prog-title">' + g.matchup + '</div><div class="tv-prog-time">' + g.time + '</div>' + (g.isLive ? '<div class="tv-prog-live">● LIVE</div>' : '') + '</div></div>'; 
+            }).join('');
+            var vH = document.getElementById('tvguide-viewport').clientHeight, fH = track.scrollHeight;
+            if (fH > vH) { var sD = fH - vH + 100; track.style.setProperty('--scroll-end', '-' + sD + 'px'); track.style.animation = 'scrollVerticalOnePass ' + (sD/40) + 's linear forwards'; slideTimer = setTimeout(nextSlide, (sD/40 * 1000) + 3000); } else { slideTimer = setTimeout(nextSlide, 15000); }
+        }
+
         async function showOdds() {
             var games = [];
             var leagues = [
@@ -947,6 +1031,9 @@
                 {id:'mlb',s:'baseball',t:'showMLB'},
                 {id:'mens-college-basketball',s:'basketball',t:'showCBB',g:settings.cbb50?50:null},
                 {id:'college-baseball',s:'baseball',t:'showCLB'},
+                {id:'fifa.world',s:'soccer',t:'showWorldCup'},
+                {id:'eng.1',s:'soccer',t:'showEPL'},
+                {id:'uefa.champions',s:'soccer',t:'showUCL'},
                 {id:'atp',s:'tennis',t:'showATP'},
                 {id:'wta',s:'tennis',t:'showWTA'}
             ];
@@ -967,8 +1054,9 @@
                             var diffHours = (gameTime - nowTime) / (1000 * 60 * 60);
                             var maxHours = (l.id === 'nfl' || l.id === 'cfb') ? 96 : 24;
                             
+                            // STRICT TIME GATE (4 Days for NFL/CFB, 24h else)
                             if (comp.status.type.state === 'pre' && diffHours >= 0 && diffHours <= maxHours) {
-                                var shortL = (l.id==='mens-college-basketball')?'CBB':(l.id==='college-baseball')?'BASEBALL':l.id.toUpperCase();
+                                var shortL = (l.id==='mens-college-basketball')?'CBB':(l.id==='college-baseball')?'BASEBALL':(l.id==='fifa.world')?'FIFA':(l.id==='eng.1')?'EPL':(l.id==='uefa.champions')?'UCL':l.id.toUpperCase();
                                 var tv = (comp.broadcasts && comp.broadcasts[0] && comp.broadcasts[0].names) ? comp.broadcasts[0].names[0] : 'TV';
                                 var oddsStr = (comp.odds && comp.odds[0]) ? comp.odds[0].details : 'EVEN';
                                 var ouStr = (comp.odds && comp.odds[0] && comp.odds[0].overUnder) ? comp.odds[0].overUnder : '--';
@@ -1003,88 +1091,6 @@
             }).join('');
             var vH = document.getElementById('odds-viewport').clientHeight, fH = track.scrollHeight;
             if (fH > vH) { var sD = fH - vH + 100; track.style.setProperty('--scroll-end', '-' + sD + 'px'); track.style.animation = 'scrollVerticalOnePass ' + (sD/50) + 's linear forwards'; slideTimer = setTimeout(nextSlide, (sD/50 * 1000) + 3000); } else { slideTimer = setTimeout(nextSlide, 15000); }
-        }
-
-        /* --- OMITTED UNCHANGED FUNCTIONS FOR BREVITY (MySquad, News, TVGuide, Rankings, Standings, etc.) --- */
-        /* Since they didn't require any structural changes from the last iteration, we include them as standard */
-        
-        async function showMySquad() {
-            if(!settings.mySquad || !settings.mySquadTeams) { rotationStep++; nextSlide(); return; }
-            var teams = settings.mySquadTeams.split(',').map(function(t) { return t.trim().toLowerCase(); }).filter(function(t) { return t; });
-            document.querySelectorAll('.slide-screen').forEach(function(el) { el.style.display = 'none'; });
-            document.getElementById('mysquad-screen').style.display = 'flex';
-
-            var gamesHtml = "";
-            globalRawGames.forEach(function(g) { 
-                for(var i=0; i<teams.length; i++) {
-                    if(g.searchString.indexOf(teams[i]) > -1) { gamesHtml += g.html; break; }
-                }
-            });
-            document.getElementById('squad-games-track').innerHTML = gamesHtml || '<div style="text-align:center; color:#aaa; font-size:3vh; margin-top:5vh; border: 2px dashed #333; padding: 4vh; border-radius: 1vh;">NO ACTIVE/UPCOMING GAMES FOUND</div>';
-
-            var newsHtml = "";
-            try {
-                var combinedNews = [];
-                for (var i=0; i<teams.length; i++) {
-                    var team = teams[i];
-                    var rssUrl = 'https://news.google.com/rss/search?q=' + encodeURIComponent(team + ' sports') + '&hl=en-US&gl=US&ceid=US:en';
-                    var res = await fetch('https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent(rssUrl));
-                    var data = await res.json();
-                    if (data.status === 'ok' && data.items) {
-                        data.items.slice(0, 2).forEach(function(item) { combinedNews.push({ title: item.title, teamTag: team.toUpperCase() }); });
-                    }
-                }
-                newsHtml = combinedNews.map(function(n) { return '<div class="squad-news-card"><div style="color:#39ff14; font-size:2vh; font-weight:900; margin-bottom:0.5vh;">' + n.teamTag + ' HIGHLIGHT</div><div style="color:white; font-size:2.8vh; font-weight:700; line-height:1.2;">' + n.title + '</div></div>'; }).join('');
-                document.getElementById('squad-news-track').innerHTML = newsHtml || '<div style="text-align:center; color:#aaa; font-size:3vh; margin-top:5vh;">NO SQUAD HEADLINES</div>';
-            } catch(e) { document.getElementById('squad-news-track').innerHTML = '<div style="text-align:center; color:red;">FEED ERR</div>'; }
-
-            var vH = document.getElementById('mysquad-viewport').clientHeight;
-            var maxH = Math.max(document.getElementById('squad-games-track').scrollHeight, document.getElementById('squad-news-track').scrollHeight);
-            if (maxH > vH) { var sD = maxH - vH + 120; document.getElementById('squad-games-track').style.setProperty('--scroll-end', '-' + sD + 'px'); document.getElementById('squad-news-track').style.setProperty('--scroll-end', '-' + sD + 'px'); document.getElementById('squad-games-track').style.animation = 'scrollVerticalOnePass ' + (sD/30) + 's linear forwards'; document.getElementById('squad-news-track').style.animation = 'scrollVerticalOnePass ' + (sD/30) + 's linear forwards'; slideTimer = setTimeout(nextSlide, (sD/30 * 1000) + 4000); } else { slideTimer = setTimeout(nextSlide, 15000); }
-        }
-
-        async function showNews() {
-            try {
-                var sources = [{ url: 'https://api.rss2json.com/v1/api.json?rss_url=https%3A%2F%2Fsports.yahoo.com%2Frss%2F', name: 'YAHOO SPORTS' }, { url: 'https://api.rss2json.com/v1/api.json?rss_url=https%3A%2F%2Fwww.cbssports.com%2Frss%2Fheadlines%2F', name: 'CBS SPORTS' }];
-                var combinedNews = [];
-                for (var i=0; i<sources.length; i++) {
-                    var src = sources[i];
-                    try {
-                        var res = await fetch(src.url);
-                        var data = await res.json();
-                        if (data.status === 'ok') {
-                            data.items.forEach(function(item) {
-                                var img = item.thumbnail || (item.enclosure && item.enclosure.link) || '';
-                                combinedNews.push({ title: item.title, img: img, source: src.name, time: new Date(item.pubDate.replace(/-/g, '/')).getTime() });
-                            });
-                        }
-                    } catch(e) {}
-                }
-                if (combinedNews.length === 0) { rotationStep++; nextSlide(); return; }
-                combinedNews.sort(function(a,b) { return b.time - a.time; });
-                document.querySelectorAll('.slide-screen').forEach(function(el) { el.style.display = 'none'; });
-                document.getElementById('news-screen').style.display = 'flex';
-                var track = document.getElementById('news-list-track');
-                track.innerHTML = combinedNews.slice(0, 10).map(function(item) {
-                    var imgHtml = item.img ? '<img class="news-thumb" src="' + item.img + '" onerror="this.style.display=\'none\'">' : '<div class="news-thumb" style="display:flex;align-items:center;justify-content:center;color:#ff007f;font-weight:900;font-size:3vh;">NEWS</div>';
-                    return '<div class="news-row">' + imgHtml + '<div class="news-content"><div class="news-title">' + item.title + '</div><div class="news-source">' + item.source + '</div></div></div>';
-                }).join('');
-                var vH = document.getElementById('news-viewport').clientHeight, fH = track.scrollHeight;
-                if (fH > vH) { var sD = fH - vH + 120; track.style.setProperty('--scroll-end', '-' + sD + 'px'); track.style.animation = 'scrollVerticalOnePass ' + (sD/40) + 's linear forwards'; slideTimer = setTimeout(nextSlide, (sD/40 * 1000) + 3000); } else { slideTimer = setTimeout(nextSlide, 15000); }
-            } catch(e) { rotationStep++; nextSlide(); }
-        }
-
-        function showTVGuide() {
-            if(!settings.tvGuide || globalTVGuideData.length === 0) { rotationStep++; nextSlide(); return; }
-            document.querySelectorAll('.slide-screen').forEach(function(el) { el.style.display = 'none'; });
-            document.getElementById('tvguide-screen').style.display = 'flex';
-            var sorted = [].concat(globalTVGuideData).sort(function(a,b) { return a.timestamp - b.timestamp; });
-            var track = document.getElementById('tvguide-track');
-            track.innerHTML = sorted.map(function(g) { 
-                return '<div class="tv-row"><div class="tv-channel">' + getNetworkLogo(g.network) + '</div><div class="tv-program"><div class="tv-prog-title">' + g.matchup + '</div><div class="tv-prog-time">' + g.time + '</div>' + (g.isLive ? '<div class="tv-prog-live">● LIVE</div>' : '') + '</div></div>'; 
-            }).join('');
-            var vH = document.getElementById('tvguide-viewport').clientHeight, fH = track.scrollHeight;
-            if (fH > vH) { var sD = fH - vH + 100; track.style.setProperty('--scroll-end', '-' + sD + 'px'); track.style.animation = 'scrollVerticalOnePass ' + (sD/40) + 's linear forwards'; slideTimer = setTimeout(nextSlide, (sD/40 * 1000) + 3000); } else { slideTimer = setTimeout(nextSlide, 15000); }
         }
 
         async function showCommand() {
