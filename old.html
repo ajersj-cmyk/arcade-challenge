@@ -36,7 +36,7 @@
         .score-item { display: inline-flex !important; flex-direction: row !important; align-items: center !important; padding: 0 5vw; height: 100%; vertical-align: middle; flex-wrap: nowrap !important; }
         .team-box { display: flex !important; flex-direction: row !important; align-items: center !important; flex-wrap: nowrap !important; }
         .team-logo { width: 11vh; height: 11vh; object-fit: contain; margin-right: 1.5vw; flex-shrink: 0; } 
-        .team-score { font-size: 4.8rem; line-height: 1; color: #00ffff; margin-right: 0.8vw; font-weight: 900; }
+        .team-score { font-size: 4.8rem; line-height: 1; color: #00ffff; margin-right: 0.8vw; font-weight: 900; transition: color 0.3s ease; }
         
         /* SCORE FLASH */
         @keyframes scoreUpdate { 0% { color: #39ff14; transform: scale(1.1); } 100% { color: #00ffff; transform: scale(1); } }
@@ -245,7 +245,7 @@
                         <input type="text" id="set-marqueeMessage" style="width: 100%; padding: 1vh; border-radius: 0.5vh; background: #1a1a1a; color: white; border: 1px solid #ff007f; font-family: 'Inter', sans-serif;" placeholder="e.g. Welcome to the Arcade!" onchange="updateSettings()">
                     </div>
                     
-                    <div class="toggle-row"><span>Top Stats Leaders</span> <input type="checkbox" id="set-leaders" checked onchange="updateSettings()"></div>
+                    <div class="toggle-row"><span style="color:#facc15; font-weight:bold;">Top Stats Leaders</span> <input type="checkbox" id="set-leaders" checked onchange="updateSettings()"></div>
                     <div class="toggle-row"><span>Command Center</span> <input type="checkbox" id="set-command" checked onchange="updateSettings()"></div>
                     <div class="toggle-row"><span>UFC Fight Card Slide</span> <input type="checkbox" id="set-ufc" checked onchange="updateSettings()"></div>
                     <div class="toggle-row"><span>TV Guide Slide</span> <input type="checkbox" id="set-tvGuide" checked onchange="updateSettings()"></div>
@@ -308,7 +308,6 @@
             var saved = localStorage.getItem('ahlersArcadeSettings');
             if (saved) settings = JSON.parse(saved);
             
-            // Failsafe: if the user's saved settings are missing the new 'leaders' property, add it
             if (typeof settings.leaders === 'undefined') settings.leaders = true;
             if (typeof settings.command === 'undefined') settings.command = true;
         } catch(e) {}
@@ -507,35 +506,44 @@
                                 previousScores[matchKey] = { h: h.score, a: a.score };
                             }
 
-                            // PERFECTED STAT LEADERS EXTRACTION
-                            comp.competitors.forEach(function(competitor) {
-                                if (competitor.leaders && competitor.leaders.length > 0) {
-                                    var lData = competitor.leaders[0];
-                                    if (lData && lData.leaders && lData.leaders.length > 0) {
-                                        var topDude = lData.leaders[0];
-                                        var headshotUrl = '';
-                                        
-                                        // Attempt explicit href first, then build a fallback, then default to team logo
-                                        if (topDude.athlete && topDude.athlete.headshot && topDude.athlete.headshot.href) {
-                                            headshotUrl = topDude.athlete.headshot.href;
-                                        } else if (topDude.athlete && topDude.athlete.id) {
-                                            headshotUrl = 'https://a.espncdn.com/combiner/i?img=/i/headshots/' + c.s + '/players/full/' + topDude.athlete.id + '.png&w=150&h=150';
-                                        } else {
-                                            headshotUrl = competitor.team.logo;
-                                        }
+                            // PERFECTED STAT LEADERS EXTRACTION - STRICTLY LIVE OR POST GAMES ONLY
+                            if (status.state === 'in' || status.state === 'post') {
+                                comp.competitors.forEach(function(competitor) {
+                                    if (competitor.leaders && competitor.leaders.length > 0) {
+                                        var lData = competitor.leaders[0];
+                                        if (lData && lData.leaders && lData.leaders.length > 0) {
+                                            var topDude = lData.leaders[0];
+                                            var headshotUrl = '';
+                                            
+                                            if (topDude.athlete && topDude.athlete.headshot && topDude.athlete.headshot.href) {
+                                                headshotUrl = topDude.athlete.headshot.href;
+                                            } else if (topDude.athlete && topDude.athlete.id) {
+                                                headshotUrl = 'https://a.espncdn.com/combiner/i?img=/i/headshots/' + c.s + '/players/full/' + topDude.athlete.id + '.png&w=150&h=150';
+                                            } else {
+                                                headshotUrl = competitor.team.logo;
+                                            }
 
-                                        newLeaders.push({
-                                            league: c.id.toUpperCase(),
-                                            category: lData.displayName || lData.name || 'LEADER',
-                                            name: topDude.athlete ? (topDude.athlete.shortName || topDude.athlete.displayName) : 'Player',
-                                            headshot: headshotUrl,
-                                            teamLogo: competitor.team.logo,
-                                            teamName: competitor.team.abbreviation || competitor.team.shortDisplayName || '',
-                                            value: topDude.displayValue
-                                        });
+                                            // Prevent duplicating same player from different events
+                                            var isDup = false;
+                                            for(var x=0; x<newLeaders.length; x++) {
+                                                if (newLeaders[x].name === (topDude.athlete ? (topDude.athlete.shortName || topDude.athlete.displayName) : 'Player')) isDup = true;
+                                            }
+
+                                            if (!isDup) {
+                                                newLeaders.push({
+                                                    league: c.id.toUpperCase(),
+                                                    category: lData.displayName || lData.name || 'LEADER',
+                                                    name: topDude.athlete ? (topDude.athlete.shortName || topDude.athlete.displayName) : 'Player',
+                                                    headshot: headshotUrl,
+                                                    teamLogo: competitor.team.logo,
+                                                    teamName: competitor.team.abbreviation || competitor.team.shortDisplayName || '',
+                                                    value: topDude.displayValue
+                                                });
+                                            }
+                                        }
                                     }
-                                }
-                            });
+                                });
+                            }
 
                             var extraClass = "";
                             var gameSearchString = (h.team.displayName + " " + a.team.displayName).toLowerCase();
@@ -575,7 +583,6 @@
             globalRawGames = newRawGames;
             globalTVGuideData = newTVGuide;
             
-            // Randomize array to avoid showing only one league's leaders
             newLeaders.sort(function() { return 0.5 - Math.random() });
             globalLeadersData = newLeaders.slice(0, 8);
 
@@ -611,7 +618,6 @@
             if (fH > vH) { var sD = fH - vH + 100; track.style.setProperty('--scroll-end', '-' + sD + 'px'); track.style.animation = 'scrollVerticalOnePass ' + (sD/50) + 's linear 2s forwards'; slideTimer = setTimeout(nextSlide, (sD/50 * 1000) + 5000); } else { slideTimer = setTimeout(nextSlide, 15000); }
         }
 
-        // CORRECTED LEADERS SLIDE RENDERER
         function showLeaders() {
             if(!settings.leaders || globalLeadersData.length === 0) { rotationStep++; nextSlide(); return; }
             document.querySelectorAll('.slide-screen').forEach(function(el) { el.style.display = 'none'; });
@@ -619,7 +625,6 @@
             
             var track = document.getElementById('leaders-grid-track');
             track.innerHTML = globalLeadersData.map(function(l) {
-                // If headshot breaks, default to team logo automatically via onerror
                 return '<div class="info-card" style="border-left-color:#facc15;"><div class="card-meta"><span style="color:#00ffff">' + l.category + '</span><span>' + l.league + '</span></div><div style="display:flex; align-items:center; gap:2vh; padding-top:1vh;"><img src="' + l.headshot + '" class="leader-headshot" onerror="this.src=\'' + l.teamLogo + '\'"><div style="flex:1;"><div style="font-size:3.5vh; font-weight:900; color:white;">' + l.name + '</div><div style="font-size:2.5vh; color:#aaa;">' + l.teamName + '</div></div><div class="leader-val">' + l.value + '</div></div></div>';
             }).join('');
 
@@ -729,7 +734,6 @@
                             var gameTime = new Date(ev.date).getTime();
                             var diffHours = (gameTime - nowTime) / (1000 * 60 * 60);
                             
-                            // STRICT TIME GATE FOR ODDS (Next 48 Hours)
                             if (comp.status.type.state === 'pre' && diffHours >= 0 && diffHours <= 48) {
                                 var shortL = (l.id==='mens-college-basketball'?'CBB':l.id==='college-baseball'?'BASEBALL':l.id.toUpperCase());
                                 var tv = (comp.broadcasts && comp.broadcasts[0] && comp.broadcasts[0].names) ? comp.broadcasts[0].names[0] : 'TV';
