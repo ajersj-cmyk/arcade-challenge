@@ -46,7 +46,10 @@
 
         .vs-label { color: #444; font-size: 2.7rem; margin: 0 2.5vw; font-weight: bold; }
         .game-status { margin-left: 2vw; color: #facc15; font-size: 2.7rem; text-transform: uppercase; letter-spacing: 0.1vw; }
-        .live-pulse { animation: pulseRed 1s infinite; color: #ff0000; font-weight: 900; margin-right: 1.5vw; font-size: 2.7rem; }
+        
+        /* CYBERPUNK PULSE */
+        .live-pulse { animation: pulsePink 1s infinite; color: #ff007f; font-weight: 900; margin-right: 1.5vw; font-size: 2.7rem; }
+        @keyframes pulsePink { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
 
         /* SLIDES & GRIDS */
         .slide-screen { position: absolute; inset: 0; z-index: 10; display: none; flex-direction: column; padding: 2vh 4vh; font-family: 'Share Tech Mono', monospace; align-items: center; overflow: hidden; }
@@ -110,15 +113,16 @@
         .news-title { font-size: 4vh; color: white; font-weight: 900; line-height: 1.2; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
         .news-source { font-size: 2.8vh; color: #ff007f; font-weight: 900; margin-top: 1vh; text-transform: uppercase; letter-spacing: 0.2vh; }
 
-        /* UFC SLIDE */
-        .ufc-card { background: #0a0000; border: 1px solid #550000; border-left: 1vh solid #ff0000; border-radius: 1vh; display: flex; flex-direction: column; padding: 2.5vh; position: relative; overflow: hidden; }
+        /* PUNCHY ORANGE UFC SLIDE */
+        .ufc-card { background: #0a0500; border: 1px solid #552200; border-left: 1vh solid #ff6600; border-radius: 1vh; display: flex; flex-direction: column; padding: 2.5vh; position: relative; overflow: hidden; }
         .ufc-matchup { display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 1vh; z-index: 2; position: relative; }
         .fighter-col { display: flex; flex-direction: column; align-items: center; width: 40%; }
         .fighter-img { height: 16vh; object-fit: contain; }
         .fighter-name { font-size: 3vh; color: white; font-weight: 900; text-align: center; text-transform: uppercase; margin-top: 1vh; line-height: 1.1; }
         .ufc-center { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 20%; }
-        .ufc-vs { font-size: 4.5vh; color: #ff0000; font-weight: 900; font-style: italic; }
-        .ufc-meta { display: flex; justify-content: space-between; border-top: 1px dashed #550000; padding-top: 1.5vh; margin-top: auto; font-size: 2.8vh; color: #aaa; font-weight: bold; text-transform: uppercase; align-items: center;}
+        .ufc-vs { font-size: 4.5vh; color: #ff6600; font-weight: 900; font-style: italic; }
+        .ufc-meta { display: flex; justify-content: space-between; border-top: 1px dashed #552200; padding-top: 1.5vh; margin-top: auto; font-size: 2.8vh; color: #aaa; font-weight: bold; text-transform: uppercase; align-items: center;}
+        .ufc-live-badge { position: absolute; top: 1vh; left: 50%; transform: translateX(-50%); background: #ff007f; color: white; padding: 0.5vh 2vh; border-radius: 0.5vh; font-size: 2.2vh; font-weight: 900; animation: pulsePink 1s infinite; z-index: 3; letter-spacing: 0.2vh; }
         
         /* RETRO TV GUIDE */
         .tv-row { display: flex; align-items: stretch; background: #0a1118; border-bottom: 2px solid #00aaaa; width: 100%; min-height: 12vh; }
@@ -129,10 +133,9 @@
         .tv-program { flex: 1; padding: 2vh 4vh; display: flex; flex-direction: column; justify-content: center; position: relative; }
         .tv-prog-title { font-size: 5.5vh; color: white; font-weight: 900; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .tv-prog-time { font-size: 3.8vh; color: #00ffff; margin-top: 0.5vh; font-weight: bold; }
-        .tv-prog-live { position: absolute; right: 4vh; top: 50%; transform: translateY(-50%); color: #ff0000; font-weight: 900; font-size: 4.5vh; animation: pulseRed 1s infinite; }
+        .tv-prog-live { position: absolute; right: 4vh; top: 50%; transform: translateY(-50%); color: #ff007f; font-weight: 900; font-size: 4.5vh; animation: pulsePink 1s infinite; }
 
         @keyframes scrollVerticalOnePass { 0% { transform: translate3d(0,0,0); } 100% { transform: translate3d(0, var(--scroll-end), 0); } }
-        @keyframes pulseRed { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
         
         .cyber-grid { position: absolute; top: 0; left: -50%; width: 200%; height: 100%; background-image: linear-gradient(rgba(0, 255, 255, 0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 255, 255, 0.1) 1px, transparent 1px); background-size: 100px 100px; transform: rotateX(45deg); opacity: 0.5; }
         
@@ -152,7 +155,7 @@
         <button id="fs-toggle" onclick="if(!document.fullscreenElement) document.documentElement.requestFullscreen(); else document.exitFullscreen();">⛶</button>
 
         <div id="live-game-screen" class="slide-screen">
-            <div class="screen-header" style="color: #ff0000; border-bottom-color: red;">LIVE ACTION</div>
+            <div class="screen-header" style="color: #ff007f; border-bottom-color: #ff007f; text-shadow: 0 0 15px #ff007f;">LIVE ACTION</div>
             <div class="content-viewport" id="live-viewport"><div class="grid-track" id="live-grid-track"></div></div>
         </div>
 
@@ -177,7 +180,6 @@
             <div class="content-viewport" id="leaders-viewport"><div class="grid-track" id="leaders-grid-track"></div></div>
         </div>
 
-        <!-- NEW: PGA TOUR LEADERBOARD SLIDE -->
         <div id="pga-screen" class="slide-screen">
             <div class="screen-header" id="pga-title" style="color: #39ff14; border-bottom-color: #39ff14;">PGA TOUR</div>
             <div class="content-viewport" id="pga-viewport">
@@ -186,12 +188,13 @@
         </div>
 
         <div id="ufc-screen" class="slide-screen">
-            <div class="screen-header" id="ufc-title" style="color: #ff0000; border-bottom-color: #ff0000;">UFC FIGHT NIGHT</div>
+            <div class="screen-header" id="ufc-title" style="color: #ff6600; border-bottom-color: #ff6600; text-shadow: 0 0 15px #ff6600;">UFC FIGHT NIGHT</div>
             <div class="content-viewport" id="ufc-viewport">
                 <div class="grid-track" id="ufc-grid-track"></div>
             </div>
         </div>
         
+        <!-- UPDATED COMMAND CENTER WITH MARQUEE DEEP DIVE -->
         <div id="command-screen" class="slide-screen">
             <div class="screen-header" style="color: #ffffff; border-bottom-color: #ffffff;">AHLERS COMMAND CENTER</div>
             <div class="content-viewport" id="command-viewport">
@@ -206,10 +209,10 @@
                             <span id="local-highlow">H: -- L: --</span>
                         </div>
                     </div>
-                    <div class="info-card" style="border-left: 1vh solid #39ff14;">
-                        <div class="card-meta"><span style="color:#39ff14">MARKET WATCH</span><span>LIVE</span></div>
-                        <div id="crypto-track" style="display:flex; flex-direction:column; gap: 2vh; padding-top: 1vh;">
-                            <div style="color:white; font-size:3vh; text-align:center;">Fetching Markets...</div>
+                    <div class="info-card" style="border-left: 1vh solid #ff6600;">
+                        <div class="card-meta"><span style="color:#ff6600">MARQUEE MATCHUPS</span><span>DEEP DIVE</span></div>
+                        <div id="marquee-track" style="display:flex; flex-direction:column; gap: 1.5vh; padding-top: 1vh;">
+                            <div style="color:white; font-size:3vh; text-align:center;">Analyzing Global Sports Data...</div>
                         </div>
                     </div>
                 </div>
@@ -265,7 +268,6 @@
                     </div>
                     
                     <div class="toggle-row"><span style="color:#facc15; font-weight:bold;">Top Stats Leaders</span> <input type="checkbox" id="set-leaders" checked onchange="updateSettings()"></div>
-                    <!-- NEW PGA TOGGLE -->
                     <div class="toggle-row"><span style="color:#39ff14; font-weight:bold;">PGA Golf Slide</span> <input type="checkbox" id="set-pga" checked onchange="updateSettings()"></div>
                     <div class="toggle-row"><span>Command Center</span> <input type="checkbox" id="set-command" checked onchange="updateSettings()"></div>
                     <div class="toggle-row"><span>UFC Fight Card Slide</span> <input type="checkbox" id="set-ufc" checked onchange="updateSettings()"></div>
@@ -275,6 +277,7 @@
                 </div>
                 <div class="settings-section">
                     <h3>Live/Ticker Data</h3>
+                    <div class="toggle-row"><span style="color:#ff007f; font-weight:bold;">World Cup (FIFA)</span> <input type="checkbox" id="set-showWorldCup" checked onchange="updateSettings()"></div>
                     <div class="toggle-row"><span>NFL</span> <input type="checkbox" id="set-showNFL" checked onchange="updateSettings()"></div>
                     <div class="toggle-row"><span>NBA</span> <input type="checkbox" id="set-showNBA" checked onchange="updateSettings()"></div>
                     <div class="toggle-row"><span>NHL</span> <input type="checkbox" id="set-showNHL" checked onchange="updateSettings()"></div>
@@ -317,7 +320,7 @@
 
         var defaultSettings = { 
             nfl:true, nba:true, nhl:true, mlb:true, rankings:true, odds:true, tvGuide:true, news:true, mySquad:true, ufc:true, command:true, leaders:true, pga:true,
-            showNFL:true, showNBA:true, showNHL:true, showMLB:true, showCFB:true, showCBB:true, showCLB:true,
+            showWorldCup:true, showNFL:true, showNBA:true, showNHL:true, showMLB:true, showCFB:true, showCBB:true, showCLB:true,
             cbb50:true, cfb75:true, clb50:true, apiBase:"https://site.api.espn.com/apis",
             mySquadTeams: "Hurricanes, Duke, ECU, East Carolina",
             marqueeMessage: "WELCOME TO AHLERS ARCADE",
@@ -332,6 +335,7 @@
             if (typeof settings.leaders === 'undefined') settings.leaders = true;
             if (typeof settings.command === 'undefined') settings.command = true;
             if (typeof settings.pga === 'undefined') settings.pga = true;
+            if (typeof settings.showWorldCup === 'undefined') settings.showWorldCup = true;
         } catch(e) {}
 
         function updateSettings() {
@@ -371,7 +375,6 @@
             setTimeout(function() { window.location.reload(true); }, refreshTime - now);
         }
 
-        // --- MASTER CLOCK FUNCTION ---
         function updateClock() {
             var now = new Date();
             var h = now.getHours();
@@ -411,18 +414,6 @@
                 if(code >= 50 && code < 70) desc = "RAIN";
                 if(code >= 70) desc = "SNOW/STORM";
                 document.getElementById('local-desc').innerText = desc;
-            } catch (e) {}
-
-            try {
-                var coinRes = await fetch("https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,solana&vs_currencies=usd&include_24hr_change=true");
-                var coinData = await coinRes.json();
-                var formatCoin = function(name, data) {
-                    if(!data) return '';
-                    var color = data.usd_24h_change >= 0 ? '#39ff14' : '#ff0000';
-                    var sign = data.usd_24h_change >= 0 ? '+' : '';
-                    return '<div style="display:flex; justify-content:space-between; align-items:center; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom:1vh;"><span style="color:white; font-size:4vh; font-weight:900; text-transform:uppercase;">' + name + '</span><div style="text-align:right;"><div style="color:white; font-size:3.5vh; font-weight:900;">$' + data.usd.toLocaleString() + '</div><div style="color:' + color + '; font-size:2.5vh; font-weight:bold;">' + sign + data.usd_24h_change.toFixed(2) + '%</div></div></div>';
-                };
-                document.getElementById('crypto-track').innerHTML = formatCoin("Bitcoin", coinData.bitcoin) + formatCoin("Ethereum", coinData.ethereum) + formatCoin("Solana", coinData.solana);
             } catch (e) {}
         }
         setInterval(fetchCommandData, 900000); 
@@ -492,15 +483,18 @@
         }
 
         async function updateSportsTicker() { 
-            var newTVGuide = [], newRawGames = [];
+            var newTVGuide = [], newRawGames = [], newMarqueeGames = [];
             var newLivePage = [], allLive = [], allSched = [], newLeaders = [];
             
             var configs = [
-                {l:'nhl',s:'hockey',id:'nhl',t:'showNHL'},{l:'nfl',s:'football',id:'nfl',t:'showNFL'},
-                {l:'nba',s:'basketball',id:'nba',t:'showNBA'},{l:'mlb',s:'baseball',id:'mlb',t:'showMLB'},
+                {l:'nhl',s:'hockey',id:'nhl',t:'showNHL'},
+                {l:'nfl',s:'football',id:'nfl',t:'showNFL'},
+                {l:'nba',s:'basketball',id:'nba',t:'showNBA'},
+                {l:'mlb',s:'baseball',id:'mlb',t:'showMLB'},
                 {l:'college-football',s:'football',g:80,id:'cfb',t:'showCFB'},
                 {l:'mens-college-basketball',s:'basketball',g:settings.cbb50?50:null,id:'cbb',t:'showCBB'},
-                {l:'college-baseball',s:'baseball',id:'clb',t:'showCLB'}
+                {l:'college-baseball',s:'baseball',id:'clb',t:'showCLB'},
+                {l:'fifa.world',s:'soccer',id:'worldcup',t:'showWorldCup'}
             ];
             
             var nowTime = new Date().getTime();
@@ -542,6 +536,33 @@
                                 previousScores[matchKey] = { h: h.score, a: a.score };
                             }
 
+                            // PERFECTED MARQUEE MATCHUP SCORING ALGORITHM
+                            var mWeight = 0;
+                            if (c.id === 'worldcup') mWeight += 50; 
+                            if (c.id === 'nfl') mWeight += 30; 
+                            if (tv.indexOf('ESPN') > -1 || tv.indexOf('FOX') > -1 || tv.indexOf('ABC') > -1 || tv.indexOf('TNT') > -1 || tv.indexOf('CBS') > -1 || tv.indexOf('NBC') > -1) mWeight += 20;
+                            if (h.team.curatedRank && h.team.curatedRank.current <= 25) mWeight += 15;
+                            if (a.team.curatedRank && a.team.curatedRank.current <= 25) mWeight += 15;
+                            if (status.state === 'in') mWeight += 30; 
+                            if (status.state === 'post') mWeight -= 50; // Push finished games down
+                            
+                            newMarqueeGames.push({
+                                weight: mWeight,
+                                league: (c.id === 'worldcup') ? 'FIFA WORLD CUP' : c.id.toUpperCase(),
+                                hName: h.team.shortDisplayName,
+                                hLogo: h.team.logo,
+                                hScore: h.score,
+                                aName: a.team.shortDisplayName,
+                                aLogo: a.team.logo,
+                                aScore: a.score,
+                                tv: tv,
+                                odds: (comp.odds && comp.odds[0]) ? comp.odds[0].details : 'EVEN',
+                                ou: (comp.odds && comp.odds[0] && comp.odds[0].overUnder) ? comp.odds[0].overUnder : '--',
+                                time: new Date(ev.date).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}),
+                                state: status.state,
+                                clock: comp.status.displayClock || status.detail
+                            });
+
                             if (status.state === 'in' || status.state === 'post') {
                                 comp.competitors.forEach(function(competitor) {
                                     if (competitor.leaders && competitor.leaders.length > 0) {
@@ -565,7 +586,7 @@
 
                                             if (!isDup) {
                                                 newLeaders.push({
-                                                    league: c.id.toUpperCase(),
+                                                    league: (c.id === 'worldcup') ? 'FIFA' : c.id.toUpperCase(),
                                                     category: lData.displayName || lData.name || 'LEADER',
                                                     name: topDude.athlete ? (topDude.athlete.shortName || topDude.athlete.displayName) : 'Player',
                                                     headshot: headshotUrl,
@@ -591,7 +612,7 @@
 
                             newRawGames.push({
                                 searchString: gameSearchString,
-                                html: '<div class="squad-game-card' + extraClass + '"><div class="card-meta"><span>' + c.id.toUpperCase() + '</span><span style="color:#00ff00">' + tv + '</span></div><div class="card-row"><div class="card-team"><img src="' + a.team.logo + '">' + a.team.shortDisplayName + '</div><div class="card-val-lg">' + aScoreStr + '</div></div><div class="card-row"><div class="card-team"><img src="' + h.team.logo + '">' + h.team.shortDisplayName + '</div><div class="card-val-lg">' + hScoreStr + '</div></div><div class="card-footer" style="justify-content:center; color:#39ff14;">' + timeStr + '</div></div>'
+                                html: '<div class="squad-game-card' + extraClass + '"><div class="card-meta"><span>' + ((c.id === 'worldcup') ? 'FIFA' : c.id.toUpperCase()) + '</span><span style="color:#00ff00">' + tv + '</span></div><div class="card-row"><div class="card-team"><img src="' + a.team.logo + '">' + a.team.shortDisplayName + '</div><div class="card-val-lg">' + aScoreStr + '</div></div><div class="card-row"><div class="card-team"><img src="' + h.team.logo + '">' + h.team.shortDisplayName + '</div><div class="card-val-lg">' + hScoreStr + '</div></div><div class="card-footer" style="justify-content:center; color:#39ff14;">' + timeStr + '</div></div>'
                             });
 
                             if (tv !== 'TV' && status.state === 'in') {
@@ -602,11 +623,11 @@
                             }
                             
                             if (status.state === 'in') {
-                                allLive.push({ html: '<span class="score-item"><span class="live-pulse">●</span><div class="team-box"><img class="team-logo" src="' + a.team.logo + '"><span class="' + aScoreClass + '">' + a.score + '</span></div><span class="vs-label">@</span><div class="team-box"><img class="team-logo" src="' + h.team.logo + '"><span class="' + hScoreClass + '">' + h.score + '</span></div><span class="game-status">' + statusText + '</span></span>', league: c.id.toUpperCase() });
-                                newLivePage.push({ league: c.id.toUpperCase(), home: h.team.shortDisplayName, hScore: h.score, hLogo: h.team.logo, away: a.team.shortDisplayName, aScore: a.score, aLogo: a.team.logo, status: statusText, tv: tv, clock: comp.status.displayClock || status.detail });
+                                allLive.push({ html: '<span class="score-item"><span class="live-pulse">●</span><div class="team-box"><img class="team-logo" src="' + a.team.logo + '"><span class="' + aScoreClass + '">' + a.score + '</span></div><span class="vs-label">@</span><div class="team-box"><img class="team-logo" src="' + h.team.logo + '"><span class="' + hScoreClass + '">' + h.score + '</span></div><span class="game-status">' + statusText + '</span></span>', league: ((c.id === 'worldcup') ? 'FIFA' : c.id.toUpperCase()) });
+                                newLivePage.push({ league: ((c.id === 'worldcup') ? 'FIFA' : c.id.toUpperCase()), home: h.team.shortDisplayName, hScore: h.score, hLogo: h.team.logo, away: a.team.shortDisplayName, aScore: a.score, aLogo: a.team.logo, status: statusText, tv: tv, clock: comp.status.displayClock || status.detail });
                             } else {
                                 var oddsStr = (comp.odds && comp.odds[0]) ? comp.odds[0].details : "LINE TBD";
-                                allSched.push({ html: '<span class="score-item"><div class="team-box"><img class="team-logo" src="' + a.team.logo + '"></div><span class="vs-label">vs</span><div class="team-box"><img class="team-logo" src="' + h.team.logo + '"></div><span class="game-status" style="color:#00ffff">' + oddsStr + ' • ' + new Date(ev.date).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}) + '</span></span>', league: c.id.toUpperCase() });
+                                allSched.push({ html: '<span class="score-item"><div class="team-box"><img class="team-logo" src="' + a.team.logo + '"></div><span class="vs-label">vs</span><div class="team-box"><img class="team-logo" src="' + h.team.logo + '"></div><span class="game-status" style="color:#00ffff">' + oddsStr + ' • ' + new Date(ev.date).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}) + '</span></span>', league: ((c.id === 'worldcup') ? 'FIFA' : c.id.toUpperCase()) });
                             }
                         } catch(innerErr) {}
                     });
@@ -617,12 +638,51 @@
             globalRawGames = newRawGames;
             globalTVGuideData = newTVGuide;
             
+            // Populate Marquee Games in Command Center
+            newMarqueeGames.sort(function(a,b) { return b.weight - a.weight; });
+            var top2 = newMarqueeGames.slice(0, 2);
+            var marqueeHtml = top2.map(function(g) {
+                var displayTime = g.state === 'in' ? '<span style="color:#ff007f; animation: pulsePink 1s infinite;">● LIVE ' + g.clock + '</span>' : (g.state === 'post' ? '<span style="color:#aaa;">FINAL</span>' : '<span style="color:#facc15;">' + g.time + '</span>');
+                var scoreOrOdds = (g.state === 'in' || g.state === 'post') ? 
+                    '<div style="font-size:3.5vh; font-weight:900; color:#00ffff;">' + g.aScore + ' - ' + g.hScore + '</div>' : 
+                    '<div style="font-size:2.5vh; color:#aaa; font-weight:bold;">LINE: <span style="color:#39ff14;">' + g.odds + '</span> | O/U: ' + g.ou + '</div>';
+                    
+                return '<div style="background: #00111a; border: 1px solid #004444; border-radius: 1vh; padding: 1.5vh; display:flex; flex-direction:column; gap: 1vh;">' +
+                         '<div style="display:flex; justify-content:space-between; align-items:center; font-size: 2vh; font-weight:900; color:#00aaaa; border-bottom: 1px dashed #004444; padding-bottom: 0.5vh;">' +
+                             '<span>' + g.league + '</span><span>' + g.tv + '</span>' +
+                         '</div>' +
+                         '<div style="display:flex; justify-content:space-between; align-items:center;">' +
+                             '<div style="display:flex; align-items:center; gap: 1vh;">' +
+                                 '<img src="' + g.aLogo + '" style="width:4.5vh; height:4.5vh; object-fit:contain;">' +
+                                 '<span style="color:white; font-size:2.8vh; font-weight:900;">' + g.aName + '</span>' +
+                             '</div>' +
+                             '<span style="color:#ff6600; font-size:2vh; font-weight:900; font-style:italic;">VS</span>' +
+                             '<div style="display:flex; align-items:center; gap: 1vh;">' +
+                                 '<span style="color:white; font-size:2.8vh; font-weight:900;">' + g.hName + '</span>' +
+                                 '<img src="' + g.hLogo + '" style="width:4.5vh; height:4.5vh; object-fit:contain;">' +
+                             '</div>' +
+                         '</div>' +
+                         '<div style="display:flex; justify-content:space-between; align-items:center; margin-top: 0.5vh;">' +
+                             displayTime + scoreOrOdds +
+                         '</div>' +
+                       '</div>';
+            }).join('');
+            
+            var marqueeTrack = document.getElementById('marquee-track');
+            if(marqueeTrack) {
+                if(marqueeHtml === "") {
+                    marqueeTrack.innerHTML = '<div style="color:#aaa; font-size:3vh; text-align:center; padding-top:2vh;">No Marquee Games Today</div>';
+                } else {
+                    marqueeTrack.innerHTML = marqueeHtml;
+                }
+            }
+
             newLeaders.sort(function() { return 0.5 - Math.random() });
             globalLeadersData = newLeaders.slice(0, 8);
 
             var content = "";
             if (allLive.length > 0) {
-                content += '<div class="live-mode-header" style="display:inline-flex; align-items:center; padding: 0 3vw; color:red; font-size:4rem; font-weight:900;"><span class="live-pulse">●</span> LIVE SCORES</div>';
+                content += '<div class="live-mode-header" style="display:inline-flex; align-items:center; padding: 0 3vw; color:#ff007f; font-size:4rem; font-weight:900;"><span class="live-pulse">●</span> LIVE SCORES</div>';
                 var sorted = {};
                 allLive.forEach(function(g) { if(!sorted[g.league]) sorted[g.league]=[]; sorted[g.league].push(g.html); });
                 for(var l in sorted) { content += '<span class="ticker-section-head">' + l + '</span>' + sorted[l].join(''); }
@@ -646,7 +706,7 @@
             document.getElementById('live-game-screen').style.display = 'flex';
             var track = document.getElementById('live-grid-track');
             track.innerHTML = globalLiveGamesData.map(function(g) { 
-                return '<div class="info-card"><div class="card-meta"><span style="color:red">● LIVE</span><span>' + g.league + '</span><span>' + g.status + '</span></div><div class="card-row"><div class="card-team"><img src="' + g.aLogo + '">' + g.away + '</div><div class="card-val-lg">' + g.aScore + '</div></div><div class="card-row"><div class="card-team"><img src="' + g.hLogo + '">' + g.home + '</div><div class="card-val-lg">' + g.hScore + '</div></div><div class="card-footer"><span>' + (g.clock === '0:00' ? '' : g.clock) + '</span><span style="color:#00ff00">' + g.tv + '</span></div></div>';
+                return '<div class="info-card"><div class="card-meta"><span style="color:#ff007f">● LIVE</span><span>' + g.league + '</span><span>' + g.status + '</span></div><div class="card-row"><div class="card-team"><img src="' + g.aLogo + '">' + g.away + '</div><div class="card-val-lg">' + g.aScore + '</div></div><div class="card-row"><div class="card-team"><img src="' + g.hLogo + '">' + g.home + '</div><div class="card-val-lg">' + g.hScore + '</div></div><div class="card-footer"><span>' + (g.clock === '0:00' ? '' : g.clock) + '</span><span style="color:#00ff00">' + g.tv + '</span></div></div>';
             }).join('');
             var vH = document.getElementById('live-viewport').clientHeight, fH = track.scrollHeight;
             if (fH > vH) { var sD = fH - vH + 100; track.style.setProperty('--scroll-end', '-' + sD + 'px'); track.style.animation = 'scrollVerticalOnePass ' + (sD/50) + 's linear 2s forwards'; slideTimer = setTimeout(nextSlide, (sD/50 * 1000) + 5000); } else { slideTimer = setTimeout(nextSlide, 15000); }
@@ -727,7 +787,7 @@
                 }
                 newsHtml = combinedNews.map(function(n) { return '<div class="squad-news-card"><div style="color:#39ff14; font-size:2vh; font-weight:900; margin-bottom:0.5vh;">' + n.teamTag + ' HIGHLIGHT</div><div style="color:white; font-size:2.8vh; font-weight:700; line-height:1.2;">' + n.title + '</div></div>'; }).join('');
                 document.getElementById('squad-news-track').innerHTML = newsHtml || '<div style="text-align:center; color:#aaa; font-size:3vh; margin-top:5vh;">NO SQUAD HEADLINES</div>';
-            } catch(e) { document.getElementById('squad-news-track').innerHTML = '<div style="text-align:center; color:red;">FEED ERR</div>'; }
+            } catch(e) { document.getElementById('squad-news-track').innerHTML = '<div style="text-align:center; color:#ff007f;">FEED ERR</div>'; }
 
             var vH = document.getElementById('mysquad-viewport').clientHeight;
             var maxH = Math.max(document.getElementById('squad-games-track').scrollHeight, document.getElementById('squad-news-track').scrollHeight);
@@ -782,7 +842,15 @@
 
         async function showOdds() {
             var games = [];
-            var leagues = [{id:'nfl',s:'football',t:'showNFL'},{id:'nba',s:'basketball',t:'showNBA'},{id:'nhl',s:'hockey',t:'showNHL'},{id:'mlb',s:'baseball',t:'showMLB'},{id:'mens-college-basketball',s:'basketball',t:'showCBB',g:settings.cbb50?50:null},{id:'college-baseball',s:'baseball',t:'showCLB'}];
+            var leagues = [
+                {id:'nfl',s:'football',t:'showNFL'},
+                {id:'nba',s:'basketball',t:'showNBA'},
+                {id:'nhl',s:'hockey',t:'showNHL'},
+                {id:'mlb',s:'baseball',t:'showMLB'},
+                {id:'mens-college-basketball',s:'basketball',t:'showCBB',g:settings.cbb50?50:null},
+                {id:'college-baseball',s:'baseball',t:'showCLB'},
+                {id:'fifa.world',s:'soccer',t:'showWorldCup'}
+            ];
             
             var nowTime = new Date().getTime();
 
@@ -799,8 +867,9 @@
                             var gameTime = new Date(ev.date).getTime();
                             var diffHours = (gameTime - nowTime) / (1000 * 60 * 60);
                             
+                            // STRICT TIME GATE FOR ODDS (Next 48 Hours)
                             if (comp.status.type.state === 'pre' && diffHours >= 0 && diffHours <= 48) {
-                                var shortL = (l.id==='mens-college-basketball'?'CBB':l.id==='college-baseball'?'BASEBALL':l.id.toUpperCase());
+                                var shortL = (l.id==='mens-college-basketball')?'CBB':(l.id==='college-baseball')?'BASEBALL':(l.id==='fifa.world')?'FIFA':l.id.toUpperCase();
                                 var tv = (comp.broadcasts && comp.broadcasts[0] && comp.broadcasts[0].names) ? comp.broadcasts[0].names[0] : 'TV';
                                 var oddsStr = (comp.odds && comp.odds[0]) ? comp.odds[0].details : 'EVEN';
                                 var ouStr = (comp.odds && comp.odds[0] && comp.odds[0].overUnder) ? comp.odds[0].overUnder : '--';
@@ -829,6 +898,7 @@
         }
 
         async function showUFC() {
+            if(!settings.ufc) { rotationStep++; nextSlide(); return; }
             try {
                 var res = await fetch(settings.apiBase + '/site/v2/sports/mma/ufc/scoreboard');
                 var d = await res.json();
@@ -843,8 +913,9 @@
                 document.getElementById('ufc-screen').style.display = 'flex';
                 var track = document.getElementById('ufc-grid-track');
                 track.innerHTML = fights.map(function(f) {
-                    var f1Img = (f.f1.athlete && f.f1.athlete.headshot) ? f.f1.athlete.headshot.href : '';
-                    var f2Img = (f.f2.athlete && f.f2.athlete.headshot) ? f.f2.athlete.headshot.href : '';
+                    var f1Img = (f.f1.athlete && f.f1.athlete.headshot && f.f1.athlete.headshot.href) ? f.f1.athlete.headshot.href : (f.f1.athlete && f.f1.athlete.id ? 'https://a.espncdn.com/combiner/i?img=/i/headshots/mma/players/full/' + f.f1.athlete.id + '.png&w=150&h=150' : 'https://a.espncdn.com/combiner/i?img=/i/headshots/mma/players/full/default.png');
+                    var f2Img = (f.f2.athlete && f.f2.athlete.headshot && f.f2.athlete.headshot.href) ? f.f2.athlete.headshot.href : (f.f2.athlete && f.f2.athlete.id ? 'https://a.espncdn.com/combiner/i?img=/i/headshots/mma/players/full/' + f.f2.athlete.id + '.png&w=150&h=150' : 'https://a.espncdn.com/combiner/i?img=/i/headshots/mma/players/full/default.png');
+                    
                     var f1Class = "fighter-img", f2Class = "fighter-img", resultMeta = f.weightClass;
                     if(f.status.state === 'post') {
                         if(f.f1.winner) { f1Class += " winner"; f2Class += " loser"; resultMeta = '<span class="ufc-result">' + f.status.detail + '</span>'; }
