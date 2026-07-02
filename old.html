@@ -544,113 +544,13 @@
             if (fH > vH) { const sD = fH - vH + 100; track.style.setProperty('--scroll-end', `-${sD}px`); track.style.animation = `scrollVerticalOnePass ${sD/40}s linear forwards`; slideTimer = setTimeout(nextSlide, (sD/40 * 1000) + 3000); } else { slideTimer = setTimeout(nextSlide, 15000); }
         }
 
-        async function updateSportsTicker() { 
-            globalTVGuideData = []; globalRawGames = []; 
-            let upsetAlerts = []; 
-            
-            const configs = [{l:'nhl',s:'hockey',id:'nhl',t:'showNHL'},{l:'nfl',s:'football',id:'nfl',t:'showNFL'},{l:'nba',s:'basketball',id:'nba',t:'showNBA'},{l:'mlb',s:'baseball',id:'mlb',t:'showMLB'},{l:'college-football',s:'football',g:80,id:'cfb',t:'showCFB'},{l:'mens-college-basketball',s:'basketball',g:settings.cbb50?50:null,id:'cbb',t:'showCBB'},{l:'college-baseball',s:'baseball',id:'clb',t:'showCLB'}];
-            let allLive = [], allSched = [], livePage = [];
-            
-            const now = new Date();
-            const oneDayAgo = new Date(now.getTime() - 86400000);
-            const oneDayHence = new Date(now.getTime() + 86400000);
-            
-            for (const c of configs) { 
-                if (!settings[c.t]) continue; 
-                try { 
-                    const d = await (await fetch(`${settings.apiBase}/site/v2/sports/${c.s}/${c.l}/scoreboard${c.g?'?groups='+c.g:''}`)).json(); 
-                    if (!d.events) continue;
-                    
-                    d.events.forEach(ev => { 
-                        const comp = ev.competitions[0], status = comp.status.type;
-                        if (c.id === 'clb' && !comp.competitors.some(team => team.curatedRank && team.curatedRank.current <= (settings.clb50 ? 50 : 25))) return;
-                        
-                        // --- ENHANCED 24-HOUR STRICTION FOR EVERY ELEMENT ---
-                        const gameDate = new Date(ev.date);
-                        const isLiveGame = (status.state === 'in');
-                        const isUpcoming24h = (status.state === 'pre' && gameDate >= now && gameDate <= oneDayHence);
-                        const isRecentPost24h = (status.state === 'post' && gameDate >= oneDayAgo && gameDate <= now);
-                        
-                        // If it doesn't match any active timeline filter, drop it completely
-                        if (!isLiveGame && !isUpcoming24h && !isRecentPost24h) return;
-                        
-                        const h = comp.competitors[0], a = comp.competitors[1];
-                        const tv = comp.broadcasts?.[0]?.names?.[0] || 'TV';
-                        const statusText = (c.id === 'mlb' || c.id === 'clb') ? (comp.status.type.detail) : status.shortDetail;
-                        
-                        const matchKey = h.team.shortDisplayName + '_' + a.team.shortDisplayName;
-                        let hScoreClass = "team-score", aScoreClass = "team-score";
-                        
-                        if (previousScores[matchKey]) {
-                            if (previousScores[matchKey].h !== h.score) hScoreClass += " score-changed";
-                            if (previousScores[matchKey].a !== a.score) aScoreClass += " score-changed";
-                        }
-                        if (status.state === 'in' || status.state === 'post') {
-                            previousScores[matchKey] = { h: h.score, a: a.score };
-                        }
-
-                        if ((c.id === 'cfb' || c.id === 'cbb') && status.state === 'in' && comp.status.period >= 3) {
-                            const homeRank = h.team.curatedRank?.current || 999;
-                            const awayRank = a.team.curatedRank?.current || 999;
-                            if (homeRank <= 15 && awayRank > 25 && parseInt(a.score) > parseInt(h.score)) {
-                                upsetAlerts.push(`🚨 UPSET ALERT: UNRANKED ${a.team.shortDisplayName} LEADING #${homeRank} ${h.team.shortDisplayName} ${a.score}-${h.score} IN Q${comp.status.period} 🚨`);
-                            } else if (awayRank <= 15 && homeRank > 25 && parseInt(h.score) > parseInt(a.score)) {
-                                upsetAlerts.push(`🚨 UPSET ALERT: UNRANKED ${h.team.shortDisplayName} LEADING #${awayRank} ${a.team.shortDisplayName} ${h.score}-${a.score} IN Q${comp.status.period} 🚨`);
-                            }
-                        }
-
-                        let extraClass = "";
-                        const gameSearchString = (h.team.displayName + " " + a.team.displayName).toLowerCase();
-                        if (gameSearchString.includes("hurricanes")) extraClass = " card-focus-canes";
-                        else if (gameSearchString.includes("duke")) extraClass = " card-focus-duke";
-                        else if (gameSearchString.includes("ecu") || gameSearchString.includes("east carolina")) extraClass = " card-focus-ecu";
-
-                        globalRawGames.push({
-                            searchString: gameSearchString,
-                            html: `<div class="squad-game-card${extraClass}"><div class="card-meta"><span>${c.id.toUpperCase()}</span><span style="color:#00ff00">${tv}</span></div><div class="card-row"><div class="card-team"><img src="${a.team.logo}">${a.team.shortDisplayName}</div><div class="card-val-lg">${(status.state === 'in' || status.state === 'post') ? a.score : ''}</div></div><div class="card-row"><div class="card-team"><img src="${h.team.logo}">${h.team.shortDisplayName}</div><div class="card-val-lg">${(status.state === 'in' || status.state === 'post') ? h.score : ''}</div></div><div class="card-footer" style="justify-content:center; color:#39ff14;">${status.state === 'pre' ? new Date(ev.date).toLocaleDateString([],{weekday:'short'}) + ' ' + new Date(ev.date).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}) : statusText}</div></div>`
-                        });
-
-                        if (tv !== 'TV' && status.state === 'in') {
-                            const matchupStr = `${a.team.shortDisplayName} @ ${h.team.shortDisplayName}`;
-                            if (!globalTVGuideData.some(g => g.matchup === matchupStr)) globalTVGuideData.push({ network: tv, matchup: matchupStr, time: 'LIVE RIGHT NOW', isLive: true, timestamp: new Date(ev.date).getTime() });
-                        }
-                        
-                        if (status.state === 'in') {
-                            allLive.push({ html: `<span class="score-item"><span class="live-pulse">●</span><div class="team-box"><img class="team-logo" src="${a.team.logo}"><span class="${aScoreClass}">${a.score}</span></div><span class="vs-label">@</span><div class="team-box"><img class="team-logo" src="${h.team.logo}"><span class="${hScoreClass}">${h.score}</span></div><span class="game-status">${statusText}</span></span>`, league: c.id.toUpperCase() });
-                            livePage.push({ league: c.id.toUpperCase(), home: h.team.shortDisplayName, hScore: h.score, hLogo: h.team.logo, away: a.team.shortDisplayName, aScore: a.score, aLogo: a.team.logo, status: statusText, tv: tv, clock: comp.status.displayClock || status.detail });
-                        } else {
-                            allSched.push({ html: `<span class="score-item"><div class="team-box"><img class="team-logo" src="${a.team.logo}"></div><span class="vs-label">vs</span><div class="team-box"><img class="team-logo" src="${h.team.logo}"></div><span class="game-status" style="color:#00ffff">${comp.odds?.[0]?.details || "LINE TBD"} • ${new Date(ev.date).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</span></span>`, league: c.id.toUpperCase() });
-                        }
-                    });
-                } catch(e) {} 
-            }
-            
-            globalLiveGamesData = livePage;
-            let content = "";
-            if (upsetAlerts.length > 0) content += `<span class="score-item"><span style="color:#ff0000; font-size:4.5rem; font-weight:900; letter-spacing:0.2vw; text-shadow:0 0 15px red; margin: 0 5vw;">${upsetAlerts.join(' ••• ')}</span></span>`;
-            if (allLive.length > 0) {
-                content += `<div class="live-mode-header"><span class="live-pulse">●</span> LIVE SCORES</div>`;
-                const sorted = allLive.reduce((acc, g) => { if(!acc[g.league]) acc[g.league]=[]; acc[g.league].push(g.html); return acc; }, {});
-                for(const [l, gs] of Object.entries(sorted)) content += `<span class="ticker-section-head">${l}</span>` + gs.join('');
-            } else { allSched.forEach(g => content += `<span class="ticker-section-head">${g.league}</span>` + g.html); }
-            if (settings.marqueeMessage && settings.marqueeMessage.trim() !== '') content += `<span class="score-item"><span style="color:#fff; font-size:4rem; font-weight:900; letter-spacing:0.2vw; text-shadow:0 0 15px #ff007f; margin-left: 5vw;">••• ${settings.marqueeMessage.toUpperCase()} •••</span></span>`;
-
-            document.getElementById('ticker-track').innerHTML = content + content;
-            setTimeout(applyTickerSpeed, 100);
-        }
-
-        function renderLivePage() {
-            document.querySelectorAll('.slide-screen').forEach(el => el.style.display = 'none');
-            document.getElementById('live-game-screen').style.display = 'flex';
-            const track = document.getElementById('live-grid-track');
-            track.innerHTML = globalLiveGamesData.map(g => `<div class="info-card"><div class="card-meta"><span style="color:red">● LIVE</span><span>${g.league}</span><span>${g.status}</span></div><div class="card-row"><div class="card-team"><img src="${g.aLogo}">${g.away}</div><div class="card-val-lg">${g.aScore}</div></div><div class="card-row"><div class="card-team"><img src="${g.hLogo}">${g.home}</div><div class="card-val-lg">${g.hScore}</div></div><div class="card-footer"><span>${(g.clock === '0:00' ? '' : g.clock)}</span><span style="color:#00ff00">${g.tv}</span></div></div>`).join('');
-            const vH = document.getElementById('live-viewport').clientHeight, fH = track.scrollHeight;
-            if (fH > vH) { const sD = fH - vH + 120; track.style.setProperty('--scroll-end', `-${sD}px`); track.style.animation = `scrollVerticalOnePass ${sD/50}s linear 2s forwards`; slideTimer = setTimeout(nextSlide, (sD/50 * 1000) + 5000); } else { slideTimer = setTimeout(nextSlide, 15000); }
-        }
-
         async function showOdds() {
             let games = [];
             const leagues = [{id:'nfl',s:'football',t:'showNFL'},{id:'nba',s:'basketball',t:'showNBA'},{id:'nhl',s:'hockey',t:'showNHL'},{id:'mlb',s:'baseball',t:'showMLB'},{id:'mens-college-basketball',s:'basketball',t:'showCBB',g:settings.cbb50?50:null},{id:'college-baseball',s:'baseball',t:'showCLB'}];
+            
+            const now = new Date();
+            const oneDayHence = new Date(now.getTime() + 86400000);
+
             for (const l of leagues) {
                 if(!settings[l.t]) continue;
                 try {
@@ -658,8 +558,11 @@
                     if(!d.events) continue;
                     d.events.forEach(ev => { 
                         const comp = ev.competitions[0];
-                        if(comp.status.type.state === 'pre') {
-                            games.push({ l: (l.id==='mens-college-basketball'?'CBB':l.id==='college-baseball'?'BASEBALL':l.id.toUpperCase()), t:new Date(ev.date).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}), h:comp.competitors[0].team, a:comp.competitors[1].team, o:comp.odds?.[0]?.details || 'EVEN', ou:comp.odds?.[0]?.overUnder || '--', tv:comp.broadcasts?.[0]?.names?.[0] || 'TV' });
+                        
+                        // STRICT 24-HOUR TIME-GATE FOR BETTING LINES
+                        const gameDate = new Date(ev.date);
+                        if (comp.status.type.state === 'pre' && gameDate >= now && gameDate <= oneDayHence) {
+                            games.push({ l: (l.id==='mens-college-basketball'?'CBB':l.id==='college-baseball'?'BASEBALL':l.id.toUpperCase()), t:gameDate.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}), h:comp.competitors[0].team, a:comp.competitors[1].team, o:comp.odds?.[0]?.details || 'EVEN', ou:comp.odds?.[0]?.overUnder || '--', tv:comp.broadcasts?.[0]?.names?.[0] || 'TV' });
                         }
                     });
                 } catch(e) {}
