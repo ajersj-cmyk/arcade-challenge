@@ -53,8 +53,10 @@
 
         /* SLIDES & GRIDS */
         .slide-screen { position: absolute; inset: 0; z-index: 10; display: none; flex-direction: column; padding: 2vh 4vh; font-family: 'Share Tech Mono', monospace; align-items: center; overflow: hidden; }
-        .screen-header { display: flex; align-items: center; justify-content: center; font-size: 9.5vh; font-weight: 900; color: #fff; text-transform: uppercase; letter-spacing: 1vh; margin-bottom: 2vh; margin-top: 1vh; text-shadow: 0 0 15px rgba(0, 255, 255, 0.9); z-index: 20; border-bottom: 0.6vh solid #00ffff; padding-bottom: 1vh; width: 95%; text-align: center; }
-        .league-logo { height: 1.2em; margin-right: 2vw; filter: drop-shadow(0 0 10px rgba(255,255,255,0.5)); border-radius: 1vh; }
+        
+        /* COMPACT SCREEN HEADER */
+        .screen-header { font-size: 9.5vh; font-weight: 900; color: #fff; text-transform: uppercase; letter-spacing: 1vh; margin-bottom: 2vh; margin-top: 1vh; text-shadow: 0 0 15px rgba(0, 255, 255, 0.9); z-index: 20; border-bottom: 0.6vh solid #00ffff; padding-bottom: 1vh; width: 95%; text-align: center; display: block; }
+        .league-logo { height: 1em; margin-right: 1.5vw; filter: drop-shadow(0 0 10px rgba(255,255,255,0.5)); border-radius: 1vh; display: inline-block; vertical-align: middle; margin-top: -1.5vh; }
         
         .content-viewport { width: 95%; height: 62vh; overflow: hidden; position: relative; z-index: 20; padding-bottom: var(--ticker-height); }
         .grid-track { display: grid; grid-template-columns: repeat(2, 1fr); gap: 2vw; padding-bottom: 10vh; will-change: transform; }
@@ -71,7 +73,7 @@
 
         .card-row { display: flex !important; flex-direction: row !important; justify-content: space-between !important; align-items: center !important; margin-bottom: 1.5vh; width: 100%; }
         .card-team { display: flex; align-items: center; gap: 2vh; font-size: 5.2vh; font-weight: 900; color: white; text-transform: uppercase; } 
-        .card-team img { width: 8.2vh; height: 8.2vh; object-fit: contain; } /* Removed background and border to fix PNG squares */
+        .card-team img { width: 8.2vh; height: 8.2vh; object-fit: contain; } 
         .card-val-lg { font-weight: 900; color: #facc15; font-size: 5.7vh; } 
         .card-meta { display: flex; justify-content: space-between; border-bottom: 2px solid #004444; padding-bottom: 1vh; margin-bottom: 1.5vh; font-size: 3.5vh; color: #00aaaa; font-weight: 900; text-transform: uppercase; }
         .card-footer { margin-top: auto; padding-top: 1.2vh; border-top: 2px dashed #004444; display: flex; justify-content: space-between; align-items: center; color: #aaa; font-size: 3.5vh; text-transform: uppercase; }
@@ -116,7 +118,7 @@
         .news-title { font-size: 4vh; color: white; font-weight: 900; line-height: 1.2; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
         .news-source { font-size: 2.8vh; color: #ff007f; font-weight: 900; margin-top: 1vh; text-transform: uppercase; letter-spacing: 0.2vh; }
 
-        /* PUNCHY ORANGE UFC SLIDE - FIXED TO ORIGINAL FALLBACKS */
+        /* PUNCHY ORANGE UFC SLIDE */
         .ufc-card { background: #0a0500; border: 1px solid #552200; border-left: 1vh solid #ff6600; border-radius: 1vh; display: flex; flex-direction: column; padding: 2.5vh; position: relative; overflow: hidden; }
         .ufc-matchup { display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 1vh; z-index: 2; position: relative; }
         .fighter-col { display: flex; flex-direction: column; align-items: center; width: 40%; }
@@ -203,7 +205,6 @@
             </div>
         </div>
         
-        <!-- COMMAND CENTER WITH MARQUEE DEEP DIVE -->
         <div id="command-screen" class="slide-screen">
             <div class="screen-header" style="color: #ffffff; border-bottom-color: #ffffff;">AHLERS COMMAND CENTER</div>
             <div class="content-viewport" id="command-viewport">
@@ -357,6 +358,7 @@
             var saved = localStorage.getItem('ahlersArcadeSettings');
             if (saved) settings = JSON.parse(saved);
             
+            // Failsafe parameter injection
             if (typeof settings.leaders === 'undefined') settings.leaders = true;
             if (typeof settings.command === 'undefined') settings.command = true;
             if (typeof settings.pga === 'undefined') settings.pga = true;
@@ -367,6 +369,7 @@
             if (typeof settings.showATP === 'undefined') settings.showATP = true;
             if (typeof settings.showWTA === 'undefined') settings.showWTA = true;
             
+            // Auto-correct to Carolina Hurricanes to avoid Miami CFB bug
             if (settings.mySquadTeams === "Hurricanes, Duke, ECU, East Carolina" || settings.mySquadTeams === "Hurricanes, Duke, ECU") {
                 settings.mySquadTeams = "Carolina Hurricanes, Duke, ECU, East Carolina";
             }
@@ -685,7 +688,6 @@
                             var aScoreStr = (status.state === 'in' || status.state === 'post') ? a.score : '';
                             var timeStr = (status.state === 'pre') ? new Date(ev.date).toLocaleDateString([],{weekday:'short'}) + ' ' + new Date(ev.date).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}) : statusText;
 
-                            // TV CARDS - Added onerror fallback to remove broken images cleanly
                             newRawGames.push({
                                 searchString: gameSearchString,
                                 html: '<div class="squad-game-card' + extraClass + '"><div class="card-meta"><span>' + displayLeague + '</span><span style="color:#00ff00">' + tv + '</span></div><div class="card-row"><div class="card-team"><img src="' + aLogo + '" onerror="this.src=\'' + aFallback + '\'; this.onerror=null;">' + aName + '</div><div class="card-val-lg">' + aScoreStr + '</div></div><div class="card-row"><div class="card-team"><img src="' + hLogo + '" onerror="this.src=\'' + hFallback + '\'; this.onerror=null;">' + hName + '</div><div class="card-val-lg">' + hScoreStr + '</div></div><div class="card-footer" style="justify-content:center; color:#39ff14;">' + timeStr + '</div></div>'
@@ -729,13 +731,13 @@
                          '</div>' +
                          '<div style="display:flex; justify-content:space-between; align-items:center;">' +
                              '<div style="display:flex; align-items:center; gap: 1vh;">' +
-                                 '<img src="' + g.aLogo + '" style="width:4.5vh; height:4.5vh; object-fit:contain;" onerror="this.src=\'' + g.aFallback + '\'; this.onerror=null;">' +
+                                 '<img src="' + g.aLogo + '" style="width:4.5vh; height:4.5vh; object-fit:cover; border-radius:0.5vh; background:#000;" onerror="this.src=\'' + g.aFallback + '\'; this.onerror=null;">' +
                                  '<span style="color:white; font-size:2.8vh; font-weight:900;">' + g.aName + '</span>' +
                              '</div>' +
                              '<span style="color:#ff6600; font-size:2vh; font-weight:900; font-style:italic;">VS</span>' +
                              '<div style="display:flex; align-items:center; gap: 1vh;">' +
                                  '<span style="color:white; font-size:2.8vh; font-weight:900;">' + g.hName + '</span>' +
-                                 '<img src="' + g.hLogo + '" style="width:4.5vh; height:4.5vh; object-fit:contain;" onerror="this.src=\'' + g.hFallback + '\'; this.onerror=null;">' +
+                                 '<img src="' + g.hLogo + '" style="width:4.5vh; height:4.5vh; object-fit:cover; border-radius:0.5vh; background:#000;" onerror="this.src=\'' + g.hFallback + '\'; this.onerror=null;">' +
                              '</div>' +
                          '</div>' +
                          '<div style="display:flex; justify-content:space-between; align-items:center; margin-top: 0.5vh;">' +
@@ -906,11 +908,8 @@
                             var gameTime = new Date(ev.date).getTime();
                             var diffHours = (gameTime - nowTime) / (1000 * 60 * 60);
                             
-                            var isLive = (comp.status.type.state === 'in');
-                            var isUpcoming24h = (comp.status.type.state === 'pre' && diffHours >= 0 && diffHours <= 24);
-                            var isRecent24h = (comp.status.type.state === 'post' && diffHours >= -24 && diffHours <= 0);
-
-                            if (isLive || isUpcoming24h || isRecent24h) {
+                            // 24 Hour Constraint
+                            if ((comp.status.type.state === 'in' || comp.status.type.state === 'post') || (comp.status.type.state === 'pre' && diffHours >= 0 && diffHours <= 24)) {
                                 var h = comp.competitors[0], a = comp.competitors[1];
                                 var hLogo = (h.team && h.team.logo) ? h.team.logo : 'https://a.espncdn.com/combiner/i?img=/i/teamlogos/default-team-logo-500.png';
                                 var aLogo = (a.team && a.team.logo) ? a.team.logo : 'https://a.espncdn.com/combiner/i?img=/i/teamlogos/default-team-logo-500.png';
@@ -1140,11 +1139,13 @@
                 var html = "";
                 
                 var groups = d.children ? d.children : (d.standings ? [d] : []);
+                
                 groups.forEach(function(group) {
                     var groupName = group.name || "STANDINGS";
                     html += '<div class="division-block"><div class="division-header">' + groupName + '</div>';
                     var entries = group.standings ? group.standings.entries : (group.children && group.children[0].standings ? group.children[0].standings.entries : []);
                     if (!entries) entries = [];
+                    
                     entries.sort(function(a, b) { 
                         var getVal = function(t) { 
                             var wp = t.stats.find(function(st) { return st.name.toLowerCase() === 'winpercent'; }); 
@@ -1155,13 +1156,30 @@
                         }; 
                         return getVal(b) - getVal(a); 
                     });
+                    
                     entries.forEach(function(t) { 
-                        var rS = t.stats.find(function(st) { return ['record','overall','overallRecord','points'].indexOf(st.name) > -1 || st.type === 'total'; }); 
-                        var logoStr = (t.team.logos && t.team.logos[0]) ? t.team.logos[0].href : '';
-                        html += '<div class="st-row"><img class="st-logo" src="' + logoStr + '"><div class="st-name">' + t.team.displayName + '</div><div class="st-rec">' + (rS ? rS.displayValue : '0-0') + '</div></div>'; 
+                        var recText = '0-0';
+                        var statsArr = t.stats || [];
+                        var overallNode = statsArr.find(function(st) { return st.name === 'All Splits' || st.name === 'overall' || st.name === 'overallRecord'; });
+                        
+                        if (overallNode && (overallNode.displayValue || overallNode.summary)) {
+                            recText = overallNode.displayValue || overallNode.summary;
+                        } else {
+                            var w = statsArr.find(function(st) { return st.name === 'wins'; });
+                            var l = statsArr.find(function(st) { return st.name === 'losses'; });
+                            var tie = statsArr.find(function(st) { return st.name === 'ties'; });
+                            if (w && l) {
+                                recText = w.displayValue + '-' + l.displayValue;
+                                if (tie && tie.displayValue && tie.displayValue !== '0') recText += '-' + tie.displayValue;
+                            }
+                        }
+                        
+                        var logoStr = (t.team.logos && t.team.logos[0]) ? t.team.logos[0].href : 'https://a.espncdn.com/combiner/i?img=/i/teamlogos/default-team-logo-500.png';
+                        html += '<div class="st-row"><img class="st-logo" src="' + logoStr + '"><div class="st-name">' + t.team.displayName + '</div><div class="st-rec">' + recText + '</div></div>'; 
                     });
                     html += '</div>';
                 });
+                
                 if(track) {
                     track.innerHTML = html;
                     var vH = document.getElementById(cleanId + '-viewport').clientHeight, fH = track.scrollHeight;
