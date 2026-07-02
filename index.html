@@ -56,7 +56,17 @@
         
         /* COMPACT SCREEN HEADER */
         .screen-header { font-size: 9.5vh; font-weight: 900; color: #fff; text-transform: uppercase; letter-spacing: 1vh; margin-bottom: 2vh; margin-top: 1vh; text-shadow: 0 0 15px rgba(0, 255, 255, 0.9); z-index: 20; border-bottom: 0.6vh solid #00ffff; padding-bottom: 1vh; width: 95%; text-align: center; display: block; }
-        .league-logo { height: 1em; margin-right: 1.5vw; filter: drop-shadow(0 0 10px rgba(255,255,255,0.5)); border-radius: 1vh; display: inline-block; vertical-align: middle; margin-top: -1.5vh; }
+        
+        /* DOUBLE SHADOW APPLIED TO LEAGUE LOGOS */
+        .league-logo { 
+            height: 1em; 
+            margin-right: 1.5vw; 
+            filter: drop-shadow(0px 0px 2px rgba(255, 255, 255, 0.8)) drop-shadow(0px 0px 8px rgba(255, 255, 255, 0.3)); 
+            border-radius: 1vh; 
+            display: inline-block; 
+            vertical-align: middle; 
+            margin-top: -1.5vh; 
+        }
         
         .content-viewport { width: 95%; height: 62vh; overflow: hidden; position: relative; z-index: 20; padding-bottom: var(--ticker-height); }
         .grid-track { display: grid; grid-template-columns: repeat(2, 1fr); gap: 2vw; padding-bottom: 10vh; will-change: transform; }
@@ -130,12 +140,14 @@
         .news-title { font-size: 4vh; color: white; font-weight: 900; line-height: 1.2; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
         .news-source { font-size: 2.8vh; color: #ff007f; font-weight: 900; margin-top: 1vh; text-transform: uppercase; letter-spacing: 0.2vh; }
 
-        /* PUNCHY ORANGE UFC SLIDE */
+        /* PUNCHY ORANGE UFC SLIDE - DOUBLE SHADOW APPLIED TO FIGHTERS */
         .ufc-card { background: #0a0500; border: 1px solid #552200; border-left: 1vh solid #ff6600; border-radius: 1vh; display: flex; flex-direction: column; padding: 2.5vh; position: relative; overflow: hidden; }
         .ufc-matchup { display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 1vh; z-index: 2; position: relative; }
         .fighter-col { display: flex; flex-direction: column; align-items: center; width: 40%; }
-        .fighter-img { height: 16vh; width: 16vh; object-fit: cover; object-position: top; border-radius: 50%; filter: drop-shadow(0 0 1vh rgba(255,255,255,0.2)); transition: all 0.3s ease; background: #000; border: 2px solid #ff6600;}
-        .fighter-img.winner { filter: drop-shadow(0 0 2vh #39ff14); transform: scale(1.05); border-color: #39ff14; }
+        
+        .fighter-img { height: 16vh; width: 16vh; object-fit: cover; object-position: top; border-radius: 50%; filter: drop-shadow(0px 0px 2px rgba(255, 255, 255, 0.5)); transition: all 0.3s ease; background: #000; border: 2px solid #ff6600;}
+        .fighter-img.winner { filter: drop-shadow(0px 0px 2px #39ff14) drop-shadow(0px 0px 8px rgba(57, 255, 20, 0.4)); transform: scale(1.05); border-color: #39ff14; }
+        
         .fighter-img.loser { filter: grayscale(100%) brightness(0.5); opacity: 0.6; border-color: #555; }
         .fighter-name { font-size: 3vh; color: white; font-weight: 900; text-align: center; text-transform: uppercase; margin-top: 1.5vh; line-height: 1.1; }
         .ufc-center { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 20%; }
