@@ -368,16 +368,12 @@
             if (action === 'settingsUpdated') { settings = args[0]; loadSettingsUI(); updateSportsTicker(); applyTickerSpeed(); }
         }
 
-        // NATIVE SUMMARY PARSER (Strips HTML tags & breaks clean bullet arrays)
         function generateArticleSummary(htmlString) {
             if (!htmlString) return '';
             let cleanText = htmlString.replace(/<\/?[^>]+(>|$)/g, "").trim();
             cleanText = cleanText.replace(/&nbsp;/g, " ").replace(/&amp;/g, "&").replace(/&quot;/g, '"');
-            
-            // Extract distinct complete statements
             let sentences = cleanText.split(/(?<=[.!?])\s+/).filter(s => s.length > 25 && !s.includes("Yahoo") && !s.includes("Copyright") && !s.includes("CBS Sports"));
             if (sentences.length === 0) return '';
-            
             return `<div class="summary-box">` + sentences.slice(0, 2).map(s => `<div class="summary-bullet"><span>${s}</span></div>`).join('') + `</div>`;
         }
 
@@ -554,10 +550,13 @@
             
             const configs = [{l:'nhl',s:'hockey',id:'nhl',t:'showNHL'},{l:'nfl',s:'football',id:'nfl',t:'showNFL'},{l:'nba',s:'basketball',id:'nba',t:'showNBA'},{l:'mlb',s:'baseball',id:'mlb',t:'showMLB'},{l:'college-football',s:'football',g:80,id:'cfb',t:'showCFB'},{l:'mens-college-basketball',s:'basketball',g:settings.cbb50?50:null,id:'cbb',t:'showCBB'},{l:'college-baseball',s:'baseball',id:'clb',t:'showCLB'}];
             let allLive = [], allSched = [], livePage = [];
-            const now = new Date(), tomorrow = new Date(now.getTime() + 86400000);
+            
+            const now = new Date();
+            const oneDayAgo = new Date(now.getTime() - 86400000);
+            const oneDayHence = new Date(now.getTime() + 86400000);
             
             for (const c of configs) { 
-                if (!settings[c.t]) continue; // Removed Month Restraints completely for dynamic reliability
+                if (!settings[c.t]) continue; 
                 try { 
                     const d = await (await fetch(`${settings.apiBase}/site/v2/sports/${c.s}/${c.l}/scoreboard${c.g?'?groups='+c.g:''}`)).json(); 
                     if (!d.events) continue;
@@ -565,6 +564,15 @@
                     d.events.forEach(ev => { 
                         const comp = ev.competitions[0], status = comp.status.type;
                         if (c.id === 'clb' && !comp.competitors.some(team => team.curatedRank && team.curatedRank.current <= (settings.clb50 ? 50 : 25))) return;
+                        
+                        // --- ENHANCED 24-HOUR STRICTION FOR EVERY ELEMENT ---
+                        const gameDate = new Date(ev.date);
+                        const isLiveGame = (status.state === 'in');
+                        const isUpcoming24h = (status.state === 'pre' && gameDate >= now && gameDate <= oneDayHence);
+                        const isRecentPost24h = (status.state === 'post' && gameDate >= oneDayAgo && gameDate <= now);
+                        
+                        // If it doesn't match any active timeline filter, drop it completely
+                        if (!isLiveGame && !isUpcoming24h && !isRecentPost24h) return;
                         
                         const h = comp.competitors[0], a = comp.competitors[1];
                         const tv = comp.broadcasts?.[0]?.names?.[0] || 'TV';
@@ -602,18 +610,17 @@
                             html: `<div class="squad-game-card${extraClass}"><div class="card-meta"><span>${c.id.toUpperCase()}</span><span style="color:#00ff00">${tv}</span></div><div class="card-row"><div class="card-team"><img src="${a.team.logo}">${a.team.shortDisplayName}</div><div class="card-val-lg">${(status.state === 'in' || status.state === 'post') ? a.score : ''}</div></div><div class="card-row"><div class="card-team"><img src="${h.team.logo}">${h.team.shortDisplayName}</div><div class="card-val-lg">${(status.state === 'in' || status.state === 'post') ? h.score : ''}</div></div><div class="card-footer" style="justify-content:center; color:#39ff14;">${status.state === 'pre' ? new Date(ev.date).toLocaleDateString([],{weekday:'short'}) + ' ' + new Date(ev.date).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}) : statusText}</div></div>`
                         });
 
-                        if (status.state === 'in' || status.state === 'post' || (new Date(ev.date) > now && new Date(ev.date) < tomorrow)) { 
-                            if (tv !== 'TV' && status.state === 'in') {
-                                const matchupStr = `${a.team.shortDisplayName} @ ${h.team.shortDisplayName}`;
-                                if (!globalTVGuideData.some(g => g.matchup === matchupStr)) globalTVGuideData.push({ network: tv, matchup: matchupStr, time: 'LIVE RIGHT NOW', isLive: true, timestamp: new Date(ev.date).getTime() });
-                            }
-                            if (status.state === 'in') {
-                                allLive.push({ html: `<span class="score-item"><span class="live-pulse">●</span><div class="team-box"><img class="team-logo" src="${a.team.logo}"><span class="${aScoreClass}">${a.score}</span></div><span class="vs-label">@</span><div class="team-box"><img class="team-logo" src="${h.team.logo}"><span class="${hScoreClass}">${h.score}</span></div><span class="game-status">${statusText}</span></span>`, league: c.id.toUpperCase() });
-                                livePage.push({ league: c.id.toUpperCase(), home: h.team.shortDisplayName, hScore: h.score, hLogo: h.team.logo, away: a.team.shortDisplayName, aScore: a.score, aLogo: a.team.logo, status: statusText, tv: tv, clock: comp.status.displayClock || status.detail });
-                            } else {
-                                allSched.push({ html: `<span class="score-item"><div class="team-box"><img class="team-logo" src="${a.team.logo}"></div><span class="vs-label">vs</span><div class="team-box"><img class="team-logo" src="${h.team.logo}"></div><span class="game-status" style="color:#00ffff">${comp.odds?.[0]?.details || "LINE TBD"} • ${new Date(ev.date).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</span></span>`, league: c.id.toUpperCase() });
-                            }
-                        } 
+                        if (tv !== 'TV' && status.state === 'in') {
+                            const matchupStr = `${a.team.shortDisplayName} @ ${h.team.shortDisplayName}`;
+                            if (!globalTVGuideData.some(g => g.matchup === matchupStr)) globalTVGuideData.push({ network: tv, matchup: matchupStr, time: 'LIVE RIGHT NOW', isLive: true, timestamp: new Date(ev.date).getTime() });
+                        }
+                        
+                        if (status.state === 'in') {
+                            allLive.push({ html: `<span class="score-item"><span class="live-pulse">●</span><div class="team-box"><img class="team-logo" src="${a.team.logo}"><span class="${aScoreClass}">${a.score}</span></div><span class="vs-label">@</span><div class="team-box"><img class="team-logo" src="${h.team.logo}"><span class="${hScoreClass}">${h.score}</span></div><span class="game-status">${statusText}</span></span>`, league: c.id.toUpperCase() });
+                            livePage.push({ league: c.id.toUpperCase(), home: h.team.shortDisplayName, hScore: h.score, hLogo: h.team.logo, away: a.team.shortDisplayName, aScore: a.score, aLogo: a.team.logo, status: statusText, tv: tv, clock: comp.status.displayClock || status.detail });
+                        } else {
+                            allSched.push({ html: `<span class="score-item"><div class="team-box"><img class="team-logo" src="${a.team.logo}"></div><span class="vs-label">vs</span><div class="team-box"><img class="team-logo" src="${h.team.logo}"></div><span class="game-status" style="color:#00ffff">${comp.odds?.[0]?.details || "LINE TBD"} • ${new Date(ev.date).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</span></span>`, league: c.id.toUpperCase() });
+                        }
                     });
                 } catch(e) {} 
             }
