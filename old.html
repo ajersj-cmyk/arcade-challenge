@@ -276,7 +276,9 @@
     </div>
 
     <script>
-        const bc = new BroadcastChannel('cinema_channel');
+        // TV-SAFE BROADCAST CHANNEL
+        const bc = window.BroadcastChannel ? new BroadcastChannel('cinema_channel') : { postMessage: function(){} };
+        
         let rotationStep = 0, slideTimer, cursorTimer, globalLiveGamesData = [], globalTVGuideData = [], globalRawGames = [];
         let previousScores = {}; 
 
@@ -288,7 +290,14 @@
             marqueeMessage: "WELCOME TO AHLERS ARCADE",
             tickerSpeed: 5 
         };
-        let settings = JSON.parse(localStorage.getItem('ahlersArcadeSettings')) || defaultSettings;
+        
+        // TV-SAFE LOCAL STORAGE
+        let settings = defaultSettings;
+        try {
+            if (localStorage.getItem('ahlersArcadeSettings')) {
+                settings = JSON.parse(localStorage.getItem('ahlersArcadeSettings'));
+            }
+        } catch(e) {}
 
         function updateSettings() {
             Object.keys(defaultSettings).forEach(k => { 
@@ -299,8 +308,9 @@
                     else settings[k] = el.value;
                 }
             });
-            localStorage.setItem('ahlersArcadeSettings', JSON.stringify(settings));
-            bcSend('settingsUpdated', settings);
+            try { localStorage.setItem('ahlersArcadeSettings', JSON.stringify(settings)); } catch(e) {}
+            if(window.BroadcastChannel) bc.postMessage({ action: 'settingsUpdated', args: [settings] });
+            loadSettingsUI(); updateSportsTicker(); applyTickerSpeed();
         }
         
         function loadSettingsUI() { 
@@ -361,18 +371,22 @@
         }
         setInterval(fetchCommandData, 900000); 
 
-        function bcSend(action, ...args) { if (document.body.classList.contains('remote-active')) bc.postMessage({ action, args }); executeLocal(action, args); }
-        bc.onmessage = (ev) => executeLocal(ev.data.action, ev.data.args);
-        function executeLocal(action, args) { 
-            if (action === 'forceNext') { clearTimeout(slideTimer); nextSlide(); } 
-            if (action === 'settingsUpdated') { settings = args[0]; loadSettingsUI(); updateSportsTicker(); applyTickerSpeed(); }
+        if (window.BroadcastChannel) {
+            bc.onmessage = (ev) => {
+                if (ev.data.action === 'forceNext') { clearTimeout(slideTimer); nextSlide(); } 
+                if (ev.data.action === 'settingsUpdated') { settings = ev.data.args[0]; loadSettingsUI(); updateSportsTicker(); applyTickerSpeed(); }
+            };
         }
 
+        // TV-SAFE NATIVE SUMMARY PARSER
         function generateArticleSummary(htmlString) {
             if (!htmlString) return '';
             let cleanText = htmlString.replace(/<\/?[^>]+(>|$)/g, "").trim();
             cleanText = cleanText.replace(/&nbsp;/g, " ").replace(/&amp;/g, "&").replace(/&quot;/g, '"');
-            let sentences = cleanText.split(/(?<=[.!?])\s+/).filter(s => s.length > 25 && !s.includes("Yahoo") && !s.includes("Copyright") && !s.includes("CBS Sports"));
+            
+            let sentences = cleanText.match(/[^.!?]+[.!?]+/g) || [cleanText];
+            sentences = sentences.map(s => s.trim()).filter(s => s.length > 25 && !s.includes("Yahoo") && !s.includes("Copyright") && !s.includes("CBS Sports"));
+            
             if (sentences.length === 0) return '';
             return `<div class="summary-box">` + sentences.slice(0, 2).map(s => `<div class="summary-bullet"><span>${s}</span></div>`).join('') + `</div>`;
         }
@@ -558,9 +572,9 @@
                     if(!d.events) continue;
                     d.events.forEach(ev => { 
                         const comp = ev.competitions[0];
-                        
-                        // STRICT 24-HOUR TIME-GATE FOR BETTING LINES
                         const gameDate = new Date(ev.date);
+                        
+                        // STRICT 24-HOUR TIME-GATE FOR ODDS
                         if (comp.status.type.state === 'pre' && gameDate >= now && gameDate <= oneDayHence) {
                             games.push({ l: (l.id==='mens-college-basketball'?'CBB':l.id==='college-baseball'?'BASEBALL':l.id.toUpperCase()), t:gameDate.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}), h:comp.competitors[0].team, a:comp.competitors[1].team, o:comp.odds?.[0]?.details || 'EVEN', ou:comp.odds?.[0]?.overUnder || '--', tv:comp.broadcasts?.[0]?.names?.[0] || 'TV' });
                         }
@@ -621,7 +635,18 @@
         }
 
         function showCursor() { document.body.style.cursor = 'default'; clearTimeout(cursorTimer); cursorTimer = setTimeout(()=>document.body.style.cursor='none', 3000); }
-        setInterval(updateSportsTicker, 60000); updateSportsTicker(); nextSlide();
+        
+        // MASTER TICKER UPDATE WRAPPER
+        async function runTickerUpdate() {
+            try { await updateSportsTicker(); } catch(e) {}
+            // FAILSAFE: If no content loaded, clear the loading screen anyway
+            let track = document.getElementById('ticker-track');
+            if (track.innerHTML.includes('LOADING AHLERS ARCADE...')) {
+                track.innerHTML = `<span class="score-item"><span style="color:#aaa; font-size:4rem; font-weight:900; letter-spacing:0.2vw;">AWAITING SPORTS DATA...</span></span>`;
+            }
+        }
+        
+        setInterval(runTickerUpdate, 60000); runTickerUpdate(); nextSlide();
     </script>
 </body>
 </html>
