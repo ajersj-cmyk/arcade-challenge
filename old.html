@@ -117,7 +117,9 @@
         .ufc-card { background: #0a0500; border: 1px solid #552200; border-left: 1vh solid #ff6600; border-radius: 1vh; display: flex; flex-direction: column; padding: 2.5vh; position: relative; overflow: hidden; }
         .ufc-matchup { display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 1vh; z-index: 2; position: relative; }
         .fighter-col { display: flex; flex-direction: column; align-items: center; width: 40%; }
-        .fighter-img { height: 16vh; object-fit: contain; }
+        .fighter-img { height: 16vh; object-fit: contain; filter: drop-shadow(0 0 1vh rgba(255,255,255,0.2)); transition: all 0.3s ease; }
+        .fighter-img.winner { filter: drop-shadow(0 0 2vh #39ff14); transform: scale(1.05); }
+        .fighter-img.loser { filter: grayscale(100%) brightness(0.5); opacity: 0.6; }
         .fighter-name { font-size: 3vh; color: white; font-weight: 900; text-align: center; text-transform: uppercase; margin-top: 1vh; line-height: 1.1; }
         .ufc-center { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 20%; }
         .ufc-vs { font-size: 4.5vh; color: #ff6600; font-weight: 900; font-style: italic; }
@@ -194,7 +196,7 @@
             </div>
         </div>
         
-        <!-- UPDATED COMMAND CENTER WITH MARQUEE DEEP DIVE -->
+        <!-- COMMAND CENTER WITH MARQUEE DEEP DIVE -->
         <div id="command-screen" class="slide-screen">
             <div class="screen-header" style="color: #ffffff; border-bottom-color: #ffffff;">AHLERS COMMAND CENTER</div>
             <div class="content-viewport" id="command-viewport">
@@ -757,6 +759,96 @@
             } catch (e) { rotationStep++; nextSlide(); }
         }
 
+        async function showUFC() {
+            if(!settings.ufc) { rotationStep++; nextSlide(); return; }
+            try {
+                var res = await fetch(settings.apiBase + '/site/v2/sports/mma/ufc/scoreboard');
+                if(!res.ok) { rotationStep++; nextSlide(); return; }
+                var d = await res.json();
+                if(!d.events || d.events.length === 0) { rotationStep++; nextSlide(); return; }
+                
+                var title = d.events[0].name || "UFC FIGHT NIGHT"; 
+                document.getElementById('ufc-title').innerText = title.toUpperCase();
+
+                var fights = [];
+                d.events[0].competitions.forEach(function(fight) {
+                    var status = fight.status.type;
+                    var f1 = fight.competitors[0];
+                    var f2 = fight.competitors[1];
+                    
+                    var f1Rec = (f1.records && f1.records.length > 0) ? f1.records[0].summary : '';
+                    var f2Rec = (f2.records && f2.records.length > 0) ? f2.records[0].summary : '';
+
+                    fights.push({
+                        weightClass: (fight.type && fight.type.text) ? fight.type.text : "Bout",
+                        f1: f1,
+                        f2: f2,
+                        f1Rec: f1Rec,
+                        f2Rec: f2Rec,
+                        status: status,
+                        clock: fight.status.displayClock,
+                        period: fight.status.period
+                    });
+                });
+
+                if(fights.length === 0) { rotationStep++; nextSlide(); return; }
+
+                document.querySelectorAll('.slide-screen').forEach(function(el) { el.style.display = 'none'; });
+                document.getElementById('ufc-screen').style.display = 'flex';
+                
+                var track = document.getElementById('ufc-grid-track');
+                track.innerHTML = fights.map(function(f) {
+                    var f1Img = (f.f1.athlete && f.f1.athlete.headshot && f.f1.athlete.headshot.href) ? f.f1.athlete.headshot.href : 'https://a.espncdn.com/combiner/i?img=/i/headshots/mma/players/full/' + f.f1.id + '.png&h=150&w=150&scale=crop';
+                    var f2Img = (f.f2.athlete && f.f2.athlete.headshot && f.f2.athlete.headshot.href) ? f.f2.athlete.headshot.href : 'https://a.espncdn.com/combiner/i?img=/i/headshots/mma/players/full/' + f.f2.id + '.png&h=150&w=150&scale=crop';
+                    
+                    var f1Class = "fighter-img";
+                    var f2Class = "fighter-img";
+                    var resultMeta = f.weightClass;
+                    
+                    if(f.status.state === 'post') {
+                        if(f.f1.winner) { f1Class += " winner"; f2Class += " loser"; resultMeta = '<span class="ufc-result">' + f.status.detail + '</span>'; }
+                        else if(f.f2.winner) { f2Class += " winner"; f1Class += " loser"; resultMeta = '<span class="ufc-result">' + f.status.detail + '</span>'; }
+                        else { resultMeta = '<span class="ufc-result" style="color:#facc15;">DRAW</span>'; }
+                    }
+
+                    var liveBadge = f.status.state === 'in' ? '<div class="ufc-live-badge">RND ' + f.period + ' • ' + f.clock + '</div>' : '';
+                    var f1RecHtml = f.f1Rec ? '<div style="color:#00ffff; font-size:2.2vh; margin-top:0.5vh; font-weight:bold; letter-spacing:0.1vw;">' + f.f1Rec + '</div>' : '';
+                    var f2RecHtml = f.f2Rec ? '<div style="color:#00ffff; font-size:2.2vh; margin-top:0.5vh; font-weight:bold; letter-spacing:0.1vw;">' + f.f2Rec + '</div>' : '';
+                    var f1Name = f.f1.athlete ? f.f1.athlete.shortName : 'Fighter';
+                    var f2Name = f.f2.athlete ? f.f2.athlete.shortName : 'Fighter';
+
+                    return '<div class="ufc-card">' +
+                        liveBadge +
+                        '<div class="ufc-matchup">' +
+                            '<div class="fighter-col">' +
+                                '<img src="' + f2Img + '" class="' + f2Class + '" onerror="this.src=\'https://a.espncdn.com/combiner/i?img=/i/headshots/mma/players/full/default.png\'">' +
+                                '<div class="fighter-name">' + f2Name + '</div>' +
+                                f2RecHtml +
+                            '</div>' +
+                            '<div class="ufc-center">' +
+                                '<div class="ufc-vs">VS</div>' +
+                            '</div>' +
+                            '<div class="fighter-col">' +
+                                '<img src="' + f1Img + '" class="' + f1Class + '" onerror="this.src=\'https://a.espncdn.com/combiner/i?img=/i/headshots/mma/players/full/default.png\'">' +
+                                '<div class="fighter-name">' + f1Name + '</div>' +
+                                f1RecHtml +
+                            '</div>' +
+                        '</div>' +
+                        '<div class="ufc-meta">' +
+                            '<span>' + (f.status.state === 'post' ? 'FINAL' : f.weightClass) + '</span>' +
+                            (f.status.state === 'post' ? resultMeta : '') +
+                        '</div>' +
+                    '</div>';
+                }).join('');
+
+                var vH = document.getElementById('ufc-viewport').clientHeight, fH = track.scrollHeight;
+                if (fH > vH) { var sD = fH - vH + 100; track.style.setProperty('--scroll-end', '-' + sD + 'px'); track.style.animation = 'scrollVerticalOnePass ' + (sD/50) + 's linear forwards'; slideTimer = setTimeout(nextSlide, (sD/50 * 1000) + 3000); } else { slideTimer = setTimeout(nextSlide, 15000); }
+                
+            } catch(e) {
+                rotationStep++; nextSlide();
+            }
+        }
+
         async function showMySquad() {
             if(!settings.mySquad || !settings.mySquadTeams) { rotationStep++; nextSlide(); return; }
             var teams = settings.mySquadTeams.split(',').map(function(t) { return t.trim().toLowerCase(); }).filter(function(t) { return t; });
@@ -787,7 +879,7 @@
                 }
                 newsHtml = combinedNews.map(function(n) { return '<div class="squad-news-card"><div style="color:#39ff14; font-size:2vh; font-weight:900; margin-bottom:0.5vh;">' + n.teamTag + ' HIGHLIGHT</div><div style="color:white; font-size:2.8vh; font-weight:700; line-height:1.2;">' + n.title + '</div></div>'; }).join('');
                 document.getElementById('squad-news-track').innerHTML = newsHtml || '<div style="text-align:center; color:#aaa; font-size:3vh; margin-top:5vh;">NO SQUAD HEADLINES</div>';
-            } catch(e) { document.getElementById('squad-news-track').innerHTML = '<div style="text-align:center; color:#ff007f;">FEED ERR</div>'; }
+            } catch(e) { document.getElementById('squad-news-track').innerHTML = '<div style="text-align:center; color:red;">FEED ERR</div>'; }
 
             var vH = document.getElementById('mysquad-viewport').clientHeight;
             var maxH = Math.max(document.getElementById('squad-games-track').scrollHeight, document.getElementById('squad-news-track').scrollHeight);
@@ -867,7 +959,6 @@
                             var gameTime = new Date(ev.date).getTime();
                             var diffHours = (gameTime - nowTime) / (1000 * 60 * 60);
                             
-                            // STRICT TIME GATE FOR ODDS (Next 48 Hours)
                             if (comp.status.type.state === 'pre' && diffHours >= 0 && diffHours <= 48) {
                                 var shortL = (l.id==='mens-college-basketball')?'CBB':(l.id==='college-baseball')?'BASEBALL':(l.id==='fifa.world')?'FIFA':l.id.toUpperCase();
                                 var tv = (comp.broadcasts && comp.broadcasts[0] && comp.broadcasts[0].names) ? comp.broadcasts[0].names[0] : 'TV';
@@ -895,40 +986,6 @@
             document.querySelectorAll('.slide-screen').forEach(function(el) { el.style.display = 'none'; });
             document.getElementById('command-screen').style.display = 'flex';
             slideTimer = setTimeout(nextSlide, 15000);
-        }
-
-        async function showUFC() {
-            if(!settings.ufc) { rotationStep++; nextSlide(); return; }
-            try {
-                var res = await fetch(settings.apiBase + '/site/v2/sports/mma/ufc/scoreboard');
-                var d = await res.json();
-                if(!d.events || d.events.length === 0) { rotationStep++; nextSlide(); return; }
-                document.getElementById('ufc-title').innerText = (d.events[0].name || "UFC FIGHT NIGHT").toUpperCase();
-                var fights = [];
-                d.events[0].competitions.forEach(function(fight) {
-                    var f1 = fight.competitors[0], f2 = fight.competitors[1];
-                    fights.push({ weightClass: fight.type ? fight.type.text : "Bout", f1: f1, f2: f2, f1Rec: (f1.records && f1.records[0]) ? f1.records[0].summary : '', f2Rec: (f2.records && f2.records[0]) ? f2.records[0].summary : '', status: fight.status.type, clock: fight.status.displayClock, period: fight.status.period });
-                });
-                document.querySelectorAll('.slide-screen').forEach(function(el) { el.style.display = 'none'; });
-                document.getElementById('ufc-screen').style.display = 'flex';
-                var track = document.getElementById('ufc-grid-track');
-                track.innerHTML = fights.map(function(f) {
-                    var f1Img = (f.f1.athlete && f.f1.athlete.headshot && f.f1.athlete.headshot.href) ? f.f1.athlete.headshot.href : (f.f1.athlete && f.f1.athlete.id ? 'https://a.espncdn.com/combiner/i?img=/i/headshots/mma/players/full/' + f.f1.athlete.id + '.png&w=150&h=150' : 'https://a.espncdn.com/combiner/i?img=/i/headshots/mma/players/full/default.png');
-                    var f2Img = (f.f2.athlete && f.f2.athlete.headshot && f.f2.athlete.headshot.href) ? f.f2.athlete.headshot.href : (f.f2.athlete && f.f2.athlete.id ? 'https://a.espncdn.com/combiner/i?img=/i/headshots/mma/players/full/' + f.f2.athlete.id + '.png&w=150&h=150' : 'https://a.espncdn.com/combiner/i?img=/i/headshots/mma/players/full/default.png');
-                    
-                    var f1Class = "fighter-img", f2Class = "fighter-img", resultMeta = f.weightClass;
-                    if(f.status.state === 'post') {
-                        if(f.f1.winner) { f1Class += " winner"; f2Class += " loser"; resultMeta = '<span class="ufc-result">' + f.status.detail + '</span>'; }
-                        else if(f.f2.winner) { f2Class += " winner"; f1Class += " loser"; resultMeta = '<span class="ufc-result">' + f.status.detail + '</span>'; }
-                    }
-                    var f1Name = f.f1.athlete ? f.f1.athlete.shortName : '';
-                    var f2Name = f.f2.athlete ? f.f2.athlete.shortName : '';
-                    var liveBadge = (f.status.state === 'in') ? '<div class="ufc-live-badge">RND ' + f.period + ' • ' + f.clock + '</div>' : '';
-                    return '<div class="ufc-card">' + liveBadge + '<div class="ufc-matchup"><div class="fighter-col"><img src="' + f2Img + '" class="' + f2Class + '"><div class="fighter-name">' + f2Name + '</div></div><div class="ufc-center"><div class="ufc-vs">VS</div></div><div class="fighter-col"><img src="' + f1Img + '" class="' + f1Class + '"><div class="fighter-name">' + f1Name + '</div></div></div><div class="ufc-meta"><span>' + (f.status.state === 'post' ? 'FINAL' : f.weightClass) + '</span>' + (f.status.state === 'post' ? resultMeta : '') + '</div></div>';
-                }).join('');
-                var vH = document.getElementById('ufc-viewport').clientHeight, fH = track.scrollHeight;
-                if (fH > vH) { var sD = fH - vH + 100; track.style.setProperty('--scroll-end', '-' + sD + 'px'); track.style.animation = 'scrollVerticalOnePass ' + (sD/50) + 's linear forwards'; slideTimer = setTimeout(nextSlide, (sD/50 * 1000) + 3000); } else { slideTimer = setTimeout(nextSlide, 15000); }
-            } catch(e) { rotationStep++; nextSlide(); }
         }
 
         async function showRankings() {
