@@ -52,7 +52,7 @@
         .content-viewport { width: 95%; height: 62vh; overflow: hidden; position: relative; z-index: 20; padding-bottom: var(--ticker-height); }
         .grid-track { display: grid; grid-template-columns: repeat(2, 1fr); gap: 2vw; padding-bottom: 10vh; will-change: transform; }
         
-        /* FLAT TV CARDS (No Blur) */
+        /* FLAT TV CARDS */
         .info-card, .squad-game-card, .news-row { background: linear-gradient(135deg, #0a1118 0%, #050a0f 100%); border: 1px solid #004444; border-left: 1vh solid #00ffff; border-radius: 1vh; display: flex; flex-direction: column; padding: 2.5vh; }
         .squad-game-card { border-left-color: #39ff14; margin-bottom: 1.5vh; }
         .news-row { border-left-color: #ff007f; flex-direction: row; margin-bottom: 1.5vh; width: 100%; gap: 3vh; align-items: center; }
@@ -69,9 +69,9 @@
         .card-meta { display: flex; justify-content: space-between; border-bottom: 2px solid #004444; padding-bottom: 1vh; margin-bottom: 1.5vh; font-size: 3.5vh; color: #00aaaa; font-weight: 900; }
         .card-footer { margin-top: auto; padding-top: 1.2vh; border-top: 2px dashed #004444; display: flex; justify-content: space-between; align-items: center; color: #aaa; font-size: 3.5vh; }
 
-        /* LEADERS SLIDE */
-        .leader-headshot { width: 9vh; height: 9vh; border-radius: 50%; object-fit: cover; border: 2px solid #00ffff; background: #000; flex-shrink: 0; }
-        .leader-val { font-size: 4.5vh; font-weight: 900; color: #facc15; text-align: right; }
+        /* LEADERS SLIDE STYLES */
+        .leader-headshot { width: 10vh; height: 10vh; border-radius: 50%; object-fit: cover; object-position: top; border: 2px solid #00ffff; background: #000; flex-shrink: 0; box-shadow: 0 0 1vh rgba(0,255,255,0.3); }
+        .leader-val { font-size: 5vh; font-weight: 900; color: #facc15; text-align: right; }
 
         /* STANDINGS & LISTS */
         .list-track { display: flex; flex-direction: column; gap: 1.5vh; padding-bottom: 10vh; width: 90%; margin: 0 auto; will-change: transform; }
@@ -160,7 +160,7 @@
             </div>
         </div>
         
-        <!-- NEW: DAILY TOP PERFORMERS SLIDE -->
+        <!-- DAILY TOP PERFORMERS SLIDE -->
         <div id="leaders-screen" class="slide-screen">
             <div class="screen-header" style="color: #facc15; border-bottom-color: #facc15;">DAILY TOP PERFORMERS</div>
             <div class="content-viewport" id="leaders-viewport"><div class="grid-track" id="leaders-grid-track"></div></div>
@@ -170,6 +170,30 @@
             <div class="screen-header" id="ufc-title" style="color: #ff0000; border-bottom-color: #ff0000;">UFC FIGHT NIGHT</div>
             <div class="content-viewport" id="ufc-viewport">
                 <div class="grid-track" id="ufc-grid-track"></div>
+            </div>
+        </div>
+        
+        <div id="command-screen" class="slide-screen">
+            <div class="screen-header" style="color: #ffffff; border-bottom-color: #ffffff;">AHLERS COMMAND CENTER</div>
+            <div class="content-viewport" id="command-viewport">
+                <div class="grid-track" style="grid-template-columns: 1fr 1fr; gap: 4vw;">
+                    <div class="info-card" style="border-left: 1vh solid #facc15;">
+                        <div class="card-meta"><span style="color:#facc15">LOCAL CONDITIONS</span><span>GREENVILLE, NC</span></div>
+                        <div style="display:flex; justify-content:space-between; align-items:center; padding: 2vh 0;">
+                            <div id="local-temp" style="font-size: 8vh; font-weight: 900; color: white;">--°</div>
+                            <div id="local-desc" style="font-size: 4vh; color: #aaa; text-transform: uppercase; font-weight: 700; text-align: right;">Loading...</div>
+                        </div>
+                        <div class="card-footer" style="border-top: 1px solid #222; justify-content: space-around;">
+                            <span id="local-highlow">H: -- L: --</span>
+                        </div>
+                    </div>
+                    <div class="info-card" style="border-left: 1vh solid #39ff14;">
+                        <div class="card-meta"><span style="color:#39ff14">MARKET WATCH</span><span>LIVE</span></div>
+                        <div id="crypto-track" style="display:flex; flex-direction:column; gap: 2vh; padding-top: 1vh;">
+                            <div style="color:white; font-size:3vh; text-align:center;">Fetching Markets...</div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
         
@@ -220,8 +244,9 @@
                         <div style="font-size: 1.8vh; color: #ff007f; margin-bottom: 0.5vh; text-transform: uppercase;">Custom Ticker Marquee:</div>
                         <input type="text" id="set-marqueeMessage" style="width: 100%; padding: 1vh; border-radius: 0.5vh; background: #1a1a1a; color: white; border: 1px solid #ff007f; font-family: 'Inter', sans-serif;" placeholder="e.g. Welcome to the Arcade!" onchange="updateSettings()">
                     </div>
-                    <!-- NEW LEADERS TOGGLE -->
-                    <div class="toggle-row"><span style="color:#facc15; font-weight:bold;">Top Stats Leaders</span> <input type="checkbox" id="set-leaders" checked onchange="updateSettings()"></div>
+                    
+                    <div class="toggle-row"><span>Top Stats Leaders</span> <input type="checkbox" id="set-leaders" checked onchange="updateSettings()"></div>
+                    <div class="toggle-row"><span>Command Center</span> <input type="checkbox" id="set-command" checked onchange="updateSettings()"></div>
                     <div class="toggle-row"><span>UFC Fight Card Slide</span> <input type="checkbox" id="set-ufc" checked onchange="updateSettings()"></div>
                     <div class="toggle-row"><span>TV Guide Slide</span> <input type="checkbox" id="set-tvGuide" checked onchange="updateSettings()"></div>
                     <div class="toggle-row"><span>Headlines Slide</span> <input type="checkbox" id="set-news" checked onchange="updateSettings()"></div>
@@ -262,7 +287,6 @@
     </div>
 
     <script>
-        // CRASH SAFE GLOBALS
         var bc = null;
         try { if (window.BroadcastChannel) bc = new BroadcastChannel('cinema_channel'); } catch(e) {}
         
@@ -271,7 +295,7 @@
         var previousScores = {}; 
 
         var defaultSettings = { 
-            nfl:true, nba:true, nhl:true, mlb:true, rankings:true, odds:true, tvGuide:true, news:true, mySquad:true, ufc:true, leaders:true,
+            nfl:true, nba:true, nhl:true, mlb:true, rankings:true, odds:true, tvGuide:true, news:true, mySquad:true, ufc:true, command:true, leaders:true,
             showNFL:true, showNBA:true, showNHL:true, showMLB:true, showCFB:true, showCBB:true, showCLB:true,
             cbb50:true, cfb75:true, clb50:true, apiBase:"https://site.api.espn.com/apis",
             mySquadTeams: "Hurricanes, Duke, ECU, East Carolina",
@@ -283,6 +307,10 @@
         try {
             var saved = localStorage.getItem('ahlersArcadeSettings');
             if (saved) settings = JSON.parse(saved);
+            
+            // Failsafe: if the user's saved settings are missing the new 'leaders' property, add it
+            if (typeof settings.leaders === 'undefined') settings.leaders = true;
+            if (typeof settings.command === 'undefined') settings.command = true;
         } catch(e) {}
 
         function updateSettings() {
@@ -326,6 +354,7 @@
             checkMode(); 
             loadSettingsUI(); 
             scheduleDailyRefresh(); 
+            fetchCommandData();
         });
 
         if (bc) {
@@ -334,6 +363,34 @@
                 if (ev.data.action === 'settingsUpdated') { settings = ev.data.args[0]; loadSettingsUI(); updateSportsTicker(); applyTickerSpeed(); }
             };
         }
+
+        async function fetchCommandData() {
+            try {
+                var weatherRes = await fetch("https://api.open-meteo.com/v1/forecast?latitude=35.6127&longitude=-77.3663&current=temperature_2m,weather_code&daily=temperature_2m_max,temperature_2m_min&temperature_unit=fahrenheit&timezone=America%2FNew_York");
+                var weatherData = await weatherRes.json();
+                document.getElementById('local-temp').innerText = Math.round(weatherData.current.temperature_2m) + '°F';
+                document.getElementById('local-highlow').innerText = 'HIGH: ' + Math.round(weatherData.daily.temperature_2m_max[0]) + '° | LOW: ' + Math.round(weatherData.daily.temperature_2m_min[0]) + '°';
+                var code = weatherData.current.weather_code;
+                var desc = "CLEAR";
+                if(code > 0 && code < 4) desc = "PARTLY CLOUDY";
+                if(code >= 50 && code < 70) desc = "RAIN";
+                if(code >= 70) desc = "SNOW/STORM";
+                document.getElementById('local-desc').innerText = desc;
+            } catch (e) {}
+
+            try {
+                var coinRes = await fetch("https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,solana&vs_currencies=usd&include_24hr_change=true");
+                var coinData = await coinRes.json();
+                var formatCoin = function(name, data) {
+                    if(!data) return '';
+                    var color = data.usd_24h_change >= 0 ? '#39ff14' : '#ff0000';
+                    var sign = data.usd_24h_change >= 0 ? '+' : '';
+                    return '<div style="display:flex; justify-content:space-between; align-items:center; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom:1vh;"><span style="color:white; font-size:4vh; font-weight:900; text-transform:uppercase;">' + name + '</span><div style="text-align:right;"><div style="color:white; font-size:3.5vh; font-weight:900;">$' + data.usd.toLocaleString() + '</div><div style="color:' + color + '; font-size:2.5vh; font-weight:bold;">' + sign + data.usd_24h_change.toFixed(2) + '%</div></div></div>';
+                };
+                document.getElementById('crypto-track').innerHTML = formatCoin("Bitcoin", coinData.bitcoin) + formatCoin("Ethereum", coinData.ethereum) + formatCoin("Solana", coinData.solana);
+            } catch (e) {}
+        }
+        setInterval(fetchCommandData, 900000); 
 
         function applyTickerSpeed() {
             var track = document.getElementById('ticker-track');
@@ -378,27 +435,28 @@
                 if (globalLiveGamesData.length > 0) { renderLivePage(); rotationStep++; return; }
                 else { rotationStep++; nextSlide(); return; }
             }
-            // Inserted 'leaders' into rotation
-            var screens = [null, 'mySquad', 'leaders', 'ufc', 'tvGuide', 'news', 'odds', 'rankings', 'nfl', 'nba', 'nhl', 'mlb'];
+            
+            var screens = [null, 'mySquad', 'leaders', 'ufc', 'command', 'tvGuide', 'news', 'odds', 'rankings', 'nfl', 'nba', 'nhl', 'mlb'];
             var current = screens[rotationStep];
             if (!settings[current]) { rotationStep++; nextSlide(); return; }
 
             if (rotationStep === 1) showMySquad();
             else if (rotationStep === 2) showLeaders();
             else if (rotationStep === 3) showUFC();
-            else if (rotationStep === 4) showTVGuide();
-            else if (rotationStep === 5) showNews();
-            else if (rotationStep === 6) showOdds(); 
-            else if (rotationStep === 7) showRankings();
-            else if (rotationStep === 8) showStandings('nfl', 'football');
-            else if (rotationStep === 9) showStandings('nba', 'basketball');
-            else if (rotationStep === 10) showStandings('nhl', 'hockey');
-            else if (rotationStep === 11) showStandings('mlb', 'baseball');
+            else if (rotationStep === 4) showCommand();
+            else if (rotationStep === 5) showTVGuide();
+            else if (rotationStep === 6) showNews();
+            else if (rotationStep === 7) showOdds(); 
+            else if (rotationStep === 8) showRankings();
+            else if (rotationStep === 9) showStandings('nfl', 'football');
+            else if (rotationStep === 10) showStandings('nba', 'basketball');
+            else if (rotationStep === 11) showStandings('nhl', 'hockey');
+            else if (rotationStep === 12) showStandings('mlb', 'baseball');
             rotationStep++;
         }
 
         async function updateSportsTicker() { 
-            var newTVGuide = [], newRawGames = [], upsetAlerts = []; 
+            var newTVGuide = [], newRawGames = [];
             var newLivePage = [], allLive = [], allSched = [], newLeaders = [];
             
             var configs = [
@@ -425,7 +483,6 @@
                             var comp = ev.competitions[0], status = comp.status.type;
                             if (c.id === 'clb' && !comp.competitors.some(function(team) { return team.curatedRank && team.curatedRank.current <= (settings.clb50 ? 50 : 25); })) return;
                             
-                            // --- STRICT TIME GATE LOGIC ---
                             var gameTime = new Date(ev.date).getTime();
                             var diffHours = (gameTime - nowTime) / (1000 * 60 * 60);
                             
@@ -433,7 +490,7 @@
                             var isUpcoming24h = (status.state === 'pre' && diffHours >= 0 && diffHours <= 48);
                             var isRecent24h = (status.state === 'post' && diffHours >= -24 && diffHours <= 0);
                             
-                            if (!isLive && !isUpcoming24h && !isRecent24h) return; // Drop zombie games
+                            if (!isLive && !isUpcoming24h && !isRecent24h) return;
                             
                             var h = comp.competitors[0], a = comp.competitors[1];
                             var tv = (comp.broadcasts && comp.broadcasts[0] && comp.broadcasts[0].names) ? comp.broadcasts[0].names[0] : 'TV';
@@ -442,7 +499,6 @@
                             // SCORE FLASH LOGIC
                             var matchKey = h.team.shortDisplayName + '_' + a.team.shortDisplayName;
                             var hScoreClass = "team-score", aScoreClass = "team-score";
-                            
                             if (previousScores[matchKey]) {
                                 if (previousScores[matchKey].h !== h.score) hScoreClass += " score-changed";
                                 if (previousScores[matchKey].a !== a.score) aScoreClass += " score-changed";
@@ -451,22 +507,35 @@
                                 previousScores[matchKey] = { h: h.score, a: a.score };
                             }
 
-                            // STAT LEADERS LOGIC (Grab top daily performers)
-                            if (comp.leaders && comp.leaders.length > 0) {
-                                var lData = comp.leaders[0];
-                                if (lData.leaders && lData.leaders.length > 0) {
-                                    var topDude = lData.leaders[0];
-                                    newLeaders.push({
-                                        league: c.id.toUpperCase(),
-                                        category: lData.displayName || lData.name,
-                                        name: topDude.athlete.shortName || topDude.athlete.displayName,
-                                        headshot: topDude.athlete.headshot ? topDude.athlete.headshot.href : '',
-                                        teamLogo: topDude.team ? topDude.team.logo : '',
-                                        teamName: topDude.team ? topDude.team.abbreviation : '',
-                                        value: topDude.displayValue
-                                    });
+                            // PERFECTED STAT LEADERS EXTRACTION
+                            comp.competitors.forEach(function(competitor) {
+                                if (competitor.leaders && competitor.leaders.length > 0) {
+                                    var lData = competitor.leaders[0];
+                                    if (lData && lData.leaders && lData.leaders.length > 0) {
+                                        var topDude = lData.leaders[0];
+                                        var headshotUrl = '';
+                                        
+                                        // Attempt explicit href first, then build a fallback, then default to team logo
+                                        if (topDude.athlete && topDude.athlete.headshot && topDude.athlete.headshot.href) {
+                                            headshotUrl = topDude.athlete.headshot.href;
+                                        } else if (topDude.athlete && topDude.athlete.id) {
+                                            headshotUrl = 'https://a.espncdn.com/combiner/i?img=/i/headshots/' + c.s + '/players/full/' + topDude.athlete.id + '.png&w=150&h=150';
+                                        } else {
+                                            headshotUrl = competitor.team.logo;
+                                        }
+
+                                        newLeaders.push({
+                                            league: c.id.toUpperCase(),
+                                            category: lData.displayName || lData.name || 'LEADER',
+                                            name: topDude.athlete ? (topDude.athlete.shortName || topDude.athlete.displayName) : 'Player',
+                                            headshot: headshotUrl,
+                                            teamLogo: competitor.team.logo,
+                                            teamName: competitor.team.abbreviation || competitor.team.shortDisplayName || '',
+                                            value: topDude.displayValue
+                                        });
+                                    }
                                 }
-                            }
+                            });
 
                             var extraClass = "";
                             var gameSearchString = (h.team.displayName + " " + a.team.displayName).toLowerCase();
@@ -506,14 +575,13 @@
             globalRawGames = newRawGames;
             globalTVGuideData = newTVGuide;
             
-            // Randomize and keep top 8 daily leaders
+            // Randomize array to avoid showing only one league's leaders
             newLeaders.sort(function() { return 0.5 - Math.random() });
             globalLeadersData = newLeaders.slice(0, 8);
 
             var content = "";
             if (allLive.length > 0) {
                 content += '<div class="live-mode-header" style="display:inline-flex; align-items:center; padding: 0 3vw; color:red; font-size:4rem; font-weight:900;"><span class="live-pulse">●</span> LIVE SCORES</div>';
-                // Group by league
                 var sorted = {};
                 allLive.forEach(function(g) { if(!sorted[g.league]) sorted[g.league]=[]; sorted[g.league].push(g.html); });
                 for(var l in sorted) { content += '<span class="ticker-section-head">' + l + '</span>' + sorted[l].join(''); }
@@ -543,7 +611,7 @@
             if (fH > vH) { var sD = fH - vH + 100; track.style.setProperty('--scroll-end', '-' + sD + 'px'); track.style.animation = 'scrollVerticalOnePass ' + (sD/50) + 's linear 2s forwards'; slideTimer = setTimeout(nextSlide, (sD/50 * 1000) + 5000); } else { slideTimer = setTimeout(nextSlide, 15000); }
         }
 
-        // NEW LEADERS SLIDE
+        // CORRECTED LEADERS SLIDE RENDERER
         function showLeaders() {
             if(!settings.leaders || globalLeadersData.length === 0) { rotationStep++; nextSlide(); return; }
             document.querySelectorAll('.slide-screen').forEach(function(el) { el.style.display = 'none'; });
@@ -551,6 +619,7 @@
             
             var track = document.getElementById('leaders-grid-track');
             track.innerHTML = globalLeadersData.map(function(l) {
+                // If headshot breaks, default to team logo automatically via onerror
                 return '<div class="info-card" style="border-left-color:#facc15;"><div class="card-meta"><span style="color:#00ffff">' + l.category + '</span><span>' + l.league + '</span></div><div style="display:flex; align-items:center; gap:2vh; padding-top:1vh;"><img src="' + l.headshot + '" class="leader-headshot" onerror="this.src=\'' + l.teamLogo + '\'"><div style="flex:1;"><div style="font-size:3.5vh; font-weight:900; color:white;">' + l.name + '</div><div style="font-size:2.5vh; color:#aaa;">' + l.teamName + '</div></div><div class="leader-val">' + l.value + '</div></div></div>';
             }).join('');
 
@@ -660,7 +729,7 @@
                             var gameTime = new Date(ev.date).getTime();
                             var diffHours = (gameTime - nowTime) / (1000 * 60 * 60);
                             
-                            // STRICT TIME GATE (Next 48 Hours Only)
+                            // STRICT TIME GATE FOR ODDS (Next 48 Hours)
                             if (comp.status.type.state === 'pre' && diffHours >= 0 && diffHours <= 48) {
                                 var shortL = (l.id==='mens-college-basketball'?'CBB':l.id==='college-baseball'?'BASEBALL':l.id.toUpperCase());
                                 var tv = (comp.broadcasts && comp.broadcasts[0] && comp.broadcasts[0].names) ? comp.broadcasts[0].names[0] : 'TV';
@@ -684,36 +753,10 @@
             if (fH > vH) { var sD = fH - vH + 100; track.style.setProperty('--scroll-end', '-' + sD + 'px'); track.style.animation = 'scrollVerticalOnePass ' + (sD/50) + 's linear forwards'; slideTimer = setTimeout(nextSlide, (sD/50 * 1000) + 3000); } else { slideTimer = setTimeout(nextSlide, 15000); }
         }
 
-        async function showUFC() {
-            try {
-                var res = await fetch(settings.apiBase + '/site/v2/sports/mma/ufc/scoreboard');
-                var d = await res.json();
-                if(!d.events || d.events.length === 0) { rotationStep++; nextSlide(); return; }
-                document.getElementById('ufc-title').innerText = (d.events[0].name || "UFC FIGHT NIGHT").toUpperCase();
-                var fights = [];
-                d.events[0].competitions.forEach(function(fight) {
-                    var f1 = fight.competitors[0], f2 = fight.competitors[1];
-                    fights.push({ weightClass: fight.type ? fight.type.text : "Bout", f1: f1, f2: f2, f1Rec: (f1.records && f1.records[0]) ? f1.records[0].summary : '', f2Rec: (f2.records && f2.records[0]) ? f2.records[0].summary : '', status: fight.status.type, clock: fight.status.displayClock, period: fight.status.period });
-                });
-                document.querySelectorAll('.slide-screen').forEach(function(el) { el.style.display = 'none'; });
-                document.getElementById('ufc-screen').style.display = 'flex';
-                var track = document.getElementById('ufc-grid-track');
-                track.innerHTML = fights.map(function(f) {
-                    var f1Img = (f.f1.athlete && f.f1.athlete.headshot) ? f.f1.athlete.headshot.href : '';
-                    var f2Img = (f.f2.athlete && f.f2.athlete.headshot) ? f.f2.athlete.headshot.href : '';
-                    var f1Class = "fighter-img", f2Class = "fighter-img", resultMeta = f.weightClass;
-                    if(f.status.state === 'post') {
-                        if(f.f1.winner) { f1Class += " winner"; f2Class += " loser"; resultMeta = '<span class="ufc-result">' + f.status.detail + '</span>'; }
-                        else if(f.f2.winner) { f2Class += " winner"; f1Class += " loser"; resultMeta = '<span class="ufc-result">' + f.status.detail + '</span>'; }
-                    }
-                    var f1Name = f.f1.athlete ? f.f1.athlete.shortName : '';
-                    var f2Name = f.f2.athlete ? f.f2.athlete.shortName : '';
-                    var liveBadge = (f.status.state === 'in') ? '<div class="ufc-live-badge">RND ' + f.period + ' • ' + f.clock + '</div>' : '';
-                    return '<div class="ufc-card">' + liveBadge + '<div class="ufc-matchup"><div class="fighter-col"><img src="' + f2Img + '" class="' + f2Class + '"><div class="fighter-name">' + f2Name + '</div></div><div class="ufc-center"><div class="ufc-vs">VS</div></div><div class="fighter-col"><img src="' + f1Img + '" class="' + f1Class + '"><div class="fighter-name">' + f1Name + '</div></div></div><div class="ufc-meta"><span>' + (f.status.state === 'post' ? 'FINAL' : f.weightClass) + '</span>' + (f.status.state === 'post' ? resultMeta : '') + '</div></div>';
-                }).join('');
-                var vH = document.getElementById('ufc-viewport').clientHeight, fH = track.scrollHeight;
-                if (fH > vH) { var sD = fH - vH + 100; track.style.setProperty('--scroll-end', '-' + sD + 'px'); track.style.animation = 'scrollVerticalOnePass ' + (sD/50) + 's linear forwards'; slideTimer = setTimeout(nextSlide, (sD/50 * 1000) + 3000); } else { slideTimer = setTimeout(nextSlide, 15000); }
-            } catch(e) { rotationStep++; nextSlide(); }
+        async function showCommand() {
+            document.querySelectorAll('.slide-screen').forEach(function(el) { el.style.display = 'none'; });
+            document.getElementById('command-screen').style.display = 'flex';
+            slideTimer = setTimeout(nextSlide, 15000);
         }
 
         async function showRankings() {
