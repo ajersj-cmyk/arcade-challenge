@@ -544,6 +544,11 @@
         function nextSlide() {
             clearTimeout(slideTimer);
             clearTimeout(triviaRevealTimer);
+            
+            // RESET CLOCK VISIBILITY ON EVERY SLIDE CHANGE
+            var mc = document.getElementById('master-clock');
+            if (mc) mc.style.display = 'block';
+
             if (globalLiveGamesData.length >= 2 && rotationStep % 2 !== 0) {
                 renderLivePage(); rotationStep++; return;
             }
@@ -1002,6 +1007,10 @@
 
             document.querySelectorAll('.slide-screen').forEach(function(el) { el.style.display = 'none'; });
             document.getElementById('trivia-screen').style.display = 'flex';
+            
+            // HIDE CLOCK ON THIS SPECIFIC SLIDE
+            var mc = document.getElementById('master-clock');
+            if (mc) mc.style.display = 'none';
             
             document.getElementById('trivia-q').innerText = currentTrivia.q;
             var optHtml = currentTrivia.opts.map(function(o, i) {
