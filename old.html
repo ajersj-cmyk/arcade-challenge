@@ -78,11 +78,11 @@
         .card-meta { display: flex; justify-content: space-between; border-bottom: 2px solid #004444; padding-bottom: 1vh; margin-bottom: 1.5vh; font-size: 3.5vh; color: #00aaaa; font-weight: 900; text-transform: uppercase; }
         .card-footer { margin-top: auto; padding-top: 1.2vh; border-top: 2px dashed #004444; display: flex; justify-content: space-between; align-items: center; color: #aaa; font-size: 3.5vh; text-transform: uppercase; }
 
-        /* TRIVIA SLIDE STYLES (COMPACT FIX) */
-        .trivia-q-box { background: #0a1118; border: 1px solid #004444; border-left: 1vh solid #ff007f; padding: 2.5vh 3vh; border-radius: 1vh; width: 100%; text-align: center; font-size: 3.8vh; font-weight: 900; line-height: 1.3; color: #fff; margin-bottom: 2vh; text-transform: uppercase; box-shadow: inset 0 0 2vh rgba(255,0,127,0.1); }
+        /* TRIVIA SLIDE STYLES (COMPACT FIX TO PREVENT CUTOFF) */
+        .trivia-q-box { background: #0a1118; border: 1px solid #004444; border-left: 1vh solid #ff007f; padding: 3vh; border-radius: 1vh; width: 100%; text-align: center; font-size: 3.2vh; font-weight: 900; line-height: 1.4; color: #fff; margin-bottom: 2vh; text-transform: uppercase; box-shadow: inset 0 0 2vh rgba(255,0,127,0.1); }
         .trivia-ans-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2vh; width: 100%; }
-        .trivia-ans { background: #00111a; border: 2px solid #333; border-radius: 1vh; padding: 2vh; font-size: 3.2vh; font-weight: 700; color: #aaa; text-align: left; text-transform: uppercase; transition: all 0.3s ease; display: flex; align-items: center; }
-        .trivia-letter { display: inline-block; background: #111; border: 2px solid #ff007f; color: #ff007f; width: 5vh; height: 5vh; line-height: 4.5vh; text-align: center; border-radius: 0.8vh; margin-right: 1.5vw; flex-shrink: 0; font-weight: 900; }
+        .trivia-ans { background: #00111a; border: 2px solid #333; border-radius: 1vh; padding: 2vh; font-size: 2.8vh; font-weight: 700; color: #aaa; text-align: left; text-transform: uppercase; transition: all 0.3s ease; display: flex; align-items: center; }
+        .trivia-letter { display: inline-block; background: #111; border: 2px solid #ff007f; color: #ff007f; width: 4.5vh; height: 4.5vh; line-height: 4vh; text-align: center; border-radius: 0.8vh; margin-right: 1.5vw; flex-shrink: 0; font-weight: 900; }
         .trivia-ans.correct { background: #003300; border-color: #39ff14; color: #39ff14; font-weight: 900; }
         .trivia-ans.correct .trivia-letter { border-color: #39ff14; color: #39ff14; background: #002200; }
         .trivia-ans.wrong { opacity: 0.2; }
@@ -194,10 +194,10 @@
             </div>
         </div>
         
-        <!-- TRIVIA SLIDE -->
+        <!-- TRIVIA SLIDE WITH FIXED VIEWPORT PADDING -->
         <div id="trivia-screen" class="slide-screen">
             <div class="screen-header" style="color: #00ffff; border-bottom-color: #00ffff; text-shadow: 0 0 15px #00ffff;">ARCADE TRIVIA CHALLENGE</div>
-            <div class="content-viewport" style="display:flex; flex-direction:column; justify-content:center; padding-top:2vh;">
+            <div class="content-viewport" style="display:flex; flex-direction:column; justify-content:center; padding-top:0; padding-bottom:0; height:65vh;">
                 <div class="trivia-q-box" id="trivia-q">Loading next challenge...</div>
                 <div class="trivia-ans-grid" id="trivia-options"></div>
                 <div class="trivia-timer-container"><div class="trivia-timer-bar" id="trivia-timer"></div></div>
@@ -227,7 +227,6 @@
             </div>
         </div>
         
-        <!-- COMMAND CENTER WITH MARQUEE DEEP DIVE -->
         <div id="command-screen" class="slide-screen">
             <div class="screen-header" style="color: #ffffff; border-bottom-color: #ffffff;">AHLERS COMMAND CENTER</div>
             <div class="content-viewport" id="command-viewport">
@@ -252,7 +251,6 @@
             </div>
         </div>
         
-        <!-- GLOBAL SOCCER HUB SLIDE -->
         <div id="soccer-screen" class="slide-screen">
             <div class="screen-header" style="color: #00ffff; border-bottom-color: #00ffff;">GLOBAL SOCCER MATCHES</div>
             <div class="content-viewport" id="soccer-viewport">
@@ -277,7 +275,6 @@
         <div id="odds-screen" class="slide-screen"><div class="screen-header">TODAY'S LINES</div><div class="content-viewport" id="odds-viewport"><div class="grid-track" id="odds-grid-track"></div></div></div>
         <div id="rankings-screen" class="slide-screen"><div class="screen-header">COLLEGE RANKINGS</div><div class="content-viewport" id="rankings-viewport"><div class="list-track" id="rankings-list-track"></div></div></div>
         
-        <!-- STANDINGS WITH GLOWING LOGOS -->
         <div id="nfl-screen" class="slide-screen"><div class="screen-header"><img src="https://a.espncdn.com/combiner/i?img=/i/teamlogos/leagues/500/nfl.png" class="league-logo" onerror="this.style.display='none'">NFL STANDINGS</div><div class="content-viewport" id="nfl-viewport"><div class="standings-track" id="nfl-track"></div></div></div>
         <div id="nba-screen" class="slide-screen"><div class="screen-header"><img src="https://a.espncdn.com/combiner/i?img=/i/teamlogos/leagues/500/nba.png" class="league-logo" onerror="this.style.display='none'">NBA STANDINGS</div><div class="content-viewport" id="nba-viewport"><div class="standings-track" id="nba-track"></div></div></div>
         <div id="nhl-screen" class="slide-screen"><div class="screen-header"><img src="https://a.espncdn.com/combiner/i?img=/i/teamlogos/leagues/500/nhl.png" class="league-logo" onerror="this.style.display='none'">NHL STANDINGS</div><div class="content-viewport" id="nhl-viewport"><div class="standings-track" id="nhl-track"></div></div></div>
@@ -824,50 +821,6 @@
             }
         }
 
-        // --- THE TRIVIA ENGINE ---
-        function showTrivia() {
-            if(!settings.trivia) { rotationStep++; nextSlide(); return; }
-            if(!currentTrivia) { 
-                fetchNextTrivia(); 
-                rotationStep++; nextSlide(); return; 
-            }
-
-            document.querySelectorAll('.slide-screen').forEach(function(el) { el.style.display = 'none'; });
-            document.getElementById('trivia-screen').style.display = 'flex';
-            
-            document.getElementById('trivia-q').innerText = currentTrivia.q;
-            var optHtml = currentTrivia.opts.map(function(o, i) {
-                var letter = ['A', 'B', 'C', 'D'][i];
-                var isCorrect = (o === currentTrivia.ans) ? 'true' : 'false';
-                return '<div class="trivia-ans" data-correct="' + isCorrect + '"><div class="trivia-letter">' + letter + '</div>' + o + '</div>';
-            }).join('');
-            document.getElementById('trivia-options').innerHTML = optHtml;
-
-            // Trigger Animation
-            var tBar = document.getElementById('trivia-timer');
-            tBar.style.animation = 'none';
-            void tBar.offsetWidth; // Force Reflow
-            tBar.style.animation = 'shrinkTimer 15s linear forwards';
-
-            clearTimeout(triviaRevealTimer);
-            triviaRevealTimer = setTimeout(function() {
-                var opts = document.querySelectorAll('.trivia-ans');
-                opts.forEach(function(opt) {
-                    if (opt.getAttribute('data-correct') === 'true') {
-                        opt.classList.add('correct');
-                    } else {
-                        opt.classList.add('wrong');
-                    }
-                });
-                
-                slideTimer = setTimeout(function() {
-                    fetchNextTrivia(); // Queue next question
-                    rotationStep++;
-                    nextSlide();
-                }, 5000);
-            }, 15000);
-        }
-
         function renderLivePage() {
             document.querySelectorAll('.slide-screen').forEach(function(el) { el.style.display = 'none'; });
             document.getElementById('live-game-screen').style.display = 'flex';
@@ -1027,6 +980,50 @@
             } catch(e) { rotationStep++; nextSlide(); }
         }
 
+        // --- THE TRIVIA ENGINE (COMPACT VIEWPORT FIX) ---
+        function showTrivia() {
+            if(!settings.trivia) { rotationStep++; nextSlide(); return; }
+            if(!currentTrivia) { 
+                fetchNextTrivia(); 
+                rotationStep++; nextSlide(); return; 
+            }
+
+            document.querySelectorAll('.slide-screen').forEach(function(el) { el.style.display = 'none'; });
+            document.getElementById('trivia-screen').style.display = 'flex';
+            
+            document.getElementById('trivia-q').innerText = currentTrivia.q;
+            var optHtml = currentTrivia.opts.map(function(o, i) {
+                var letter = ['A', 'B', 'C', 'D'][i];
+                var isCorrect = (o === currentTrivia.ans) ? 'true' : 'false';
+                return '<div class="trivia-ans" data-correct="' + isCorrect + '"><div class="trivia-letter">' + letter + '</div>' + o + '</div>';
+            }).join('');
+            document.getElementById('trivia-options').innerHTML = optHtml;
+
+            // Trigger Animation
+            var tBar = document.getElementById('trivia-timer');
+            tBar.style.animation = 'none';
+            void tBar.offsetWidth; // Force Reflow
+            tBar.style.animation = 'shrinkTimer 15s linear forwards';
+
+            clearTimeout(triviaRevealTimer);
+            triviaRevealTimer = setTimeout(function() {
+                var opts = document.querySelectorAll('.trivia-ans');
+                opts.forEach(function(opt) {
+                    if (opt.getAttribute('data-correct') === 'true') {
+                        opt.classList.add('correct');
+                    } else {
+                        opt.classList.add('wrong');
+                    }
+                });
+                
+                slideTimer = setTimeout(function() {
+                    fetchNextTrivia(); // Queue next question
+                    rotationStep++;
+                    nextSlide();
+                }, 5000);
+            }, 15000);
+        }
+
         async function showMySquad() {
             if(!settings.mySquad || !settings.mySquadTeams) { rotationStep++; nextSlide(); return; }
             var teams = settings.mySquadTeams.split(',').map(function(t) { return t.trim().toLowerCase(); }).filter(function(t) { return t; });
@@ -1039,7 +1036,7 @@
                     if(g.searchString.indexOf(teams[i]) > -1) { gamesHtml += g.html; break; }
                 }
             });
-            document.getElementById('squad-games-track').innerHTML = gamesHtml || '<div style="text-align:center; color:#aaa; font-size:3vh; margin-top:5vh; border: 2px dashed #333; padding: 4vh; border-radius: 1vh;">NO ACTIVE/UPCOMING GAMES</div>';
+            document.getElementById('squad-games-track').innerHTML = gamesHtml || '<div style="text-align:center; color:#aaa; font-size:3vh; margin-top:5vh; border: 2px dashed #333; padding: 4vh; border-radius: 1vh;">NO ACTIVE/UPCOMING GAMES (NEXT 48H)</div>';
 
             var newsHtml = "";
             try {
@@ -1142,7 +1139,6 @@
                             var diffHours = (gameTime - nowTime) / (1000 * 60 * 60);
                             var maxHours = (l.id === 'nfl' || l.id === 'cfb') ? 96 : 24;
                             
-                            // STRICT TIME GATE (4 Days for NFL/CFB, 24h else)
                             if (comp.status.type.state === 'pre' && diffHours >= 0 && diffHours <= maxHours) {
                                 var shortL = (l.id==='mens-college-basketball')?'CBB':(l.id==='college-baseball')?'BASEBALL':(l.id==='fifa.world')?'FIFA':(l.id==='eng.1')?'EPL':(l.id==='uefa.champions')?'UCL':l.id.toUpperCase();
                                 var tv = (comp.broadcasts && comp.broadcasts[0] && comp.broadcasts[0].names) ? comp.broadcasts[0].names[0] : 'TV';
