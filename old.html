@@ -33,11 +33,11 @@
         #ticker-track { display: inline-flex; animation: scrollTicker 80s linear infinite; height: 100%; align-items: center; width: max-content; will-change: transform; } 
         @keyframes scrollTicker { 0% { transform: translate3d(0, 0, 0); } 100% { transform: translate3d(-50%, 0, 0); } }
 
-        /* TICKER ITEMS */
+        /* TICKER ITEMS - SQUARES REMOVED FROM LOGOS */
         .ticker-section-head { display: inline-flex; align-items: center; justify-content: center; padding: 0 3vw; height: 100%; color: #ff007f; font-size: 4rem; letter-spacing: 0.3vw; font-weight: 900; vertical-align: middle; }
         .score-item { display: inline-flex !important; flex-direction: row !important; align-items: center !important; padding: 0 5vw; height: 100%; vertical-align: middle; flex-wrap: nowrap !important; }
         .team-box { display: flex !important; flex-direction: row !important; align-items: center !important; flex-wrap: nowrap !important; }
-        .team-logo { width: 11vh; height: 11vh; object-fit: cover; object-position: top; margin-right: 1.5vw; flex-shrink: 0; border-radius: 1vh; background:#000; border:1px solid #333;} 
+        .team-logo { width: 11vh; height: 11vh; object-fit: contain; margin-right: 1.5vw; flex-shrink: 0; background: transparent; border: none; } 
         .team-score { font-size: 4.8rem; line-height: 1; color: #00ffff; margin-right: 0.8vw; font-weight: 900; transition: color 0.3s ease; }
         
         /* SCORE FLASH */
@@ -53,6 +53,8 @@
 
         /* SLIDES & GRIDS */
         .slide-screen { position: absolute; inset: 0; z-index: 10; display: none; flex-direction: column; padding: 2vh 4vh; font-family: 'Share Tech Mono', monospace; align-items: center; overflow: hidden; }
+        
+        /* COMPACT SCREEN HEADER */
         .screen-header { font-size: 9.5vh; font-weight: 900; color: #fff; text-transform: uppercase; letter-spacing: 1vh; margin-bottom: 2vh; margin-top: 1vh; text-shadow: 0 0 15px rgba(0, 255, 255, 0.9); z-index: 20; border-bottom: 0.6vh solid #00ffff; padding-bottom: 1vh; width: 95%; text-align: center; display: block; }
         .league-logo { height: 1em; margin-right: 1.5vw; filter: drop-shadow(0 0 10px rgba(255,255,255,0.5)); border-radius: 1vh; display: inline-block; vertical-align: middle; margin-top: -1.5vh; }
         
@@ -71,20 +73,20 @@
 
         .card-row { display: flex !important; flex-direction: row !important; justify-content: space-between !important; align-items: center !important; margin-bottom: 1.5vh; width: 100%; }
         .card-team { display: flex; align-items: center; gap: 2vh; font-size: 5.2vh; font-weight: 900; color: white; text-transform: uppercase; } 
-        .card-team img { width: 8.2vh; height: 8.2vh; object-fit: contain; border: none; background: transparent;} 
+        .card-team img { width: 8.2vh; height: 8.2vh; object-fit: contain; background: transparent; border: none; } 
         .card-val-lg { font-weight: 900; color: #facc15; font-size: 5.7vh; } 
         .card-meta { display: flex; justify-content: space-between; border-bottom: 2px solid #004444; padding-bottom: 1vh; margin-bottom: 1.5vh; font-size: 3.5vh; color: #00aaaa; font-weight: 900; text-transform: uppercase; }
         .card-footer { margin-top: auto; padding-top: 1.2vh; border-top: 2px dashed #004444; display: flex; justify-content: space-between; align-items: center; color: #aaa; font-size: 3.5vh; text-transform: uppercase; }
 
-        /* TRIVIA SLIDE STYLES (NEW) */
-        .trivia-q-box { background: #0a1118; border: 1px solid #004444; border-left: 1vh solid #ff007f; padding: 4vh; border-radius: 1vh; width: 100%; text-align: center; font-size: 5vh; font-weight: 900; line-height: 1.3; color: #fff; margin-bottom: 3vh; text-transform: uppercase; box-shadow: inset 0 0 2vh rgba(255,0,127,0.1); }
-        .trivia-ans-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 3vh; width: 100%; }
-        .trivia-ans { background: #00111a; border: 2px solid #333; border-radius: 1vh; padding: 3vh; font-size: 4vh; font-weight: 700; color: #aaa; text-align: left; text-transform: uppercase; transition: all 0.3s ease; display: flex; align-items: center; }
-        .trivia-letter { display: inline-block; background: #111; border: 2px solid #ff007f; color: #ff007f; width: 6vh; height: 6vh; line-height: 5.5vh; text-align: center; border-radius: 1vh; margin-right: 2vw; flex-shrink: 0; font-weight: 900; }
+        /* TRIVIA SLIDE STYLES (COMPACT FIX) */
+        .trivia-q-box { background: #0a1118; border: 1px solid #004444; border-left: 1vh solid #ff007f; padding: 2.5vh 3vh; border-radius: 1vh; width: 100%; text-align: center; font-size: 3.8vh; font-weight: 900; line-height: 1.3; color: #fff; margin-bottom: 2vh; text-transform: uppercase; box-shadow: inset 0 0 2vh rgba(255,0,127,0.1); }
+        .trivia-ans-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2vh; width: 100%; }
+        .trivia-ans { background: #00111a; border: 2px solid #333; border-radius: 1vh; padding: 2vh; font-size: 3.2vh; font-weight: 700; color: #aaa; text-align: left; text-transform: uppercase; transition: all 0.3s ease; display: flex; align-items: center; }
+        .trivia-letter { display: inline-block; background: #111; border: 2px solid #ff007f; color: #ff007f; width: 5vh; height: 5vh; line-height: 4.5vh; text-align: center; border-radius: 0.8vh; margin-right: 1.5vw; flex-shrink: 0; font-weight: 900; }
         .trivia-ans.correct { background: #003300; border-color: #39ff14; color: #39ff14; font-weight: 900; }
         .trivia-ans.correct .trivia-letter { border-color: #39ff14; color: #39ff14; background: #002200; }
         .trivia-ans.wrong { opacity: 0.2; }
-        .trivia-timer-container { width: 100%; height: 1vh; background: #222; margin-top: 4vh; border-radius: 0.5vh; overflow: hidden; }
+        .trivia-timer-container { width: 100%; height: 1vh; background: #222; margin-top: 3vh; border-radius: 0.5vh; overflow: hidden; }
         .trivia-timer-bar { height: 100%; background: #ff007f; width: 100%; transform-origin: left; box-shadow: 0 0 1vh #ff007f; }
         @keyframes shrinkTimer { 0% { transform: scaleX(1); background: #39ff14; box-shadow: 0 0 1vh #39ff14; } 50% { background: #facc15; box-shadow: 0 0 1vh #facc15;} 100% { transform: scaleX(0); background: #ff0000; box-shadow: 0 0 1vh #ff0000; } }
 
@@ -192,7 +194,7 @@
             </div>
         </div>
         
-        <!-- NEW TRIVIA SLIDE -->
+        <!-- TRIVIA SLIDE -->
         <div id="trivia-screen" class="slide-screen">
             <div class="screen-header" style="color: #00ffff; border-bottom-color: #00ffff; text-shadow: 0 0 15px #00ffff;">ARCADE TRIVIA CHALLENGE</div>
             <div class="content-viewport" style="display:flex; flex-direction:column; justify-content:center; padding-top:2vh;">
@@ -225,6 +227,7 @@
             </div>
         </div>
         
+        <!-- COMMAND CENTER WITH MARQUEE DEEP DIVE -->
         <div id="command-screen" class="slide-screen">
             <div class="screen-header" style="color: #ffffff; border-bottom-color: #ffffff;">AHLERS COMMAND CENTER</div>
             <div class="content-viewport" id="command-viewport">
@@ -249,6 +252,7 @@
             </div>
         </div>
         
+        <!-- GLOBAL SOCCER HUB SLIDE -->
         <div id="soccer-screen" class="slide-screen">
             <div class="screen-header" style="color: #00ffff; border-bottom-color: #00ffff;">GLOBAL SOCCER MATCHES</div>
             <div class="content-viewport" id="soccer-viewport">
@@ -273,6 +277,7 @@
         <div id="odds-screen" class="slide-screen"><div class="screen-header">TODAY'S LINES</div><div class="content-viewport" id="odds-viewport"><div class="grid-track" id="odds-grid-track"></div></div></div>
         <div id="rankings-screen" class="slide-screen"><div class="screen-header">COLLEGE RANKINGS</div><div class="content-viewport" id="rankings-viewport"><div class="list-track" id="rankings-list-track"></div></div></div>
         
+        <!-- STANDINGS WITH GLOWING LOGOS -->
         <div id="nfl-screen" class="slide-screen"><div class="screen-header"><img src="https://a.espncdn.com/combiner/i?img=/i/teamlogos/leagues/500/nfl.png" class="league-logo" onerror="this.style.display='none'">NFL STANDINGS</div><div class="content-viewport" id="nfl-viewport"><div class="standings-track" id="nfl-track"></div></div></div>
         <div id="nba-screen" class="slide-screen"><div class="screen-header"><img src="https://a.espncdn.com/combiner/i?img=/i/teamlogos/leagues/500/nba.png" class="league-logo" onerror="this.style.display='none'">NBA STANDINGS</div><div class="content-viewport" id="nba-viewport"><div class="standings-track" id="nba-track"></div></div></div>
         <div id="nhl-screen" class="slide-screen"><div class="screen-header"><img src="https://a.espncdn.com/combiner/i?img=/i/teamlogos/leagues/500/nhl.png" class="league-logo" onerror="this.style.display='none'">NHL STANDINGS</div><div class="content-viewport" id="nhl-viewport"><div class="standings-track" id="nhl-track"></div></div></div>
@@ -756,6 +761,7 @@
             globalRawGames = newRawGames;
             globalTVGuideData = newTVGuide;
             
+            // Populate Marquee Games in Command Center
             newMarqueeGames.sort(function(a,b) { return b.weight - a.weight; });
             var top2 = newMarqueeGames.slice(0, 2);
             var marqueeHtml = top2.map(function(g) {
@@ -770,13 +776,13 @@
                          '</div>' +
                          '<div style="display:flex; justify-content:space-between; align-items:center;">' +
                              '<div style="display:flex; align-items:center; gap: 1vh;">' +
-                                 '<img src="' + g.aLogo + '" style="width:4.5vh; height:4.5vh; object-fit:contain; border-radius:0.5vh;" onerror="this.src=\'' + g.aFallback + '\'; this.onerror=null;">' +
+                                 '<img src="' + g.aLogo + '" style="width:4.5vh; height:4.5vh; object-fit:contain; border-radius:0; background:transparent; border:none;" onerror="this.src=\'' + g.aFallback + '\'; this.onerror=null;">' +
                                  '<span style="color:white; font-size:2.8vh; font-weight:900;">' + g.aName + '</span>' +
                              '</div>' +
                              '<span style="color:#ff6600; font-size:2vh; font-weight:900; font-style:italic;">VS</span>' +
                              '<div style="display:flex; align-items:center; gap: 1vh;">' +
                                  '<span style="color:white; font-size:2.8vh; font-weight:900;">' + g.hName + '</span>' +
-                                 '<img src="' + g.hLogo + '" style="width:4.5vh; height:4.5vh; object-fit:contain; border-radius:0.5vh;" onerror="this.src=\'' + g.hFallback + '\'; this.onerror=null;">' +
+                                 '<img src="' + g.hLogo + '" style="width:4.5vh; height:4.5vh; object-fit:contain; border-radius:0; background:transparent; border:none;" onerror="this.src=\'' + g.hFallback + '\'; this.onerror=null;">' +
                              '</div>' +
                          '</div>' +
                          '<div style="display:flex; justify-content:space-between; align-items:center; margin-top: 0.5vh;">' +
@@ -945,8 +951,10 @@
                 document.getElementById('ufc-screen').style.display = 'flex';
                 var track = document.getElementById('ufc-grid-track');
                 track.innerHTML = fights.map(function(f) {
+                    
                     var f1Img = (f.f1.athlete && f.f1.athlete.headshot && f.f1.athlete.headshot.href) ? f.f1.athlete.headshot.href : 'https://a.espncdn.com/combiner/i?img=/i/headshots/mma/players/full/' + f.f1.id + '.png&h=150&w=150&scale=crop';
                     var f2Img = (f.f2.athlete && f.f2.athlete.headshot && f.f2.athlete.headshot.href) ? f.f2.athlete.headshot.href : 'https://a.espncdn.com/combiner/i?img=/i/headshots/mma/players/full/' + f.f2.id + '.png&h=150&w=150&scale=crop';
+                    
                     var f1Class = "fighter-img", f2Class = "fighter-img", resultMeta = f.weightClass;
                     if(f.status.state === 'post') {
                         if(f.f1.winner) { f1Class += " winner"; f2Class += " loser"; resultMeta = '<span class="ufc-result">' + f.status.detail + '</span>'; }
@@ -989,6 +997,7 @@
                             var gameTime = new Date(ev.date).getTime();
                             var diffHours = (gameTime - nowTime) / (1000 * 60 * 60);
                             
+                            // 24 Hour Constraint
                             if ((comp.status.type.state === 'in' || comp.status.type.state === 'post') || (comp.status.type.state === 'pre' && diffHours >= 0 && diffHours <= 24)) {
                                 var h = comp.competitors[0], a = comp.competitors[1];
                                 var hLogo = (h.team && h.team.logo) ? h.team.logo : 'https://a.espncdn.com/combiner/i?img=/i/teamlogos/default-team-logo-500.png';
@@ -1110,6 +1119,9 @@
                 {id:'mlb',s:'baseball',t:'showMLB'},
                 {id:'mens-college-basketball',s:'basketball',t:'showCBB',g:settings.cbb50?50:null},
                 {id:'college-baseball',s:'baseball',t:'showCLB'},
+                {id:'fifa.world',s:'soccer',t:'showWorldCup'},
+                {id:'eng.1',s:'soccer',t:'showEPL'},
+                {id:'uefa.champions',s:'soccer',t:'showUCL'},
                 {id:'atp',s:'tennis',t:'showATP'},
                 {id:'wta',s:'tennis',t:'showWTA'}
             ];
@@ -1130,8 +1142,9 @@
                             var diffHours = (gameTime - nowTime) / (1000 * 60 * 60);
                             var maxHours = (l.id === 'nfl' || l.id === 'cfb') ? 96 : 24;
                             
+                            // STRICT TIME GATE (4 Days for NFL/CFB, 24h else)
                             if (comp.status.type.state === 'pre' && diffHours >= 0 && diffHours <= maxHours) {
-                                var shortL = (l.id==='mens-college-basketball')?'CBB':(l.id==='college-baseball')?'BASEBALL':l.id.toUpperCase();
+                                var shortL = (l.id==='mens-college-basketball')?'CBB':(l.id==='college-baseball')?'BASEBALL':(l.id==='fifa.world')?'FIFA':(l.id==='eng.1')?'EPL':(l.id==='uefa.champions')?'UCL':l.id.toUpperCase();
                                 var tv = (comp.broadcasts && comp.broadcasts[0] && comp.broadcasts[0].names) ? comp.broadcasts[0].names[0] : 'TV';
                                 var oddsStr = (comp.odds && comp.odds[0]) ? comp.odds[0].details : 'EVEN';
                                 var ouStr = (comp.odds && comp.odds[0] && comp.odds[0].overUnder) ? comp.odds[0].overUnder : '--';
