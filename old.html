@@ -58,15 +58,7 @@
         .screen-header { font-size: 9.5vh; font-weight: 900; color: #fff; text-transform: uppercase; letter-spacing: 1vh; margin-bottom: 2vh; margin-top: 1vh; text-shadow: 0 0 15px rgba(0, 255, 255, 0.9); z-index: 20; border-bottom: 0.6vh solid #00ffff; padding-bottom: 1vh; width: 95%; text-align: center; display: block; }
         
         /* DOUBLE SHADOW APPLIED TO LEAGUE LOGOS */
-        .league-logo { 
-            height: 1em; 
-            margin-right: 1.5vw; 
-            filter: drop-shadow(0px 0px 2px rgba(255, 255, 255, 0.8)) drop-shadow(0px 0px 8px rgba(255, 255, 255, 0.3)); 
-            border-radius: 1vh; 
-            display: inline-block; 
-            vertical-align: middle; 
-            margin-top: -1.5vh; 
-        }
+        .league-logo { height: 1em; margin-right: 1.5vw; filter: drop-shadow(0px 0px 2px rgba(255, 255, 255, 0.8)) drop-shadow(0px 0px 8px rgba(255, 255, 255, 0.3)); border-radius: 1vh; display: inline-block; vertical-align: middle; margin-top: -1.5vh; }
         
         .content-viewport { width: 95%; height: 62vh; overflow: hidden; position: relative; z-index: 20; padding-bottom: var(--ticker-height); }
         .grid-track { display: grid; grid-template-columns: repeat(2, 1fr); gap: 2vw; padding-bottom: 10vh; will-change: transform; }
@@ -168,14 +160,21 @@
         .r-btn { width: 100%; padding: 20px; margin-bottom: 10px; background: #1a1a1a; border: 1px solid #333; color: white; font-weight: bold; border-radius: 8px; font-size: 3vh; }
 
         /* --- GAMECAST MODAL OVERLAY --- */
-        #gamecast-modal { position: fixed; inset: 0; background: rgba(5, 5, 5, 0.98); z-index: 30000; display: none; flex-direction: column; padding: 4vh; border: 1vh solid #00ffff; font-family: 'Share Tech Mono', monospace; }
-        .gc-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 0.5vh solid #333; padding-bottom: 2vh; margin-bottom: 2vh; }
-        .gc-close { background: none; border: 2px solid #ff007f; color: #ff007f; font-size: 4vh; font-weight: 900; padding: 1vh 3vh; border-radius: 1vh; cursor: pointer; transition: all 0.3s ease; text-transform: uppercase; }
-        .gc-close:hover { background: #ff007f; color: #000; box-shadow: 0 0 20px #ff007f; }
+        #gamecast-modal { position: fixed; inset: 0; background: rgba(5, 5, 5, 0.98); z-index: 30000; display: none; flex-direction: column; padding: 4vh; border: 1vh solid #00ffff; font-family: 'Share Tech Mono', monospace; transition: background 0.5s ease, border-color 0.5s ease; }
+        .gc-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 0.5vh solid rgba(255,255,255,0.2); padding-bottom: 2vh; margin-bottom: 2vh; }
+        .gc-close { background: rgba(0,0,0,0.5); border: 2px solid white; color: white; font-size: 4vh; font-weight: 900; padding: 1vh 3vh; border-radius: 1vh; cursor: pointer; transition: all 0.3s ease; text-transform: uppercase; }
+        .gc-close:hover { background: white; color: #000; box-shadow: 0 0 20px white; }
         .gc-content { flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 4vw; overflow: hidden; align-items: start; }
-        .gc-panel { background: #0a1118; border: 1px solid #004444; border-left: 1vh solid #00ffff; padding: 3vh; border-radius: 1vh; margin-bottom: 2vh; display: flex; flex-direction: column; }
-        .gc-label { color: #00ffff; font-size: 2.5vh; text-transform: uppercase; font-weight: 900; margin-bottom: 1vh; border-bottom: 1px dashed #333; padding-bottom: 0.5vh; }
-        .gc-value { color: white; font-size: 4vh; font-weight: 700; line-height: 1.2; }
+        .gc-panel { background: rgba(10, 17, 24, 0.7); border: 1px solid rgba(255,255,255,0.2); border-radius: 1vh; margin-bottom: 2vh; display: flex; flex-direction: column; backdrop-filter: blur(5px); }
+        
+        /* FADING PLAY-BY-PLAY TERMINAL */
+        .pbp-container { display: flex; flex-direction: column; gap: 1.5vh; padding: 2vh; height: 100%; overflow: hidden; }
+        .pbp-item { font-size: 2.5vh; color: #ddd; transition: all 0.3s ease; line-height: 1.3; }
+        .pbp-item.latest { font-size: 4vh; color: white; font-weight: 900; text-shadow: 0 0 10px rgba(255,255,255,0.5); border-left: 0.5vh solid white; padding-left: 2vh; }
+        
+        /* DYNAMIC GC STYLING */
+        .gc-label { color: rgba(255,255,255,0.7); font-size: 2.5vh; text-transform: uppercase; font-weight: 900; margin-bottom: 1vh; border-bottom: 1px dashed rgba(255,255,255,0.2); padding: 1.5vh 2vh; background: rgba(0,0,0,0.3); border-radius: 1vh 1vh 0 0; }
+        .gc-value { padding: 0 2vh 2vh 2vh; }
     </style>
 </head>
 <body onmousemove="showCursor()">
@@ -189,11 +188,11 @@
 
         <div id="gamecast-modal">
             <div class="gc-header">
-                <div id="gc-title" style="font-size: 6vh; font-weight: 900; color: #00ffff; text-transform: uppercase; text-shadow: 0 0 15px rgba(0,255,255,0.8);">LIVE GAMECAST OVERLAY</div>
-                <button class="gc-close" onclick="closeGamecast()">CLOSE [X]</button>
+                <div id="gc-title" style="font-size: 6vh; font-weight: 900; color: #00ffff; text-transform: uppercase; text-shadow: 0 0 15px rgba(0,255,255,0.8); transition: color 0.5s ease, text-shadow 0.5s ease;">LIVE GAMECAST OVERLAY</div>
+                <button class="gc-close" id="gc-close-btn" onclick="closeGamecast()">CLOSE [X]</button>
             </div>
             <div class="gc-content" id="gc-body">
-                <div style="font-size: 4vh; color: #facc15; grid-column: span 2; text-align: center; margin-top: 10vh;">CONNECTING TO BROADCAST SATELLITE...</div>
+                <div style="font-size: 4vh; color: white; grid-column: span 2; text-align: center; margin-top: 10vh; font-weight:900; text-shadow: 0 0 15px rgba(255,255,255,0.5);">ESTABLISHING UPLINK...</div>
             </div>
         </div>
 
@@ -328,10 +327,6 @@
                         <div style="font-size: 1.8vh; color: #ff007f; margin-bottom: 0.5vh; text-transform: uppercase;">Custom Ticker Marquee:</div>
                         <input type="text" id="set-marqueeMessage" style="width: 100%; padding: 1vh; border-radius: 0.5vh; background: #1a1a1a; color: white; border: 1px solid #ff007f; font-family: 'Inter', sans-serif;" placeholder="e.g. Welcome to the Arcade!" onchange="updateSettings()">
                     </div>
-                    <div style="margin-bottom: 2vh;">
-                        <div style="font-size: 1.8vh; color: #39ff14; margin-bottom: 0.5vh; text-transform: uppercase;">Gemini AI API Key (Free):</div>
-                        <input type="password" id="set-geminiKey" style="width: 100%; padding: 1vh; border-radius: 0.5vh; background: #1a1a1a; color: white; border: 1px solid #39ff14; font-family: 'Inter', sans-serif;" placeholder="Paste API Key for AI Narratives" onchange="updateSettings()">
-                    </div>
                     
                     <div class="toggle-row"><span style="color:#00ffff; font-weight:bold;">Live Trivia Game</span> <input type="checkbox" id="set-trivia" checked onchange="updateSettings()"></div>
                     <div class="toggle-row"><span style="color:#facc15; font-weight:bold;">Top Stats Leaders</span> <input type="checkbox" id="set-leaders" checked onchange="updateSettings()"></div>
@@ -391,7 +386,6 @@
         var globalLiveGamesData = [], globalTVGuideData = [], globalRawGames = [], globalLeadersData = [];
         var previousScores = {}; 
         var currentTrivia = null;
-        var aiNarrativeCache = { eventId: null, text: "" };
 
         var defaultSettings = { 
             nfl:true, nba:true, nhl:true, mlb:true, rankings:true, odds:true, tvGuide:true, news:true, mySquad:true, ufc:true, command:true, leaders:true, pga:true, soccerSlide:true, trivia:true,
@@ -399,8 +393,7 @@
             cbb50:true, cfb75:true, clb50:true, apiBase:"https://site.api.espn.com/apis",
             mySquadTeams: "Carolina Hurricanes, Duke, ECU, East Carolina",
             marqueeMessage: "WELCOME TO AHLERS ARCADE",
-            tickerSpeed: 5,
-            geminiKey: ""
+            tickerSpeed: 5
         };
         
         var settings = defaultSettings;
@@ -412,7 +405,6 @@
             if (typeof settings.pga === 'undefined') settings.pga = true;
             if (typeof settings.soccerSlide === 'undefined') settings.soccerSlide = true;
             if (typeof settings.trivia === 'undefined') settings.trivia = true;
-            if (typeof settings.geminiKey === 'undefined') settings.geminiKey = "";
             if (typeof settings.showWorldCup === 'undefined') settings.showWorldCup = true;
             if (typeof settings.showEPL === 'undefined') settings.showEPL = true;
             if (typeof settings.showUCL === 'undefined') settings.showUCL = true;
@@ -491,11 +483,17 @@
             } catch(e) {}
         }
 
-        // --- GAMECAST LOGIC ---
+        // --- GAMECAST LOGIC (WITH DYNAMIC COLOR & FADING PBP) ---
         function openGamecast(sport, league, eventId) {
             clearTimeout(slideTimer);
-            document.getElementById('gamecast-modal').style.display = 'flex';
-            document.getElementById('gc-body').innerHTML = '<div style="font-size: 4vh; color: #facc15; grid-column: span 2; text-align: center; margin-top: 10vh;">ESTABLISHING UPLINK...</div>';
+            var modal = document.getElementById('gamecast-modal');
+            modal.style.background = 'rgba(5, 5, 5, 0.98)';
+            modal.style.borderColor = '#00ffff';
+            document.getElementById('gc-title').style.color = '#00ffff';
+            document.getElementById('gc-title').style.textShadow = '0 0 15px rgba(0,255,255,0.8)';
+            
+            modal.style.display = 'flex';
+            document.getElementById('gc-body').innerHTML = '<div style="font-size: 4vh; color: white; grid-column: span 2; text-align: center; margin-top: 10vh; font-weight:900; text-shadow: 0 0 15px rgba(255,255,255,0.5);">ESTABLISHING UPLINK...</div>';
             
             fetchGamecastData(sport, league, eventId);
             clearInterval(gamecastInterval);
@@ -513,22 +511,56 @@
                 var res = await fetch(settings.apiBase + '/site/v2/sports/' + sport + '/' + league + '/summary?event=' + eventId);
                 var d = await res.json();
                 
+                // EXTRACT HOME TEAM COLOR FOR DYNAMIC RADIAL GRADIENT
+                var primaryColor = "00ffff";
+                if(d.header && d.header.competitions && d.header.competitions[0]) {
+                    var homeTeam = d.header.competitions[0].competitors.find(function(c) { return c.homeAway === 'home'; });
+                    if (!homeTeam) homeTeam = d.header.competitions[0].competitors[0];
+                    if (homeTeam && homeTeam.team && homeTeam.team.color) {
+                        primaryColor = homeTeam.team.color;
+                    }
+                }
+                
+                var modal = document.getElementById('gamecast-modal');
+                modal.style.background = 'radial-gradient(circle at center, #' + primaryColor + '40 0%, #050505 80%)';
+                modal.style.borderColor = '#' + primaryColor;
+                document.getElementById('gc-title').style.color = '#' + primaryColor;
+                document.getElementById('gc-title').style.textShadow = '0 0 15px #' + primaryColor;
+                document.getElementById('gc-close-btn').style.borderColor = '#' + primaryColor;
+
                 var boxscoreHtml = "";
                 if(d.boxscore && d.boxscore.teams) {
                     boxscoreHtml = d.boxscore.teams.map(function(t) {
+                        var teamColor = t.team.color ? '#' + t.team.color : 'white';
                         var stats = t.statistics ? t.statistics.slice(0, 4).map(function(s) { return s.displayValue + ' ' + s.abbreviation; }).join(' | ') : 'Stats pending';
-                        return '<div style="color:#aaa; font-size:2.5vh; margin-top:1vh;">' + t.team.shortDisplayName + ': <span style="color:white;">' + stats + '</span></div>';
+                        return '<div style="color:white; font-size:2.8vh; margin-top:1.5vh; border-left: 4px solid ' + teamColor + '; padding-left: 1.5vh;">' + t.team.shortDisplayName + ':<br><span style="color:#aaa; font-size:2.2vh;">' + stats + '</span></div>';
                     }).join('');
                 }
 
-                var lastPlayText = "Awaiting play data...";
-                if (d.drives && d.drives.current && d.drives.current.lastPlay) { lastPlayText = d.drives.current.lastPlay.text; }
-                else if (d.plays && d.plays.length > 0) { lastPlayText = d.plays[d.plays.length - 1].text; }
-                else if (d.lastPlay && d.lastPlay.text) { lastPlayText = d.lastPlay.text; }
+                // FADING PLAY-BY-PLAY TERMINAL EXTRACTION
+                var recentPlays = [];
+                if (d.drives && d.drives.current && d.drives.current.plays) {
+                    recentPlays = d.drives.current.plays.slice(-5).reverse();
+                } else if (d.plays && d.plays.length > 0) {
+                    recentPlays = d.plays.slice(-5).reverse();
+                } else if (d.lastPlay) {
+                    recentPlays = [d.lastPlay];
+                }
+
+                var playsHtml = '<div style="font-size:3vh; color:#aaa; text-align:center; margin-top: 2vh;">Awaiting play data...</div>';
+                if (recentPlays.length > 0) {
+                    playsHtml = '<div class="pbp-container">' + recentPlays.map(function(p, i) {
+                        var op = i === 0 ? 1 : (i === 1 ? 0.7 : (i === 2 ? 0.4 : 0.2));
+                        var itemClass = i === 0 ? "pbp-item latest" : "pbp-item";
+                        return '<div class="' + itemClass + '" style="opacity: ' + op + ';">' + p.text + '</div>';
+                    }).join('') + '</div>';
+                }
 
                 var winProbHtml = "";
                 if(d.predictor && d.predictor.homeTeam) {
-                    winProbHtml = '<div class="gc-panel"><div class="gc-label">WIN PROBABILITY</div><div class="gc-value" style="color:#39ff14;">' + d.header.competitions[0].competitors[0].team.shortDisplayName + ' ' + d.predictor.homeTeam.gameProjection + '%</div></div>';
+                    var prob = parseFloat(d.predictor.homeTeam.gameProjection);
+                    var awayProb = 100 - prob;
+                    winProbHtml = '<div class="gc-panel"><div class="gc-label">WIN PROBABILITY</div><div class="gc-value" style="display:flex; justify-content:space-between; align-items:center; color:white; font-size:3vh; margin-top:1vh;"><span>' + d.header.competitions[0].competitors[1].team.shortDisplayName + ' ' + awayProb.toFixed(1) + '%</span><span>' + d.header.competitions[0].competitors[0].team.shortDisplayName + ' ' + prob.toFixed(1) + '%</span></div></div>';
                 }
 
                 var leadersHtml = "";
@@ -537,57 +569,33 @@
                         if(!cat.leaders || cat.leaders.length === 0) return '';
                         var top = cat.leaders[0].leaders[0];
                         if(!top) return '';
-                        return '<div style="font-size:2.5vh; color:#fff; border-bottom:1px solid #222; padding: 1vh 0;"><span style="color:#facc15;">' + cat.displayName + ':</span> ' + top.athlete.displayName + ' (' + top.displayValue + ')</div>';
+                        return '<div style="font-size:2.5vh; color:#fff; border-bottom:1px solid rgba(255,255,255,0.1); padding: 1vh 0;"><span style="color:#facc15;">' + cat.displayName + ':</span> ' + top.athlete.displayName + ' (' + top.displayValue + ')</div>';
                     }).join('');
                 }
 
                 document.getElementById('gc-body').innerHTML = `
-                    <div style="grid-column: span 2; background: #00111a; border: 1px solid #00ffff; padding: 2vh; border-radius: 1vh; margin-bottom: 2vh; text-align:center;">
-                        <div style="font-size: 5vh; font-weight: 900; color: white;">${d.header.competitions[0].competitors[1].team.shortDisplayName} ${d.header.competitions[0].competitors[1].score || '0'} - ${d.header.competitions[0].competitors[0].score || '0'} ${d.header.competitions[0].competitors[0].team.shortDisplayName}</div>
-                        <div style="font-size: 3vh; color: #ff007f;">${d.header.competitions[0].status.type.detail}</div>
+                    <div style="grid-column: span 2; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.2); padding: 2vh; border-radius: 1vh; margin-bottom: 2vh; text-align:center;">
+                        <div style="font-size: 6vh; font-weight: 900; color: white;">${d.header.competitions[0].competitors[1].team.shortDisplayName} ${d.header.competitions[0].competitors[1].score || '0'} - ${d.header.competitions[0].competitors[0].score || '0'} ${d.header.competitions[0].competitors[0].team.shortDisplayName}</div>
+                        <div style="font-size: 3vh; color: #${primaryColor}; font-weight: 700; margin-top: 0.5vh;">${d.header.competitions[0].status.type.detail}</div>
                     </div>
                     <div class="gc-panel">
-                        <div class="gc-label">LAST PLAY / MOMENTUM</div>
-                        <div class="gc-value">${lastPlayText}</div>
+                        <div class="gc-label">LIVE PLAY-BY-PLAY</div>
+                        ${playsHtml}
                     </div>
-                    ${winProbHtml}
-                    <div class="gc-panel" style="grid-column: span 2;">
-                        <div class="gc-label">MATCHUP METRICS</div>
-                        ${boxscoreHtml}
-                        <div style="margin-top:2vh;">${leadersHtml}</div>
+                    <div style="display:flex; flex-direction:column;">
+                        ${winProbHtml}
+                        <div class="gc-panel" style="flex: 1;">
+                            <div class="gc-label">MATCHUP METRICS</div>
+                            <div class="gc-value">
+                                ${boxscoreHtml}
+                                <div style="margin-top:2.5vh;">${leadersHtml}</div>
+                            </div>
+                        </div>
                     </div>
                 `;
             } catch(e) {
                 console.log("Gamecast Error", e);
                 document.getElementById('gc-body').innerHTML = '<div style="font-size: 4vh; color: #ff0000; grid-column: span 2;">FEED LOST. RETRYING...</div>';
-            }
-        }
-
-        // --- GEMINI AI NARRATIVE GENERATOR ---
-        async function fetchAINarrative(gameContextStr) {
-            if(!settings.geminiKey) return "Awaiting Analyst Insights... (Add API Key in Settings)";
-            try {
-                var payload = {
-                    contents: [{
-                        parts: [{
-                            text: "Write a single, punchy 2-sentence sports broadcast breakdown of this game context: " + gameContextStr + ". You are the embedded AI announcer for Ahlers Arcade. Be highly biased towards the Carolina Hurricanes, Duke Blue Devils, and East Carolina Pirates. Hype them up heavily if they are involved. CRITICAL: If the North Carolina Tar Heels are playing, subtly roast them. Do not use quotes."
-                        }]
-                    }]
-                };
-                
-                var res = await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=" + settings.geminiKey, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(payload)
-                });
-                
-                var data = await res.json();
-                if(data.candidates && data.candidates[0].content.parts[0].text) {
-                    return data.candidates[0].content.parts[0].text;
-                }
-                return "Analyst Feed Unavailable.";
-            } catch(e) {
-                return "Data Uplink Failed.";
             }
         }
 
@@ -872,27 +880,11 @@
             newMarqueeGames.sort(function(a,b) { return b.weight - a.weight; });
             var top2 = newMarqueeGames.slice(0, 2);
             
-            // GENERATE AI NARRATIVE FOR THE TOP MATCHUP
-            if(settings.geminiKey && top2.length > 0) {
-                var topGame = top2[0];
-                if(aiNarrativeCache.eventId !== topGame.id) {
-                    var ctx = topGame.aName + " (" + topGame.aScore + ") vs " + topGame.hName + " (" + topGame.hScore + ") - " + topGame.league + " Status: " + topGame.state + " " + topGame.clock;
-                    fetchAINarrative(ctx).then(function(narrative) {
-                        aiNarrativeCache.eventId = topGame.id;
-                        aiNarrativeCache.text = narrative;
-                        var aiDiv = document.getElementById('ai-narrative-box');
-                        if(aiDiv) aiDiv.innerHTML = '<div style="color:#39ff14; font-size: 2.2vh; font-weight:900; margin-bottom:0.5vh;">AHLERS AI INSIGHT</div>' + narrative;
-                    });
-                }
-            }
-            
             var marqueeHtml = top2.map(function(g, idx) {
                 var displayTime = g.state === 'in' ? '<span style="color:#ff007f; animation: pulsePink 1s infinite;">● LIVE ' + g.clock + '</span>' : (g.state === 'post' ? '<span style="color:#aaa;">FINAL</span>' : '<span style="color:#facc15;">' + g.time + '</span>');
                 var scoreOrOdds = (g.state === 'in' || g.state === 'post') ? 
                     '<div style="font-size:3.5vh; font-weight:900; color:#00ffff;">' + g.aScore + ' - ' + g.hScore + '</div>' : 
                     '<div style="font-size:2.5vh; color:#aaa; font-weight:bold;">LINE: <span style="color:#39ff14;">' + g.odds + '</span> | O/U: ' + g.ou + '</div>';
-                
-                var aiBoxHtml = (idx === 0) ? '<div id="ai-narrative-box" style="margin-top: 1.5vh; padding: 1vh; border-top: 1px dashed #333; font-size: 2.2vh; color: #ccc; font-style: italic;">' + (aiNarrativeCache.eventId === g.id ? ('<div style="color:#39ff14; font-size: 2.2vh; font-weight:900; margin-bottom:0.5vh;">AHLERS AI INSIGHT</div>' + aiNarrativeCache.text) : 'Querying AI Analyst...') + '</div>' : '';
 
                 return '<div style="background: #00111a; border: 1px solid #004444; border-radius: 1vh; padding: 1.5vh; display:flex; flex-direction:column; gap: 1vh; cursor: pointer;" onclick="openGamecast(\'' + g.sport + '\', \'' + g.lCode + '\', \'' + g.id + '\')">' +
                          '<div style="display:flex; justify-content:space-between; align-items:center; font-size: 2vh; font-weight:900; color:#00aaaa; border-bottom: 1px dashed #004444; padding-bottom: 0.5vh;">' +
@@ -911,7 +903,7 @@
                          '</div>' +
                          '<div style="display:flex; justify-content:space-between; align-items:center; margin-top: 0.5vh;">' +
                              displayTime + scoreOrOdds +
-                         '</div>' + aiBoxHtml +
+                         '</div>' +
                        '</div>';
             }).join('');
             
@@ -1292,31 +1284,4 @@
                             }
                         }
                         
-                        var logoStr = (t.team.logos && t.team.logos[0]) ? t.team.logos[0].href : 'https://a.espncdn.com/combiner/i?img=/i/teamlogos/default-team-logo-500.png';
-                        html += '<div class="st-row"><img class="st-logo" src="' + logoStr + '"><div class="st-name">' + t.team.displayName + '</div><div class="st-rec">' + recText + '</div></div>'; 
-                    });
-                    html += '</div>';
-                });
-                
-                if(track) {
-                    track.innerHTML = html;
-                    var vH = document.getElementById(cleanId + '-viewport').clientHeight, fH = track.scrollHeight;
-                    if (fH > vH) { var sD = fH - vH + 100; track.style.setProperty('--scroll-end', '-' + sD + 'px'); track.style.animation = 'scrollVerticalOnePass ' + (sD/50) + 's linear 2s forwards'; slideTimer = setTimeout(nextSlide, (sD/50 * 1000) + 5000); } else { slideTimer = setTimeout(nextSlide, 15000); }
-                } else { rotationStep++; nextSlide(); }
-            } catch(e) { rotationStep++; nextSlide(); }
-        }
-
-        function showCursor() { document.body.style.cursor = 'default'; clearTimeout(cursorTimer); cursorTimer = setTimeout(function(){ document.body.style.cursor='none'; }, 3000); }
-        
-        async function initTicker() {
-            try { await updateSportsTicker(); } catch(e) {}
-            var tr = document.getElementById('ticker-track');
-            if(tr && tr.innerHTML.indexOf('LOADING AHLERS') > -1) tr.innerHTML = '<span class="score-item"><span style="color:#aaa; font-size:4rem; font-weight:900;">AWAITING DATA...</span></span>';
-            nextSlide();
-        }
-        
-        setInterval(function() { updateSportsTicker().catch(function(){}); }, 60000);
-        initTicker();
-    </script>
-</body>
-</html>
+                        var logoStr = (t.team.logos && t.team.logos[0]) ? t.team.logos[0].href : 'https://a.espncdn.com/combiner/i?img=/i/teamlogos/default-team-logo-500.
