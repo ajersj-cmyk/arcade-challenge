@@ -184,7 +184,7 @@
         .r-btn { width: 100%; padding: 20px; margin-bottom: 10px; background: #1a1a1a; border: 1px solid #333; color: white; font-weight: bold; border-radius: 8px; font-size: 3vh; }
     </style>
 </head>
-<body class="theme-cyan">
+<body>
 
     <div class="cyber-grid-container"><div class="cyber-grid"></div></div>
     
@@ -223,7 +223,7 @@
         </div>
         
         <div id="trivia-screen" class="slide-screen">
-            <div class="screen-header neon-text-cycle">ARCADE TRIVIA CHALLENGE</div>
+            <div class="screen-header neon-text-cycle">TRIVIA BREAK!</div>
             <div class="content-viewport" style="display:flex; flex-direction:column; justify-content:center; padding-top:0; padding-bottom:0; height:65vh;">
                 <div class="trivia-q-box glass-card neon-border-cycle" id="trivia-q">Loading next challenge...</div>
                 <div class="trivia-ans-grid" id="trivia-options"></div>
@@ -386,9 +386,6 @@
         var globalTVGuideData = [], globalLeadersData = [], newMarqueeGames = [];
         var currentTrivia = null;
 
-        var neonThemes = ['theme-cyan', 'theme-pink', 'theme-green'];
-        var currentThemeIndex = 0;
-
         var defaultSettings = { 
             nfl:true, nba:true, nhl:true, mlb:true, rankings:true, odds:true, tvGuide:true, news:true, mySquad:true, ufc:true, command:true, leaders:true, pga:true, soccerSlide:true, trivia:true,
             showWorldCup:true, showEPL:true, showUCL:true, showATP:true, showWTA:true, showNFL:true, showNBA:true, showNHL:true, showMLB:true, showCFB:true, showCBB:true, showCLB:true,
@@ -534,10 +531,12 @@
             clearTimeout(slideTimer);
             clearTimeout(triviaRevealTimer);
             
-            // Cycle color per slide transition
+            // Cycle neon theme colors once per transition
+            var neonThemes = ['theme-cyan', 'theme-pink', 'theme-green'];
             document.body.classList.remove(...neonThemes);
-            currentThemeIndex = (currentThemeIndex + 1) % neonThemes.length;
-            document.body.classList.add(neonThemes[currentThemeIndex]);
+            if(typeof window.currentThemeIndex === 'undefined') window.currentThemeIndex = 0;
+            window.currentThemeIndex = (window.currentThemeIndex + 1) % neonThemes.length;
+            document.body.classList.add(neonThemes[window.currentThemeIndex]);
 
             var mc = document.getElementById('master-clock');
             if (mc) mc.style.display = 'block';
@@ -808,11 +807,30 @@
         function showProps() {
             document.getElementById('props-screen').style.display = 'flex';
             var track = document.getElementById('props-grid-track');
-            if (globalPropsData.length === 0) { track.innerHTML = '<div class="neon-text-cycle" style="font-size:4vh; font-weight:900; text-align:center; grid-column: 1 / -1; padding-top: 10vh;">PROPS UNAVAILABLE</div>'; applyScroll('props-viewport', 'props-grid-track', 10000); } 
-            else {
+            if (globalPropsData.length === 0) { 
+                track.innerHTML = '<div class="neon-text-cycle" style="font-size:4vh; font-weight:900; text-align:center; grid-column: 1 / -1; padding-top: 10vh;">PROPS UNAVAILABLE</div>'; 
+                applyScroll('props-viewport', 'props-grid-track', 10000); 
+            } else {
                 track.innerHTML = globalPropsData.map(function(p) {
-                    var valFloat = parseFloat(p.value); var simLine = (!isNaN(valFloat) && valFloat > 0) ? (valFloat * 0.85).toFixed(1) : "0.5"; 
-                    return '<div class="prop-card"><img src="' + p.headshot + '" onerror="this.src=\'' + p.teamLogo + '\'; this.onerror=null;" class="prop-headshot"><div class="prop-details"><div class="prop-name">' + p.name + '</div><div class="prop-game neon-text-cycle">' + p.teamCode + ' vs ' + p.oppCode + '</div><div class="prop-line-container"><div class="prop-line neon-text-cycle">O/U ' + simLine + ' ' + p.statDesc + '</div><span class="prop-odds neon-text-cycle">' + p.baseOdds + '</span></div></div></div>';
+                    var label = (p.statDesc || "STAT").toUpperCase();
+                    var line = "0.5";
+                    
+                    // Filter out season decimal stats and convert to realistic daily props
+                    if (label.indexOf('AVG') > -1 || label.indexOf('BATTING') > -1 || (p.value && p.value.toString().indexOf('.') === 0)) {
+                        label = "TOTAL HITS"; 
+                        line = "0.5";
+                    } else if (label.indexOf('ERA') > -1) {
+                        label = "EARNED RUNS ALLOWED";
+                        line = "2.5";
+                    } else {
+                        // Dynamically calculate a realistic daily over/under based on their stats
+                        var vFloat = parseFloat(p.value);
+                        if (!isNaN(vFloat) && vFloat > 0) {
+                            line = (vFloat < 5) ? (Math.floor(vFloat) + 0.5).toFixed(1) : (vFloat * 0.85).toFixed(1);
+                        }
+                    }
+
+                    return '<div class="prop-card"><img src="' + p.headshot + '" onerror="this.src=\'' + p.teamLogo + '\'; this.onerror=null;" class="prop-headshot"><div class="prop-details"><div class="prop-name">' + p.name + '</div><div class="prop-game neon-text-cycle">' + p.teamCode + ' vs ' + p.oppCode + '</div><div class="prop-line-container"><div class="prop-line neon-text-cycle">O/U ' + line + ' ' + label + '</div><span class="prop-odds neon-text-cycle">' + p.baseOdds + '</span></div></div></div>';
                 }).join('');
                 applyScroll('props-viewport', 'props-grid-track', 15000);
             }
