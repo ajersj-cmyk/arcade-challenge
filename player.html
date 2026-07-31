@@ -10,38 +10,31 @@
         :root { --ticker-height: 22vh; }
         body, html { margin: 0; padding: 0; width: 100vw; height: 100vh; background: #02050a; overflow: hidden; color: white; font-family: 'Inter', sans-serif; cursor: none; font-size: 3.5vh; }
         
-        /* DYNAMIC CINEMATIC BACKGROUND */
-        #cinematic-bg { position: absolute; inset: -2%; width: 104%; height: 104%; z-index: 0; background-size: cover; background-position: center; filter: blur(15px) brightness(0.25); transition: background-image 2s ease-in-out; background-image: url('https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?q=80&w=2000&auto=format&fit=crop'); }
-        
-        /* THE CYBER GRID OVERLAY */
+        #cinematic-bg { position: absolute; inset: -2%; width: 104%; height: 104%; z-index: 0; background-size: cover; background-position: center; filter: blur(15px) brightness(0.25); transition: background-image 2s ease-in-out; }
         .cyber-grid { position: absolute; top: 0; left: -50%; width: 200%; height: 100%; background-image: linear-gradient(rgba(0, 255, 255, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 255, 255, 0.05) 1px, transparent 1px); background-size: 100px 100px; transform: rotateX(45deg); z-index: 1; pointer-events: none; }
-
         .tv-wrapper { position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; display: flex; justify-content: center; align-items: center; overflow: hidden; z-index: 2; }
 
         #fs-toggle { position: fixed; top: 2.5vh; right: 3vw; z-index: 15000; background: none; border: none; color: #fff; font-size: 4vh; cursor: pointer; opacity: 0.3; transition: all 0.3s ease; }
         #fs-toggle:hover { opacity: 1; color: #00ffff; text-shadow: 0 0 15px #00ffff; }
         #master-clock { position: fixed; top: 2.5vh; left: 3vw; z-index: 15000; color: #fff; font-family: 'Share Tech Mono', monospace; font-size: 4.5vh; font-weight: 900; text-shadow: 0 0 15px rgba(255,255,255,0.6); opacity: 0.9; letter-spacing: 0.2vw; }
 
-        /* TICKER - PREMIUM GLASSMORPHISM */
+        /* TICKER */
         #sports-ticker { position: absolute; bottom: 0; left: 0; width: 100%; height: var(--ticker-height); background: rgba(5, 10, 15, 0.6); backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px); border-top: 1px solid rgba(255, 255, 255, 0.15); box-shadow: 0 -5px 25px rgba(0,0,0,0.5); z-index: 100; display: flex; align-items: center; overflow: hidden; white-space: nowrap; }
-        #ticker-track { display: inline-flex; animation: scrollTicker 80s linear infinite; height: 100%; align-items: center; width: max-content; will-change: transform; } 
+        #ticker-track { display: inline-flex; height: 100%; align-items: center; width: max-content; will-change: transform; } 
         @keyframes scrollTicker { 0% { transform: translate3d(0, 0, 0); } 100% { transform: translate3d(-50%, 0, 0); } }
 
         .ticker-section-head { display: inline-flex; align-items: center; justify-content: center; padding: 0 3vw; height: 100%; color: #00ffff; font-size: 4rem; letter-spacing: 0.3vw; font-weight: 900; text-shadow: 0 0 20px rgba(0,255,255,0.4); }
         .score-item { display: inline-flex !important; flex-direction: row !important; align-items: center !important; padding: 0 5vw; height: 100%; vertical-align: middle; flex-wrap: nowrap !important; }
         .team-box { display: flex !important; flex-direction: row !important; align-items: center !important; flex-wrap: nowrap !important; }
-        .team-logo { width: 11vh; height: 11vh; object-fit: contain; margin-right: 1.5vw; flex-shrink: 0; background: transparent; filter: drop-shadow(0px 5px 10px rgba(0,0,0,0.5)); } 
+        .team-logo { width: 11vh; height: 11vh; object-fit: contain; margin-right: 1.5vw; flex-shrink: 0; filter: drop-shadow(0px 5px 10px rgba(0,0,0,0.5)); } 
         .team-score { font-size: 4.8rem; line-height: 1; color: #fff; margin-right: 0.8vw; font-weight: 900; }
-        
         .vs-label { color: rgba(255,255,255,0.3); font-size: 2.7rem; margin: 0 2.5vw; font-weight: bold; }
         .game-status { margin-left: 2vw; color: #facc15; font-size: 2.7rem; text-transform: uppercase; letter-spacing: 0.1vw; }
         .live-pulse { animation: pulsePink 1.5s ease-in-out infinite; color: #ff007f; font-weight: 900; margin-right: 1.5vw; font-size: 2.7rem; text-shadow: 0 0 15px #ff007f; }
         @keyframes pulsePink { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
 
-        /* SLIDES & GRIDS */
+        /* SLIDES */
         .slide-screen { position: absolute; inset: 0; z-index: 10; display: none; flex-direction: column; padding: 0 4vh; align-items: center; overflow: hidden; }
-        
-        /* HEADER FIX - Pushed down to clear buttons */
         .screen-header { margin-top: 9vh; font-size: 9.5vh; font-weight: 900; color: #fff; text-transform: uppercase; letter-spacing: 1vh; margin-bottom: 2vh; z-index: 20; border-bottom: 1px solid rgba(255,255,255,0.2); padding-bottom: 1vh; width: 95%; text-align: center; display: block; }
         .league-logo { height: 1em; margin-right: 1.5vw; filter: drop-shadow(0px 0px 10px rgba(255, 255, 255, 0.4)); display: inline-block; vertical-align: middle; margin-top: -1.5vh; }
         
@@ -52,25 +45,43 @@
 
         /* PREMIUM GLASS CARDS */
         .glass-card { background: rgba(15, 20, 30, 0.45); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.1); border-top: 1px solid rgba(255, 255, 255, 0.2); border-radius: 1.5vh; display: flex; flex-direction: column; padding: 2.5vh; box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3); position: relative; overflow: hidden; }
-        
         .squad-game-card { border-left: 0.8vh solid #00ffff; }
         .squad-game-card.card-focus-canes { border-left-color: #cc0000; background: rgba(40, 5, 5, 0.45); }
         .squad-game-card.card-focus-duke { border-left-color: #003087; background: rgba(5, 15, 40, 0.45); }
         .squad-game-card.card-focus-ecu { border-left-color: #592A8A; background: rgba(30, 10, 45, 0.45); }
 
-        .card-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5vh; width: 100%; z-index: 2; position: relative; }
+        .card-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1vh; width: 100%; z-index: 2; position: relative; }
         .card-team { display: flex; align-items: center; gap: 2vh; font-size: 5.2vh; font-weight: 900; color: white; text-transform: uppercase; text-shadow: 0 2px 4px rgba(0,0,0,0.8); } 
         .card-team img { width: 8.2vh; height: 8.2vh; object-fit: contain; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.5)); } 
         .card-val-lg { font-weight: 900; color: #fff; font-size: 5.7vh; text-shadow: 0 2px 5px rgba(0,0,0,0.8); } 
         .card-meta { display: flex; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 1vh; margin-bottom: 1.5vh; font-size: 3vh; color: rgba(255,255,255,0.6); font-weight: 900; text-transform: uppercase; letter-spacing: 0.1vw; z-index: 2; position: relative; }
-        .card-footer { margin-top: auto; padding-top: 1.2vh; border-top: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: space-between; align-items: center; color: rgba(255,255,255,0.5); font-size: 3vh; text-transform: uppercase; font-weight: bold; z-index: 2; position: relative; }
+        .card-footer { margin-top: auto; padding-top: 1.2vh; border-top: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: space-between; align-items: center; color: rgba(255,255,255,0.5); font-size: 2.8vh; text-transform: uppercase; font-weight: bold; z-index: 2; position: relative; }
 
-        /* WIN PROBABILITY BAR */
-        .win-prob-container { margin-top: 1.5vh; z-index: 2; position: relative; }
-        .win-prob-labels { display: flex; justify-content: space-between; font-size: 2vh; color: rgba(255,255,255,0.6); font-weight: 900; margin-bottom: 0.5vh; }
-        .win-prob-track { width: 100%; height: 0.8vh; background: rgba(255,255,255,0.1); border-radius: 0.4vh; overflow: hidden; display: flex; box-shadow: inset 0 1px 3px rgba(0,0,0,0.5); }
+        /* TRENDS & MOMENTUM (MLB Bases & NFL Win Prob) */
+        .trend-container { display: flex; align-items: center; gap: 2vh; margin-top: 1vh; padding: 1vh; background: rgba(0,0,0,0.3); border-radius: 1vh; z-index: 2; position: relative; }
+        .trend-label { font-size: 2vh; color: rgba(255,255,255,0.5); font-weight: 900; letter-spacing: 0.1vw; text-transform: uppercase; }
+        
+        .diamond-graphic { width: 5vh; height: 5vh; transform: rotate(45deg); display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 2px; }
+        .base { background: rgba(255,255,255,0.2); border-radius: 2px; }
+        .base.active { background: #39ff14; box-shadow: 0 0 10px #39ff14; }
+        .outs-dots { display: flex; gap: 1vh; }
+        .out-dot { width: 1.5vh; height: 1.5vh; border-radius: 50%; background: rgba(255,255,255,0.2); }
+        .out-dot.active { background: #ff007f; box-shadow: 0 0 10px #ff007f; }
+
+        .win-prob-track { flex: 1; height: 1vh; background: rgba(255,255,255,0.1); border-radius: 0.5vh; overflow: hidden; display: flex; margin: 0 2vh; }
         .win-prob-away { height: 100%; background: #00ffff; box-shadow: 0 0 10px #00ffff; }
         .win-prob-home { height: 100%; background: #ff007f; box-shadow: 0 0 10px #ff007f; }
+        .trend-streak { font-size: 2.8vh; color: #facc15; font-weight: 900; letter-spacing: 0.2vw; }
+
+        /* PROP SHOP SLIDE (FIXED) */
+        .prop-card { background: rgba(10, 15, 20, 0.5); backdrop-filter: blur(25px); border: 1px solid rgba(212, 175, 55, 0.3); border-top: 1px solid rgba(212, 175, 55, 0.6); border-radius: 1.5vh; padding: 3vh; display: flex; align-items: center; gap: 3vh; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .prop-headshot { width: 14vh; height: 14vh; border-radius: 50%; border: 3px solid #d4af37; object-fit: cover; object-position: top; background: rgba(0,0,0,0.5); box-shadow: 0 0 20px rgba(212, 175, 55, 0.3); flex-shrink: 0; }
+        .prop-details { flex: 1; display: flex; flex-direction: column; justify-content: center; }
+        .prop-name { font-size: 4.5vh; font-weight: 900; color: white; text-transform: uppercase; margin-bottom: 0.5vh; line-height: 1; }
+        .prop-game { font-size: 2.5vh; color: rgba(255,255,255,0.5); font-weight: bold; text-transform: uppercase; letter-spacing: 0.1vw; }
+        .prop-line-container { display: flex; justify-content: space-between; align-items: center; background: rgba(212, 175, 55, 0.1); padding: 1.5vh 2.5vh; border-radius: 1vh; border: 1px solid rgba(212, 175, 55, 0.2); margin-top: 1.5vh; }
+        .prop-line { font-size: 3vh; color: #d4af37; font-weight: 900; line-height: 1.2; word-wrap: break-word; flex: 1; padding-right: 2vh; }
+        .prop-odds { font-size: 3.5vh; color: #39ff14; font-weight: 900; flex-shrink: 0; }
 
         /* SKELETON SHIMMER */
         .skeleton { background: linear-gradient(90deg, rgba(255,255,255,0.05) 25%, rgba(255,255,255,0.15) 50%, rgba(255,255,255,0.05) 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 0.8vh; }
@@ -79,17 +90,8 @@
         .skel-img { width: 8.2vh; height: 8.2vh; border-radius: 50%; }
         .skel-row { display: flex; align-items: center; gap: 2vh; margin-bottom: 2vh; }
 
-        /* PROP SHOP SLIDE */
-        .prop-card { background: rgba(10, 15, 20, 0.5); backdrop-filter: blur(25px); border: 1px solid rgba(212, 175, 55, 0.3); border-top: 1px solid rgba(212, 175, 55, 0.6); border-radius: 1.5vh; padding: 3vh; display: flex; align-items: center; gap: 3vh; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-        .prop-headshot { width: 14vh; height: 14vh; border-radius: 50%; border: 3px solid #d4af37; object-fit: cover; object-position: top; background: rgba(0,0,0,0.5); box-shadow: 0 0 20px rgba(212, 175, 55, 0.3); flex-shrink: 0; }
-        .prop-details { flex: 1; display: flex; flex-direction: column; justify-content: center; overflow: hidden; }
-        .prop-name { font-size: 4.5vh; font-weight: 900; color: white; text-transform: uppercase; margin-bottom: 0.5vh; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .prop-game { font-size: 2.5vh; color: rgba(255,255,255,0.5); font-weight: bold; text-transform: uppercase; margin-bottom: 1.5vh; letter-spacing: 0.1vw; }
-        .prop-line { font-size: 3.5vh; color: #d4af37; font-weight: 900; background: rgba(212, 175, 55, 0.1); padding: 1vh 2vh; border-radius: 1vh; display: inline-block; border: 1px solid rgba(212, 175, 55, 0.2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 90%; }
-        .prop-odds { font-size: 3.5vh; color: #39ff14; font-weight: 900; float: right; padding: 1vh 0; }
-
-        /* OTHER EXISTING SLIDES UPGRADED TO GLASS */
-        .golf-row, .rank-row, .tv-row { background: rgba(15, 20, 30, 0.45); backdrop-filter: blur(15px); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 1.2vh; margin-bottom: 1.5vh; width: 100%; display: flex; align-items: center; padding: 2vh 2.5vh; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
+        /* OTHER SLIDES */
+        .rank-row { background: rgba(15, 20, 30, 0.45); backdrop-filter: blur(15px); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 1.2vh; margin-bottom: 1.5vh; width: 100%; display: flex; align-items: center; padding: 2vh 2.5vh; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
         .rank-num { font-size: 6.8vh; color: #facc15; font-weight: 900; width: 12vh; text-align: center; text-shadow: 0 2px 10px rgba(250, 204, 21, 0.4); }
         .rank-name { font-size: 5.4vh; color: white; font-weight: 900; flex: 1; text-transform: uppercase; }
         
@@ -117,9 +119,7 @@
 
         <div id="props-screen" class="slide-screen">
             <div class="screen-header" style="color: #d4af37; border-bottom-color: rgba(212,175,55,0.3); text-shadow: 0 0 20px rgba(212,175,55,0.5);">VEGAS PROP SHOP</div>
-            <div class="content-viewport" id="props-viewport">
-                <div class="grid-track" id="props-grid-track"></div>
-            </div>
+            <div class="content-viewport" id="props-viewport"><div class="grid-track" id="props-grid-track"></div></div>
         </div>
 
         <div id="mysquad-screen" class="slide-screen">
@@ -157,21 +157,18 @@
             if(clockEl) clockEl.innerText = h + ':' + m + ' ' + ampm;
         }
 
-        // --- DYNAMIC VERTICAL SCROLLING ENGINE ---
         function applyScroll(viewportId, trackId, baseDelay = 12000) {
             var vH = document.getElementById(viewportId).clientHeight;
             var track = document.getElementById(trackId);
             var fH = track.scrollHeight;
             
-            // Reset track position
             track.style.animation = 'none';
             track.style.transform = 'translate3d(0,0,0)';
             
             if (fH > vH) { 
-                var sD = fH - vH + 100; // Extra buffer at the bottom
+                var sD = fH - vH + 100;
                 track.style.setProperty('--scroll-end', '-' + sD + 'px'); 
-                var duration = (sD / 40); // 40px per second scroll speed
-                // Force reflow
+                var duration = (sD / 40); 
                 void track.offsetWidth;
                 track.style.animation = 'scrollVerticalOnePass ' + duration + 's linear 2s forwards'; 
                 slideTimer = setTimeout(nextSlide, (duration * 1000) + 4000); 
@@ -185,7 +182,7 @@
             if(!track) return;
             var trackWidth = track.scrollWidth / 2; 
             if(trackWidth <= 0) return;
-            var duration = trackWidth / 120; // Default pixel per sec speed
+            var duration = trackWidth / 120; 
             if (duration < 10) duration = 10; 
             track.style.animationDuration = duration + 's';
         }
@@ -262,17 +259,25 @@
                             var hName = h.team.shortDisplayName, aName = a.team.shortDisplayName;
                             var tv = (comp.broadcasts && comp.broadcasts[0]) ? comp.broadcasts[0].names[0] : 'TV';
                             
-                            var aProb = null, hProb = null;
-                            if (comp.situation && comp.situation.lastPlay && comp.situation.lastPlay.probability) {
-                                aProb = comp.situation.lastPlay.probability.awayWinPercentage * 100;
-                                hProb = comp.situation.lastPlay.probability.homeWinPercentage * 100;
+                            // EXTRAT TRENDS: Win Prob OR Baseball Diamonds OR Pre-game Streak
+                            var trendData = { type: null };
+                            if (status.state === 'in') {
+                                if (comp.situation && comp.situation.lastPlay && comp.situation.lastPlay.probability) {
+                                    trendData = { type: 'winprob', aProb: comp.situation.lastPlay.probability.awayWinPercentage * 100, hProb: comp.situation.lastPlay.probability.homeWinPercentage * 100 };
+                                } else if (c.id === 'mlb' && comp.situation) {
+                                    trendData = { type: 'mlb', b1: comp.situation.onFirst, b2: comp.situation.onSecond, b3: comp.situation.onThird, outs: comp.situation.outs };
+                                }
+                            } else if (status.state === 'pre') {
+                                var aRec = (a.records && a.records[0]) ? a.records[0].summary : '0-0';
+                                var hRec = (h.records && h.records[0]) ? h.records[0].summary : '0-0';
+                                trendData = { type: 'records', aRec: aRec, hRec: hRec };
                             }
 
                             var gameObj = {
                                 league: c.id.toUpperCase(), home: hName, hLogo: hLogo, hScore: h.score || '', 
                                 away: aName, aLogo: aLogo, aScore: a.score || '', status: status.detail, 
                                 clock: comp.status.displayClock || '', tv: tv, state: status.state,
-                                aProb: aProb, hProb: hProb, searchString: (hName + " " + aName).toLowerCase()
+                                trend: trendData, searchString: (hName + " " + aName).toLowerCase()
                             };
 
                             globalRawGames.push(gameObj);
@@ -284,7 +289,7 @@
                                 allSched.push('<span class="score-item"><div class="team-box"><img class="team-logo" src="' + aLogo + '"></div><span class="vs-label">@</span><div class="team-box"><img class="team-logo" src="' + hLogo + '"></div><span class="game-status" style="color:rgba(255,255,255,0.5)">' + new Date(ev.date).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}) + '</span></span>');
                             }
 
-                            // Prop Shop - Fixed extraction logic to search all games safely
+                            // EXTRACT PROPS WITH FALLBACKS
                             comp.competitors.forEach(function(competitor) {
                                 if (competitor.leaders && competitor.leaders.length > 0) {
                                     competitor.leaders.forEach(function(cat) {
@@ -292,16 +297,17 @@
                                             var topDude = cat.leaders[0];
                                             if (topDude && topDude.athlete) {
                                                 var headshotUrl = (topDude.athlete.headshot && topDude.athlete.headshot.href) ? topDude.athlete.headshot.href : 'https://a.espncdn.com/combiner/i?img=/i/headshots/' + c.s + '/players/full/' + topDude.athlete.id + '.png&h=150&w=150&scale=crop';
+                                                var fallbackLogo = (competitor.team && competitor.team.logo) ? competitor.team.logo : 'https://a.espncdn.com/combiner/i?img=/i/teamlogos/default-team-logo-500.png';
                                                 var playerName = topDude.athlete.displayName || topDude.athlete.shortName;
                                                 
-                                                // Prevent duplicates
                                                 if (!newLeaders.some(l => l.name === playerName)) {
                                                     newLeaders.push({
                                                         name: playerName,
                                                         headshot: headshotUrl,
+                                                        teamLogo: fallbackLogo,
                                                         statDesc: cat.displayName || cat.name || "STAT",
-                                                        teamCode: competitor.team.abbreviation || competitor.team.shortDisplayName || "TEAM",
-                                                        oppCode: (competitor.id === h.id) ? (a.team.abbreviation || a.team.shortDisplayName || "OPP") : (h.team.abbreviation || h.team.shortDisplayName || "OPP"),
+                                                        teamCode: (competitor.team && competitor.team.abbreviation) ? competitor.team.abbreviation : "TEAM",
+                                                        oppCode: (competitor.id === h.id) ? (a.team && a.team.abbreviation ? a.team.abbreviation : "OPP") : (h.team && h.team.abbreviation ? h.team.abbreviation : "OPP"),
                                                         value: topDude.displayValue,
                                                         baseOdds: "-115"
                                                     });
@@ -317,7 +323,6 @@
             }
             
             globalLiveGamesData = newLivePage;
-            // Randomize and select top 6 for the Prop board
             globalPropsData = newLeaders.sort(function() { return 0.5 - Math.random(); }).slice(0, 6); 
             
             var trackHtml = "";
@@ -326,6 +331,30 @@
             
             document.getElementById('ticker-track').innerHTML = trackHtml + trackHtml;
             setTimeout(applyTickerSpeed, 100);
+        }
+
+        // GENERATE TREND HTML HELPER
+        function buildTrendHtml(trend) {
+            if (!trend || !trend.type) return '';
+            
+            if (trend.type === 'winprob') {
+                return '<div class="trend-container"><div class="trend-label" style="color:#00ffff;">' + trend.aProb.toFixed(1) + '%</div><div class="win-prob-track"><div class="win-prob-away" style="width:' + trend.aProb + '%"></div><div class="win-prob-home" style="width:' + trend.hProb + '%"></div></div><div class="trend-label" style="color:#ff007f;">' + trend.hProb.toFixed(1) + '%</div></div>';
+            }
+            
+            if (trend.type === 'mlb') {
+                var oHTML = '<div class="outs-dots">';
+                for(var i=1; i<=3; i++) { oHTML += '<div class="out-dot ' + (trend.outs >= i ? 'active' : '') + '"></div>'; }
+                oHTML += '</div>';
+                
+                var dHTML = '<div class="diamond-graphic"><div class="base ' + (trend.b2 ? 'active' : '') + '"></div><div class="base ' + (trend.b1 ? 'active' : '') + '"></div><div class="base ' + (trend.b3 ? 'active' : '') + '"></div><div class="base" style="background:transparent;"></div></div>';
+                
+                return '<div class="trend-container"><span class="trend-label">ON BASE</span>' + dHTML + '<span class="trend-label" style="margin-left:2vh;">OUTS</span>' + oHTML + '</div>';
+            }
+            
+            if (trend.type === 'records') {
+                return '<div class="trend-container" style="justify-content:space-between; width:100%; background:transparent; padding:0;"><span class="trend-streak">' + trend.aRec + '</span><span class="trend-label">SEASON RECORD</span><span class="trend-streak">' + trend.hRec + '</span></div>';
+            }
+            return '';
         }
 
         function renderLivePage() {
@@ -337,11 +366,7 @@
                 applyScroll('live-viewport', 'live-grid-track', 10000);
             } else {
                 track.innerHTML = globalLiveGamesData.map(function(g) { 
-                    var probHtml = "";
-                    if (g.aProb !== null && g.hProb !== null) {
-                        probHtml = '<div class="win-prob-container"><div class="win-prob-labels"><span style="color:#00ffff;">' + g.aProb.toFixed(1) + '%</span><span style="font-size:1.5vh; color:rgba(255,255,255,0.4);">WIN PROBABILITY</span><span style="color:#ff007f;">' + g.hProb.toFixed(1) + '%</span></div><div class="win-prob-track"><div class="win-prob-away" style="width:' + g.aProb + '%"></div><div class="win-prob-home" style="width:' + g.hProb + '%"></div></div></div>';
-                    }
-                    return '<div class="glass-card"><div class="card-meta"><span style="color:#00ffff; text-shadow: 0 0 10px #00ffff;">● LIVE</span><span>' + g.league + '</span><span>' + g.status + '</span></div><div class="card-row"><div class="card-team"><img src="' + g.aLogo + '">' + g.away + '</div><div class="card-val-lg">' + g.aScore + '</div></div><div class="card-row"><div class="card-team"><img src="' + g.hLogo + '">' + g.home + '</div><div class="card-val-lg">' + g.hScore + '</div></div>' + probHtml + '<div class="card-footer" style="margin-top: 1.5vh;"><span>' + g.clock + '</span><span style="color:#39ff14">' + g.tv + '</span></div></div>';
+                    return '<div class="glass-card"><div class="card-meta"><span style="color:#00ffff; text-shadow: 0 0 10px #00ffff;">● LIVE</span><span>' + g.league + '</span><span>' + g.status + '</span></div><div class="card-row"><div class="card-team"><img src="' + g.aLogo + '">' + g.away + '</div><div class="card-val-lg">' + g.aScore + '</div></div><div class="card-row"><div class="card-team"><img src="' + g.hLogo + '">' + g.home + '</div><div class="card-val-lg">' + g.hScore + '</div></div>' + buildTrendHtml(g.trend) + '<div class="card-footer" style="margin-top: 1vh;"><span>' + g.clock + '</span><span style="color:#39ff14">' + g.tv + '</span></div></div>';
                 }).join('');
                 applyScroll('live-viewport', 'live-grid-track', 15000);
             }
@@ -358,7 +383,8 @@
                 track.innerHTML = globalPropsData.map(function(p) {
                     var valFloat = parseFloat(p.value);
                     var simLine = (!isNaN(valFloat) && valFloat > 0) ? (valFloat * 0.85).toFixed(1) : "0.5"; 
-                    return '<div class="prop-card"><img src="' + p.headshot + '" class="prop-headshot"><div class="prop-details"><div class="prop-name">' + p.name + '</div><div class="prop-game">' + p.teamCode + ' vs ' + p.oppCode + '</div><div><div class="prop-line">O/U ' + simLine + ' ' + p.statDesc + '</div><span class="prop-odds">' + p.baseOdds + '</span></div></div></div>';
+                    // ADDED ONERROR FALLBACK FOR PROP HEADSHOTS
+                    return '<div class="prop-card"><img src="' + p.headshot + '" onerror="this.src=\'' + p.teamLogo + '\'; this.onerror=null;" class="prop-headshot"><div class="prop-details"><div class="prop-name">' + p.name + '</div><div class="prop-game">' + p.teamCode + ' vs ' + p.oppCode + '</div><div class="prop-line-container"><div class="prop-line">O/U ' + simLine + ' ' + p.statDesc + '</div><span class="prop-odds">' + p.baseOdds + '</span></div></div></div>';
                 }).join('');
                 applyScroll('props-viewport', 'props-grid-track', 15000);
             }
@@ -370,7 +396,7 @@
             globalRawGames.forEach(function(g) { 
                 for(var i=0; i<mySquadTeams.length; i++) {
                     if(g.searchString.indexOf(mySquadTeams[i]) > -1) { 
-                        gamesHtml += '<div class="glass-card squad-game-card"><div class="card-meta"><span>' + g.league + '</span><span style="color:#00ffff">' + g.tv + '</span></div><div class="card-row"><div class="card-team"><img src="' + g.aLogo + '">' + g.away + '</div><div class="card-val-lg">' + g.aScore + '</div></div><div class="card-row"><div class="card-team"><img src="' + g.hLogo + '">' + g.home + '</div><div class="card-val-lg">' + g.hScore + '</div></div><div class="card-footer" style="justify-content:center; color:#39ff14;">' + (g.state === 'in' ? 'LIVE NOW' : (g.state === 'post' ? 'FINAL' : g.status)) + '</div></div>';
+                        gamesHtml += '<div class="glass-card squad-game-card"><div class="card-meta"><span>' + g.league + '</span><span style="color:#00ffff">' + g.tv + '</span></div><div class="card-row"><div class="card-team"><img src="' + g.aLogo + '">' + g.away + '</div><div class="card-val-lg">' + g.aScore + '</div></div><div class="card-row"><div class="card-team"><img src="' + g.hLogo + '">' + g.home + '</div><div class="card-val-lg">' + g.hScore + '</div></div>' + buildTrendHtml(g.trend) + '<div class="card-footer" style="margin-top:1vh; justify-content:center; color:#39ff14;">' + (g.state === 'in' ? 'LIVE NOW' : (g.state === 'post' ? 'FINAL' : g.status)) + '</div></div>';
                         break; 
                     }
                 }
