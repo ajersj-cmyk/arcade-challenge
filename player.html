@@ -26,19 +26,17 @@
         #fs-toggle:hover { opacity: 1; color: #ff007f; text-shadow: 0 0 15px #ff007f; }
         #master-clock { position: fixed; top: 2.5vh; left: 3vw; z-index: 15000; color: #fff; font-family: 'Share Tech Mono', monospace; font-size: 4.5vh; font-weight: 900; letter-spacing: 0.2vw; text-shadow: 0 3px 6px rgba(0,0,0,0.8); }
 
-        /* --- ROTATING NEON ANIMATIONS --- */
+        /* --- ROTATING NEON ANIMATIONS (YELLOW REMOVED) --- */
         @keyframes neonText {
             0% { color: #00ffff; text-shadow: 0 0 15px rgba(0,255,255,0.6); }
-            25% { color: #ff007f; text-shadow: 0 0 15px rgba(255,0,127,0.6); }
-            50% { color: #facc15; text-shadow: 0 0 15px rgba(250,204,21,0.6); }
-            75% { color: #39ff14; text-shadow: 0 0 15px rgba(57,255,20,0.6); }
+            33% { color: #ff007f; text-shadow: 0 0 15px rgba(255,0,127,0.6); }
+            66% { color: #39ff14; text-shadow: 0 0 15px rgba(57,255,20,0.6); }
             100% { color: #00ffff; text-shadow: 0 0 15px rgba(0,255,255,0.6); }
         }
         @keyframes neonBorder {
             0% { border-color: rgba(0,255,255,0.5); box-shadow: 0 -5px 25px rgba(0,255,255,0.2); }
-            25% { border-color: rgba(255,0,127,0.5); box-shadow: 0 -5px 25px rgba(255,0,127,0.2); }
-            50% { border-color: rgba(250,204,21,0.5); box-shadow: 0 -5px 25px rgba(250,204,21,0.2); }
-            75% { border-color: rgba(57,255,20,0.5); box-shadow: 0 -5px 25px rgba(57,255,20,0.2); }
+            33% { border-color: rgba(255,0,127,0.5); box-shadow: 0 -5px 25px rgba(255,0,127,0.2); }
+            66% { border-color: rgba(57,255,20,0.5); box-shadow: 0 -5px 25px rgba(57,255,20,0.2); }
             100% { border-color: rgba(0,255,255,0.5); box-shadow: 0 -5px 25px rgba(0,255,255,0.2); }
         }
         .neon-text-cycle { animation: neonText 20s linear infinite; }
@@ -86,7 +84,7 @@
         .grid-track { display: grid; grid-template-columns: repeat(2, 1fr); gap: 2vw; }
         .list-track { display: flex; flex-direction: column; gap: 1.5vh; width: 90%; margin: 0 auto; }
 
-        /* PREMIUM GLASS CARDS (USED EVERYWHERE) */
+        /* PREMIUM GLASS CARDS */
         .glass-card, .trivia-ans, .golf-row, .rank-row, .tv-row, .news-row, .division-block, .info-card, .prop-card, .ufc-card, .trivia-q-box { 
             background: rgba(15, 20, 30, 0.45); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.1); border-top: 1px solid rgba(255, 255, 255, 0.2); border-radius: 1.5vh; box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5); position: relative; overflow: hidden; 
         }
@@ -143,7 +141,7 @@
         .trivia-ans.wrong { opacity: 0.4; }
         .trivia-timer-container { width: 100%; height: 1vh; background: rgba(255,255,255,0.1); margin-top: 3vh; border-radius: 0.5vh; overflow: hidden; }
         .trivia-timer-bar { height: 100%; width: 100%; transform-origin: left; }
-        @keyframes shrinkTimer { 0% { transform: scaleX(1); background: #39ff14; box-shadow: 0 0 1vh #39ff14; } 50% { background: #facc15; box-shadow: 0 0 1vh #facc15;} 100% { transform: scaleX(0); background: #ff0000; box-shadow: 0 0 1vh #ff0000; } }
+        @keyframes shrinkTimer { 0% { transform: scaleX(1); background: #39ff14; box-shadow: 0 0 1vh #39ff14; } 50% { background: #ff007f; box-shadow: 0 0 1vh #ff007f;} 100% { transform: scaleX(0); background: #ff0000; box-shadow: 0 0 1vh #ff0000; } }
 
         /* GOLF */
         .golf-row { display: flex; align-items: center; padding: 2vh 2.5vh; }
@@ -285,7 +283,7 @@
         <div id="tvguide-screen" class="slide-screen">
             <div class="screen-header neon-text-cycle">LIVE ON TV</div>
             <div class="content-viewport" id="tvguide-viewport">
-                <div class="list-track glass-card neon-border-cycle" id="tvguide-track" style="gap: 0; padding: 0; border-width: 2px;"></div>
+                <div class="list-track glass-card" id="tvguide-track" style="gap: 0; padding: 0;"></div>
             </div>
         </div>
 
@@ -608,7 +606,6 @@
             rotationStep++;
         }
 
-        // RESTORED FULL DOMAIN LOGO PARSER
         function getNetworkLogo(networkStr) {
             var n = networkStr.toUpperCase();
             var domains = {
@@ -666,24 +663,9 @@
                             var isRecent = (status.state === 'post' && diffHours >= -24 && diffHours <= 0);
                             if (!isLive && !isUpcoming && !isRecent) return;
                             
-                            // RESTORED ORIGINAL BASE IMAGE LOGIC EXACTLY
                             var h = comp.competitors[0], a = comp.competitors[1];
-                            var hId = (h.athlete && h.athlete.id) ? h.athlete.id : h.id;
-                            var aId = (a.athlete && a.athlete.id) ? a.athlete.id : a.id;
-                            
-                            var hLogo = '';
-                            if (h.team && h.team.logo) hLogo = h.team.logo;
-                            else if (h.athlete && h.athlete.headshot && h.athlete.headshot.href) hLogo = h.athlete.headshot.href;
-                            else hLogo = 'https://a.espncdn.com/combiner/i?img=/i/headshots/' + c.s + '/players/full/' + hId + '.png&h=150&w=150&scale=crop';
-                            
-                            var aLogo = '';
-                            if (a.team && a.team.logo) aLogo = a.team.logo;
-                            else if (a.athlete && a.athlete.headshot && a.athlete.headshot.href) aLogo = a.athlete.headshot.href;
-                            else aLogo = 'https://a.espncdn.com/combiner/i?img=/i/headshots/' + c.s + '/players/full/' + aId + '.png&h=150&w=150&scale=crop';
-
-                            var hFallback = (c.s === 'tennis') ? 'https://a.espncdn.com/combiner/i?img=/i/headshots/tennis/players/full/default.png' : 'https://a.espncdn.com/combiner/i?img=/i/teamlogos/default-team-logo-500.png';
-                            var aFallback = (c.s === 'tennis') ? 'https://a.espncdn.com/combiner/i?img=/i/headshots/tennis/players/full/default.png' : 'https://a.espncdn.com/combiner/i?img=/i/teamlogos/default-team-logo-500.png';
-
+                            var hLogo = (h.team && h.team.logo) ? h.team.logo : 'https://a.espncdn.com/combiner/i?img=/i/teamlogos/default-team-logo-500.png';
+                            var aLogo = (a.team && a.team.logo) ? a.team.logo : 'https://a.espncdn.com/combiner/i?img=/i/teamlogos/default-team-logo-500.png';
                             var hName = (h.team && h.team.shortDisplayName) ? h.team.shortDisplayName : (h.athlete ? (h.athlete.shortName || h.athlete.displayName) : 'TBD');
                             var aName = (a.team && a.team.shortDisplayName) ? a.team.shortDisplayName : (a.athlete ? (a.athlete.shortName || a.athlete.displayName) : 'TBD');
                             var tv = (comp.broadcasts && comp.broadcasts[0]) ? comp.broadcasts[0].names[0] : 'TV';
@@ -716,8 +698,8 @@
                             var displayLeague = (c.id === 'worldcup') ? 'FIFA WORLD CUP' : ((c.id === 'ucl') ? 'CHAMPIONS LEAGUE' : c.id.toUpperCase());
 
                             var gameObj = {
-                                league: displayLeague, home: hName, hLogo: hLogo, hFallback: hFallback, hScore: h.score || '', 
-                                away: aName, aLogo: aLogo, aFallback: aFallback, aScore: a.score || '', status: status.detail, 
+                                league: displayLeague, home: hName, hLogo: hLogo, hScore: h.score || '', 
+                                away: aName, aLogo: aLogo, aScore: a.score || '', status: status.detail, 
                                 clock: clockStr, tv: tv, state: status.state,
                                 trend: trendData, searchString: (hName + " " + aName).toLowerCase(),
                                 weight: mWeight, odds: (comp.odds && comp.odds[0]) ? comp.odds[0].details : 'EVEN',
@@ -730,9 +712,9 @@
                             
                             if (status.state === 'in') {
                                 newLivePage.push(gameObj);
-                                allLive.push('<span class="score-item"><span class="live-pulse">●</span><div class="team-box"><img class="team-logo" src="' + aLogo + '" onerror="this.src=\'' + aFallback + '\'; this.onerror=null;"><span class="team-score">' + a.score + '</span></div><span class="vs-label">@</span><div class="team-box"><img class="team-logo" src="' + hLogo + '" onerror="this.src=\'' + hFallback + '\'; this.onerror=null;"><span class="team-score">' + h.score + '</span></div><span class="game-status neon-text-cycle">' + status.shortDetail + '</span></span>');
+                                allLive.push('<span class="score-item"><span class="live-pulse">●</span><div class="team-box"><img class="team-logo" src="' + aLogo + '"><span class="team-score">' + a.score + '</span></div><span class="vs-label">@</span><div class="team-box"><img class="team-logo" src="' + hLogo + '"><span class="team-score">' + h.score + '</span></div><span class="game-status neon-text-cycle">' + status.shortDetail + '</span></span>');
                             } else if (status.state === 'pre') {
-                                allSched.push('<span class="score-item"><div class="team-box"><img class="team-logo" src="' + aLogo + '" onerror="this.src=\'' + aFallback + '\'; this.onerror=null;"></div><span class="vs-label">@</span><div class="team-box"><img class="team-logo" src="' + hLogo + '" onerror="this.src=\'' + hFallback + '\'; this.onerror=null;"></div><span class="game-status neon-text-cycle">' + new Date(ev.date).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}) + '</span></span>');
+                                allSched.push('<span class="score-item"><div class="team-box"><img class="team-logo" src="' + aLogo + '"></div><span class="vs-label">@</span><div class="team-box"><img class="team-logo" src="' + hLogo + '"></div><span class="game-status neon-text-cycle">' + new Date(ev.date).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}) + '</span></span>');
                             }
                             
                             if (tv !== 'TV' && status.state === 'in') {
@@ -747,8 +729,6 @@
                                         if (cat.leaders && cat.leaders.length > 0) {
                                             var topDude = cat.leaders[0];
                                             if (topDude && topDude.athlete) {
-                                                
-                                                // RESTORED ORIGINAL ID-BUILDER FALLBACK LOGIC
                                                 var headshotUrl = '';
                                                 var lId = topDude.athlete.id ? topDude.athlete.id : null;
                                                 
@@ -759,12 +739,11 @@
                                                 } else {
                                                     headshotUrl = competitor.team ? competitor.team.logo : '';
                                                 }
-                                                var leaderFallback = competitor.team ? competitor.team.logo : 'https://a.espncdn.com/combiner/i?img=/i/headshots/default.png';
-
+                                                var fallbackLogo = competitor.team ? competitor.team.logo : 'https://a.espncdn.com/combiner/i?img=/i/teamlogos/default-team-logo-500.png';
                                                 var playerName = topDude.athlete.displayName || topDude.athlete.shortName;
                                                 
                                                 var lObj = {
-                                                    league: displayLeague, name: playerName, headshot: headshotUrl, teamLogo: leaderFallback,
+                                                    league: displayLeague, name: playerName, headshot: headshotUrl, teamLogo: fallbackLogo,
                                                     statDesc: cat.displayName || cat.name || "STAT",
                                                     teamCode: (competitor.team && competitor.team.abbreviation) ? competitor.team.abbreviation : "TEAM",
                                                     oppCode: (competitor.id === h.id) ? (a.team && a.team.abbreviation ? a.team.abbreviation : "OPP") : (h.team && h.team.abbreviation ? h.team.abbreviation : "OPP"),
@@ -792,9 +771,9 @@
                 return '<div style="background: rgba(0,0,0,0.5); border-radius: 1vh; padding: 1.5vh; display:flex; flex-direction:column; gap: 1vh; border: 1px solid rgba(255,255,255,0.1);">' +
                          '<div class="neon-text-cycle" style="display:flex; justify-content:space-between; align-items:center; font-size: 2vh; font-weight:900; border-bottom: 1px dashed currentColor; padding-bottom: 0.5vh;"><span>' + g.league + '</span><span>' + g.tv + '</span></div>' +
                          '<div style="display:flex; justify-content:space-between; align-items:center;">' +
-                             '<div style="display:flex; align-items:center; gap: 1vh;"><img src="' + g.aLogo + '" onerror="this.src=\'' + g.aFallback + '\'; this.onerror=null;" style="width:4.5vh; height:4.5vh; object-fit:contain; filter:drop-shadow(0 2px 5px black);"><span style="color:white; font-size:2.8vh; font-weight:900; text-shadow:0 2px 5px black;">' + g.away + '</span></div>' +
+                             '<div style="display:flex; align-items:center; gap: 1vh;"><img src="' + g.aLogo + '" style="width:4.5vh; height:4.5vh; object-fit:contain; filter:drop-shadow(0 2px 5px black);"><span style="color:white; font-size:2.8vh; font-weight:900; text-shadow:0 2px 5px black;">' + g.away + '</span></div>' +
                              '<span style="color:#ff007f; font-size:2vh; font-weight:900; font-style:italic;">VS</span>' +
-                             '<div style="display:flex; align-items:center; gap: 1vh;"><span style="color:white; font-size:2.8vh; font-weight:900; text-shadow:0 2px 5px black;">' + g.home + '</span><img src="' + g.hLogo + '" onerror="this.src=\'' + g.hFallback + '\'; this.onerror=null;" style="width:4.5vh; height:4.5vh; object-fit:contain; filter:drop-shadow(0 2px 5px black);"></div>' +
+                             '<div style="display:flex; align-items:center; gap: 1vh;"><span style="color:white; font-size:2.8vh; font-weight:900; text-shadow:0 2px 5px black;">' + g.home + '</span><img src="' + g.hLogo + '" style="width:4.5vh; height:4.5vh; object-fit:contain; filter:drop-shadow(0 2px 5px black);"></div>' +
                          '</div>' +
                          '<div style="display:flex; justify-content:space-between; align-items:center; margin-top: 0.5vh;">' + displayTime + scoreOrOdds + '</div>' +
                        '</div>';
@@ -835,7 +814,7 @@
             if (globalLiveGamesData.length === 0) { track.innerHTML = '<div class="neon-text-cycle" style="font-size:4vh; font-weight:900; text-align:center; grid-column: 1 / -1; padding-top: 10vh;">NO LIVE GAMES</div>'; applyScroll('live-viewport', 'live-grid-track', 10000); } 
             else {
                 track.innerHTML = globalLiveGamesData.map(function(g) { 
-                    return '<div class="glass-card"><div class="card-meta neon-text-cycle neon-border-cycle"><span style="text-shadow: 0 0 10px currentColor;">● LIVE</span><span>' + g.league + '</span><span>' + g.status + '</span></div><div class="card-row"><div class="card-team"><img src="' + g.aLogo + '" onerror="this.src=\'' + g.aFallback + '\'; this.onerror=null;">' + g.away + '</div><div class="card-val-lg">' + g.aScore + '</div></div><div class="card-row"><div class="card-team"><img src="' + g.hLogo + '" onerror="this.src=\'' + g.hFallback + '\'; this.onerror=null;">' + g.home + '</div><div class="card-val-lg">' + g.hScore + '</div></div>' + buildTrendHtml(g.trend) + '<div class="card-footer neon-text-cycle neon-border-cycle" style="margin-top: 1.5vh;"><span>' + g.clock + '</span><span>' + g.tv + '</span></div></div>';
+                    return '<div class="glass-card"><div class="card-meta neon-text-cycle"><span style="text-shadow: 0 0 10px currentColor;">● LIVE</span><span>' + g.league + '</span><span>' + g.status + '</span></div><div class="card-row"><div class="card-team"><img src="' + g.aLogo + '">' + g.away + '</div><div class="card-val-lg">' + g.aScore + '</div></div><div class="card-row"><div class="card-team"><img src="' + g.hLogo + '">' + g.home + '</div><div class="card-val-lg">' + g.hScore + '</div></div>' + buildTrendHtml(g.trend) + '<div class="card-footer neon-text-cycle" style="margin-top: 1.5vh;"><span>' + g.clock + '</span><span>' + g.tv + '</span></div></div>';
                 }).join('');
                 applyScroll('live-viewport', 'live-grid-track', 15000);
             }
@@ -848,7 +827,7 @@
             else {
                 track.innerHTML = globalPropsData.map(function(p) {
                     var valFloat = parseFloat(p.value); var simLine = (!isNaN(valFloat) && valFloat > 0) ? (valFloat * 0.85).toFixed(1) : "0.5"; 
-                    return '<div class="prop-card neon-border-cycle"><img src="' + p.headshot + '" onerror="this.src=\'' + p.teamLogo + '\'; this.onerror=null;" class="prop-headshot neon-border-cycle"><div class="prop-details"><div class="prop-name">' + p.name + '</div><div class="prop-game neon-text-cycle">' + p.teamCode + ' vs ' + p.oppCode + '</div><div class="prop-line-container neon-border-cycle"><div class="prop-line neon-text-cycle">O/U ' + simLine + ' ' + p.statDesc + '</div><span class="prop-odds neon-text-cycle">' + p.baseOdds + '</span></div></div></div>';
+                    return '<div class="prop-card"><img src="' + p.headshot + '" onerror="this.src=\'' + p.teamLogo + '\'; this.onerror=null;" class="prop-headshot"><div class="prop-details"><div class="prop-name">' + p.name + '</div><div class="prop-game neon-text-cycle">' + p.teamCode + ' vs ' + p.oppCode + '</div><div class="prop-line-container"><div class="prop-line neon-text-cycle">O/U ' + simLine + ' ' + p.statDesc + '</div><span class="prop-odds neon-text-cycle">' + p.baseOdds + '</span></div></div></div>';
                 }).join('');
                 applyScroll('props-viewport', 'props-grid-track', 15000);
             }
@@ -861,12 +840,12 @@
             globalRawGames.forEach(function(g) { 
                 for(var i=0; i<teams.length; i++) {
                     if(g.searchString.indexOf(teams[i]) > -1) { 
-                        gamesHtml += '<div class="glass-card squad-game-card neon-border-cycle"><div class="card-meta neon-text-cycle neon-border-cycle"><span>' + g.league + '</span><span>' + g.tv + '</span></div><div class="card-row"><div class="card-team"><img src="' + g.aLogo + '" onerror="this.src=\'' + g.aFallback + '\'; this.onerror=null;">' + g.away + '</div><div class="card-val-lg">' + g.aScore + '</div></div><div class="card-row"><div class="card-team"><img src="' + g.hLogo + '" onerror="this.src=\'' + g.hFallback + '\'; this.onerror=null;">' + g.home + '</div><div class="card-val-lg">' + g.hScore + '</div></div>' + buildTrendHtml(g.trend) + '<div class="card-footer neon-text-cycle neon-border-cycle" style="margin-top:1.5vh; justify-content:center;">' + (g.state === 'in' ? 'LIVE NOW' : (g.state === 'post' ? 'FINAL' : g.status)) + '</div></div>';
+                        gamesHtml += '<div class="glass-card squad-game-card"><div class="card-meta neon-text-cycle"><span>' + g.league + '</span><span>' + g.tv + '</span></div><div class="card-row"><div class="card-team"><img src="' + g.aLogo + '">' + g.away + '</div><div class="card-val-lg">' + g.aScore + '</div></div><div class="card-row"><div class="card-team"><img src="' + g.hLogo + '">' + g.home + '</div><div class="card-val-lg">' + g.hScore + '</div></div>' + buildTrendHtml(g.trend) + '<div class="card-footer neon-text-cycle" style="margin-top:1.5vh; justify-content:center;">' + (g.state === 'in' ? 'LIVE NOW' : (g.state === 'post' ? 'FINAL' : g.status)) + '</div></div>';
                         break; 
                     }
                 }
             });
-            document.getElementById('squad-games-track').innerHTML = gamesHtml || '<div class="neon-text-cycle neon-border-cycle" style="text-align:center; font-weight:900; font-size:3vh; margin-top:5vh; border: 1px dashed currentColor; padding: 4vh; border-radius: 1.5vh;">NO ACTIVE/UPCOMING GAMES</div>';
+            document.getElementById('squad-games-track').innerHTML = gamesHtml || '<div class="neon-text-cycle" style="text-align:center; font-weight:900; font-size:3vh; margin-top:5vh; border: 1px dashed currentColor; padding: 4vh; border-radius: 1.5vh;">NO ACTIVE/UPCOMING GAMES</div>';
             applyScroll('mysquad-viewport', 'squad-games-track', 12000);
         }
 
@@ -876,7 +855,7 @@
             var mc = document.getElementById('master-clock'); if (mc) mc.style.display = 'none';
             document.getElementById('trivia-q').innerText = currentTrivia.q;
             document.getElementById('trivia-options').innerHTML = currentTrivia.opts.map(function(o, i) {
-                return '<div class="trivia-ans glass-card neon-border-cycle" data-correct="' + (o === currentTrivia.ans ? 'true' : 'false') + '"><div class="trivia-letter neon-text-cycle">' + ['A', 'B', 'C', 'D'][i] + '</div>' + o + '</div>';
+                return '<div class="trivia-ans glass-card" data-correct="' + (o === currentTrivia.ans ? 'true' : 'false') + '"><div class="trivia-letter neon-text-cycle">' + ['A', 'B', 'C', 'D'][i] + '</div>' + o + '</div>';
             }).join('');
             var tBar = document.getElementById('trivia-timer');
             tBar.style.animation = 'none'; void tBar.offsetWidth; tBar.style.animation = 'shrinkTimer 15s linear forwards';
@@ -892,7 +871,7 @@
             document.getElementById('leaders-screen').style.display = 'flex';
             var track = document.getElementById('leaders-grid-track');
             track.innerHTML = globalLeadersData.slice(0, 8).map(function(l) {
-                return '<div class="info-card glass-card neon-border-cycle"><div class="card-meta neon-text-cycle"><span>' + l.statDesc + '</span><span>' + l.league + '</span></div><div style="display:flex; align-items:center; gap:2vh; padding-top:1vh;"><img src="' + l.headshot + '" onerror="this.src=\'' + l.teamLogo + '\'; this.onerror=null;" class="prop-headshot" style="width:10vh; height:10vh;"><div style="flex:1;"><div class="prop-name">' + l.name + '</div><div class="neon-text-cycle" style="font-size:2.5vh; font-weight:900;">' + l.teamCode + '</div></div><div class="card-val-lg">' + l.value + '</div></div></div>';
+                return '<div class="info-card glass-card"><div class="card-meta neon-text-cycle"><span>' + l.statDesc + '</span><span>' + l.league + '</span></div><div style="display:flex; align-items:center; gap:2vh; padding-top:1vh;"><img src="' + l.headshot + '" onerror="this.src=\'' + l.teamLogo + '\'; this.onerror=null;" class="prop-headshot" style="width:10vh; height:10vh;"><div style="flex:1;"><div class="prop-name">' + l.name + '</div><div class="neon-text-cycle" style="font-size:2.5vh; font-weight:900;">' + l.teamCode + '</div></div><div class="card-val-lg">' + l.value + '</div></div></div>';
             }).join('');
             applyScroll('leaders-viewport', 'leaders-grid-track', 12000);
         }
@@ -907,7 +886,6 @@
                 var golfers = d.events[0].competitions[0].competitors.slice(0, 10);
                 document.getElementById('pga-screen').style.display = 'flex';
                 
-                // RESTORED GOLF HEADSHOT LOGIC
                 document.getElementById('pga-track').innerHTML = golfers.map(function(g) {
                     var pgaId = (g.athlete && g.athlete.id) ? g.athlete.id : g.id;
                     var hs = '';
@@ -918,7 +896,7 @@
                     }
                     var pgaFallback = 'https://a.espncdn.com/combiner/i?img=/i/headshots/golf/players/full/default.png';
                     
-                    return '<div class="golf-row glass-card neon-border-cycle" style="flex-direction:row;"><div class="golf-pos neon-text-cycle">' + ((g.status && g.status.position) ? g.status.position : '-') + '</div><img src="' + hs + '" onerror="this.src=\'' + pgaFallback + '\'; this.onerror=null;" class="golf-headshot"><div class="golf-name">' + (g.athlete ? g.athlete.displayName : 'Golfer') + '<div class="golf-thru neon-text-cycle">' + ((g.status && g.status.displayThru) ? g.status.displayThru : '') + '</div></div><div class="golf-score card-val-lg">' + (g.score || 'E') + '</div></div>';
+                    return '<div class="golf-row glass-card" style="flex-direction:row;"><div class="golf-pos neon-text-cycle">' + ((g.status && g.status.position) ? g.status.position : '-') + '</div><img src="' + hs + '" onerror="this.src=\'' + pgaFallback + '\'; this.onerror=null;" class="golf-headshot"><div class="golf-name">' + (g.athlete ? (g.athlete.shortName || g.athlete.displayName) : 'Golfer') + '<div class="golf-thru neon-text-cycle">' + ((g.status && g.status.displayThru) ? g.status.displayThru : '') + '</div></div><div class="golf-score card-val-lg">' + (g.score || 'E') + '</div></div>';
                 }).join('');
                 applyScroll('pga-viewport', 'pga-track', 12000);
             } catch (e) { rotationStep++; nextSlide(); }
@@ -932,9 +910,11 @@
                 document.getElementById('ufc-screen').style.display = 'flex';
                 document.getElementById('ufc-grid-track').innerHTML = d.events[0].competitions.map(function(fight) {
                     var f1 = fight.competitors[0], f2 = fight.competitors[1];
-                    var f1Img = (f1.athlete && f1.athlete.headshot && f1.athlete.headshot.href) ? f1.athlete.headshot.href : 'https://a.espncdn.com/combiner/i?img=/i/headshots/mma/players/full/default.png';
-                    var f2Img = (f2.athlete && f2.athlete.headshot && f2.athlete.headshot.href) ? f2.athlete.headshot.href : 'https://a.espncdn.com/combiner/i?img=/i/headshots/mma/players/full/default.png';
-                    return '<div class="ufc-card glass-card neon-border-cycle"><div class="ufc-matchup"><div class="fighter-col"><img src="' + f2Img + '" class="fighter-img" onerror="this.src=\'https://a.espncdn.com/combiner/i?img=/i/headshots/mma/players/full/default.png\'; this.onerror=null;"><div class="fighter-name">' + (f2.athlete ? f2.athlete.shortName : '') + '</div></div><div class="ufc-center"><div class="ufc-vs neon-text-cycle">VS</div></div><div class="fighter-col"><img src="' + f1Img + '" class="fighter-img" onerror="this.src=\'https://a.espncdn.com/combiner/i?img=/i/headshots/mma/players/full/default.png\'; this.onerror=null;"><div class="fighter-name">' + (f1.athlete ? f1.athlete.shortName : '') + '</div></div></div><div class="ufc-meta neon-text-cycle neon-border-cycle"><span>' + (fight.status.state === 'post' ? 'FINAL' : (fight.type ? fight.type.text : "Bout")) + '</span></div></div>';
+                    var f1Img = (f1.athlete && f1.athlete.headshot && f1.athlete.headshot.href) ? f1.athlete.headshot.href : 'https://a.espncdn.com/combiner/i?img=/i/headshots/mma/players/full/' + (f1.athlete ? f1.athlete.id : f1.id) + '.png&h=150&w=150&scale=crop';
+                    var f2Img = (f2.athlete && f2.athlete.headshot && f2.athlete.headshot.href) ? f2.athlete.headshot.href : 'https://a.espncdn.com/combiner/i?img=/i/headshots/mma/players/full/' + (f2.athlete ? f2.athlete.id : f2.id) + '.png&h=150&w=150&scale=crop';
+                    var f1Name = f1.athlete ? (f1.athlete.shortName || f1.athlete.displayName || '') : '';
+                    var f2Name = f2.athlete ? (f2.athlete.shortName || f2.athlete.displayName || '') : '';
+                    return '<div class="ufc-card glass-card"><div class="ufc-matchup"><div class="fighter-col"><img src="' + f2Img + '" class="fighter-img" onerror="this.src=\'https://a.espncdn.com/combiner/i?img=/i/headshots/mma/players/full/default.png\'; this.onerror=null;"><div class="fighter-name">' + f2Name + '</div></div><div class="ufc-center"><div class="ufc-vs neon-text-cycle">VS</div></div><div class="fighter-col"><img src="' + f1Img + '" class="fighter-img" onerror="this.src=\'https://a.espncdn.com/combiner/i?img=/i/headshots/mma/players/full/default.png\'; this.onerror=null;"><div class="fighter-name">' + f1Name + '</div></div></div><div class="ufc-meta neon-text-cycle"><span>' + (fight.status.state === 'post' ? 'FINAL' : (fight.type ? fight.type.text : "Bout")) + '</span></div></div>';
                 }).join('');
                 applyScroll('ufc-viewport', 'ufc-grid-track', 15000);
             } catch(e) { rotationStep++; nextSlide(); }
@@ -960,7 +940,7 @@
             if(games.length === 0) { rotationStep++; nextSlide(); return; }
             document.getElementById('soccer-screen').style.display = 'flex';
             document.getElementById('soccer-grid-track').innerHTML = games.sort((a,b)=>b.weight-a.weight).map(function(g) {
-                return '<div class="glass-card neon-border-cycle"><div class="card-meta neon-text-cycle"><span>' + g.league + '</span></div><div class="card-row"><div class="card-team"><img src="' + g.aLogo + '" onerror="this.src=\'https://a.espncdn.com/combiner/i?img=/i/teamlogos/default-team-logo-500.png\'; this.onerror=null;">' + g.aName + '</div><div class="card-val-lg">' + g.aScore + '</div></div><div class="card-row"><div class="card-team"><img src="' + g.hLogo + '" onerror="this.src=\'https://a.espncdn.com/combiner/i?img=/i/teamlogos/default-team-logo-500.png\'; this.onerror=null;">' + g.hName + '</div><div class="card-val-lg">' + g.hScore + '</div></div><div class="card-footer neon-text-cycle" style="justify-content:center;">' + g.time + '</div></div>';
+                return '<div class="glass-card"><div class="card-meta neon-text-cycle"><span>' + g.league + '</span></div><div class="card-row"><div class="card-team"><img src="' + g.aLogo + '">' + g.aName + '</div><div class="card-val-lg">' + g.aScore + '</div></div><div class="card-row"><div class="card-team"><img src="' + g.hLogo + '">' + g.hName + '</div><div class="card-val-lg">' + g.hScore + '</div></div><div class="card-footer neon-text-cycle" style="justify-content:center;">' + g.time + '</div></div>';
             }).join('');
             applyScroll('soccer-viewport', 'soccer-grid-track', 12000);
         }
@@ -969,7 +949,7 @@
             if(globalTVGuideData.length === 0) { rotationStep++; nextSlide(); return; }
             document.getElementById('tvguide-screen').style.display = 'flex';
             document.getElementById('tvguide-track').innerHTML = [].concat(globalTVGuideData).sort((a,b)=>a.timestamp-b.timestamp).map(function(g) { 
-                return '<div class="tv-row"><div class="tv-channel neon-border-cycle neon-text-cycle">' + getNetworkLogo(g.network) + '</div><div class="tv-program"><div class="tv-prog-title">' + g.matchup + '</div><div class="tv-prog-time neon-text-cycle">' + g.time + '</div>' + (g.isLive ? '<div class="neon-text-cycle live-pulse" style="position:absolute; right:4vh; font-size:3vh;">● LIVE</div>' : '') + '</div></div>'; 
+                return '<div class="tv-row"><div class="tv-channel neon-text-cycle">' + getNetworkLogo(g.network) + '</div><div class="tv-program"><div class="tv-prog-title">' + g.matchup + '</div><div class="tv-prog-time neon-text-cycle">' + g.time + '</div>' + (g.isLive ? '<div class="neon-text-cycle live-pulse" style="position:absolute; right:4vh; font-size:3vh;">● LIVE</div>' : '') + '</div></div>'; 
             }).join('');
             applyScroll('tvguide-viewport', 'tvguide-track', 12000);
         }
@@ -985,7 +965,7 @@
                 document.getElementById('news-screen').style.display = 'flex';
                 document.getElementById('news-list-track').innerHTML = combinedNews.sort((a,b)=>b.time-a.time).slice(0, 10).map(function(item) {
                     var imgHtml = item.img ? '<img class="news-thumb" src="' + item.img + '">' : '<div class="news-thumb neon-text-cycle" style="display:flex;align-items:center;justify-content:center;font-weight:900;font-size:3vh;">NEWS</div>';
-                    return '<div class="news-row glass-card neon-border-cycle">' + imgHtml + '<div class="news-content"><div class="news-title">' + item.title + '</div><div class="news-source neon-text-cycle">' + item.source + '</div></div></div>';
+                    return '<div class="news-row glass-card">' + imgHtml + '<div class="news-content"><div class="news-title">' + item.title + '</div><div class="news-source neon-text-cycle">' + item.source + '</div></div></div>';
                 }).join('');
                 applyScroll('news-viewport', 'news-list-track', 12000);
             } catch(e) { rotationStep++; nextSlide(); }
@@ -996,7 +976,7 @@
             if (oddsGames.length === 0) { rotationStep++; nextSlide(); return; }
             document.getElementById('odds-screen').style.display = 'flex';
             document.getElementById('odds-grid-track').innerHTML = oddsGames.map(function(g) { 
-                return '<div class="glass-card neon-border-cycle"><div class="card-meta neon-text-cycle"><span>' + g.league + '</span><span>' + g.tv + '</span></div><div class="card-row"><div class="card-team"><img src="' + g.aLogo + '" onerror="this.src=\'' + g.aFallback + '\'; this.onerror=null;">' + g.away + '</div></div><div class="card-row"><div class="card-team"><img src="' + g.hLogo + '" onerror="this.src=\'' + g.hFallback + '\'; this.onerror=null;">' + g.home + '</div></div><div class="card-footer neon-text-cycle" style="margin-top:1.5vh;"><span>' + g.clock + '</span><span>' + g.odds + ' (O/U ' + (g.ou||'--') + ')</span></div></div>'; 
+                return '<div class="glass-card"><div class="card-meta neon-text-cycle"><span>' + g.league + '</span><span>' + g.tv + '</span></div><div class="card-row"><div class="card-team"><img src="' + g.aLogo + '" onerror="this.src=\'' + g.aFallback + '\'; this.onerror=null;">' + g.away + '</div></div><div class="card-row"><div class="card-team"><img src="' + g.hLogo + '" onerror="this.src=\'' + g.hFallback + '\'; this.onerror=null;">' + g.home + '</div></div><div class="card-footer neon-text-cycle" style="margin-top:1.5vh;"><span>' + g.clock + '</span><span>' + g.odds + ' (O/U ' + (g.ou||'--') + ')</span></div></div>'; 
             }).join('');
             applyScroll('odds-viewport', 'odds-grid-track', 12000);
         }
@@ -1006,7 +986,7 @@
             try {
                 var res = await fetch('https://site.api.espn.com/apis/site/v2/sports/football/college-football/rankings'); var d = await res.json();
                 document.getElementById('rankings-list-track').innerHTML = d.rankings[0].ranks.slice(0, 15).map(function(r) { 
-                    return '<div class="rank-row glass-card neon-border-cycle" style="flex-direction:row;"><span class="rank-num neon-text-cycle">' + r.current + '</span><img class="rank-logo" style="width:8vh; margin:0 3vh;" src="' + r.team.logo + '" onerror="this.src=\'https://a.espncdn.com/combiner/i?img=/i/teamlogos/default-team-logo-500.png\'; this.onerror=null;"><span><span class="rank-name">' + r.team.nickname + '</span></span><span class="neon-text-cycle" style="margin-left:auto; font-size:4vh; font-weight:900;">' + (r.recordSummary || '0-0') + '</span></div>'; 
+                    return '<div class="rank-row glass-card" style="flex-direction:row;"><span class="rank-num neon-text-cycle">' + r.current + '</span><img class="rank-logo" style="width:8vh; margin:0 3vh;" src="' + r.team.logo + '" onerror="this.src=\'https://a.espncdn.com/combiner/i?img=/i/teamlogos/default-team-logo-500.png\'; this.onerror=null;"><span><span class="rank-name">' + r.team.nickname + '</span></span><span class="neon-text-cycle" style="margin-left:auto; font-size:4vh; font-weight:900;">' + (r.recordSummary || '0-0') + '</span></div>'; 
                 }).join('');
                 applyScroll('rankings-viewport', 'rankings-list-track', 15000);
             } catch(e) { slideTimer = setTimeout(nextSlide, 5000); }
@@ -1023,7 +1003,7 @@
                         if (overallNode && overallNode.summary) recText = overallNode.summary;
                         return '<div class="st-row"><img class="st-logo" style="width:4.8vh; margin:0 1.5vh;" src="' + t.team.logos[0].href + '" onerror="this.src=\'https://a.espncdn.com/combiner/i?img=/i/teamlogos/default-team-logo-500.png\'; this.onerror=null;"><div class="st-name" style="flex:1; font-size:3vh;">' + t.team.displayName + '</div><div class="neon-text-cycle">' + recText + '</div></div>';
                     }).join('');
-                    return '<div class="division-block glass-card neon-border-cycle"><div class="division-header neon-text-cycle neon-border-cycle">' + (group.name || "STANDINGS") + '</div>' + rows + '</div>';
+                    return '<div class="division-block glass-card"><div class="division-header neon-text-cycle">' + (group.name || "STANDINGS") + '</div>' + rows + '</div>';
                 }).join('');
                 applyScroll(league + '-viewport', league + '-track', 15000);
             } catch(e) { slideTimer = setTimeout(nextSlide, 5000); }
