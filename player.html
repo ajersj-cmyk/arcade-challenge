@@ -2,248 +2,405 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Arcade Challenge Player</title>
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&display=swap" rel="stylesheet">
+    <title>Ahlers Arcade Command Center | Premium</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
     <style>
-        body { background: linear-gradient(135deg, #0f0c29, #302b63, #24243e); color: #fff; font-family: 'Cinzel', serif; display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 100vh; margin: 0; text-align: center; padding: 20px; box-sizing: border-box; }
-        .container { 
-            background: rgba(0, 0, 0, 0.4); border: 5px solid #ff007f; border-radius: 40px; padding: 20px; box-shadow: 0 0 30px rgba(255, 0, 127, 0.5); max-width: 90%; width: 100%; position: relative;
-            background-image: url('https://raw.githubusercontent.com/ajersj-cmyk/arcade-challenge/main/quest/mickeyintro/1.jpg');
-            background-size: cover; 
-            background-position: center; 
-            background-repeat: no-repeat;
-            transition: background-image 0.5s ease-in-out;
-            background-color: #0f0c29;
-        }
-        #main-title { margin-bottom: 20px; flex-shrink: 0; }
-        #main-title img { max-width: 100%; max-height: 20vh; height: auto; }
-        #player-display { 
-            font-size: 3.5vw; 
-            font-weight: bold;
-            color: #ff007f;
-            margin-bottom: 15px;
-            animation: purple-text-pulse 4s infinite alternate;
-        }
-        .challenge-section { 
-            background: rgba(0, 0, 0, 0.6); 
-            color: #fff; 
-            border-radius: 20px; 
-            padding: 20px; 
-            min-height: 200px; 
-            display: flex; 
-            flex-direction: column; 
-            justify-content: center; 
-            margin-bottom: 20px; 
-            box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.5);
-            border: 2px solid rgba(255, 255, 255, 0.5);
-        }
-        #challenge-text { font-size: 4vw; font-weight: bold; margin: 0; }
-        #challenge-details { font-size: 2.2vw; margin-top: 15px; opacity: 0.9; }
-        .btn-container, .challenge-action-form { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-top: 15px; }
-        button { 
-            background: #ff007f; color: #fff; font-family: 'Cinzel', serif; font-weight: bold; border: none; padding: 20px; font-size: 2.5vw; cursor: pointer; border-radius: 12px; text-transform: uppercase; transition: transform 0.2s, box-shadow 0.2s; 
-            box-shadow: 0 6px 0 #cc0066; 
-        }
-        button:active { transform: translateY(3px); box-shadow: 0 3px 0 #cc0066; }
-        #done-btn { 
-            background: #ff007f;
-            color: #fff; 
-            animation: purple-button-pulse 4s infinite alternate;
-        }
-        #impossible-btn { background-color: #9d00ff; box-shadow: 0 6px 0 #6e00b3; }
-        .name-entry-form { padding: 20px; margin-top: 15px; display: flex; flex-direction: column; gap: 15px; align-items: center; }
-        .name-entry-form input[type="text"] { background: #fff; color: #000; border: none; padding: 15px; border-radius: 10px; font-family: 'Cinzel', serif; font-size: 3vw; width: 80%; }
+        /* --- PREMIUM CINEMATIC BASE --- */
+        :root { --ticker-height: 22vh; }
+        body, html { margin: 0; padding: 0; width: 100vw; height: 100vh; background: #02050a; overflow: hidden; color: white; font-family: 'Inter', sans-serif; cursor: none; font-size: 3.5vh; }
         
-        /* NEW: Styles for the fullscreen intro screen */
-        #intro-screen {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-size: cover;
-            background-position: center;
-            z-index: 100;
-            flex-direction: column;
-            justify-content: flex-end;
-            align-items: center;
-            padding-bottom: 5vh;
-        }
-        #start-quest-btn {
-            padding: 20px 40px;
-            font-size: 4vw;
-            background-color: #00ffff;
-            color: #302b63;
-            border: 3px solid #fff;
-            animation: rainbow-pulse 4s linear infinite;
-        }
+        /* DYNAMIC CINEMATIC BACKGROUND */
+        #cinematic-bg { position: absolute; inset: -2%; width: 104%; height: 104%; z-index: 0; background-size: cover; background-position: center; filter: blur(15px) brightness(0.25); transition: background-image 2s ease-in-out; background-image: url('https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?q=80&w=2000&auto=format&fit=crop'); }
         
-        @keyframes purple-text-pulse {
-            from { text-shadow: 0 0 4px #4b0082, 0 0 8px #4b0082; }
-            to { text-shadow: 0 0 8px #4b0082, 0 0 16px #4b0082, 0 0 24px #4b0082; }
-        }
-        @keyframes purple-button-pulse {
-            from { box-shadow: 0 6px 0 #6e00b3, 0 0 10px #4b0082, 0 0 20px #4b0082; }
-            to { box-shadow: 0 6px 0 #6e00b3, 0 0 20px #4b0082, 0 0 40px #4b0082, 0 0 60px #4b0082; }
-        }
-        @keyframes rainbow-pulse { 0% { box-shadow: 0 0 15px 5px #ff0000, 0 6px 0 #00cccc; } 16% { box-shadow: 0 0 15px 5px #ff7f00, 0 6px 0 #00cccc; } 33% { box-shadow: 0 0 15px 5px #ffff00, 0 6px 0 #00cccc; } 50% { box-shadow: 0 0 15px 5px #00ff00, 0 6px 0 #00cccc; } 66% { box-shadow: 0 0 15px 5px #0000ff, 0 6px 0 #00cccc; } 83% { box-shadow: 0 0 15px 5px #4b0082, 0 6px 0 #00cccc; } 100% { box-shadow: 0 0 15px 5px #ff0000, 0 6px 0 #00cccc; } }
+        /* THE CYBER GRID OVERLAY */
+        .cyber-grid { position: absolute; top: 0; left: -50%; width: 200%; height: 100%; background-image: linear-gradient(rgba(0, 255, 255, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 255, 255, 0.05) 1px, transparent 1px); background-size: 100px 100px; transform: rotateX(45deg); z-index: 1; pointer-events: none; }
 
+        body.remote-active .tv-wrapper { display: none !important; }
+        body:not(.remote-active) #remote-controller { display: none !important; }
+        .tv-wrapper { position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; display: flex; justify-content: center; align-items: center; overflow: hidden; z-index: 2; }
+
+        #fs-toggle { position: fixed; top: 2vh; right: 2vw; z-index: 10000; background: none; border: none; color: #fff; font-size: 4vh; cursor: pointer; opacity: 0.3; transition: all 0.3s ease; }
+        #fs-toggle:hover { opacity: 1; color: #00ffff; text-shadow: 0 0 15px #00ffff; }
+        #master-clock { position: fixed; top: 2.5vh; left: 3vw; z-index: 15000; color: #fff; font-family: 'Share Tech Mono', monospace; font-size: 4.5vh; font-weight: 900; text-shadow: 0 0 15px rgba(255,255,255,0.6); opacity: 0.9; letter-spacing: 0.2vw; }
+
+        /* TICKER - PREMIUM GLASSMORPHISM */
+        #sports-ticker { position: absolute; bottom: 0; left: 0; width: 100%; height: var(--ticker-height); background: rgba(5, 10, 15, 0.6); backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px); border-top: 1px solid rgba(255, 255, 255, 0.15); box-shadow: 0 -5px 25px rgba(0,0,0,0.5); z-index: 100; display: flex; align-items: center; overflow: hidden; white-space: nowrap; }
+        #ticker-track { display: inline-flex; animation: scrollTicker 80s linear infinite; height: 100%; align-items: center; width: max-content; will-change: transform; } 
+        @keyframes scrollTicker { 0% { transform: translate3d(0, 0, 0); } 100% { transform: translate3d(-50%, 0, 0); } }
+
+        .ticker-section-head { display: inline-flex; align-items: center; justify-content: center; padding: 0 3vw; height: 100%; color: #00ffff; font-size: 4rem; letter-spacing: 0.3vw; font-weight: 900; text-shadow: 0 0 20px rgba(0,255,255,0.4); }
+        .score-item { display: inline-flex !important; flex-direction: row !important; align-items: center !important; padding: 0 5vw; height: 100%; vertical-align: middle; flex-wrap: nowrap !important; }
+        .team-box { display: flex !important; flex-direction: row !important; align-items: center !important; flex-wrap: nowrap !important; }
+        .team-logo { width: 11vh; height: 11vh; object-fit: contain; margin-right: 1.5vw; flex-shrink: 0; background: transparent; filter: drop-shadow(0px 5px 10px rgba(0,0,0,0.5)); } 
+        .team-score { font-size: 4.8rem; line-height: 1; color: #fff; margin-right: 0.8vw; font-weight: 900; }
+        
+        .score-changed { animation: scoreUpdate 3s ease-out forwards; }
+        @keyframes scoreUpdate { 0% { color: #39ff14; transform: scale(1.1); text-shadow: 0 0 20px #39ff14; } 100% { color: #fff; transform: scale(1); text-shadow: none; } }
+
+        .vs-label { color: rgba(255,255,255,0.3); font-size: 2.7rem; margin: 0 2.5vw; font-weight: bold; }
+        .game-status { margin-left: 2vw; color: #facc15; font-size: 2.7rem; text-transform: uppercase; letter-spacing: 0.1vw; }
+        .live-pulse { animation: pulsePink 1.5s ease-in-out infinite; color: #ff007f; font-weight: 900; margin-right: 1.5vw; font-size: 2.7rem; text-shadow: 0 0 15px #ff007f; }
+        @keyframes pulsePink { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
+
+        /* SLIDES & GRIDS */
+        .slide-screen { position: absolute; inset: 0; z-index: 10; display: none; flex-direction: column; padding: 2vh 4vh; align-items: center; overflow: hidden; }
+        .screen-header { font-size: 9.5vh; font-weight: 900; color: #fff; text-transform: uppercase; letter-spacing: 1vh; margin-bottom: 2vh; margin-top: 1vh; z-index: 20; border-bottom: 1px solid rgba(255,255,255,0.2); padding-bottom: 1vh; width: 95%; text-align: center; display: block; }
+        .league-logo { height: 1em; margin-right: 1.5vw; filter: drop-shadow(0px 0px 10px rgba(255, 255, 255, 0.4)); display: inline-block; vertical-align: middle; margin-top: -1.5vh; }
+        
+        .content-viewport { width: 95%; height: 62vh; overflow: hidden; position: relative; z-index: 20; padding-bottom: var(--ticker-height); }
+        .grid-track { display: grid; grid-template-columns: repeat(2, 1fr); gap: 2vw; padding-bottom: 10vh; will-change: transform; }
+        .list-track { display: flex; flex-direction: column; gap: 1.5vh; padding-bottom: 10vh; width: 90%; margin: 0 auto; will-change: transform; }
+
+        /* PREMIUM GLASS CARDS */
+        .glass-card { background: rgba(15, 20, 30, 0.45); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.1); border-top: 1px solid rgba(255, 255, 255, 0.2); border-radius: 1.5vh; display: flex; flex-direction: column; padding: 2.5vh; box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3); position: relative; overflow: hidden; }
+        
+        .squad-game-card { border-left: 0.8vh solid #00ffff; }
+        .squad-game-card.card-focus-canes { border-left-color: #cc0000; background: rgba(40, 5, 5, 0.45); }
+        .squad-game-card.card-focus-duke { border-left-color: #003087; background: rgba(5, 15, 40, 0.45); }
+        .squad-game-card.card-focus-ecu { border-left-color: #592A8A; background: rgba(30, 10, 45, 0.45); }
+
+        .card-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5vh; width: 100%; z-index: 2; position: relative; }
+        .card-team { display: flex; align-items: center; gap: 2vh; font-size: 5.2vh; font-weight: 900; color: white; text-transform: uppercase; text-shadow: 0 2px 4px rgba(0,0,0,0.8); } 
+        .card-team img { width: 8.2vh; height: 8.2vh; object-fit: contain; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.5)); } 
+        .card-val-lg { font-weight: 900; color: #fff; font-size: 5.7vh; text-shadow: 0 2px 5px rgba(0,0,0,0.8); } 
+        .card-meta { display: flex; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 1vh; margin-bottom: 1.5vh; font-size: 3vh; color: rgba(255,255,255,0.6); font-weight: 900; text-transform: uppercase; letter-spacing: 0.1vw; z-index: 2; position: relative; }
+        .card-footer { margin-top: auto; padding-top: 1.2vh; border-top: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: space-between; align-items: center; color: rgba(255,255,255,0.5); font-size: 3vh; text-transform: uppercase; font-weight: bold; z-index: 2; position: relative; }
+
+        /* WIN PROBABILITY BAR */
+        .win-prob-container { margin-top: 1.5vh; z-index: 2; position: relative; }
+        .win-prob-labels { display: flex; justify-content: space-between; font-size: 2vh; color: rgba(255,255,255,0.6); font-weight: 900; margin-bottom: 0.5vh; }
+        .win-prob-track { width: 100%; height: 0.8vh; background: rgba(255,255,255,0.1); border-radius: 0.4vh; overflow: hidden; display: flex; box-shadow: inset 0 1px 3px rgba(0,0,0,0.5); }
+        .win-prob-away { height: 100%; background: #00ffff; box-shadow: 0 0 10px #00ffff; }
+        .win-prob-home { height: 100%; background: #ff007f; box-shadow: 0 0 10px #ff007f; }
+
+        /* SKELETON SHIMMER (ZERO JANK) */
+        .skeleton { background: linear-gradient(90deg, rgba(255,255,255,0.05) 25%, rgba(255,255,255,0.15) 50%, rgba(255,255,255,0.05) 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 0.8vh; }
+        @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+        .skel-text { height: 3vh; width: 40%; margin-bottom: 1.5vh; }
+        .skel-img { width: 8.2vh; height: 8.2vh; border-radius: 50%; }
+        .skel-row { display: flex; align-items: center; gap: 2vh; margin-bottom: 2vh; }
+
+        /* PROP SHOP SLIDE */
+        .prop-card { background: rgba(10, 15, 20, 0.5); backdrop-filter: blur(25px); border: 1px solid rgba(212, 175, 55, 0.3); border-top: 1px solid rgba(212, 175, 55, 0.6); border-radius: 1.5vh; padding: 3vh; display: flex; align-items: center; gap: 3vh; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .prop-headshot { width: 14vh; height: 14vh; border-radius: 50%; border: 3px solid #d4af37; object-fit: cover; object-position: top; background: rgba(0,0,0,0.5); box-shadow: 0 0 20px rgba(212, 175, 55, 0.3); }
+        .prop-details { flex: 1; }
+        .prop-name { font-size: 4.5vh; font-weight: 900; color: white; text-transform: uppercase; margin-bottom: 0.5vh; }
+        .prop-game { font-size: 2.5vh; color: rgba(255,255,255,0.5); font-weight: bold; text-transform: uppercase; margin-bottom: 1.5vh; letter-spacing: 0.1vw; }
+        .prop-line { font-size: 3.5vh; color: #d4af37; font-weight: 900; background: rgba(212, 175, 55, 0.1); padding: 1vh 2vh; border-radius: 1vh; display: inline-block; border: 1px solid rgba(212, 175, 55, 0.2); }
+        .prop-odds { font-size: 3.5vh; color: #39ff14; font-weight: 900; float: right; padding: 1vh 0; }
+
+        /* OTHER EXISTING SLIDES UPGRADED TO GLASS */
+        .golf-row, .rank-row, .tv-row { background: rgba(15, 20, 30, 0.45); backdrop-filter: blur(15px); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 1.2vh; margin-bottom: 1.5vh; width: 100%; display: flex; align-items: center; padding: 2vh 2.5vh; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
+        .rank-num { font-size: 6.8vh; color: #facc15; font-weight: 900; width: 12vh; text-align: center; text-shadow: 0 2px 10px rgba(250, 204, 21, 0.4); }
+        .rank-name { font-size: 5.4vh; color: white; font-weight: 900; flex: 1; text-transform: uppercase; }
+        
+        .division-block { background: rgba(10, 15, 25, 0.5); backdrop-filter: blur(15px); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 1.5vh; padding: 2.5vh; margin-bottom: 2.5vh; box-shadow: 0 10px 25px rgba(0,0,0,0.4); }
+        .division-header { color: #facc15; font-size: 3.8vh; font-weight: 900; text-transform: uppercase; border-bottom: 2px solid rgba(255,255,255,0.1); margin-bottom: 1.5vh; padding-bottom: 1vh; text-shadow: 0 2px 5px rgba(0,0,0,0.5); }
+        .st-row { display: flex; align-items: center; padding: 1.2vh 0; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 3.8vh; font-weight: 900; }
+        
+        @keyframes scrollVerticalOnePass { 0% { transform: translate3d(0,0,0); } 100% { transform: translate3d(0, var(--scroll-end), 0); } }
     </style>
 </head>
 <body>
-    <div id="intro-screen">
-        <button id="start-quest-btn">Start Quest</button>
-    </div>
 
-    <div class="container" id="main-container">
-        <h1 id="main-title"><img src="https://raw.githubusercontent.com/ajersj-cmyk/arcade-challenge/main/header.PNG" alt="Ahlers Arcade Challenge"></h1>
-        <p id="player-display" style="display: none;"></p>
-        <div class="challenge-section" id="challenge-box">
-            <p id="challenge-text">What is your name, Adventurer?</p>
-            <div id="challenge-details"></div>
-            <div class="name-entry-form" id="name-entry-form"><input type="text" id="player-name-input" placeholder="Enter Your Name"><button id="start-session-btn">Start / Continue</button></div>
-            <div class="challenge-action-form" id="challenge-action-form" style="display: none;"><button id="complete-challenge-btn">Completed!</button><button id="skip-challenge-btn">Skip (-5 pts)</button><button id="impossible-btn">This is Impossible</button></div>
-            <div class="success-screen" id="success-screen" style="display: none;"><button id="next-quest-btn">Next Quest</button></div>
+    <div id="cinematic-bg"></div>
+    <div class="cyber-grid"></div>
+    
+    <div id="master-clock">12:00 PM</div>
+
+    <div class="tv-wrapper" id="main-wrapper">
+        <button id="fs-toggle" onclick="if(!document.fullscreenElement) document.documentElement.requestFullscreen(); else document.exitFullscreen();">⛶</button>
+
+        <!-- LIVE SCREEN -->
+        <div id="live-game-screen" class="slide-screen">
+            <div class="screen-header" style="color: #00ffff; border-bottom-color: rgba(0,255,255,0.3); text-shadow: 0 0 20px rgba(0,255,255,0.5);">LIVE ACTION</div>
+            <div class="content-viewport" id="live-viewport"><div class="grid-track" id="live-grid-track"></div></div>
         </div>
-        <div class="btn-container"><button class="mode-toggle-btn" id="mode-toggle">Switch to Adult Mode</button><button id="done-btn" style="display: none;">Save & Quit</button></div>
+
+        <!-- PROP SHOP (NEW PREMIUM SLIDE) -->
+        <div id="props-screen" class="slide-screen">
+            <div class="screen-header" style="color: #d4af37; border-bottom-color: rgba(212,175,55,0.3); text-shadow: 0 0 20px rgba(212,175,55,0.5);">VEGAS PROP SHOP</div>
+            <div class="content-viewport" id="props-viewport">
+                <div class="grid-track" id="props-grid-track"></div>
+            </div>
+        </div>
+
+        <!-- MY SQUAD -->
+        <div id="mysquad-screen" class="slide-screen">
+            <div class="screen-header" style="color: #39ff14; border-bottom-color: rgba(57,255,20,0.3);">MY SQUAD DASHBOARD</div>
+            <div class="content-viewport" id="mysquad-viewport">
+                <div style="display: flex; width: 100%; height: 100%; gap: 4vw;">
+                    <div style="flex: 1; display: flex; flex-direction: column; overflow: hidden;">
+                        <div style="font-size: 4vh; color: rgba(255,255,255,0.6); font-weight: 900; text-transform: uppercase; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 1vh; margin-bottom: 2vh; text-align: center;">ACTIVE MATCHUPS</div>
+                        <div id="squad-games-track" style="padding-bottom: 5vh; display: flex; flex-direction: column; gap: 1.5vh;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- STANDINGS & OTHERS (Reusing existing structures but styled via premium CSS) -->
+        <div id="nfl-screen" class="slide-screen"><div class="screen-header"><img src="https://a.espncdn.com/combiner/i?img=/i/teamlogos/leagues/500/nfl.png" class="league-logo" onerror="this.style.display='none'">NFL STANDINGS</div><div class="content-viewport" id="nfl-viewport"><div class="grid-track" style="gap: 2.5vw;" id="nfl-track"></div></div></div>
+        <div id="nba-screen" class="slide-screen"><div class="screen-header"><img src="https://a.espncdn.com/combiner/i?img=/i/teamlogos/leagues/500/nba.png" class="league-logo" onerror="this.style.display='none'">NBA STANDINGS</div><div class="content-viewport" id="nba-viewport"><div class="grid-track" style="gap: 2.5vw;" id="nba-track"></div></div></div>
+        <div id="mlb-screen" class="slide-screen"><div class="screen-header"><img src="https://a.espncdn.com/combiner/i?img=/i/teamlogos/leagues/500/mlb.png" class="league-logo" onerror="this.style.display='none'">MLB STANDINGS</div><div class="content-viewport" id="mlb-viewport"><div class="grid-track" style="gap: 2.5vw;" id="mlb-track"></div></div></div>
+        <div id="rankings-screen" class="slide-screen"><div class="screen-header" style="color:#ff007f;">COLLEGE RANKINGS</div><div class="content-viewport" id="rankings-viewport"><div class="list-track" id="rankings-list-track"></div></div></div>
+
+        <!-- TICKER -->
+        <div id="sports-ticker"><div id="ticker-track"></div></div>
     </div>
+
     <script>
-    document.addEventListener('DOMContentLoaded', () => {
-        const scoresApiUrl = "https://script.google.com/macros/s/AKfycbzVzQirgLxs7Pse85u7RStzQFL-yJz8ZD9-PuVrfko9wBCm7lKbS9N5dQxZSvXj_eMW/exec";
-        const challengesUrl = "https://script.google.com/macros/s/AKfycbxj_xzLgkkQqsXKyBA4mJLvuTbzuDemZv8SYXMVD6gPeTzQOsJjH8iiEYDaaaNFpjIc/exec"; 
+        var rotationStep = 0, slideTimer;
+        var globalLiveGamesData = [], globalRawGames = [], globalLeadersData = [], globalPropsData = [];
+        var previousScores = {}; 
+        
+        // Define user's specific teams for the squad slide
+        var mySquadTeams = ["carolina hurricanes", "duke", "ecu", "east carolina"];
 
-        const mainContainer = document.getElementById('main-container');
-        const challengeText = document.getElementById('challenge-text');
-        const challengeDetails = document.getElementById('challenge-details');
-        const nameEntryForm = document.getElementById('name-entry-form');
-        const challengeActionForm = document.getElementById('challenge-action-form');
-        const playerNameInput = document.getElementById('player-name-input');
-        const startSessionBtn = document.getElementById('start-session-btn');
-        const playerDisplay = document.getElementById('player-display');
-        const doneBtn = document.getElementById('done-btn');
-        const modeToggleBtn = document.getElementById('mode-toggle');
-        const successScreen = document.getElementById('success-screen');
-        const nextQuestBtn = document.getElementById('next-quest-btn');
-        // NEW: Element references for the intro screen
-        const introScreen = document.getElementById('intro-screen');
-        const startQuestBtn = document.getElementById('start-quest-btn');
-        
-        let allChallenges = []; 
-        let isKidMode = true; 
-        let currentPlayerName = null; 
-        let currentChallenge = null; 
-        let historicalScore = 0; 
-        let sessionScore = 0; 
-        let hiddenChallenges = JSON.parse(localStorage.getItem('hiddenChallenges')) || {};
-        let challengeCounter = 0;
-        
-        const getRandomImageNumber = (max) => { const count = Number(max) || 1; return Math.floor(Math.random() * count) + 1; };
-        const getCharacterFolderName = (character) => character.toLowerCase().replace(/\s+/g, '');
-        
-        const fetchChallenges = async () => { try { const response = await fetch(challengesUrl); if (!response.ok) throw new Error('Network response was not ok'); allChallenges = await response.json(); challengeText.textContent = "What is your name, Adventurer?"; } catch (error) { console.error("Failed to fetch challenges:", error); challengeText.textContent = "Error: Could not load challenges. Please refresh."; } };
-        const lookupPlayerScore = async (name) => { startSessionBtn.textContent = "Loading..."; try { const response = await fetch(scoresApiUrl); const data = await response.json(); const playerScores = (data.sheet1 || []).filter(entry => entry.playername === name); return playerScores.reduce((total, entry) => total + (Number(entry.score) || 0), 0); } catch (error) { console.error("Could not look up score:", error); return 0; } finally { startSessionBtn.textContent = "Start / Continue"; } };
-        
-        const addScoreToSheet = async (playerName, score, mode) => {
-            if (score === 0) { window.location.reload(); return; }
-            try {
-                await fetch(scoresApiUrl, {
-                    method: 'POST',
-                    mode: 'no-cors',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ playername: playerName, score: score, mode: mode })
-                });
-            } catch (error) { console.error('FETCH FAILED:', error); } 
-            finally { window.location.reload(); }
-        };
+        function updateClock() {
+            var now = new Date();
+            var h = now.getHours(), m = now.getMinutes();
+            var ampm = h >= 12 ? 'PM' : 'AM';
+            h = h % 12; h = h ? h : 12; m = m < 10 ? '0' + m : m;
+            var clockEl = document.getElementById('master-clock');
+            if(clockEl) clockEl.innerText = h + ':' + m + ' ' + ampm;
+        }
 
-        const startNewChallenge = () => {
-            let desiredMode = isKidMode ? 'Kid' : 'Adult';
-            let challengePool = allChallenges.filter(c => c.mode === desiredMode);
-            const activeChallenges = challengePool.filter(c => !hiddenChallenges[c.uniqueId]);
-            if (activeChallenges.length === 0) {
-                challengeText.textContent = "Wow! You've completed all challenges in this mode!";
-                challengeDetails.innerHTML = '';
-                challengeActionForm.style.display = 'none';
-                return;
-            }
-            currentChallenge = activeChallenges[Math.floor(Math.random() * activeChallenges.length)];
-            const charFolder = getCharacterFolderName(currentChallenge.character);
-            const imgNum = getRandomImageNumber(currentChallenge.introimagecount); 
-            const imageUrl = `https://raw.githubusercontent.com/ajersj-cmyk/arcade-challenge/main/quest/${charFolder}intro/${imgNum}.jpg`;
-            mainContainer.style.backgroundImage = `url('${imageUrl}')`;
-            challengeText.textContent = currentChallenge.text;
-            challengeDetails.innerHTML = `Difficulty: ${currentChallenge.difficulty} | Points: ${currentChallenge.points}`;
-            nameEntryForm.style.display = 'none';
-            doneBtn.style.display = 'inline-block';
-            modeToggleBtn.style.display = 'none';
-            challengeActionForm.style.display = 'flex';
-            successScreen.style.display = 'none';
-        };
-
-        const showWinScreen = () => {
-            const charFolder = getCharacterFolderName(currentChallenge.character);
-            const imgNum = getRandomImageNumber(currentChallenge.winimagecount);
-            const imageUrl = `https://raw.githubusercontent.com/ajersj-cmyk/arcade-challenge/main/quest/${charFolder}win/${imgNum}.jpg`;
-            mainContainer.style.backgroundImage = `url('${imageUrl}')`;
-            challengeText.textContent = currentChallenge.successQuote;
-            challengeDetails.innerHTML = `+${currentChallenge.points} points!`;
-            challengeActionForm.style.display = 'none';
-            successScreen.style.display = 'flex';
-        };
-        
-        const updateScore = (points) => {
-            if (currentChallenge) {
-                hiddenChallenges[currentChallenge.uniqueId] = true;
-                localStorage.setItem('hiddenChallenges', JSON.stringify(hiddenChallenges));
-            }
-            sessionScore += points;
-            const totalScore = historicalScore + sessionScore;
-            playerDisplay.innerHTML = `Player: ${currentPlayerName} | Total Score: ${totalScore}`;
-            if (points > 0) {
-                showWinScreen();
-            } else {
-                startNewChallenge();
-            }
-        };
-        
-        // ### THIS IS THE ONLY MODIFIED FUNCTION ###
-        startSessionBtn.addEventListener('click', async () => {
-            const name = playerNameInput.value.trim();
-            if (!name) { alert('Please enter your name.'); return; }
-            if (allChallenges.length === 0) { alert('Challenges are still loading, please wait a moment!'); return; }
-            currentPlayerName = name;
-            historicalScore = await lookupPlayerScore(name);
-            sessionScore = 0;
-            playerDisplay.innerHTML = `Player: ${currentPlayerName} | Total Score: ${historicalScore}`;
+        // --- SKELETON LOADER (ZERO JANK PRE-RENDER) ---
+        function renderSkeletons() {
+            var skeletonCard = '<div class="glass-card"><div class="card-meta"><div class="skeleton skel-text" style="width:20%"></div><div class="skeleton skel-text" style="width:30%"></div></div><div class="skel-row"><div class="skeleton skel-img"></div><div class="skeleton skel-text" style="width:60%; height:4vh;"></div></div><div class="skel-row"><div class="skeleton skel-img"></div><div class="skeleton skel-text" style="width:60%; height:4vh;"></div></div><div class="card-footer"><div class="skeleton skel-text" style="width:100%"></div></div></div>';
             
-            // This new logic shows the fullscreen intro
-            mainContainer.style.display = 'none';
-            const introImageUrl = 'https://raw.githubusercontent.com/ajersj-cmyk/arcade-challenge/main/quest/intro/intro.jpg';
-            introScreen.style.backgroundImage = `url('${introImageUrl}')`;
-            introScreen.style.display = 'flex';
+            document.getElementById('live-grid-track').innerHTML = skeletonCard.repeat(4);
+            document.getElementById('props-grid-track').innerHTML = skeletonCard.repeat(4);
+            document.getElementById('ticker-track').innerHTML = '<span class="score-item"><div class="skeleton skel-text" style="width:50vw; height:8vh; margin-top:2vh;"></div></span>';
+            
+            document.getElementById('live-game-screen').style.display = 'flex';
+        }
+
+        // --- DYNAMIC CINEMATIC BACKGROUND HANDLER ---
+        function setCinematicBackground(slide) {
+            var bg = document.getElementById('cinematic-bg');
+            var imgUrl = 'https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?q=80&w=2000&auto=format&fit=crop'; // Default Stadium
+            
+            if (slide === 'nba') imgUrl = 'https://images.unsplash.com/photo-1504450758481-7338eba7524a?q=80&w=2000&auto=format&fit=crop'; // Hardwood
+            else if (slide === 'nhl') imgUrl = 'https://images.unsplash.com/photo-1580748141549-71748dbe0bdc?q=80&w=2000&auto=format&fit=crop'; // Ice
+            else if (slide === 'mlb') imgUrl = 'https://images.unsplash.com/photo-1508344928928-7165b67de128?q=80&w=2000&auto=format&fit=crop'; // Baseball
+            else if (slide === 'props') imgUrl = 'https://images.unsplash.com/photo-1595208031648-5222fc5be50c?q=80&w=2000&auto=format&fit=crop'; // Casino/Vegas Lights
+            
+            bg.style.backgroundImage = 'url(' + imgUrl + ')';
+        }
+
+        function nextSlide() {
+            clearTimeout(slideTimer);
+            var screens = ['live', 'props', 'mySquad', 'rankings', 'nfl', 'nba', 'mlb'];
+            
+            if (rotationStep >= screens.length) rotationStep = 0;
+            var current = screens[rotationStep];
+            
+            setCinematicBackground(current);
+            document.querySelectorAll('.slide-screen').forEach(function(el) { el.style.display = 'none'; });
+            
+            if (current === 'live') renderLivePage();
+            else if (current === 'props') showProps();
+            else if (current === 'mySquad') showMySquad();
+            else if (current === 'rankings') showRankings();
+            else if (current === 'nfl') showStandings('nfl', 'football');
+            else if (current === 'nba') showStandings('nba', 'basketball');
+            else if (current === 'mlb') showStandings('mlb', 'baseball');
+            
+            rotationStep++;
+        }
+
+        async function updateSportsTicker() { 
+            var newLivePage = [], allLive = [], allSched = [], newLeaders = [];
+            var configs = [
+                {l:'nfl', s:'football', id:'nfl'}, {l:'nba', s:'basketball', id:'nba'},
+                {l:'nhl', s:'hockey', id:'nhl'}, {l:'mlb', s:'baseball', id:'mlb'},
+                {l:'college-football', s:'football', g:80, id:'cfb'},
+                {l:'mens-college-basketball', s:'basketball', id:'cbb'}
+            ];
+            
+            var nowTime = new Date().getTime();
+            globalRawGames = [];
+            
+            for (var i=0; i<configs.length; i++) { 
+                var c = configs[i];
+                try { 
+                    var res = await fetch('https://site.api.espn.com/apis/site/v2/sports/' + c.s + '/' + c.l + '/scoreboard' + (c.g ? '?groups=' + c.g : ''));
+                    var d = await res.json();
+                    if (!d || !d.events) continue;
+                    
+                    d.events.forEach(function(ev) { 
+                        try {
+                            var comp = ev.competitions[0], status = comp.status.type;
+                            var gameTime = new Date(ev.date).getTime();
+                            var diffHours = (gameTime - nowTime) / (1000 * 60 * 60);
+                            
+                            if (diffHours < -24 || diffHours > 96) return; // Filter old/distant games
+                            
+                            var h = comp.competitors[0], a = comp.competitors[1];
+                            var hLogo = (h.team && h.team.logo) ? h.team.logo : 'https://a.espncdn.com/combiner/i?img=/i/teamlogos/default-team-logo-500.png';
+                            var aLogo = (a.team && a.team.logo) ? a.team.logo : 'https://a.espncdn.com/combiner/i?img=/i/teamlogos/default-team-logo-500.png';
+                            var hName = h.team.shortDisplayName, aName = a.team.shortDisplayName;
+                            var tv = (comp.broadcasts && comp.broadcasts[0]) ? comp.broadcasts[0].names[0] : 'TV';
+                            
+                            // Win Probability Extraction (NFL/CFB/NBA)
+                            var aProb = null, hProb = null;
+                            if (comp.situation && comp.situation.lastPlay && comp.situation.lastPlay.probability) {
+                                aProb = comp.situation.lastPlay.probability.awayWinPercentage * 100;
+                                hProb = comp.situation.lastPlay.probability.homeWinPercentage * 100;
+                            }
+
+                            // Build the Master Game Object
+                            var gameObj = {
+                                league: c.id.toUpperCase(), home: hName, hLogo: hLogo, hScore: h.score || '', 
+                                away: aName, aLogo: aLogo, aScore: a.score || '', status: status.detail, 
+                                clock: comp.status.displayClock || '', tv: tv, state: status.state,
+                                aProb: aProb, hProb: hProb,
+                                searchString: (hName + " " + aName).toLowerCase(),
+                                odds: (comp.odds && comp.odds[0]) ? comp.odds[0].details : 'EVEN'
+                            };
+
+                            globalRawGames.push(gameObj);
+                            
+                            if (status.state === 'in') {
+                                newLivePage.push(gameObj);
+                                allLive.push('<span class="score-item"><span class="live-pulse">●</span><div class="team-box"><img class="team-logo" src="' + aLogo + '"><span class="team-score">' + a.score + '</span></div><span class="vs-label">@</span><div class="team-box"><img class="team-logo" src="' + hLogo + '"><span class="team-score">' + h.score + '</span></div><span class="game-status">' + status.shortDetail + '</span></span>');
+                            } else if (status.state === 'pre') {
+                                allSched.push('<span class="score-item"><div class="team-box"><img class="team-logo" src="' + aLogo + '"></div><span class="vs-label">@</span><div class="team-box"><img class="team-logo" src="' + hLogo + '"></div><span class="game-status" style="color:rgba(255,255,255,0.5)">' + new Date(ev.date).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}) + '</span></span>');
+                            }
+
+                            // Extract Star Players for Prop Shop
+                            if (status.state === 'pre' && comp.odds) {
+                                comp.competitors.forEach(function(competitor) {
+                                    if (competitor.leaders && competitor.leaders.length > 0) {
+                                        var topDude = competitor.leaders[0].leaders[0];
+                                        if (topDude && topDude.athlete && topDude.athlete.headshot) {
+                                            newLeaders.push({
+                                                name: topDude.athlete.displayName,
+                                                headshot: topDude.athlete.headshot.href,
+                                                statDesc: competitor.leaders[0].displayName,
+                                                teamCode: competitor.team.abbreviation,
+                                                oppCode: (competitor.id === h.id) ? a.team.abbreviation : h.team.abbreviation,
+                                                value: topDude.displayValue,
+                                                baseOdds: "-115"
+                                            });
+                                        }
+                                    }
+                                });
+                            }
+                        } catch(e) {}
+                    });
+                } catch(e) {} 
+            }
+            
+            globalLiveGamesData = newLivePage;
+            globalPropsData = newLeaders.sort(function() { return 0.5 - Math.random(); }).slice(0, 6); // Grab 6 random stars
+            
+            var trackHtml = "";
+            if (allLive.length > 0) trackHtml = '<span class="ticker-section-head" style="color:#ff007f;">LIVE NOW</span>' + allLive.join('');
+            else trackHtml = '<span class="ticker-section-head">UPCOMING</span>' + allSched.join('');
+            
+            document.getElementById('ticker-track').innerHTML = trackHtml + trackHtml;
+        }
+
+        // --- RENDER LIVE PAGE (WITH WIN PROBABILITY) ---
+        function renderLivePage() {
+            document.getElementById('live-game-screen').style.display = 'flex';
+            var track = document.getElementById('live-grid-track');
+            
+            if (globalLiveGamesData.length === 0) {
+                track.innerHTML = '<div style="color:rgba(255,255,255,0.5); font-size:4vh; text-align:center; grid-column: 1 / -1; padding-top: 10vh;">NO LIVE GAMES</div>';
+            } else {
+                track.innerHTML = globalLiveGamesData.map(function(g) { 
+                    var probHtml = "";
+                    if (g.aProb !== null && g.hProb !== null) {
+                        probHtml = '<div class="win-prob-container"><div class="win-prob-labels"><span style="color:#00ffff;">' + g.aProb.toFixed(1) + '%</span><span style="font-size:1.5vh; color:rgba(255,255,255,0.4);">WIN PROBABILITY</span><span style="color:#ff007f;">' + g.hProb.toFixed(1) + '%</span></div><div class="win-prob-track"><div class="win-prob-away" style="width:' + g.aProb + '%"></div><div class="win-prob-home" style="width:' + g.hProb + '%"></div></div></div>';
+                    }
+                    return '<div class="glass-card"><div class="card-meta"><span style="color:#00ffff; text-shadow: 0 0 10px #00ffff;">● LIVE</span><span>' + g.league + '</span><span>' + g.status + '</span></div><div class="card-row"><div class="card-team"><img src="' + g.aLogo + '">' + g.away + '</div><div class="card-val-lg">' + g.aScore + '</div></div><div class="card-row"><div class="card-team"><img src="' + g.hLogo + '">' + g.home + '</div><div class="card-val-lg">' + g.hScore + '</div></div>' + probHtml + '<div class="card-footer" style="margin-top: 1.5vh;"><span>' + g.clock + '</span><span style="color:#39ff14">' + g.tv + '</span></div></div>';
+                }).join('');
+            }
+            slideTimer = setTimeout(nextSlide, 15000);
+        }
+
+        // --- RENDER PROP SHOP (PREMIUM INTEGRATION) ---
+        function showProps() {
+            document.getElementById('props-screen').style.display = 'flex';
+            var track = document.getElementById('props-grid-track');
+            
+            if (globalPropsData.length === 0) {
+                track.innerHTML = '<div style="color:rgba(255,255,255,0.5); font-size:4vh; text-align:center; grid-column: 1 / -1; padding-top: 10vh;">PROPS UNAVAILABLE</div>';
+            } else {
+                track.innerHTML = globalPropsData.map(function(p) {
+                    // Simulate a prop line using their season average as the Over/Under line
+                    var simLine = (parseFloat(p.value) * 0.85).toFixed(1); 
+                    if (isNaN(simLine)) simLine = "0.5";
+                    
+                    return '<div class="prop-card"><img src="' + p.headshot + '" class="prop-headshot"><div class="prop-details"><div class="prop-name">' + p.name + '</div><div class="prop-game">' + p.teamCode + ' vs ' + p.oppCode + '</div><div class="prop-line">O/U ' + simLine + ' ' + p.statDesc + '</div><span class="prop-odds">' + p.baseOdds + '</span></div></div>';
+                }).join('');
+            }
+            slideTimer = setTimeout(nextSlide, 12000);
+        }
+
+        // --- RENDER MY SQUAD (GLASS CSS) ---
+        function showMySquad() {
+            document.getElementById('mysquad-screen').style.display = 'flex';
+            var gamesHtml = "";
+            globalRawGames.forEach(function(g) { 
+                for(var i=0; i<mySquadTeams.length; i++) {
+                    if(g.searchString.indexOf(mySquadTeams[i]) > -1) { 
+                        gamesHtml += '<div class="glass-card squad-game-card"><div class="card-meta"><span>' + g.league + '</span><span style="color:#00ffff">' + g.tv + '</span></div><div class="card-row"><div class="card-team"><img src="' + g.aLogo + '">' + g.away + '</div><div class="card-val-lg">' + g.aScore + '</div></div><div class="card-row"><div class="card-team"><img src="' + g.hLogo + '">' + g.home + '</div><div class="card-val-lg">' + g.hScore + '</div></div><div class="card-footer" style="justify-content:center; color:#39ff14;">' + (g.state === 'in' ? 'LIVE NOW' : (g.state === 'post' ? 'FINAL' : g.status)) + '</div></div>';
+                        break; 
+                    }
+                }
+            });
+            document.getElementById('squad-games-track').innerHTML = gamesHtml || '<div style="text-align:center; color:rgba(255,255,255,0.4); font-size:3vh; margin-top:5vh; border: 1px dashed rgba(255,255,255,0.2); padding: 4vh; border-radius: 1.5vh;">NO ACTIVE/UPCOMING GAMES</div>';
+            slideTimer = setTimeout(nextSlide, 12000);
+        }
+
+        async function showRankings() {
+            document.getElementById('rankings-screen').style.display = 'flex';
+            try {
+                var res = await fetch('https://site.api.espn.com/apis/site/v2/sports/football/college-football/rankings');
+                var d = await res.json();
+                var html = d.rankings[0].ranks.slice(0, 15).map(function(r) { 
+                    return '<div class="rank-row"><span class="rank-num">' + r.current + '</span><img style="width:8vh; margin:0 3vh; filter:drop-shadow(0 2px 5px rgba(0,0,0,0.5));" src="' + r.team.logo + '"><span><span class="rank-name">' + r.team.nickname + '</span></span><span style="margin-left:auto; font-size:4vh; color:rgba(255,255,255,0.6); font-weight:900;">' + (r.recordSummary || '0-0') + '</span></div>'; 
+                }).join('');
+                document.getElementById('rankings-list-track').innerHTML = html;
+            } catch(e) {}
+            slideTimer = setTimeout(nextSlide, 12000);
+        }
+
+        async function showStandings(league, sport) {
+            document.getElementById(league + '-screen').style.display = 'flex';
+            try {
+                var res = await fetch('https://site.api.espn.com/apis/v2/sports/' + sport + '/' + league + '/standings');
+                var d = await res.json();
+                var groups = d.children || [d];
+                var html = groups.slice(0,4).map(function(group) {
+                    var entries = group.standings ? group.standings.entries : (group.children ? group.children[0].standings.entries : []);
+                    var rows = entries.slice(0,5).map(function(t) {
+                        var recText = '0-0';
+                        var overallNode = t.stats.find(function(st) { return st.name === 'All Splits' || st.name === 'overall'; });
+                        if (overallNode && overallNode.summary) recText = overallNode.summary;
+                        return '<div class="st-row"><img style="width:4.8vh; margin:0 1.5vh; filter:drop-shadow(0 2px 4px rgba(0,0,0,0.5));" src="' + t.team.logos[0].href + '"><div style="flex:1; color:white; font-size:3vh;">' + t.team.displayName + '</div><div style="color:#00ffff;">' + recText + '</div></div>';
+                    }).join('');
+                    return '<div class="division-block"><div class="division-header">' + (group.name || "STANDINGS") + '</div>' + rows + '</div>';
+                }).join('');
+                document.getElementById(league + '-track').innerHTML = html;
+            } catch(e) {}
+            slideTimer = setTimeout(nextSlide, 15000);
+        }
+
+        window.addEventListener('load', async function() { 
+            updateClock(); setInterval(updateClock, 1000);
+            renderSkeletons();
+            await updateSportsTicker();
+            nextSlide(); // Begin rotation
+            
+            // Background refresh data every 5 minutes
+            setInterval(function(){ updateSportsTicker().catch(function(){}); }, 300000);
         });
-        
-        // NEW: This function runs when the "Start Quest" button is clicked
-        startQuestBtn.addEventListener('click', () => {
-            introScreen.style.display = 'none';
-            mainContainer.style.display = 'block'; // Use 'block' to respect original layout
-            playerDisplay.style.display = 'block';
-            challengeCounter = 1;
-            startNewChallenge();
-        });
-        
-        document.getElementById('complete-challenge-btn').addEventListener('click', () => updateScore(currentChallenge.points));
-        document.getElementById('skip-challenge-btn').addEventListener('click', () => updateScore(-5));
-        document.getElementById('impossible-btn').addEventListener('click', () => updateScore(0));
-        nextQuestBtn.addEventListener('click', startNewChallenge);
-        doneBtn.addEventListener('click', async () => { if (currentPlayerName) { const mode = isKidMode ? 'Kid' : 'Adult'; await addScoreToSheet(currentPlayerName, sessionScore, mode); } else { window.location.reload(); } });
-        modeToggleBtn.addEventListener('click', () => { isKidMode = !isKidMode; modeToggleBtn.textContent = isKidMode ? 'Switch to Adult Mode' : 'Switch to Kid Mode'; });
-        
-        challengeText.textContent = "Loading challenges...";
-        fetchChallenges();
-    });
     </script>
 </body>
 </html>
