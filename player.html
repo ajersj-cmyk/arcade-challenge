@@ -50,7 +50,7 @@
         .score-item { display: inline-flex !important; flex-direction: row !important; align-items: center !important; padding: 0 5vw; height: 100%; vertical-align: middle; flex-wrap: nowrap !important; }
         .team-box { display: flex !important; flex-direction: row !important; align-items: center !important; flex-wrap: nowrap !important; }
         
-        /* AGGRESSIVE WHITE OUTLINE STROKE FOR ALL LOGOS (Fixes Dark College Logos) */
+        /* AGGRESSIVE WHITE OUTLINE STROKE FOR ALL LOGOS */
         .team-logo, .card-team img, .st-logo, .rank-logo, .prop-headshot, .league-logo, .golf-headshot, .fighter-img, .tv-channel img {
             filter: drop-shadow(1px 1px 0px #fff) drop-shadow(-1px -1px 0px #fff) drop-shadow(1px -1px 0px #fff) drop-shadow(-1px 1px 0px #fff) drop-shadow(0px 4px 10px rgba(0,0,0,0.8));
         }
@@ -184,7 +184,7 @@
         .r-btn { width: 100%; padding: 20px; margin-bottom: 10px; background: #1a1a1a; border: 1px solid #333; color: white; font-weight: bold; border-radius: 8px; font-size: 3vh; }
     </style>
 </head>
-<body>
+<body class="theme-cyan">
 
     <div class="cyber-grid-container"><div class="cyber-grid"></div></div>
     
@@ -482,6 +482,75 @@
             } catch (e) {}
         }
 
+        /* 100% REAL VEGAS ODDS MATCHER (Bypasses CORS via proxy to hit Bovada's public JSON) */
+        async function fetchRealProps() {
+            var realProps = [];
+            var sportsToTry = ['baseball/mlb', 'football/nfl', 'basketball/nba'];
+
+            for (var i = 0; i < sportsToTry.length; i++) {
+                try {
+                    var bovadaUrl = 'https://www.bovada.lv/services/sports/api/v1/events/sports/' + sportsToTry[i];
+                    var proxyUrl = 'https://api.allorigins.win/get?url=' + encodeURIComponent(bovadaUrl);
+
+                    var res = await fetch(proxyUrl);
+                    var data = await res.json();
+                    var parsedData = JSON.parse(data.contents);
+
+                    if (parsedData && parsedData.length > 0) {
+                        parsedData.forEach(function(section) {
+                            if (section.events) {
+                                section.events.forEach(function(ev) {
+                                    if (ev.displayGroups) {
+                                        ev.displayGroups.forEach(function(group) {
+                                            if (group.markets) {
+                                                group.markets.forEach(function(market) {
+                                                    // Parse real player prop strings directly from the sportsbook
+                                                    if (market.description && market.description.toLowerCase().indexOf("player") > -1 && market.description.indexOf(" - ") > -1) {
+                                                        var parts = market.description.split(" - ");
+                                                        var statDesc = parts[0].replace("Player", "").trim();
+                                                        var playerName = parts[1].trim();
+
+                                                        if (market.outcomes && market.outcomes.length > 0) {
+                                                            var outcome = market.outcomes[0];
+                                                            var lineMatch = outcome.description.match(/[\d\.]+/);
+                                                            var line = lineMatch ? lineMatch[0] : "";
+                                                            var odds = (outcome.price && outcome.price.american) ? outcome.price.american : "-110";
+
+                                                            // Dedup entries and push valid live props
+                                                            if (line && !realProps.some(function(p){ return p.name === playerName && p.statDesc === statDesc; })) {
+                                                                realProps.push({
+                                                                    name: playerName,
+                                                                    statDesc: statDesc.toUpperCase(),
+                                                                    line: "O/U " + line,
+                                                                    odds: odds > 0 ? "+" + odds : odds,
+                                                                    game: ev.description, // Automatically formats "Away Team @ Home Team"
+                                                                    headshot: 'https://a.espncdn.com/combiner/i?img=/i/headshots/' + sportsToTry[i].split('/')[0] + '/players/full/default.png',
+                                                                    teamLogo: 'https://a.espncdn.com/combiner/i?img=/i/teamlogos/default-team-logo-500.png'
+                                                                });
+                                                            }
+                                                        }
+                                                    }
+                                                });
+                                            }
+                                        });
+                                    }
+                                });
+                            }
+                        });
+                    }
+                } catch (e) {
+                    console.error("Odds engine fetch failed for " + sportsToTry[i]);
+                }
+            }
+
+            if (realProps.length > 0) {
+                realProps.sort(function() { return 0.5 - Math.random(); });
+                globalPropsData = realProps.slice(0, 10);
+            } else {
+                globalPropsData = [];
+            }
+        }
+
         function applyScroll(viewportId, trackId, baseDelay = 12000) {
             setTimeout(function() {
                 var vH = document.getElementById(viewportId).clientHeight;
@@ -531,7 +600,7 @@
             clearTimeout(slideTimer);
             clearTimeout(triviaRevealTimer);
             
-            // Cycle neon theme colors once per transition
+            // Clean, CPU-Friendly Neon Theme Rotation per slide
             var neonThemes = ['theme-cyan', 'theme-pink', 'theme-green'];
             document.body.classList.remove(...neonThemes);
             if(typeof window.currentThemeIndex === 'undefined') window.currentThemeIndex = 0;
@@ -747,6 +816,10 @@
             
             globalLiveGamesData = newLivePage;
             globalTVGuideData = newTVGuide;
+            globalLeadersData = newLeaders.slice();
+
+            // Initiate our new real Vegas odds fetcher
+            await fetchRealProps();
             
             newMarqueeGames.sort(function(a,b) { return b.weight - a.weight; });
             var marqueeHtml = newMarqueeGames.slice(0, 2).map(function(g) {
@@ -764,9 +837,6 @@
             }).join('');
             var marqueeTrack = document.getElementById('marquee-track');
             if(marqueeTrack) marqueeTrack.innerHTML = marqueeHtml || '<div style="color:#aaa; font-size:3vh; text-align:center; padding-top:2vh;">No Marquee Games Today</div>';
-
-            globalLeadersData = newLeaders.slice();
-            globalPropsData = newLeaders.sort(function() { return 0.5 - Math.random(); }).slice(0, 6); 
             
             var trackHtml = "";
             if (allLive.length > 0) trackHtml = '<span class="ticker-section-head neon-text-cycle">LIVE NOW</span>' + allLive.join('');
@@ -808,29 +878,11 @@
             document.getElementById('props-screen').style.display = 'flex';
             var track = document.getElementById('props-grid-track');
             if (globalPropsData.length === 0) { 
-                track.innerHTML = '<div class="neon-text-cycle" style="font-size:4vh; font-weight:900; text-align:center; grid-column: 1 / -1; padding-top: 10vh;">PROPS UNAVAILABLE</div>'; 
+                track.innerHTML = '<div class="neon-text-cycle" style="font-size:4vh; font-weight:900; text-align:center; grid-column: 1 / -1; padding-top: 10vh;">NO ACTIVE PROPS CURRENTLY BOARDED</div>'; 
                 applyScroll('props-viewport', 'props-grid-track', 10000); 
             } else {
                 track.innerHTML = globalPropsData.map(function(p) {
-                    var label = (p.statDesc || "STAT").toUpperCase();
-                    var line = "0.5";
-                    
-                    // Filter out season decimal stats and convert to realistic daily props
-                    if (label.indexOf('AVG') > -1 || label.indexOf('BATTING') > -1 || (p.value && p.value.toString().indexOf('.') === 0)) {
-                        label = "TOTAL HITS"; 
-                        line = "0.5";
-                    } else if (label.indexOf('ERA') > -1) {
-                        label = "EARNED RUNS ALLOWED";
-                        line = "2.5";
-                    } else {
-                        // Dynamically calculate a realistic daily over/under based on their stats
-                        var vFloat = parseFloat(p.value);
-                        if (!isNaN(vFloat) && vFloat > 0) {
-                            line = (vFloat < 5) ? (Math.floor(vFloat) + 0.5).toFixed(1) : (vFloat * 0.85).toFixed(1);
-                        }
-                    }
-
-                    return '<div class="prop-card"><img src="' + p.headshot + '" onerror="this.src=\'' + p.teamLogo + '\'; this.onerror=null;" class="prop-headshot"><div class="prop-details"><div class="prop-name">' + p.name + '</div><div class="prop-game neon-text-cycle">' + p.teamCode + ' vs ' + p.oppCode + '</div><div class="prop-line-container"><div class="prop-line neon-text-cycle">O/U ' + line + ' ' + label + '</div><span class="prop-odds neon-text-cycle">' + p.baseOdds + '</span></div></div></div>';
+                    return '<div class="prop-card"><img src="' + p.headshot + '" onerror="this.src=\'' + p.teamLogo + '\'; this.onerror=null;" class="prop-headshot"><div class="prop-details"><div class="prop-name">' + p.name + '</div><div class="prop-game neon-text-cycle">' + p.game + '</div><div class="prop-line-container"><div class="prop-line neon-text-cycle">' + p.statDesc + ': ' + p.line + '</div><span class="prop-odds neon-text-cycle">' + p.odds + '</span></div></div></div>';
                 }).join('');
                 applyScroll('props-viewport', 'props-grid-track', 15000);
             }
