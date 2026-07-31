@@ -18,25 +18,31 @@
         #fs-toggle:hover { opacity: 1; color: #00ffff; text-shadow: 0 0 15px #00ffff; }
         #master-clock { position: fixed; top: 2.5vh; left: 3vw; z-index: 15000; color: #fff; font-family: 'Share Tech Mono', monospace; font-size: 4.5vh; font-weight: 900; text-shadow: 0 0 15px rgba(255,255,255,0.6); opacity: 0.9; letter-spacing: 0.2vw; }
 
-        /* TICKER */
+        /* TICKER - REVERTED TO ORIGINAL LOGIC */
         #sports-ticker { position: absolute; bottom: 0; left: 0; width: 100%; height: var(--ticker-height); background: rgba(5, 10, 15, 0.6); backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px); border-top: 1px solid rgba(255, 255, 255, 0.15); box-shadow: 0 -5px 25px rgba(0,0,0,0.5); z-index: 100; display: flex; align-items: center; overflow: hidden; white-space: nowrap; }
-        #ticker-track { display: inline-flex; height: 100%; align-items: center; width: max-content; will-change: transform; } 
+        #ticker-track { display: inline-flex; animation: scrollTicker 80s linear infinite; height: 100%; align-items: center; width: max-content; will-change: transform; } 
         @keyframes scrollTicker { 0% { transform: translate3d(0, 0, 0); } 100% { transform: translate3d(-50%, 0, 0); } }
 
         .ticker-section-head { display: inline-flex; align-items: center; justify-content: center; padding: 0 3vw; height: 100%; color: #00ffff; font-size: 4rem; letter-spacing: 0.3vw; font-weight: 900; text-shadow: 0 0 20px rgba(0,255,255,0.4); }
         .score-item { display: inline-flex !important; flex-direction: row !important; align-items: center !important; padding: 0 5vw; height: 100%; vertical-align: middle; flex-wrap: nowrap !important; }
         .team-box { display: flex !important; flex-direction: row !important; align-items: center !important; flex-wrap: nowrap !important; }
-        .team-logo { width: 11vh; height: 11vh; object-fit: contain; margin-right: 1.5vw; flex-shrink: 0; filter: drop-shadow(0px 5px 10px rgba(0,0,0,0.5)); } 
         .team-score { font-size: 4.8rem; line-height: 1; color: #fff; margin-right: 0.8vw; font-weight: 900; }
         .vs-label { color: rgba(255,255,255,0.3); font-size: 2.7rem; margin: 0 2.5vw; font-weight: bold; }
         .game-status { margin-left: 2vw; color: #facc15; font-size: 2.7rem; text-transform: uppercase; letter-spacing: 0.1vw; }
         .live-pulse { animation: pulsePink 1.5s ease-in-out infinite; color: #ff007f; font-weight: 900; margin-right: 1.5vw; font-size: 2.7rem; text-shadow: 0 0 15px #ff007f; }
         @keyframes pulsePink { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
 
+        /* ALL LOGOS - WHITE OUTLINE FIX FOR DARK TEAMS LIKE OHIO STATE */
+        .team-logo, .card-team img, .st-logo, .rank-logo, .prop-headshot, .league-logo {
+            filter: drop-shadow(0px 0px 2px rgba(255, 255, 255, 1)) drop-shadow(0px 0px 5px rgba(255, 255, 255, 0.8));
+        }
+        
+        .team-logo { width: 11vh; height: 11vh; object-fit: contain; margin-right: 1.5vw; flex-shrink: 0; } 
+
         /* SLIDES */
         .slide-screen { position: absolute; inset: 0; z-index: 10; display: none; flex-direction: column; padding: 0 4vh; align-items: center; overflow: hidden; }
         .screen-header { margin-top: 9vh; font-size: 9.5vh; font-weight: 900; color: #fff; text-transform: uppercase; letter-spacing: 1vh; margin-bottom: 2vh; z-index: 20; border-bottom: 1px solid rgba(255,255,255,0.2); padding-bottom: 1vh; width: 95%; text-align: center; display: block; }
-        .league-logo { height: 1em; margin-right: 1.5vw; filter: drop-shadow(0px 0px 10px rgba(255, 255, 255, 0.4)); display: inline-block; vertical-align: middle; margin-top: -1.5vh; }
+        .league-logo { height: 1em; margin-right: 1.5vw; display: inline-block; vertical-align: middle; margin-top: -1.5vh; }
         
         .content-viewport { width: 95%; height: 65vh; overflow: hidden; position: relative; z-index: 20; }
         .grid-track, .list-track { padding-bottom: 5vh; will-change: transform; }
@@ -52,35 +58,34 @@
 
         .card-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1vh; width: 100%; z-index: 2; position: relative; }
         .card-team { display: flex; align-items: center; gap: 2vh; font-size: 5.2vh; font-weight: 900; color: white; text-transform: uppercase; text-shadow: 0 2px 4px rgba(0,0,0,0.8); } 
-        .card-team img { width: 8.2vh; height: 8.2vh; object-fit: contain; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.5)); } 
+        .card-team img { width: 8.2vh; height: 8.2vh; object-fit: contain; } 
         .card-val-lg { font-weight: 900; color: #fff; font-size: 5.7vh; text-shadow: 0 2px 5px rgba(0,0,0,0.8); } 
         .card-meta { display: flex; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 1vh; margin-bottom: 1.5vh; font-size: 3vh; color: rgba(255,255,255,0.6); font-weight: 900; text-transform: uppercase; letter-spacing: 0.1vw; z-index: 2; position: relative; }
         .card-footer { margin-top: auto; padding-top: 1.2vh; border-top: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: space-between; align-items: center; color: rgba(255,255,255,0.5); font-size: 2.8vh; text-transform: uppercase; font-weight: bold; z-index: 2; position: relative; }
 
-        /* TRENDS & MOMENTUM (MLB Bases & NFL Win Prob) */
+        /* TRENDS & MOMENTUM */
         .trend-container { display: flex; align-items: center; gap: 2vh; margin-top: 1vh; padding: 1vh; background: rgba(0,0,0,0.3); border-radius: 1vh; z-index: 2; position: relative; }
         .trend-label { font-size: 2vh; color: rgba(255,255,255,0.5); font-weight: 900; letter-spacing: 0.1vw; text-transform: uppercase; }
-        
         .diamond-graphic { width: 5vh; height: 5vh; transform: rotate(45deg); display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 2px; }
         .base { background: rgba(255,255,255,0.2); border-radius: 2px; }
         .base.active { background: #39ff14; box-shadow: 0 0 10px #39ff14; }
         .outs-dots { display: flex; gap: 1vh; }
         .out-dot { width: 1.5vh; height: 1.5vh; border-radius: 50%; background: rgba(255,255,255,0.2); }
         .out-dot.active { background: #ff007f; box-shadow: 0 0 10px #ff007f; }
-
         .win-prob-track { flex: 1; height: 1vh; background: rgba(255,255,255,0.1); border-radius: 0.5vh; overflow: hidden; display: flex; margin: 0 2vh; }
         .win-prob-away { height: 100%; background: #00ffff; box-shadow: 0 0 10px #00ffff; }
         .win-prob-home { height: 100%; background: #ff007f; box-shadow: 0 0 10px #ff007f; }
         .trend-streak { font-size: 2.8vh; color: #facc15; font-weight: 900; letter-spacing: 0.2vw; }
 
-        /* PROP SHOP SLIDE (FIXED) */
+        /* PROP SHOP SLIDE (FIXED TEXT WRAPPING) */
         .prop-card { background: rgba(10, 15, 20, 0.5); backdrop-filter: blur(25px); border: 1px solid rgba(212, 175, 55, 0.3); border-top: 1px solid rgba(212, 175, 55, 0.6); border-radius: 1.5vh; padding: 3vh; display: flex; align-items: center; gap: 3vh; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
         .prop-headshot { width: 14vh; height: 14vh; border-radius: 50%; border: 3px solid #d4af37; object-fit: cover; object-position: top; background: rgba(0,0,0,0.5); box-shadow: 0 0 20px rgba(212, 175, 55, 0.3); flex-shrink: 0; }
         .prop-details { flex: 1; display: flex; flex-direction: column; justify-content: center; }
         .prop-name { font-size: 4.5vh; font-weight: 900; color: white; text-transform: uppercase; margin-bottom: 0.5vh; line-height: 1; }
         .prop-game { font-size: 2.5vh; color: rgba(255,255,255,0.5); font-weight: bold; text-transform: uppercase; letter-spacing: 0.1vw; }
         .prop-line-container { display: flex; justify-content: space-between; align-items: center; background: rgba(212, 175, 55, 0.1); padding: 1.5vh 2.5vh; border-radius: 1vh; border: 1px solid rgba(212, 175, 55, 0.2); margin-top: 1.5vh; }
-        .prop-line { font-size: 3vh; color: #d4af37; font-weight: 900; line-height: 1.2; word-wrap: break-word; flex: 1; padding-right: 2vh; }
+        /* Removed nowrap so text can break into two lines */
+        .prop-line { font-size: 3vh; color: #d4af37; font-weight: 900; line-height: 1.2; flex: 1; padding-right: 2vh; word-wrap: break-word; }
         .prop-odds { font-size: 3.5vh; color: #39ff14; font-weight: 900; flex-shrink: 0; }
 
         /* SKELETON SHIMMER */
@@ -157,33 +162,16 @@
             if(clockEl) clockEl.innerText = h + ':' + m + ' ' + ampm;
         }
 
-        function applyScroll(viewportId, trackId, baseDelay = 12000) {
-            var vH = document.getElementById(viewportId).clientHeight;
-            var track = document.getElementById(trackId);
-            var fH = track.scrollHeight;
-            
-            track.style.animation = 'none';
-            track.style.transform = 'translate3d(0,0,0)';
-            
-            if (fH > vH) { 
-                var sD = fH - vH + 100;
-                track.style.setProperty('--scroll-end', '-' + sD + 'px'); 
-                var duration = (sD / 40); 
-                void track.offsetWidth;
-                track.style.animation = 'scrollVerticalOnePass ' + duration + 's linear 2s forwards'; 
-                slideTimer = setTimeout(nextSlide, (duration * 1000) + 4000); 
-            } else { 
-                slideTimer = setTimeout(nextSlide, baseDelay); 
-            }
-        }
-
+        // ORIGINAL BOTTOM TICKER LOGIC REVERTED
         function applyTickerSpeed() {
             var track = document.getElementById('ticker-track');
             if(!track) return;
-            var trackWidth = track.scrollWidth / 2; 
+            var trackWidth = track.scrollWidth / 2;
             if(trackWidth <= 0) return;
-            var duration = trackWidth / 120; 
-            if (duration < 10) duration = 10; 
+            var speedMap = {1:30, 2:45, 3:65, 4:90, 5:120, 6:160, 7:210, 8:270, 9:340, 10:420};
+            var pixelsPerSec = speedMap[5] || 120; // Hardcoded default to 5
+            var duration = trackWidth / pixelsPerSec;
+            if (duration < 10) duration = 10;
             track.style.animationDuration = duration + 's';
         }
 
@@ -259,7 +247,6 @@
                             var hName = h.team.shortDisplayName, aName = a.team.shortDisplayName;
                             var tv = (comp.broadcasts && comp.broadcasts[0]) ? comp.broadcasts[0].names[0] : 'TV';
                             
-                            // EXTRAT TRENDS: Win Prob OR Baseball Diamonds OR Pre-game Streak
                             var trendData = { type: null };
                             if (status.state === 'in') {
                                 if (comp.situation && comp.situation.lastPlay && comp.situation.lastPlay.probability) {
@@ -289,7 +276,6 @@
                                 allSched.push('<span class="score-item"><div class="team-box"><img class="team-logo" src="' + aLogo + '"></div><span class="vs-label">@</span><div class="team-box"><img class="team-logo" src="' + hLogo + '"></div><span class="game-status" style="color:rgba(255,255,255,0.5)">' + new Date(ev.date).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}) + '</span></span>');
                             }
 
-                            // EXTRACT PROPS WITH FALLBACKS
                             comp.competitors.forEach(function(competitor) {
                                 if (competitor.leaders && competitor.leaders.length > 0) {
                                     competitor.leaders.forEach(function(cat) {
@@ -333,63 +319,63 @@
             setTimeout(applyTickerSpeed, 100);
         }
 
-        // GENERATE TREND HTML HELPER
         function buildTrendHtml(trend) {
             if (!trend || !trend.type) return '';
-            
             if (trend.type === 'winprob') {
                 return '<div class="trend-container"><div class="trend-label" style="color:#00ffff;">' + trend.aProb.toFixed(1) + '%</div><div class="win-prob-track"><div class="win-prob-away" style="width:' + trend.aProb + '%"></div><div class="win-prob-home" style="width:' + trend.hProb + '%"></div></div><div class="trend-label" style="color:#ff007f;">' + trend.hProb.toFixed(1) + '%</div></div>';
             }
-            
             if (trend.type === 'mlb') {
                 var oHTML = '<div class="outs-dots">';
                 for(var i=1; i<=3; i++) { oHTML += '<div class="out-dot ' + (trend.outs >= i ? 'active' : '') + '"></div>'; }
                 oHTML += '</div>';
-                
                 var dHTML = '<div class="diamond-graphic"><div class="base ' + (trend.b2 ? 'active' : '') + '"></div><div class="base ' + (trend.b1 ? 'active' : '') + '"></div><div class="base ' + (trend.b3 ? 'active' : '') + '"></div><div class="base" style="background:transparent;"></div></div>';
-                
                 return '<div class="trend-container"><span class="trend-label">ON BASE</span>' + dHTML + '<span class="trend-label" style="margin-left:2vh;">OUTS</span>' + oHTML + '</div>';
             }
-            
             if (trend.type === 'records') {
                 return '<div class="trend-container" style="justify-content:space-between; width:100%; background:transparent; padding:0;"><span class="trend-streak">' + trend.aRec + '</span><span class="trend-label">SEASON RECORD</span><span class="trend-streak">' + trend.hRec + '</span></div>';
             }
             return '';
         }
 
+        // REVERTED ORIGINAL VERTICAL SCROLL LOGIC
         function renderLivePage() {
             document.getElementById('live-game-screen').style.display = 'flex';
             var track = document.getElementById('live-grid-track');
             
             if (globalLiveGamesData.length === 0) {
                 track.innerHTML = '<div style="color:rgba(255,255,255,0.5); font-size:4vh; text-align:center; grid-column: 1 / -1; padding-top: 10vh;">NO LIVE GAMES</div>';
-                applyScroll('live-viewport', 'live-grid-track', 10000);
+                slideTimer = setTimeout(nextSlide, 10000);
             } else {
                 track.innerHTML = globalLiveGamesData.map(function(g) { 
                     return '<div class="glass-card"><div class="card-meta"><span style="color:#00ffff; text-shadow: 0 0 10px #00ffff;">● LIVE</span><span>' + g.league + '</span><span>' + g.status + '</span></div><div class="card-row"><div class="card-team"><img src="' + g.aLogo + '">' + g.away + '</div><div class="card-val-lg">' + g.aScore + '</div></div><div class="card-row"><div class="card-team"><img src="' + g.hLogo + '">' + g.home + '</div><div class="card-val-lg">' + g.hScore + '</div></div>' + buildTrendHtml(g.trend) + '<div class="card-footer" style="margin-top: 1vh;"><span>' + g.clock + '</span><span style="color:#39ff14">' + g.tv + '</span></div></div>';
                 }).join('');
-                applyScroll('live-viewport', 'live-grid-track', 15000);
+                
+                var vH = document.getElementById('live-viewport').clientHeight, fH = track.scrollHeight;
+                if (fH > vH) { var sD = fH - vH + 100; track.style.setProperty('--scroll-end', '-' + sD + 'px'); track.style.animation = 'scrollVerticalOnePass ' + (sD/50) + 's linear 2s forwards'; slideTimer = setTimeout(nextSlide, (sD/50 * 1000) + 5000); } else { slideTimer = setTimeout(nextSlide, 15000); }
             }
         }
 
+        // REVERTED ORIGINAL VERTICAL SCROLL LOGIC
         function showProps() {
             document.getElementById('props-screen').style.display = 'flex';
             var track = document.getElementById('props-grid-track');
             
             if (globalPropsData.length === 0) {
                 track.innerHTML = '<div style="color:rgba(255,255,255,0.5); font-size:4vh; text-align:center; grid-column: 1 / -1; padding-top: 10vh;">PROPS UNAVAILABLE</div>';
-                applyScroll('props-viewport', 'props-grid-track', 8000);
+                slideTimer = setTimeout(nextSlide, 10000);
             } else {
                 track.innerHTML = globalPropsData.map(function(p) {
                     var valFloat = parseFloat(p.value);
                     var simLine = (!isNaN(valFloat) && valFloat > 0) ? (valFloat * 0.85).toFixed(1) : "0.5"; 
-                    // ADDED ONERROR FALLBACK FOR PROP HEADSHOTS
                     return '<div class="prop-card"><img src="' + p.headshot + '" onerror="this.src=\'' + p.teamLogo + '\'; this.onerror=null;" class="prop-headshot"><div class="prop-details"><div class="prop-name">' + p.name + '</div><div class="prop-game">' + p.teamCode + ' vs ' + p.oppCode + '</div><div class="prop-line-container"><div class="prop-line">O/U ' + simLine + ' ' + p.statDesc + '</div><span class="prop-odds">' + p.baseOdds + '</span></div></div></div>';
                 }).join('');
-                applyScroll('props-viewport', 'props-grid-track', 15000);
+                
+                var vH = document.getElementById('props-viewport').clientHeight, fH = track.scrollHeight;
+                if (fH > vH) { var sD = fH - vH + 100; track.style.setProperty('--scroll-end', '-' + sD + 'px'); track.style.animation = 'scrollVerticalOnePass ' + (sD/50) + 's linear 2s forwards'; slideTimer = setTimeout(nextSlide, (sD/50 * 1000) + 5000); } else { slideTimer = setTimeout(nextSlide, 15000); }
             }
         }
 
+        // REVERTED ORIGINAL VERTICAL SCROLL LOGIC
         function showMySquad() {
             document.getElementById('mysquad-screen').style.display = 'flex';
             var gamesHtml = "";
@@ -401,10 +387,15 @@
                     }
                 }
             });
-            document.getElementById('squad-games-track').innerHTML = gamesHtml || '<div style="text-align:center; color:rgba(255,255,255,0.4); font-size:3vh; margin-top:5vh; border: 1px dashed rgba(255,255,255,0.2); padding: 4vh; border-radius: 1.5vh;">NO ACTIVE/UPCOMING GAMES</div>';
-            applyScroll('mysquad-viewport', 'squad-games-track', 12000);
+            var track = document.getElementById('squad-games-track');
+            track.innerHTML = gamesHtml || '<div style="text-align:center; color:rgba(255,255,255,0.4); font-size:3vh; margin-top:5vh; border: 1px dashed rgba(255,255,255,0.2); padding: 4vh; border-radius: 1.5vh;">NO ACTIVE/UPCOMING GAMES</div>';
+            
+            var vH = document.getElementById('mysquad-viewport').clientHeight;
+            var maxH = track.scrollHeight;
+            if (maxH > vH) { var sD = maxH - vH + 120; track.style.setProperty('--scroll-end', '-' + sD + 'px'); track.style.animation = 'scrollVerticalOnePass ' + (sD/30) + 's linear forwards'; slideTimer = setTimeout(nextSlide, (sD/30 * 1000) + 4000); } else { slideTimer = setTimeout(nextSlide, 15000); }
         }
 
+        // REVERTED ORIGINAL VERTICAL SCROLL LOGIC
         async function showRankings() {
             document.getElementById('rankings-screen').style.display = 'flex';
             try {
@@ -413,11 +404,15 @@
                 var html = d.rankings[0].ranks.slice(0, 15).map(function(r) { 
                     return '<div class="rank-row"><span class="rank-num">' + r.current + '</span><img style="width:8vh; margin:0 3vh; filter:drop-shadow(0 2px 5px rgba(0,0,0,0.5));" src="' + r.team.logo + '"><span><span class="rank-name">' + r.team.nickname + '</span></span><span style="margin-left:auto; font-size:4vh; color:rgba(255,255,255,0.6); font-weight:900;">' + (r.recordSummary || '0-0') + '</span></div>'; 
                 }).join('');
-                document.getElementById('rankings-list-track').innerHTML = html;
-                applyScroll('rankings-viewport', 'rankings-list-track', 15000);
+                var track = document.getElementById('rankings-list-track');
+                track.innerHTML = html;
+                
+                var vH = document.getElementById('rankings-viewport').clientHeight, fH = track.scrollHeight;
+                if (fH > vH) { var sD = fH - vH + 100; track.style.setProperty('--scroll-end', '-' + sD + 'px'); track.style.animation = 'scrollVerticalOnePass ' + (sD/40) + 's linear forwards'; slideTimer = setTimeout(nextSlide, (sD/40 * 1000) + 3000); } else { slideTimer = setTimeout(nextSlide, 15000); }
             } catch(e) { slideTimer = setTimeout(nextSlide, 5000); }
         }
 
+        // REVERTED ORIGINAL VERTICAL SCROLL LOGIC
         async function showStandings(league, sport) {
             document.getElementById(league + '-screen').style.display = 'flex';
             try {
@@ -430,12 +425,15 @@
                         var recText = '0-0';
                         var overallNode = t.stats.find(function(st) { return st.name === 'All Splits' || st.name === 'overall'; });
                         if (overallNode && overallNode.summary) recText = overallNode.summary;
-                        return '<div class="st-row"><img style="width:4.8vh; margin:0 1.5vh; filter:drop-shadow(0 2px 4px rgba(0,0,0,0.5));" src="' + t.team.logos[0].href + '"><div style="flex:1; color:white; font-size:3vh;">' + t.team.displayName + '</div><div style="color:#00ffff;">' + recText + '</div></div>';
+                        return '<div class="st-row"><img class="st-logo" style="width:4.8vh; margin:0 1.5vh; filter:drop-shadow(0 2px 4px rgba(0,0,0,0.5));" src="' + t.team.logos[0].href + '"><div style="flex:1; color:white; font-size:3vh;">' + t.team.displayName + '</div><div style="color:#00ffff;">' + recText + '</div></div>';
                     }).join('');
                     return '<div class="division-block"><div class="division-header">' + (group.name || "STANDINGS") + '</div>' + rows + '</div>';
                 }).join('');
-                document.getElementById(league + '-track').innerHTML = html;
-                applyScroll(league + '-viewport', league + '-track', 15000);
+                var track = document.getElementById(league + '-track');
+                track.innerHTML = html;
+                
+                var vH = document.getElementById(league + '-viewport').clientHeight, fH = track.scrollHeight;
+                if (fH > vH) { var sD = fH - vH + 100; track.style.setProperty('--scroll-end', '-' + sD + 'px'); track.style.animation = 'scrollVerticalOnePass ' + (sD/50) + 's linear 2s forwards'; slideTimer = setTimeout(nextSlide, (sD/50 * 1000) + 5000); } else { slideTimer = setTimeout(nextSlide, 15000); }
             } catch(e) { slideTimer = setTimeout(nextSlide, 5000); }
         }
 
