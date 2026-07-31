@@ -6,76 +6,43 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
     <style>
-        /* --- CORE BASE & PERFORMANCE STYLES --- */
-        :root { 
-            --ticker-height: 22vh; 
-            --accent-color: #00ffff;
-            --accent-border: rgba(0, 255, 255, 0.4);
-            --accent-shadow: rgba(0, 255, 255, 0.2);
-        }
-
-        /* CPU-FRIENDLY THEME CYCLING (NO CONTINUOUS KEYFRAMES ON TEXT) */
-        body.theme-cyan {
-            --accent-color: #00ffff;
-            --accent-border: rgba(0, 255, 255, 0.4);
-            --accent-shadow: rgba(0, 255, 255, 0.2);
-        }
-        body.theme-pink {
-            --accent-color: #ff007f;
-            --accent-border: rgba(255, 0, 127, 0.4);
-            --accent-shadow: rgba(255, 0, 127, 0.2);
-        }
-        body.theme-green {
-            --accent-color: #39ff14;
-            --accent-border: rgba(57, 255, 20, 0.4);
-            --accent-shadow: rgba(57, 255, 20, 0.2);
-        }
-
-        body, html { 
-            margin: 0; padding: 0; width: 100vw; height: 100vh; 
-            background: #05050a; overflow: hidden; color: white; 
-            font-family: 'Inter', sans-serif; cursor: none; font-size: 3.5vh; 
-        }
+        /* --- ORIGINAL FAST BASE WITH CYBER GRID --- */
+        :root { --ticker-height: 22vh; --accent-color: #00ffff; --accent-glow: rgba(0,255,255,0.5); }
         
-        /* LIGHTWEIGHT ICY DYNAMIC WALLPAPER (GPU Accelerated Radial Gradients) */
-        .icy-overlay {
-            position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: radial-gradient(circle at 50% 20%, #0f1c2e 0%, #050a12 85%),
-                        radial-gradient(circle at 80% 80%, rgba(0, 255, 255, 0.08), transparent 50%),
-                        radial-gradient(circle at 20% 20%, rgba(255, 0, 127, 0.08), transparent 50%);
-            pointer-events: none;
-            z-index: 0;
-        }
-
+        body, html { margin: 0; padding: 0; width: 100vw; height: 100vh; background: #05050a; overflow: hidden; color: white; font-family: 'Inter', sans-serif; cursor: none; font-size: 3.5vh; }
+        
         /* ORIGINAL 3D CYBER GRID OVERLAY */
         .cyber-grid-container { position: absolute; inset: 0; z-index: 0; overflow: hidden; perspective: 100vh; pointer-events: none; }
-        .cyber-grid { position: absolute; top: 0; left: -50%; width: 200%; height: 100%; background-image: linear-gradient(rgba(0, 255, 255, 0.08) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 255, 255, 0.08) 1px, transparent 1px); background-size: 100px 100px; transform: rotateX(45deg); opacity: 0.5; }
+        .cyber-grid { position: absolute; top: 0; left: -50%; width: 200%; height: 100%; background-image: linear-gradient(rgba(0, 255, 255, 0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 255, 255, 0.1) 1px, transparent 1px); background-size: 100px 100px; transform: rotateX(45deg); opacity: 0.5; }
         
         body.remote-active .tv-wrapper { display: none !important; }
         body:not(.remote-active) #remote-controller { display: none !important; }
         .tv-wrapper { position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; display: flex; justify-content: center; align-items: center; overflow: hidden; z-index: 2; }
 
-        /* RELIABLE TOP CONTROLS */
-        #settings-gear { position: fixed; top: 2.5vh; right: 8vw; z-index: 25000; width: 4.5vh; height: 4.5vh; cursor: pointer; opacity: 0.8; transition: transform 0.3s ease; fill: var(--accent-color); }
+        /* RELIABLE TOP CONTROLS (INLINE SVG FOR ANDROID TV) */
+        #settings-gear { position: fixed; top: 2.5vh; right: 8vw; z-index: 25000; width: 4.5vh; height: 4.5vh; cursor: pointer; opacity: 0.8; transition: transform 0.3s ease; fill: #00ffff; }
         #settings-gear:hover { opacity: 1; transform: rotate(90deg); fill: #ff007f; }
-        #fs-toggle { position: fixed; top: 2.5vh; right: 3vw; z-index: 25000; background: none; border: none; width: 4.5vh; height: 4.5vh; cursor: pointer; opacity: 0.8; transition: opacity 0.3s ease; fill: var(--accent-color); padding: 0; }
+        #fs-toggle { position: fixed; top: 2.5vh; right: 3vw; z-index: 25000; background: none; border: none; width: 4.5vh; height: 4.5vh; cursor: pointer; opacity: 0.8; transition: opacity 0.3s ease; fill: #00ffff; padding: 0; }
         #fs-toggle:hover { opacity: 1; fill: #ff007f; }
         #master-clock { position: fixed; top: 2.5vh; left: 3vw; z-index: 25000; color: #fff; font-family: 'Share Tech Mono', monospace; font-size: 4.5vh; font-weight: 900; letter-spacing: 0.2vw; text-shadow: 0 3px 6px rgba(0,0,0,0.8); }
 
-        /* NEON ACCENTS (ZERO REPAINT CPU COST) */
-        .neon-text-cycle { color: var(--accent-color) !important; transition: color 0.5s ease-in-out; }
-        .neon-border-cycle { border-color: var(--accent-border) !important; transition: border-color 0.5s ease-in-out; }
+        /* --- LIGHTWEIGHT NEON COLOR CYCLING (PER-SLIDE) --- */
+        body.theme-cyan { --accent-color: #00ffff; --accent-glow: rgba(0,255,255,0.5); }
+        body.theme-pink { --accent-color: #ff007f; --accent-glow: rgba(255,0,127,0.5); }
+        body.theme-green { --accent-color: #39ff14; --accent-glow: rgba(57,255,20,0.5); }
+
+        .neon-text-cycle { color: var(--accent-color) !important; text-shadow: 0 0 10px var(--accent-glow) !important; transition: color 0.5s ease, text-shadow 0.5s ease; }
+        .neon-border-cycle { border-color: var(--accent-color) !important; transition: border-color 0.5s ease; }
 
         /* SETTINGS MODAL */
         #settings-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.92); z-index: 30000; display: none; justify-content: center; align-items: center; }
-        .settings-card { background: #0c121c; border: 2px solid var(--accent-color); width: 85vw; max-height: 90vh; border-radius: 2vh; padding: 4vh; overflow-y: auto; }
+        .settings-card { background: #0c121c; border: 2px solid #00ffff; width: 85vw; max-height: 90vh; border-radius: 2vh; padding: 4vh; overflow-y: auto; }
         .settings-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 4vh; }
         .settings-section h3 { color: #ff007f; text-transform: uppercase; font-weight: 900; border-bottom: 1px solid rgba(255,255,255,0.2); margin-bottom: 2vh; font-size: 2.8vh; padding-bottom: 1vh; }
         .toggle-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5vh; font-size: 2.2vh; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 0.5vh; color: white; }
 
         /* TICKER */
-        #sports-ticker { position: absolute; bottom: 0; left: 0; width: 100%; height: var(--ticker-height); background: rgba(5, 10, 18, 0.95); border-top: 2px solid var(--accent-border); z-index: 100; display: flex; align-items: center; overflow: hidden; white-space: nowrap; transition: border-color 0.5s ease; }
+        #sports-ticker { position: absolute; bottom: 0; left: 0; width: 100%; height: var(--ticker-height); background: #080e18; border-top: 2px solid #00ffff; z-index: 100; display: flex; align-items: center; overflow: hidden; white-space: nowrap; }
         #ticker-track { display: inline-flex; height: 100%; align-items: center; width: max-content; will-change: transform; } 
         @keyframes scrollTicker { 0% { transform: translate3d(0, 0, 0); } 100% { transform: translate3d(-50%, 0, 0); } }
 
@@ -83,7 +50,7 @@
         .score-item { display: inline-flex !important; flex-direction: row !important; align-items: center !important; padding: 0 5vw; height: 100%; vertical-align: middle; flex-wrap: nowrap !important; }
         .team-box { display: flex !important; flex-direction: row !important; align-items: center !important; flex-wrap: nowrap !important; }
         
-        /* AGGRESSIVE WHITE OUTLINE STROKE FOR ALL LOGOS */
+        /* AGGRESSIVE WHITE OUTLINE STROKE FOR ALL LOGOS (Fixes Dark College Logos) */
         .team-logo, .card-team img, .st-logo, .rank-logo, .prop-headshot, .league-logo, .golf-headshot, .fighter-img, .tv-channel img {
             filter: drop-shadow(1px 1px 0px #fff) drop-shadow(-1px -1px 0px #fff) drop-shadow(1px -1px 0px #fff) drop-shadow(-1px 1px 0px #fff) drop-shadow(0px 4px 10px rgba(0,0,0,0.8));
         }
@@ -109,9 +76,9 @@
         .grid-track { display: grid; grid-template-columns: repeat(2, 1fr); gap: 2vw; }
         .list-track { display: flex; flex-direction: column; gap: 1.5vh; width: 90%; margin: 0 auto; }
 
-        /* HIGH-PERFORMANCE ICY FROSTED GLASS PANELS FOR TV */
+        /* FAST HIGH-CONTRAST PANELS FOR TV */
         .glass-card, .trivia-ans, .golf-row, .rank-row, .tv-row, .news-row, .division-block, .info-card, .prop-card, .ufc-card, .trivia-q-box { 
-            background: rgba(12, 20, 32, 0.88); border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 1.5vh; position: relative; overflow: hidden; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+            background: rgba(12, 18, 28, 0.95); border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 1.5vh; position: relative; overflow: hidden; 
         }
         
         .glass-card { display: flex; flex-direction: column; padding: 2.5vh; }
@@ -219,7 +186,6 @@
 </head>
 <body class="theme-cyan">
 
-    <div class="icy-overlay"></div>
     <div class="cyber-grid-container"><div class="cyber-grid"></div></div>
     
     <div id="master-clock">12:00 PM</div>
@@ -257,7 +223,7 @@
         </div>
         
         <div id="trivia-screen" class="slide-screen">
-            <div class="screen-header neon-text-cycle">TRIVIA BREAK!</div>
+            <div class="screen-header neon-text-cycle">ARCADE TRIVIA CHALLENGE</div>
             <div class="content-viewport" style="display:flex; flex-direction:column; justify-content:center; padding-top:0; padding-bottom:0; height:65vh;">
                 <div class="trivia-q-box glass-card neon-border-cycle" id="trivia-q">Loading next challenge...</div>
                 <div class="trivia-ans-grid" id="trivia-options"></div>
@@ -341,15 +307,15 @@
                 <div class="settings-section">
                     <h3>Features</h3>
                     <div style="margin-bottom: 2vh;">
-                        <div style="display:flex; justify-content:space-between; align-items:center; font-size: 1.8vh; color: var(--accent-color); margin-bottom: 0.5vh; text-transform: uppercase;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; font-size: 1.8vh; color: #00ffff; margin-bottom: 0.5vh; text-transform: uppercase;">
                             <span>Bottom Ticker Speed:</span>
                             <span id="speed-display" style="color:white; font-weight:900; font-size:2vh;">5</span>
                         </div>
-                        <input type="range" id="set-tickerSpeed" min="1" max="10" step="1" style="width: 100%; accent-color: var(--accent-color);" oninput="document.getElementById('speed-display').innerText=this.value; updateSettings();">
+                        <input type="range" id="set-tickerSpeed" min="1" max="10" step="1" style="width: 100%; accent-color: #00ffff;" oninput="document.getElementById('speed-display').innerText=this.value; updateSettings();">
                     </div>
                     <div style="margin-bottom: 2vh;">
-                        <div style="font-size: 1.8vh; color: var(--accent-color); margin-bottom: 0.5vh; text-transform: uppercase;">Set Favorite Teams:</div>
-                        <input type="text" id="set-mySquadTeams" style="width: 100%; padding: 1vh; border-radius: 0.5vh; background: rgba(0,0,0,0.5); color: white; border: 1px solid var(--accent-color); font-family: 'Inter', sans-serif;" onchange="updateSettings()">
+                        <div style="font-size: 1.8vh; color: #00ffff; margin-bottom: 0.5vh; text-transform: uppercase;">Set Favorite Teams:</div>
+                        <input type="text" id="set-mySquadTeams" style="width: 100%; padding: 1vh; border-radius: 0.5vh; background: rgba(0,0,0,0.5); color: white; border: 1px solid #00ffff; font-family: 'Inter', sans-serif;" onchange="updateSettings()">
                     </div>
                     <div style="margin-bottom: 2vh;">
                         <div style="font-size: 1.8vh; color: #ff007f; margin-bottom: 0.5vh; text-transform: uppercase;">Custom Ticker Marquee:</div>
@@ -396,13 +362,13 @@
             </div>
             <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 4vh; border-top: 1px solid rgba(255,255,255,0.2); padding-top: 4vh;">
                 <div style="display: flex; align-items: center; gap: 3vh;">
-                    <img id="settings-qr" src="" style="width: 12vh; height: 12vh; border: 2px solid var(--accent-color); border-radius: 1vh; background: white;">
+                    <img id="settings-qr" src="" style="width: 12vh; height: 12vh; border: 2px solid #00ffff; border-radius: 1vh; background: white;">
                     <div>
-                        <div style="color: var(--accent-color); font-size: 3vh; font-weight: 900;">SCAN FOR REMOTE</div>
+                        <div style="color: #00ffff; font-size: 3vh; font-weight: 900;">SCAN FOR REMOTE</div>
                         <div style="color: rgba(255,255,255,0.6); font-size: 2vh;">Control the arcade ticker from your phone</div>
                     </div>
                 </div>
-                <button style="padding: 2vh 5vh; background: rgba(0,255,255,0.2); border: 2px solid var(--accent-color); color: #fff; font-weight: 900; border-radius: 1vh; font-size: 2.5vh; cursor: pointer;" onclick="toggleSettings()">SAVE & CLOSE</button>
+                <button style="padding: 2vh 5vh; background: rgba(0,255,255,0.2); border: 2px solid #00ffff; color: #fff; font-weight: 900; border-radius: 1vh; font-size: 2.5vh; cursor: pointer;" onclick="toggleSettings()">SAVE & CLOSE</button>
             </div>
         </div>
     </div>
@@ -420,15 +386,8 @@
         var globalTVGuideData = [], globalLeadersData = [], newMarqueeGames = [];
         var currentTrivia = null;
 
-        /* PER-SLIDE COLOR THEME ROTATION ENGINE (0% Continuous CPU Cost) */
         var neonThemes = ['theme-cyan', 'theme-pink', 'theme-green'];
         var currentThemeIndex = 0;
-
-        function rotateSlideColorTheme() {
-            document.body.classList.remove(...neonThemes);
-            currentThemeIndex = (currentThemeIndex + 1) % neonThemes.length;
-            document.body.classList.add(neonThemes[currentThemeIndex]);
-        }
 
         var defaultSettings = { 
             nfl:true, nba:true, nhl:true, mlb:true, rankings:true, odds:true, tvGuide:true, news:true, mySquad:true, ufc:true, command:true, leaders:true, pga:true, soccerSlide:true, trivia:true,
@@ -575,8 +534,10 @@
             clearTimeout(slideTimer);
             clearTimeout(triviaRevealTimer);
             
-            // Cycle slide neon color accent cleanly on slide transition
-            rotateSlideColorTheme();
+            // Cycle color per slide transition
+            document.body.classList.remove(...neonThemes);
+            currentThemeIndex = (currentThemeIndex + 1) % neonThemes.length;
+            document.body.classList.add(neonThemes[currentThemeIndex]);
 
             var mc = document.getElementById('master-clock');
             if (mc) mc.style.display = 'block';
@@ -635,25 +596,6 @@
                 }
             }
             return '<span class="neon-text-cycle">' + networkStr + '</span>';
-        }
-
-        /* MLB PROP BET MARKET FORMATTER FIX */
-        function formatPlayerProp(statType, rawVal) {
-            var label = statType || "STAT";
-            var lower = label.toLowerCase();
-            
-            // Map MLB batting average or decimal season metrics to realistic markets
-            if (lower.indexOf('avg') > -1 || lower.indexOf('batting') > -1 || (typeof rawVal === 'string' && rawVal.indexOf('.') === 0)) {
-                return { label: "Total Hits", line: "O/U 0.5" };
-            }
-            
-            var valFloat = parseFloat(rawVal);
-            if (!isNaN(valFloat) && valFloat > 0) {
-                var simLine = (valFloat < 5.0) ? (Math.floor(valFloat) + 0.5).toFixed(1) : (valFloat * 0.85).toFixed(1);
-                return { label: label, line: "O/U " + simLine };
-            }
-            
-            return { label: label, line: "O/U 0.5" };
         }
 
         async function updateSportsTicker() { 
@@ -845,4 +787,243 @@
             if (trend.type === 'mlb') {
                 var oHTML = '<div class="outs-dots">'; for(var i=1; i<=3; i++) oHTML += '<div class="out-dot ' + (trend.outs >= i ? 'active' : '') + '"></div>'; oHTML += '</div>';
                 var dHTML = '<div class="diamond-graphic"><div class="base ' + (trend.b2 ? 'active' : '') + '"></div><div class="base ' + (trend.b1 ? 'active' : '') + '"></div><div class="base ' + (trend.b3 ? 'active' : '') + '"></div><div class="base" style="background:transparent; border:none;"></div></div>';
-                return '<div class="trend-container" style="justify-content: space-between;
+                return '<div class="trend-container" style="justify-content: space-between; width: 100%;"><div style="display:flex; flex-direction:column; align-items:center;"><span class="trend-label neon-text-cycle">COUNT</span><span class="neon-text-cycle" style="font-size:3.5vh; font-weight:900;">' + (trend.balls||0) + '-' + (trend.strikes||0) + '</span></div><div style="display:flex; flex-direction:column; align-items:center;"><span class="trend-label neon-text-cycle">BASES</span>' + dHTML + '</div><div style="display:flex; flex-direction:column; align-items:center;"><span class="trend-label neon-text-cycle">OUTS</span>' + oHTML + '</div></div>';
+            }
+            if (trend.type === 'records') return '<div class="trend-container" style="justify-content:space-between; width:100%; background:transparent; padding:0; border:none;"><span class="trend-streak neon-text-cycle">' + trend.aRec + '</span><span class="trend-label neon-text-cycle">SEASON RECORD</span><span class="trend-streak neon-text-cycle">' + trend.hRec + '</span></div>';
+            return '';
+        }
+
+        function renderLivePage() {
+            document.getElementById('live-game-screen').style.display = 'flex';
+            var track = document.getElementById('live-grid-track');
+            if (globalLiveGamesData.length === 0) { track.innerHTML = '<div class="neon-text-cycle" style="font-size:4vh; font-weight:900; text-align:center; grid-column: 1 / -1; padding-top: 10vh;">NO LIVE GAMES</div>'; applyScroll('live-viewport', 'live-grid-track', 10000); } 
+            else {
+                track.innerHTML = globalLiveGamesData.map(function(g) { 
+                    return '<div class="glass-card"><div class="card-meta neon-text-cycle"><span>● LIVE</span><span>' + g.league + '</span><span>' + g.status + '</span></div><div class="card-row"><div class="card-team"><img src="' + g.aLogo + '" onerror="this.src=\'' + g.aFallback + '\'; this.onerror=null;">' + g.away + '</div><div class="card-val-lg">' + g.aScore + '</div></div><div class="card-row"><div class="card-team"><img src="' + g.hLogo + '" onerror="this.src=\'' + g.hFallback + '\'; this.onerror=null;">' + g.home + '</div><div class="card-val-lg">' + g.hScore + '</div></div>' + buildTrendHtml(g.trend) + '<div class="card-footer neon-text-cycle" style="margin-top: 1.5vh;"><span>' + g.clock + '</span><span>' + g.tv + '</span></div></div>';
+                }).join('');
+                applyScroll('live-viewport', 'live-grid-track', 15000);
+            }
+        }
+
+        function showProps() {
+            document.getElementById('props-screen').style.display = 'flex';
+            var track = document.getElementById('props-grid-track');
+            if (globalPropsData.length === 0) { track.innerHTML = '<div class="neon-text-cycle" style="font-size:4vh; font-weight:900; text-align:center; grid-column: 1 / -1; padding-top: 10vh;">PROPS UNAVAILABLE</div>'; applyScroll('props-viewport', 'props-grid-track', 10000); } 
+            else {
+                track.innerHTML = globalPropsData.map(function(p) {
+                    var valFloat = parseFloat(p.value); var simLine = (!isNaN(valFloat) && valFloat > 0) ? (valFloat * 0.85).toFixed(1) : "0.5"; 
+                    return '<div class="prop-card"><img src="' + p.headshot + '" onerror="this.src=\'' + p.teamLogo + '\'; this.onerror=null;" class="prop-headshot"><div class="prop-details"><div class="prop-name">' + p.name + '</div><div class="prop-game neon-text-cycle">' + p.teamCode + ' vs ' + p.oppCode + '</div><div class="prop-line-container"><div class="prop-line neon-text-cycle">O/U ' + simLine + ' ' + p.statDesc + '</div><span class="prop-odds neon-text-cycle">' + p.baseOdds + '</span></div></div></div>';
+                }).join('');
+                applyScroll('props-viewport', 'props-grid-track', 15000);
+            }
+        }
+
+        function showMySquad() {
+            document.getElementById('mysquad-screen').style.display = 'flex';
+            var gamesHtml = "";
+            var teams = settings.mySquadTeams.split(',').map(function(t) { return t.trim().toLowerCase(); }).filter(function(t) { return t; });
+            globalRawGames.forEach(function(g) { 
+                for(var i=0; i<teams.length; i++) {
+                    if(g.searchString.indexOf(teams[i]) > -1) { 
+                        gamesHtml += '<div class="glass-card squad-game-card"><div class="card-meta neon-text-cycle"><span>' + g.league + '</span><span>' + g.tv + '</span></div><div class="card-row"><div class="card-team"><img src="' + g.aLogo + '" onerror="this.src=\'' + g.aFallback + '\'; this.onerror=null;">' + g.away + '</div><div class="card-val-lg">' + g.aScore + '</div></div><div class="card-row"><div class="card-team"><img src="' + g.hLogo + '" onerror="this.src=\'' + g.hFallback + '\'; this.onerror=null;">' + g.home + '</div><div class="card-val-lg">' + g.hScore + '</div></div>' + buildTrendHtml(g.trend) + '<div class="card-footer neon-text-cycle" style="margin-top:1.5vh; justify-content:center;">' + (g.state === 'in' ? 'LIVE NOW' : (g.state === 'post' ? 'FINAL' : g.status)) + '</div></div>';
+                        break; 
+                    }
+                }
+            });
+            document.getElementById('squad-games-track').innerHTML = gamesHtml || '<div class="neon-text-cycle" style="text-align:center; font-weight:900; font-size:3vh; margin-top:5vh; border: 1px dashed currentColor; padding: 4vh; border-radius: 1.5vh;">NO ACTIVE/UPCOMING GAMES</div>';
+            applyScroll('mysquad-viewport', 'squad-games-track', 12000);
+        }
+
+        function showTrivia() {
+            if(!currentTrivia) { fetchNextTrivia(); rotationStep++; nextSlide(); return; }
+            document.getElementById('trivia-screen').style.display = 'flex';
+            var mc = document.getElementById('master-clock'); if (mc) mc.style.display = 'none';
+            document.getElementById('trivia-q').innerText = currentTrivia.q;
+            document.getElementById('trivia-options').innerHTML = currentTrivia.opts.map(function(o, i) {
+                return '<div class="trivia-ans glass-card" data-correct="' + (o === currentTrivia.ans ? 'true' : 'false') + '"><div class="trivia-letter neon-text-cycle">' + ['A', 'B', 'C', 'D'][i] + '</div>' + o + '</div>';
+            }).join('');
+            var tBar = document.getElementById('trivia-timer');
+            tBar.style.animation = 'none'; void tBar.offsetWidth; tBar.style.animation = 'shrinkTimer 15s linear forwards';
+            clearTimeout(triviaRevealTimer);
+            triviaRevealTimer = setTimeout(function() {
+                document.querySelectorAll('.trivia-ans').forEach(function(opt) { if (opt.getAttribute('data-correct') === 'true') opt.classList.add('correct'); else opt.classList.add('wrong'); });
+                slideTimer = setTimeout(function() { fetchNextTrivia(); rotationStep++; nextSlide(); }, 5000);
+            }, 15000);
+        }
+
+        function showLeaders() {
+            if(globalLeadersData.length === 0) { rotationStep++; nextSlide(); return; }
+            document.getElementById('leaders-screen').style.display = 'flex';
+            var track = document.getElementById('leaders-grid-track');
+            track.innerHTML = globalLeadersData.slice(0, 8).map(function(l) {
+                return '<div class="info-card glass-card"><div class="card-meta neon-text-cycle"><span>' + l.statDesc + '</span><span>' + l.league + '</span></div><div style="display:flex; align-items:center; gap:2vh; padding-top:1vh;"><img src="' + l.headshot + '" onerror="this.src=\'' + l.teamLogo + '\'; this.onerror=null;" class="prop-headshot" style="width:10vh; height:10vh;"><div style="flex:1;"><div class="prop-name">' + l.name + '</div><div class="neon-text-cycle" style="font-size:2.5vh; font-weight:900;">' + l.teamCode + '</div></div><div class="card-val-lg">' + l.value + '</div></div></div>';
+            }).join('');
+            applyScroll('leaders-viewport', 'leaders-grid-track', 12000);
+        }
+
+        async function showCommand() { document.getElementById('command-screen').style.display = 'flex'; slideTimer = setTimeout(nextSlide, 15000); }
+
+        async function showPGA() {
+            try {
+                var res = await fetch(settings.apiBase + '/site/v2/sports/golf/pga/scoreboard'); var d = await res.json();
+                if (!d.events || d.events.length === 0) { rotationStep++; nextSlide(); return; }
+                document.getElementById('pga-title').innerHTML = d.events[0].name.replace('PGA TOUR', '').trim().toUpperCase();
+                var golfers = d.events[0].competitions[0].competitors.slice(0, 10);
+                document.getElementById('pga-screen').style.display = 'flex';
+                
+                document.getElementById('pga-track').innerHTML = golfers.map(function(g) {
+                    var pgaId = (g.athlete && g.athlete.id) ? g.athlete.id : g.id;
+                    var hs = '';
+                    if (g.athlete && g.athlete.headshot && g.athlete.headshot.href) {
+                        hs = g.athlete.headshot.href;
+                    } else {
+                        hs = 'https://a.espncdn.com/combiner/i?img=/i/headshots/golf/players/full/' + pgaId + '.png&h=150&w=150&scale=crop';
+                    }
+                    var pgaFallback = 'https://a.espncdn.com/combiner/i?img=/i/headshots/golf/players/full/default.png';
+                    
+                    return '<div class="golf-row glass-card" style="flex-direction:row;"><div class="golf-pos neon-text-cycle">' + ((g.status && g.status.position) ? g.status.position : '-') + '</div><img src="' + hs + '" onerror="this.src=\'' + pgaFallback + '\'; this.onerror=null;" class="golf-headshot"><div class="golf-name">' + (g.athlete ? (g.athlete.shortName || g.athlete.displayName) : 'Golfer') + '<div class="golf-thru neon-text-cycle">' + ((g.status && g.status.displayThru) ? g.status.displayThru : '') + '</div></div><div class="golf-score card-val-lg">' + (g.score || 'E') + '</div></div>';
+                }).join('');
+                applyScroll('pga-viewport', 'pga-track', 12000);
+            } catch (e) { rotationStep++; nextSlide(); }
+        }
+
+        async function showUFC() {
+            try {
+                var res = await fetch(settings.apiBase + '/site/v2/sports/mma/ufc/scoreboard'); var d = await res.json();
+                if(!d.events || d.events.length === 0) { rotationStep++; nextSlide(); return; }
+                document.getElementById('ufc-title').innerHTML = 'UFC: ' + (d.events[0].name ? d.events[0].name.replace('UFC Fight Night:', '').trim() : "FIGHT NIGHT").toUpperCase();
+                document.getElementById('ufc-screen').style.display = 'flex';
+                
+                var fights = [];
+                d.events[0].competitions.forEach(function(fight) {
+                    var f1 = fight.competitors[0], f2 = fight.competitors[1];
+                    fights.push({ weightClass: fight.type ? fight.type.text : "Bout", f1: f1, f2: f2, f1Rec: (f1.records && f1.records[0]) ? f1.records[0].summary : '', f2Rec: (f2.records && f2.records[0]) ? f2.records[0].summary : '', status: fight.status.type, clock: fight.status.displayClock, period: fight.status.period });
+                });
+                
+                document.getElementById('ufc-grid-track').innerHTML = fights.map(function(f) {
+                    var f1Id = (f.f1.athlete && f.f1.athlete.id) ? f.f1.athlete.id : f.f1.id;
+                    var f2Id = (f.f2.athlete && f.f2.athlete.id) ? f.f2.athlete.id : f.f2.id;
+                    
+                    var f1Img = (f.f1.athlete && f.f1.athlete.headshot && f.f1.athlete.headshot.href) ? f.f1.athlete.headshot.href : 'https://a.espncdn.com/combiner/i?img=/i/headshots/mma/players/full/' + f1Id + '.png&h=150&w=150&scale=crop';
+                    var f2Img = (f.f2.athlete && f.f2.athlete.headshot && f.f2.athlete.headshot.href) ? f.f2.athlete.headshot.href : 'https://a.espncdn.com/combiner/i?img=/i/headshots/mma/players/full/' + f2Id + '.png&h=150&w=150&scale=crop';
+                    
+                    var f1Class = "fighter-img", f2Class = "fighter-img", resultMeta = f.weightClass;
+                    if(f.status.state === 'post') {
+                        if(f.f1.winner) { f1Class += " winner"; f2Class += " loser"; resultMeta = '<span class="neon-text-cycle">' + f.status.detail + '</span>'; }
+                        else if(f.f2.winner) { f2Class += " winner"; f1Class += " loser"; resultMeta = '<span class="neon-text-cycle">' + f.status.detail + '</span>'; }
+                    }
+                    
+                    var f1Name = (f.f1.athlete && (f.f1.athlete.shortName || f.f1.athlete.displayName)) ? (f.f1.athlete.shortName || f.f1.athlete.displayName) : 'Fighter';
+                    var f2Name = (f.f2.athlete && (f.f2.athlete.shortName || f.f2.athlete.displayName)) ? (f.f2.athlete.shortName || f.f2.athlete.displayName) : 'Fighter';
+                    
+                    var f1RecHtml = f.f1Rec ? '<div class="neon-text-cycle" style="font-size:2.2vh; margin-top:0.5vh; font-weight:bold;">' + f.f1Rec + '</div>' : '';
+                    var f2RecHtml = f.f2Rec ? '<div class="neon-text-cycle" style="font-size:2.2vh; margin-top:0.5vh; font-weight:bold;">' + f.f2Rec + '</div>' : '';
+                    var liveBadge = (f.status.state === 'in') ? '<div class="neon-text-cycle" style="position: absolute; top: 1vh; left: 50%; transform: translateX(-50%); font-size: 2.2vh; font-weight: 900; z-index: 3; letter-spacing: 0.2vh; animation: pulsePink 1.5s infinite;">RND ' + f.period + ' • ' + f.clock + '</div>' : '';
+                    
+                    return '<div class="ufc-card glass-card">' + liveBadge + '<div class="ufc-matchup"><div class="fighter-col"><img src="' + f2Img + '" class="' + f2Class + '" onerror="this.src=\'https://a.espncdn.com/combiner/i?img=/i/headshots/mma/players/full/default.png\'; this.onerror=null;"><div class="fighter-name">' + f2Name + '</div>' + f2RecHtml + '</div><div class="ufc-center"><div class="ufc-vs neon-text-cycle">VS</div></div><div class="fighter-col"><img src="' + f1Img + '" class="' + f1Class + '" onerror="this.src=\'https://a.espncdn.com/combiner/i?img=/i/headshots/mma/players/full/default.png\'; this.onerror=null;"><div class="fighter-name">' + f1Name + '</div>' + f1RecHtml + '</div></div><div class="ufc-meta neon-text-cycle"><span>' + (f.status.state === 'post' ? 'FINAL' : f.weightClass) + '</span>' + (f.status.state === 'post' ? resultMeta : '') + '</div></div>';
+                }).join('');
+                applyScroll('ufc-viewport', 'ufc-grid-track', 15000);
+            } catch(e) { rotationStep++; nextSlide(); }
+        }
+
+        async function showSoccer() {
+            var games = []; var nowTime = new Date().getTime();
+            var leagues = [{id:'fifa.world', s:'soccer', t:'showWorldCup', name: 'FIFA WORLD CUP'}, {id:'eng.1', s:'soccer', t:'showEPL', name: 'PREMIER LEAGUE'}, {id:'uefa.champions', s:'soccer', t:'showUCL', name: 'CHAMPIONS LEAGUE'}];
+            for (var i=0; i<leagues.length; i++) {
+                if(!settings[leagues[i].t]) continue;
+                try {
+                    var res = await fetch(settings.apiBase + '/site/v2/sports/soccer/' + leagues[i].id + '/scoreboard'); var d = await res.json();
+                    if(!d.events) continue;
+                    d.events.forEach(function(ev) {
+                        var comp = ev.competitions[0]; var diffHours = (new Date(ev.date).getTime() - nowTime) / (1000 * 60 * 60);
+                        if ((comp.status.type.state === 'in' || comp.status.type.state === 'post') || (comp.status.type.state === 'pre' && diffHours >= 0 && diffHours <= 24)) {
+                            var h = comp.competitors[0], a = comp.competitors[1];
+                            games.push({ league: leagues[i].name, time: comp.status.type.state === 'in' ? 'LIVE ' + comp.status.displayClock : (comp.status.type.state === 'post' ? 'FINAL' : new Date(ev.date).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})), hName: h.team.shortDisplayName, hLogo: h.team.logo, hScore: (comp.status.type.state !== 'pre') ? h.score : '', aName: a.team.shortDisplayName, aLogo: a.team.logo, aScore: (comp.status.type.state !== 'pre') ? a.score : '', weight: comp.status.type.state === 'in' ? 2 : 1 });
+                        }
+                    });
+                } catch(e) {}
+            }
+            if(games.length === 0) { rotationStep++; nextSlide(); return; }
+            document.getElementById('soccer-screen').style.display = 'flex';
+            document.getElementById('soccer-grid-track').innerHTML = games.sort((a,b)=>b.weight-a.weight).map(function(g) {
+                return '<div class="glass-card"><div class="card-meta neon-text-cycle"><span>' + g.league + '</span></div><div class="card-row"><div class="card-team"><img src="' + g.aLogo + '" onerror="this.src=\'https://a.espncdn.com/combiner/i?img=/i/teamlogos/default-team-logo-500.png\'; this.onerror=null;">' + g.aName + '</div><div class="card-val-lg">' + g.aScore + '</div></div><div class="card-row"><div class="card-team"><img src="' + g.hLogo + '" onerror="this.src=\'https://a.espncdn.com/combiner/i?img=/i/teamlogos/default-team-logo-500.png\'; this.onerror=null;">' + g.hName + '</div><div class="card-val-lg">' + g.hScore + '</div></div><div class="card-footer neon-text-cycle" style="justify-content:center;">' + g.time + '</div></div>';
+            }).join('');
+            applyScroll('soccer-viewport', 'soccer-grid-track', 12000);
+        }
+
+        function showTVGuide() {
+            if(globalTVGuideData.length === 0) { rotationStep++; nextSlide(); return; }
+            document.getElementById('tvguide-screen').style.display = 'flex';
+            document.getElementById('tvguide-track').innerHTML = [].concat(globalTVGuideData).sort((a,b)=>a.timestamp-b.timestamp).map(function(g) { 
+                return '<div class="tv-row"><div class="tv-channel neon-text-cycle">' + getNetworkLogo(g.network) + '</div><div class="tv-program"><div class="tv-prog-title">' + g.matchup + '</div><div class="tv-prog-time neon-text-cycle">' + g.time + '</div>' + (g.isLive ? '<div class="neon-text-cycle live-pulse" style="position:absolute; right:4vh; font-size:3vh;">● LIVE</div>' : '') + '</div></div>'; 
+            }).join('');
+            applyScroll('tvguide-viewport', 'tvguide-track', 12000);
+        }
+
+        async function showNews() {
+            try {
+                var sources = [{ url: 'https://api.rss2json.com/v1/api.json?rss_url=https%3A%2F%2Fsports.yahoo.com%2Frss%2F', name: 'YAHOO SPORTS' }, { url: 'https://api.rss2json.com/v1/api.json?rss_url=https%3A%2F%2Fwww.cbssports.com%2Frss%2Fheadlines%2F', name: 'CBS SPORTS' }];
+                var combinedNews = [];
+                for (var i=0; i<sources.length; i++) {
+                    try { var res = await fetch(sources[i].url); var data = await res.json(); if (data.status === 'ok') { data.items.forEach(function(item) { combinedNews.push({ title: item.title, img: item.thumbnail || (item.enclosure && item.enclosure.link) || '', source: sources[i].name, time: new Date(item.pubDate.replace(/-/g, '/')).getTime() }); }); } } catch(e) {}
+                }
+                if (combinedNews.length === 0) { rotationStep++; nextSlide(); return; }
+                document.getElementById('news-screen').style.display = 'flex';
+                document.getElementById('news-list-track').innerHTML = combinedNews.sort((a,b)=>b.time-a.time).slice(0, 10).map(function(item) {
+                    var imgHtml = item.img ? '<img class="news-thumb" src="' + item.img + '">' : '<div class="news-thumb neon-text-cycle" style="display:flex;align-items:center;justify-content:center;font-weight:900;font-size:3vh;">NEWS</div>';
+                    return '<div class="news-row glass-card">' + imgHtml + '<div class="news-content"><div class="news-title">' + item.title + '</div><div class="news-source neon-text-cycle">' + item.source + '</div></div></div>';
+                }).join('');
+                applyScroll('news-viewport', 'news-list-track', 12000);
+            } catch(e) { rotationStep++; nextSlide(); }
+        }
+
+        function showOdds() {
+            var oddsGames = globalRawGames.filter(g => g.state === 'pre' && g.odds !== 'EVEN');
+            if (oddsGames.length === 0) { rotationStep++; nextSlide(); return; }
+            document.getElementById('odds-screen').style.display = 'flex';
+            document.getElementById('odds-grid-track').innerHTML = oddsGames.map(function(g) { 
+                return '<div class="glass-card"><div class="card-meta neon-text-cycle"><span>' + g.league + '</span><span>' + g.tv + '</span></div><div class="card-row"><div class="card-team"><img src="' + g.aLogo + '" onerror="this.src=\'' + g.aFallback + '\'; this.onerror=null;">' + g.away + '</div></div><div class="card-row"><div class="card-team"><img src="' + g.hLogo + '" onerror="this.src=\'' + g.hFallback + '\'; this.onerror=null;">' + g.home + '</div></div><div class="card-footer neon-text-cycle" style="margin-top:1.5vh;"><span>' + g.clock + '</span><span>' + g.odds + ' (O/U ' + (g.ou||'--') + ')</span></div></div>'; 
+            }).join('');
+            applyScroll('odds-viewport', 'odds-grid-track', 12000);
+        }
+
+        async function showRankings() {
+            document.getElementById('rankings-screen').style.display = 'flex';
+            try {
+                var res = await fetch('https://site.api.espn.com/apis/site/v2/sports/football/college-football/rankings'); var d = await res.json();
+                document.getElementById('rankings-list-track').innerHTML = d.rankings[0].ranks.slice(0, 15).map(function(r) { 
+                    return '<div class="rank-row glass-card" style="flex-direction:row;"><span class="rank-num neon-text-cycle">' + r.current + '</span><img class="rank-logo" style="width:8vh; margin:0 3vh;" src="' + r.team.logo + '" onerror="this.src=\'https://a.espncdn.com/combiner/i?img=/i/teamlogos/default-team-logo-500.png\'; this.onerror=null;"><span><span class="rank-name">' + r.team.nickname + '</span></span><span class="neon-text-cycle" style="margin-left:auto; font-size:4vh; font-weight:900;">' + (r.recordSummary || '0-0') + '</span></div>'; 
+                }).join('');
+                applyScroll('rankings-viewport', 'rankings-list-track', 15000);
+            } catch(e) { slideTimer = setTimeout(nextSlide, 5000); }
+        }
+
+        async function showStandings(league, sport) {
+            document.getElementById(league + '-screen').style.display = 'flex';
+            try {
+                var res = await fetch('https://site.api.espn.com/apis/v2/sports/' + sport + '/' + league + '/standings'); var d = await res.json();
+                document.getElementById(league + '-track').innerHTML = (d.children || [d]).map(function(group) {
+                    var entries = group.standings ? group.standings.entries : (group.children ? group.children[0].standings.entries : []);
+                    var rows = entries.slice(0, 16).map(function(t) {
+                        var recText = '0-0'; var overallNode = t.stats.find(function(st) { return st.name === 'All Splits' || st.name === 'overall'; });
+                        if (overallNode && overallNode.summary) recText = overallNode.summary;
+                        return '<div class="st-row"><img class="st-logo" style="width:4.8vh; margin:0 1.5vh;" src="' + t.team.logos[0].href + '" onerror="this.src=\'https://a.espncdn.com/combiner/i?img=/i/teamlogos/default-team-logo-500.png\'; this.onerror=null;"><div class="st-name" style="flex:1; font-size:3vh;">' + t.team.displayName + '</div><div class="neon-text-cycle">' + recText + '</div></div>';
+                    }).join('');
+                    return '<div class="division-block glass-card"><div class="division-header neon-text-cycle">' + (group.name || "STANDINGS") + '</div>' + rows + '</div>';
+                }).join('');
+                applyScroll(league + '-viewport', league + '-track', 15000);
+            } catch(e) { slideTimer = setTimeout(nextSlide, 5000); }
+        }
+
+        window.addEventListener('load', async function() { 
+            checkMode(); loadSettingsUI(); updateClock(); setInterval(updateClock, 1000);
+            renderSkeletons();
+            fetchCommandData(); fetchNextTrivia();
+            await updateSportsTicker();
+            nextSlide(); 
+            setInterval(function(){ updateSportsTicker().catch(function(){}); }, 300000);
+            setInterval(fetchCommandData, 900000);
+        });
+    </script>
+</body>
+</html>
