@@ -16,11 +16,9 @@
         /* THE CYBER GRID OVERLAY */
         .cyber-grid { position: absolute; top: 0; left: -50%; width: 200%; height: 100%; background-image: linear-gradient(rgba(0, 255, 255, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 255, 255, 0.05) 1px, transparent 1px); background-size: 100px 100px; transform: rotateX(45deg); z-index: 1; pointer-events: none; }
 
-        body.remote-active .tv-wrapper { display: none !important; }
-        body:not(.remote-active) #remote-controller { display: none !important; }
         .tv-wrapper { position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; display: flex; justify-content: center; align-items: center; overflow: hidden; z-index: 2; }
 
-        #fs-toggle { position: fixed; top: 2vh; right: 2vw; z-index: 10000; background: none; border: none; color: #fff; font-size: 4vh; cursor: pointer; opacity: 0.3; transition: all 0.3s ease; }
+        #fs-toggle { position: fixed; top: 2.5vh; right: 3vw; z-index: 15000; background: none; border: none; color: #fff; font-size: 4vh; cursor: pointer; opacity: 0.3; transition: all 0.3s ease; }
         #fs-toggle:hover { opacity: 1; color: #00ffff; text-shadow: 0 0 15px #00ffff; }
         #master-clock { position: fixed; top: 2.5vh; left: 3vw; z-index: 15000; color: #fff; font-family: 'Share Tech Mono', monospace; font-size: 4.5vh; font-weight: 900; text-shadow: 0 0 15px rgba(255,255,255,0.6); opacity: 0.9; letter-spacing: 0.2vw; }
 
@@ -35,22 +33,22 @@
         .team-logo { width: 11vh; height: 11vh; object-fit: contain; margin-right: 1.5vw; flex-shrink: 0; background: transparent; filter: drop-shadow(0px 5px 10px rgba(0,0,0,0.5)); } 
         .team-score { font-size: 4.8rem; line-height: 1; color: #fff; margin-right: 0.8vw; font-weight: 900; }
         
-        .score-changed { animation: scoreUpdate 3s ease-out forwards; }
-        @keyframes scoreUpdate { 0% { color: #39ff14; transform: scale(1.1); text-shadow: 0 0 20px #39ff14; } 100% { color: #fff; transform: scale(1); text-shadow: none; } }
-
         .vs-label { color: rgba(255,255,255,0.3); font-size: 2.7rem; margin: 0 2.5vw; font-weight: bold; }
         .game-status { margin-left: 2vw; color: #facc15; font-size: 2.7rem; text-transform: uppercase; letter-spacing: 0.1vw; }
         .live-pulse { animation: pulsePink 1.5s ease-in-out infinite; color: #ff007f; font-weight: 900; margin-right: 1.5vw; font-size: 2.7rem; text-shadow: 0 0 15px #ff007f; }
         @keyframes pulsePink { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
 
         /* SLIDES & GRIDS */
-        .slide-screen { position: absolute; inset: 0; z-index: 10; display: none; flex-direction: column; padding: 2vh 4vh; align-items: center; overflow: hidden; }
-        .screen-header { font-size: 9.5vh; font-weight: 900; color: #fff; text-transform: uppercase; letter-spacing: 1vh; margin-bottom: 2vh; margin-top: 1vh; z-index: 20; border-bottom: 1px solid rgba(255,255,255,0.2); padding-bottom: 1vh; width: 95%; text-align: center; display: block; }
+        .slide-screen { position: absolute; inset: 0; z-index: 10; display: none; flex-direction: column; padding: 0 4vh; align-items: center; overflow: hidden; }
+        
+        /* HEADER FIX - Pushed down to clear buttons */
+        .screen-header { margin-top: 9vh; font-size: 9.5vh; font-weight: 900; color: #fff; text-transform: uppercase; letter-spacing: 1vh; margin-bottom: 2vh; z-index: 20; border-bottom: 1px solid rgba(255,255,255,0.2); padding-bottom: 1vh; width: 95%; text-align: center; display: block; }
         .league-logo { height: 1em; margin-right: 1.5vw; filter: drop-shadow(0px 0px 10px rgba(255, 255, 255, 0.4)); display: inline-block; vertical-align: middle; margin-top: -1.5vh; }
         
-        .content-viewport { width: 95%; height: 62vh; overflow: hidden; position: relative; z-index: 20; padding-bottom: var(--ticker-height); }
-        .grid-track { display: grid; grid-template-columns: repeat(2, 1fr); gap: 2vw; padding-bottom: 10vh; will-change: transform; }
-        .list-track { display: flex; flex-direction: column; gap: 1.5vh; padding-bottom: 10vh; width: 90%; margin: 0 auto; will-change: transform; }
+        .content-viewport { width: 95%; height: 65vh; overflow: hidden; position: relative; z-index: 20; }
+        .grid-track, .list-track { padding-bottom: 5vh; will-change: transform; }
+        .grid-track { display: grid; grid-template-columns: repeat(2, 1fr); gap: 2vw; }
+        .list-track { display: flex; flex-direction: column; gap: 1.5vh; width: 90%; margin: 0 auto; }
 
         /* PREMIUM GLASS CARDS */
         .glass-card { background: rgba(15, 20, 30, 0.45); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.1); border-top: 1px solid rgba(255, 255, 255, 0.2); border-radius: 1.5vh; display: flex; flex-direction: column; padding: 2.5vh; box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3); position: relative; overflow: hidden; }
@@ -74,7 +72,7 @@
         .win-prob-away { height: 100%; background: #00ffff; box-shadow: 0 0 10px #00ffff; }
         .win-prob-home { height: 100%; background: #ff007f; box-shadow: 0 0 10px #ff007f; }
 
-        /* SKELETON SHIMMER (ZERO JANK) */
+        /* SKELETON SHIMMER */
         .skeleton { background: linear-gradient(90deg, rgba(255,255,255,0.05) 25%, rgba(255,255,255,0.15) 50%, rgba(255,255,255,0.05) 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 0.8vh; }
         @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
         .skel-text { height: 3vh; width: 40%; margin-bottom: 1.5vh; }
@@ -83,11 +81,11 @@
 
         /* PROP SHOP SLIDE */
         .prop-card { background: rgba(10, 15, 20, 0.5); backdrop-filter: blur(25px); border: 1px solid rgba(212, 175, 55, 0.3); border-top: 1px solid rgba(212, 175, 55, 0.6); border-radius: 1.5vh; padding: 3vh; display: flex; align-items: center; gap: 3vh; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-        .prop-headshot { width: 14vh; height: 14vh; border-radius: 50%; border: 3px solid #d4af37; object-fit: cover; object-position: top; background: rgba(0,0,0,0.5); box-shadow: 0 0 20px rgba(212, 175, 55, 0.3); }
-        .prop-details { flex: 1; }
-        .prop-name { font-size: 4.5vh; font-weight: 900; color: white; text-transform: uppercase; margin-bottom: 0.5vh; }
+        .prop-headshot { width: 14vh; height: 14vh; border-radius: 50%; border: 3px solid #d4af37; object-fit: cover; object-position: top; background: rgba(0,0,0,0.5); box-shadow: 0 0 20px rgba(212, 175, 55, 0.3); flex-shrink: 0; }
+        .prop-details { flex: 1; display: flex; flex-direction: column; justify-content: center; overflow: hidden; }
+        .prop-name { font-size: 4.5vh; font-weight: 900; color: white; text-transform: uppercase; margin-bottom: 0.5vh; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .prop-game { font-size: 2.5vh; color: rgba(255,255,255,0.5); font-weight: bold; text-transform: uppercase; margin-bottom: 1.5vh; letter-spacing: 0.1vw; }
-        .prop-line { font-size: 3.5vh; color: #d4af37; font-weight: 900; background: rgba(212, 175, 55, 0.1); padding: 1vh 2vh; border-radius: 1vh; display: inline-block; border: 1px solid rgba(212, 175, 55, 0.2); }
+        .prop-line { font-size: 3.5vh; color: #d4af37; font-weight: 900; background: rgba(212, 175, 55, 0.1); padding: 1vh 2vh; border-radius: 1vh; display: inline-block; border: 1px solid rgba(212, 175, 55, 0.2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 90%; }
         .prop-odds { font-size: 3.5vh; color: #39ff14; font-weight: 900; float: right; padding: 1vh 0; }
 
         /* OTHER EXISTING SLIDES UPGRADED TO GLASS */
@@ -112,13 +110,11 @@
     <div class="tv-wrapper" id="main-wrapper">
         <button id="fs-toggle" onclick="if(!document.fullscreenElement) document.documentElement.requestFullscreen(); else document.exitFullscreen();">⛶</button>
 
-        <!-- LIVE SCREEN -->
         <div id="live-game-screen" class="slide-screen">
             <div class="screen-header" style="color: #00ffff; border-bottom-color: rgba(0,255,255,0.3); text-shadow: 0 0 20px rgba(0,255,255,0.5);">LIVE ACTION</div>
             <div class="content-viewport" id="live-viewport"><div class="grid-track" id="live-grid-track"></div></div>
         </div>
 
-        <!-- PROP SHOP (NEW PREMIUM SLIDE) -->
         <div id="props-screen" class="slide-screen">
             <div class="screen-header" style="color: #d4af37; border-bottom-color: rgba(212,175,55,0.3); text-shadow: 0 0 20px rgba(212,175,55,0.5);">VEGAS PROP SHOP</div>
             <div class="content-viewport" id="props-viewport">
@@ -126,35 +122,30 @@
             </div>
         </div>
 
-        <!-- MY SQUAD -->
         <div id="mysquad-screen" class="slide-screen">
             <div class="screen-header" style="color: #39ff14; border-bottom-color: rgba(57,255,20,0.3);">MY SQUAD DASHBOARD</div>
             <div class="content-viewport" id="mysquad-viewport">
                 <div style="display: flex; width: 100%; height: 100%; gap: 4vw;">
                     <div style="flex: 1; display: flex; flex-direction: column; overflow: hidden;">
                         <div style="font-size: 4vh; color: rgba(255,255,255,0.6); font-weight: 900; text-transform: uppercase; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 1vh; margin-bottom: 2vh; text-align: center;">ACTIVE MATCHUPS</div>
-                        <div id="squad-games-track" style="padding-bottom: 5vh; display: flex; flex-direction: column; gap: 1.5vh;"></div>
+                        <div id="squad-games-track" style="padding-bottom: 5vh; display: flex; flex-direction: column; gap: 1.5vh; will-change: transform;"></div>
                     </div>
                 </div>
             </div>
         </div>
         
-        <!-- STANDINGS & OTHERS (Reusing existing structures but styled via premium CSS) -->
         <div id="nfl-screen" class="slide-screen"><div class="screen-header"><img src="https://a.espncdn.com/combiner/i?img=/i/teamlogos/leagues/500/nfl.png" class="league-logo" onerror="this.style.display='none'">NFL STANDINGS</div><div class="content-viewport" id="nfl-viewport"><div class="grid-track" style="gap: 2.5vw;" id="nfl-track"></div></div></div>
         <div id="nba-screen" class="slide-screen"><div class="screen-header"><img src="https://a.espncdn.com/combiner/i?img=/i/teamlogos/leagues/500/nba.png" class="league-logo" onerror="this.style.display='none'">NBA STANDINGS</div><div class="content-viewport" id="nba-viewport"><div class="grid-track" style="gap: 2.5vw;" id="nba-track"></div></div></div>
         <div id="mlb-screen" class="slide-screen"><div class="screen-header"><img src="https://a.espncdn.com/combiner/i?img=/i/teamlogos/leagues/500/mlb.png" class="league-logo" onerror="this.style.display='none'">MLB STANDINGS</div><div class="content-viewport" id="mlb-viewport"><div class="grid-track" style="gap: 2.5vw;" id="mlb-track"></div></div></div>
         <div id="rankings-screen" class="slide-screen"><div class="screen-header" style="color:#ff007f;">COLLEGE RANKINGS</div><div class="content-viewport" id="rankings-viewport"><div class="list-track" id="rankings-list-track"></div></div></div>
 
-        <!-- TICKER -->
         <div id="sports-ticker"><div id="ticker-track"></div></div>
     </div>
 
     <script>
         var rotationStep = 0, slideTimer;
-        var globalLiveGamesData = [], globalRawGames = [], globalLeadersData = [], globalPropsData = [];
-        var previousScores = {}; 
+        var globalLiveGamesData = [], globalRawGames = [], globalPropsData = [];
         
-        // Define user's specific teams for the squad slide
         var mySquadTeams = ["carolina hurricanes", "duke", "ecu", "east carolina"];
 
         function updateClock() {
@@ -166,27 +157,54 @@
             if(clockEl) clockEl.innerText = h + ':' + m + ' ' + ampm;
         }
 
-        // --- SKELETON LOADER (ZERO JANK PRE-RENDER) ---
+        // --- DYNAMIC VERTICAL SCROLLING ENGINE ---
+        function applyScroll(viewportId, trackId, baseDelay = 12000) {
+            var vH = document.getElementById(viewportId).clientHeight;
+            var track = document.getElementById(trackId);
+            var fH = track.scrollHeight;
+            
+            // Reset track position
+            track.style.animation = 'none';
+            track.style.transform = 'translate3d(0,0,0)';
+            
+            if (fH > vH) { 
+                var sD = fH - vH + 100; // Extra buffer at the bottom
+                track.style.setProperty('--scroll-end', '-' + sD + 'px'); 
+                var duration = (sD / 40); // 40px per second scroll speed
+                // Force reflow
+                void track.offsetWidth;
+                track.style.animation = 'scrollVerticalOnePass ' + duration + 's linear 2s forwards'; 
+                slideTimer = setTimeout(nextSlide, (duration * 1000) + 4000); 
+            } else { 
+                slideTimer = setTimeout(nextSlide, baseDelay); 
+            }
+        }
+
+        function applyTickerSpeed() {
+            var track = document.getElementById('ticker-track');
+            if(!track) return;
+            var trackWidth = track.scrollWidth / 2; 
+            if(trackWidth <= 0) return;
+            var duration = trackWidth / 120; // Default pixel per sec speed
+            if (duration < 10) duration = 10; 
+            track.style.animationDuration = duration + 's';
+        }
+
         function renderSkeletons() {
             var skeletonCard = '<div class="glass-card"><div class="card-meta"><div class="skeleton skel-text" style="width:20%"></div><div class="skeleton skel-text" style="width:30%"></div></div><div class="skel-row"><div class="skeleton skel-img"></div><div class="skeleton skel-text" style="width:60%; height:4vh;"></div></div><div class="skel-row"><div class="skeleton skel-img"></div><div class="skeleton skel-text" style="width:60%; height:4vh;"></div></div><div class="card-footer"><div class="skeleton skel-text" style="width:100%"></div></div></div>';
-            
             document.getElementById('live-grid-track').innerHTML = skeletonCard.repeat(4);
             document.getElementById('props-grid-track').innerHTML = skeletonCard.repeat(4);
             document.getElementById('ticker-track').innerHTML = '<span class="score-item"><div class="skeleton skel-text" style="width:50vw; height:8vh; margin-top:2vh;"></div></span>';
-            
             document.getElementById('live-game-screen').style.display = 'flex';
         }
 
-        // --- DYNAMIC CINEMATIC BACKGROUND HANDLER ---
         function setCinematicBackground(slide) {
             var bg = document.getElementById('cinematic-bg');
-            var imgUrl = 'https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?q=80&w=2000&auto=format&fit=crop'; // Default Stadium
-            
-            if (slide === 'nba') imgUrl = 'https://images.unsplash.com/photo-1504450758481-7338eba7524a?q=80&w=2000&auto=format&fit=crop'; // Hardwood
-            else if (slide === 'nhl') imgUrl = 'https://images.unsplash.com/photo-1580748141549-71748dbe0bdc?q=80&w=2000&auto=format&fit=crop'; // Ice
-            else if (slide === 'mlb') imgUrl = 'https://images.unsplash.com/photo-1508344928928-7165b67de128?q=80&w=2000&auto=format&fit=crop'; // Baseball
-            else if (slide === 'props') imgUrl = 'https://images.unsplash.com/photo-1595208031648-5222fc5be50c?q=80&w=2000&auto=format&fit=crop'; // Casino/Vegas Lights
-            
+            var imgUrl = 'https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?q=80&w=2000&auto=format&fit=crop'; 
+            if (slide === 'nba') imgUrl = 'https://images.unsplash.com/photo-1504450758481-7338eba7524a?q=80&w=2000&auto=format&fit=crop'; 
+            else if (slide === 'nhl') imgUrl = 'https://images.unsplash.com/photo-1580748141549-71748dbe0bdc?q=80&w=2000&auto=format&fit=crop'; 
+            else if (slide === 'mlb') imgUrl = 'https://images.unsplash.com/photo-1508344928928-7165b67de128?q=80&w=2000&auto=format&fit=crop'; 
+            else if (slide === 'props') imgUrl = 'https://images.unsplash.com/photo-1595208031648-5222fc5be50c?q=80&w=2000&auto=format&fit=crop'; 
             bg.style.backgroundImage = 'url(' + imgUrl + ')';
         }
 
@@ -236,7 +254,7 @@
                             var gameTime = new Date(ev.date).getTime();
                             var diffHours = (gameTime - nowTime) / (1000 * 60 * 60);
                             
-                            if (diffHours < -24 || diffHours > 96) return; // Filter old/distant games
+                            if (diffHours < -24 || diffHours > 96) return; 
                             
                             var h = comp.competitors[0], a = comp.competitors[1];
                             var hLogo = (h.team && h.team.logo) ? h.team.logo : 'https://a.espncdn.com/combiner/i?img=/i/teamlogos/default-team-logo-500.png';
@@ -244,21 +262,17 @@
                             var hName = h.team.shortDisplayName, aName = a.team.shortDisplayName;
                             var tv = (comp.broadcasts && comp.broadcasts[0]) ? comp.broadcasts[0].names[0] : 'TV';
                             
-                            // Win Probability Extraction (NFL/CFB/NBA)
                             var aProb = null, hProb = null;
                             if (comp.situation && comp.situation.lastPlay && comp.situation.lastPlay.probability) {
                                 aProb = comp.situation.lastPlay.probability.awayWinPercentage * 100;
                                 hProb = comp.situation.lastPlay.probability.homeWinPercentage * 100;
                             }
 
-                            // Build the Master Game Object
                             var gameObj = {
                                 league: c.id.toUpperCase(), home: hName, hLogo: hLogo, hScore: h.score || '', 
                                 away: aName, aLogo: aLogo, aScore: a.score || '', status: status.detail, 
                                 clock: comp.status.displayClock || '', tv: tv, state: status.state,
-                                aProb: aProb, hProb: hProb,
-                                searchString: (hName + " " + aName).toLowerCase(),
-                                odds: (comp.odds && comp.odds[0]) ? comp.odds[0].details : 'EVEN'
+                                aProb: aProb, hProb: hProb, searchString: (hName + " " + aName).toLowerCase()
                             };
 
                             globalRawGames.push(gameObj);
@@ -270,47 +284,57 @@
                                 allSched.push('<span class="score-item"><div class="team-box"><img class="team-logo" src="' + aLogo + '"></div><span class="vs-label">@</span><div class="team-box"><img class="team-logo" src="' + hLogo + '"></div><span class="game-status" style="color:rgba(255,255,255,0.5)">' + new Date(ev.date).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}) + '</span></span>');
                             }
 
-                            // Extract Star Players for Prop Shop
-                            if (status.state === 'pre' && comp.odds) {
-                                comp.competitors.forEach(function(competitor) {
-                                    if (competitor.leaders && competitor.leaders.length > 0) {
-                                        var topDude = competitor.leaders[0].leaders[0];
-                                        if (topDude && topDude.athlete && topDude.athlete.headshot) {
-                                            newLeaders.push({
-                                                name: topDude.athlete.displayName,
-                                                headshot: topDude.athlete.headshot.href,
-                                                statDesc: competitor.leaders[0].displayName,
-                                                teamCode: competitor.team.abbreviation,
-                                                oppCode: (competitor.id === h.id) ? a.team.abbreviation : h.team.abbreviation,
-                                                value: topDude.displayValue,
-                                                baseOdds: "-115"
-                                            });
+                            // Prop Shop - Fixed extraction logic to search all games safely
+                            comp.competitors.forEach(function(competitor) {
+                                if (competitor.leaders && competitor.leaders.length > 0) {
+                                    competitor.leaders.forEach(function(cat) {
+                                        if (cat.leaders && cat.leaders.length > 0) {
+                                            var topDude = cat.leaders[0];
+                                            if (topDude && topDude.athlete) {
+                                                var headshotUrl = (topDude.athlete.headshot && topDude.athlete.headshot.href) ? topDude.athlete.headshot.href : 'https://a.espncdn.com/combiner/i?img=/i/headshots/' + c.s + '/players/full/' + topDude.athlete.id + '.png&h=150&w=150&scale=crop';
+                                                var playerName = topDude.athlete.displayName || topDude.athlete.shortName;
+                                                
+                                                // Prevent duplicates
+                                                if (!newLeaders.some(l => l.name === playerName)) {
+                                                    newLeaders.push({
+                                                        name: playerName,
+                                                        headshot: headshotUrl,
+                                                        statDesc: cat.displayName || cat.name || "STAT",
+                                                        teamCode: competitor.team.abbreviation || competitor.team.shortDisplayName || "TEAM",
+                                                        oppCode: (competitor.id === h.id) ? (a.team.abbreviation || a.team.shortDisplayName || "OPP") : (h.team.abbreviation || h.team.shortDisplayName || "OPP"),
+                                                        value: topDude.displayValue,
+                                                        baseOdds: "-115"
+                                                    });
+                                                }
+                                            }
                                         }
-                                    }
-                                });
-                            }
+                                    });
+                                }
+                            });
                         } catch(e) {}
                     });
                 } catch(e) {} 
             }
             
             globalLiveGamesData = newLivePage;
-            globalPropsData = newLeaders.sort(function() { return 0.5 - Math.random(); }).slice(0, 6); // Grab 6 random stars
+            // Randomize and select top 6 for the Prop board
+            globalPropsData = newLeaders.sort(function() { return 0.5 - Math.random(); }).slice(0, 6); 
             
             var trackHtml = "";
             if (allLive.length > 0) trackHtml = '<span class="ticker-section-head" style="color:#ff007f;">LIVE NOW</span>' + allLive.join('');
             else trackHtml = '<span class="ticker-section-head">UPCOMING</span>' + allSched.join('');
             
             document.getElementById('ticker-track').innerHTML = trackHtml + trackHtml;
+            setTimeout(applyTickerSpeed, 100);
         }
 
-        // --- RENDER LIVE PAGE (WITH WIN PROBABILITY) ---
         function renderLivePage() {
             document.getElementById('live-game-screen').style.display = 'flex';
             var track = document.getElementById('live-grid-track');
             
             if (globalLiveGamesData.length === 0) {
                 track.innerHTML = '<div style="color:rgba(255,255,255,0.5); font-size:4vh; text-align:center; grid-column: 1 / -1; padding-top: 10vh;">NO LIVE GAMES</div>';
+                applyScroll('live-viewport', 'live-grid-track', 10000);
             } else {
                 track.innerHTML = globalLiveGamesData.map(function(g) { 
                     var probHtml = "";
@@ -319,30 +343,27 @@
                     }
                     return '<div class="glass-card"><div class="card-meta"><span style="color:#00ffff; text-shadow: 0 0 10px #00ffff;">● LIVE</span><span>' + g.league + '</span><span>' + g.status + '</span></div><div class="card-row"><div class="card-team"><img src="' + g.aLogo + '">' + g.away + '</div><div class="card-val-lg">' + g.aScore + '</div></div><div class="card-row"><div class="card-team"><img src="' + g.hLogo + '">' + g.home + '</div><div class="card-val-lg">' + g.hScore + '</div></div>' + probHtml + '<div class="card-footer" style="margin-top: 1.5vh;"><span>' + g.clock + '</span><span style="color:#39ff14">' + g.tv + '</span></div></div>';
                 }).join('');
+                applyScroll('live-viewport', 'live-grid-track', 15000);
             }
-            slideTimer = setTimeout(nextSlide, 15000);
         }
 
-        // --- RENDER PROP SHOP (PREMIUM INTEGRATION) ---
         function showProps() {
             document.getElementById('props-screen').style.display = 'flex';
             var track = document.getElementById('props-grid-track');
             
             if (globalPropsData.length === 0) {
                 track.innerHTML = '<div style="color:rgba(255,255,255,0.5); font-size:4vh; text-align:center; grid-column: 1 / -1; padding-top: 10vh;">PROPS UNAVAILABLE</div>';
+                applyScroll('props-viewport', 'props-grid-track', 8000);
             } else {
                 track.innerHTML = globalPropsData.map(function(p) {
-                    // Simulate a prop line using their season average as the Over/Under line
-                    var simLine = (parseFloat(p.value) * 0.85).toFixed(1); 
-                    if (isNaN(simLine)) simLine = "0.5";
-                    
-                    return '<div class="prop-card"><img src="' + p.headshot + '" class="prop-headshot"><div class="prop-details"><div class="prop-name">' + p.name + '</div><div class="prop-game">' + p.teamCode + ' vs ' + p.oppCode + '</div><div class="prop-line">O/U ' + simLine + ' ' + p.statDesc + '</div><span class="prop-odds">' + p.baseOdds + '</span></div></div>';
+                    var valFloat = parseFloat(p.value);
+                    var simLine = (!isNaN(valFloat) && valFloat > 0) ? (valFloat * 0.85).toFixed(1) : "0.5"; 
+                    return '<div class="prop-card"><img src="' + p.headshot + '" class="prop-headshot"><div class="prop-details"><div class="prop-name">' + p.name + '</div><div class="prop-game">' + p.teamCode + ' vs ' + p.oppCode + '</div><div><div class="prop-line">O/U ' + simLine + ' ' + p.statDesc + '</div><span class="prop-odds">' + p.baseOdds + '</span></div></div></div>';
                 }).join('');
+                applyScroll('props-viewport', 'props-grid-track', 15000);
             }
-            slideTimer = setTimeout(nextSlide, 12000);
         }
 
-        // --- RENDER MY SQUAD (GLASS CSS) ---
         function showMySquad() {
             document.getElementById('mysquad-screen').style.display = 'flex';
             var gamesHtml = "";
@@ -355,7 +376,7 @@
                 }
             });
             document.getElementById('squad-games-track').innerHTML = gamesHtml || '<div style="text-align:center; color:rgba(255,255,255,0.4); font-size:3vh; margin-top:5vh; border: 1px dashed rgba(255,255,255,0.2); padding: 4vh; border-radius: 1.5vh;">NO ACTIVE/UPCOMING GAMES</div>';
-            slideTimer = setTimeout(nextSlide, 12000);
+            applyScroll('mysquad-viewport', 'squad-games-track', 12000);
         }
 
         async function showRankings() {
@@ -367,8 +388,8 @@
                     return '<div class="rank-row"><span class="rank-num">' + r.current + '</span><img style="width:8vh; margin:0 3vh; filter:drop-shadow(0 2px 5px rgba(0,0,0,0.5));" src="' + r.team.logo + '"><span><span class="rank-name">' + r.team.nickname + '</span></span><span style="margin-left:auto; font-size:4vh; color:rgba(255,255,255,0.6); font-weight:900;">' + (r.recordSummary || '0-0') + '</span></div>'; 
                 }).join('');
                 document.getElementById('rankings-list-track').innerHTML = html;
-            } catch(e) {}
-            slideTimer = setTimeout(nextSlide, 12000);
+                applyScroll('rankings-viewport', 'rankings-list-track', 15000);
+            } catch(e) { slideTimer = setTimeout(nextSlide, 5000); }
         }
 
         async function showStandings(league, sport) {
@@ -388,17 +409,16 @@
                     return '<div class="division-block"><div class="division-header">' + (group.name || "STANDINGS") + '</div>' + rows + '</div>';
                 }).join('');
                 document.getElementById(league + '-track').innerHTML = html;
-            } catch(e) {}
-            slideTimer = setTimeout(nextSlide, 15000);
+                applyScroll(league + '-viewport', league + '-track', 15000);
+            } catch(e) { slideTimer = setTimeout(nextSlide, 5000); }
         }
 
         window.addEventListener('load', async function() { 
             updateClock(); setInterval(updateClock, 1000);
             renderSkeletons();
             await updateSportsTicker();
-            nextSlide(); // Begin rotation
+            nextSlide(); 
             
-            // Background refresh data every 5 minutes
             setInterval(function(){ updateSportsTicker().catch(function(){}); }, 300000);
         });
     </script>
