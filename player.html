@@ -16,32 +16,55 @@
 
         #fs-toggle { position: fixed; top: 2.5vh; right: 3vw; z-index: 15000; background: none; border: none; color: #00ffff; font-size: 4vh; cursor: pointer; opacity: 0.5; transition: all 0.3s ease; text-shadow: 0 0 10px #00ffff; }
         #fs-toggle:hover { opacity: 1; color: #ff007f; text-shadow: 0 0 15px #ff007f; }
-        #master-clock { position: fixed; top: 2.5vh; left: 3vw; z-index: 15000; color: #39ff14; font-family: 'Share Tech Mono', monospace; font-size: 4.5vh; font-weight: 900; text-shadow: 0 0 15px #39ff14; letter-spacing: 0.2vw; }
+        #master-clock { position: fixed; top: 2.5vh; left: 3vw; z-index: 15000; color: #fff; font-family: 'Share Tech Mono', monospace; font-size: 4.5vh; font-weight: 900; letter-spacing: 0.2vw; text-shadow: 0 2px 5px rgba(0,0,0,0.8); }
+
+        /* --- ROTATING NEON ANIMATIONS --- */
+        @keyframes neonText {
+            0% { color: #00ffff; text-shadow: 0 0 10px rgba(0,255,255,0.5); }
+            25% { color: #ff007f; text-shadow: 0 0 10px rgba(255,0,127,0.5); }
+            50% { color: #facc15; text-shadow: 0 0 10px rgba(250,204,21,0.5); }
+            75% { color: #39ff14; text-shadow: 0 0 10px rgba(57,255,20,0.5); }
+            100% { color: #00ffff; text-shadow: 0 0 10px rgba(0,255,255,0.5); }
+        }
+        @keyframes neonBorder {
+            0% { border-color: rgba(0,255,255,0.5); box-shadow: 0 -5px 25px rgba(0,255,255,0.2); }
+            25% { border-color: rgba(255,0,127,0.5); box-shadow: 0 -5px 25px rgba(255,0,127,0.2); }
+            50% { border-color: rgba(250,204,21,0.5); box-shadow: 0 -5px 25px rgba(250,204,21,0.2); }
+            75% { border-color: rgba(57,255,20,0.5); box-shadow: 0 -5px 25px rgba(57,255,20,0.2); }
+            100% { border-color: rgba(0,255,255,0.5); box-shadow: 0 -5px 25px rgba(0,255,255,0.2); }
+        }
+
+        .neon-text-cycle { animation: neonText 20s linear infinite; }
+        .neon-border-cycle { animation: neonBorder 20s linear infinite; }
 
         /* TICKER */
-        #sports-ticker { position: absolute; bottom: 0; left: 0; width: 100%; height: var(--ticker-height); background: rgba(5, 10, 15, 0.6); backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px); border-top: 2px solid #00ffff; box-shadow: 0 -5px 25px rgba(0,255,255,0.2); z-index: 100; display: flex; align-items: center; overflow: hidden; white-space: nowrap; }
+        #sports-ticker { position: absolute; bottom: 0; left: 0; width: 100%; height: var(--ticker-height); background: rgba(5, 10, 15, 0.6); backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px); border-top: 2px solid; z-index: 100; display: flex; align-items: center; overflow: hidden; white-space: nowrap; }
         #ticker-track { display: inline-flex; height: 100%; align-items: center; width: max-content; will-change: transform; } 
         @keyframes scrollTicker { 0% { transform: translate3d(0, 0, 0); } 100% { transform: translate3d(-50%, 0, 0); } }
 
-        .ticker-section-head { display: inline-flex; align-items: center; justify-content: center; padding: 0 3vw; height: 100%; color: #00ffff; font-size: 4rem; letter-spacing: 0.3vw; font-weight: 900; text-shadow: 0 0 20px #00ffff; }
+        .ticker-section-head { display: inline-flex; align-items: center; justify-content: center; padding: 0 3vw; height: 100%; font-size: 4rem; letter-spacing: 0.3vw; font-weight: 900; }
         .score-item { display: inline-flex !important; flex-direction: row !important; align-items: center !important; padding: 0 5vw; height: 100%; vertical-align: middle; flex-wrap: nowrap !important; }
         .team-box { display: flex !important; flex-direction: row !important; align-items: center !important; flex-wrap: nowrap !important; }
         
-        /* AGGRESSIVE WHITE OUTLINE STROKE FOR ALL LOGOS (Fixes Ohio State black text issue) */
+        /* AGGRESSIVE WHITE OUTLINE STROKE FOR ALL LOGOS */
         .team-logo, .card-team img, .st-logo, .rank-logo, .prop-headshot, .league-logo {
             filter: drop-shadow(1px 1px 0px #fff) drop-shadow(-1px -1px 0px #fff) drop-shadow(1px -1px 0px #fff) drop-shadow(-1px 1px 0px #fff) drop-shadow(0px 4px 10px rgba(0,0,0,0.8));
         }
         
         .team-logo { width: 11vh; height: 11vh; object-fit: contain; margin-right: 1.5vw; flex-shrink: 0; } 
-        .team-score { font-size: 4.8rem; line-height: 1; color: #fff; margin-right: 0.8vw; font-weight: 900; }
-        .vs-label { color: #00ffff; font-size: 2.7rem; margin: 0 2.5vw; font-weight: bold; text-shadow: 0 0 10px #00ffff; }
-        .game-status { margin-left: 2vw; color: #facc15; font-size: 2.7rem; text-transform: uppercase; letter-spacing: 0.1vw; text-shadow: 0 0 10px #facc15; }
+        
+        /* STRICT WHITE TEXT CLASSES FOR ALL DATA */
+        .team-score, .card-team, .card-val-lg, .prop-name, .rank-name, .st-name { color: #ffffff !important; text-shadow: 0 3px 6px rgba(0,0,0,1) !important; }
+        
+        .team-score { font-size: 4.8rem; line-height: 1; margin-right: 0.8vw; font-weight: 900; }
+        .vs-label { font-size: 2.7rem; margin: 0 2.5vw; font-weight: bold; }
+        .game-status { margin-left: 2vw; font-size: 2.7rem; text-transform: uppercase; letter-spacing: 0.1vw; }
         .live-pulse { animation: pulsePink 1.5s ease-in-out infinite; color: #ff007f; font-weight: 900; margin-right: 1.5vw; font-size: 2.7rem; text-shadow: 0 0 15px #ff007f; }
         @keyframes pulsePink { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
 
         /* SLIDES */
         .slide-screen { position: absolute; inset: 0; z-index: 10; display: none; flex-direction: column; padding: 0 4vh; align-items: center; overflow: hidden; }
-        .screen-header { margin-top: 9vh; font-size: 9.5vh; font-weight: 900; color: #fff; text-transform: uppercase; letter-spacing: 1vh; margin-bottom: 2vh; z-index: 20; border-bottom: 2px solid #00ffff; padding-bottom: 1vh; width: 95%; text-align: center; display: block; text-shadow: 0 0 15px rgba(255,255,255,0.5); box-shadow: 0 5px 15px -10px #00ffff; }
+        .screen-header { margin-top: 9vh; font-size: 9.5vh; font-weight: 900; text-transform: uppercase; letter-spacing: 1vh; margin-bottom: 2vh; z-index: 20; border-bottom: 2px solid; padding-bottom: 1vh; width: 95%; text-align: center; display: block; }
         .league-logo { height: 1em; margin-right: 1.5vw; display: inline-block; vertical-align: middle; margin-top: -1.5vh; }
         
         .content-viewport { width: 95%; height: 65vh; overflow: hidden; position: relative; z-index: 20; }
@@ -49,23 +72,20 @@
         .grid-track { display: grid; grid-template-columns: repeat(2, 1fr); gap: 2vw; }
         .list-track { display: flex; flex-direction: column; gap: 1.5vh; width: 90%; margin: 0 auto; }
 
-        /* PREMIUM GLASS CARDS - ALL NEON TEXT */
-        .glass-card { background: rgba(15, 20, 30, 0.45); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(0, 255, 255, 0.3); border-top: 1px solid rgba(0, 255, 255, 0.6); border-radius: 1.5vh; display: flex; flex-direction: column; padding: 2.5vh; box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5); position: relative; overflow: hidden; }
-        .squad-game-card { border-left: 0.8vh solid #39ff14; }
-        .squad-game-card.card-focus-canes { border-left-color: #ff007f; background: rgba(40, 5, 5, 0.45); }
-        .squad-game-card.card-focus-duke { border-left-color: #00ffff; background: rgba(5, 15, 40, 0.45); }
-        .squad-game-card.card-focus-ecu { border-left-color: #facc15; background: rgba(30, 10, 45, 0.45); }
+        /* PREMIUM GLASS CARDS */
+        .glass-card { background: rgba(15, 20, 30, 0.45); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.1); border-top: 1px solid rgba(255, 255, 255, 0.2); border-radius: 1.5vh; display: flex; flex-direction: column; padding: 2.5vh; box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5); position: relative; overflow: hidden; }
+        .squad-game-card { border-left: 0.8vh solid; }
 
         .card-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1vh; width: 100%; z-index: 2; position: relative; }
-        .card-team { display: flex; align-items: center; gap: 2vh; font-size: 5.2vh; font-weight: 900; color: white; text-transform: uppercase; text-shadow: 0 2px 5px black; } 
+        .card-team { display: flex; align-items: center; gap: 2vh; font-size: 5.2vh; font-weight: 900; text-transform: uppercase; } 
         .card-team img { width: 8.2vh; height: 8.2vh; object-fit: contain; } 
-        .card-val-lg { font-weight: 900; color: #fff; font-size: 5.7vh; text-shadow: 0 2px 5px black; } 
-        .card-meta { display: flex; justify-content: space-between; border-bottom: 1px solid rgba(0,255,255,0.3); padding-bottom: 1vh; margin-bottom: 1.5vh; font-size: 3vh; color: #00ffff; font-weight: 900; text-transform: uppercase; letter-spacing: 0.1vw; z-index: 2; position: relative; text-shadow: 0 0 10px rgba(0,255,255,0.4); }
-        .card-footer { margin-top: auto; padding-top: 1.2vh; border-top: 1px solid rgba(250,204,21,0.3); display: flex; justify-content: space-between; align-items: center; color: #facc15; font-size: 2.8vh; text-transform: uppercase; font-weight: 900; z-index: 2; position: relative; text-shadow: 0 0 10px rgba(250,204,21,0.4); }
+        .card-val-lg { font-size: 5.7vh; font-weight: 900; } 
+        .card-meta { display: flex; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 1vh; margin-bottom: 1.5vh; font-size: 3vh; font-weight: 900; text-transform: uppercase; letter-spacing: 0.1vw; z-index: 2; position: relative; }
+        .card-footer { margin-top: auto; padding-top: 1.2vh; border-top: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: space-between; align-items: center; font-size: 2.8vh; text-transform: uppercase; font-weight: 900; z-index: 2; position: relative; }
 
-        /* TRENDS & MOMENTUM (Spaced Out & Neon) */
+        /* TRENDS & MOMENTUM */
         .trend-container { display: flex; align-items: center; margin-top: 1.5vh; padding: 1.5vh; background: rgba(0,0,0,0.4); border-radius: 1vh; z-index: 2; position: relative; border: 1px solid rgba(255,255,255,0.1); }
-        .trend-label { font-size: 2.2vh; font-weight: 900; letter-spacing: 0.1vw; text-transform: uppercase; text-shadow: 0 0 5px currentColor; margin-bottom: 0.5vh; }
+        .trend-label { font-size: 2.2vh; font-weight: 900; letter-spacing: 0.1vw; text-transform: uppercase; margin-bottom: 0.5vh; }
         
         .diamond-graphic { width: 5.5vh; height: 5.5vh; transform: rotate(45deg); display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 3px; margin: auto; }
         .base { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3); border-radius: 2px; }
@@ -74,35 +94,35 @@
         .out-dot { width: 2vh; height: 2vh; border-radius: 50%; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3); }
         .out-dot.active { background: #ff007f; box-shadow: 0 0 10px #ff007f; border-color: #ff007f; }
 
-        .win-prob-track { flex: 1; height: 1.5vh; background: rgba(255,255,255,0.1); border-radius: 0.75vh; overflow: hidden; display: flex; margin: 0 2vh; }
+        .win-prob-track { flex: 1; height: 1.5vh; background: rgba(255,255,255,0.1); border-radius: 0.75vh; overflow: hidden; display: flex; margin: 0 2vh; border: 1px solid rgba(255,255,255,0.1); }
         .win-prob-away { height: 100%; background: #00ffff; box-shadow: 0 0 15px #00ffff; }
         .win-prob-home { height: 100%; background: #ff007f; box-shadow: 0 0 15px #ff007f; }
-        .trend-streak { font-size: 3vh; color: #39ff14; font-weight: 900; letter-spacing: 0.2vw; text-shadow: 0 0 10px #39ff14; }
+        .trend-streak { font-size: 3vh; font-weight: 900; letter-spacing: 0.2vw; }
 
         /* PROP SHOP SLIDE */
-        .prop-card { background: rgba(10, 15, 20, 0.5); backdrop-filter: blur(25px); border: 1px solid rgba(212, 175, 55, 0.5); border-top: 1px solid rgba(212, 175, 55, 0.8); border-radius: 1.5vh; padding: 3vh; display: flex; align-items: center; gap: 3vh; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-        .prop-headshot { width: 14vh; height: 14vh; border-radius: 50%; border: 3px solid #facc15; object-fit: cover; object-position: top; background: rgba(0,0,0,0.5); box-shadow: 0 0 20px rgba(250, 204, 21, 0.5); flex-shrink: 0; }
+        .prop-card { background: rgba(10, 15, 20, 0.5); backdrop-filter: blur(25px); border: 1px solid rgba(255, 255, 255, 0.1); border-top: 1px solid rgba(255, 255, 255, 0.2); border-radius: 1.5vh; padding: 3vh; display: flex; align-items: center; gap: 3vh; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .prop-headshot { width: 14vh; height: 14vh; border-radius: 50%; object-fit: cover; object-position: top; background: rgba(0,0,0,0.5); flex-shrink: 0; }
         .prop-details { flex: 1; display: flex; flex-direction: column; justify-content: center; }
-        .prop-name { font-size: 4.5vh; font-weight: 900; color: white; text-transform: uppercase; margin-bottom: 0.5vh; line-height: 1; text-shadow: 0 2px 5px black; }
-        .prop-game { font-size: 2.5vh; color: #00ffff; font-weight: 900; text-transform: uppercase; letter-spacing: 0.1vw; text-shadow: 0 0 10px rgba(0,255,255,0.4); }
-        .prop-line-container { display: flex; justify-content: space-between; align-items: center; background: rgba(250, 204, 21, 0.1); padding: 1.5vh 2.5vh; border-radius: 1vh; border: 1px solid rgba(250, 204, 21, 0.3); margin-top: 1.5vh; box-shadow: inset 0 0 10px rgba(0,0,0,0.5); }
-        .prop-line { font-size: 3vh; color: #facc15; font-weight: 900; line-height: 1.2; flex: 1; padding-right: 2vh; word-wrap: break-word; text-shadow: 0 0 5px rgba(250,204,21,0.5); }
-        .prop-odds { font-size: 3.5vh; color: #39ff14; font-weight: 900; flex-shrink: 0; text-shadow: 0 0 10px rgba(57,255,20,0.5); }
+        .prop-name { font-size: 4.5vh; font-weight: 900; text-transform: uppercase; margin-bottom: 0.5vh; line-height: 1; }
+        .prop-game { font-size: 2.5vh; font-weight: 900; text-transform: uppercase; letter-spacing: 0.1vw; }
+        .prop-line-container { display: flex; justify-content: space-between; align-items: center; background: rgba(0, 0, 0, 0.4); padding: 1.5vh 2.5vh; border-radius: 1vh; border: 1px solid rgba(255, 255, 255, 0.1); margin-top: 1.5vh; box-shadow: inset 0 0 10px rgba(0,0,0,0.5); }
+        .prop-line { font-size: 3vh; font-weight: 900; line-height: 1.2; flex: 1; padding-right: 2vh; word-wrap: break-word; }
+        .prop-odds { font-size: 3.5vh; font-weight: 900; flex-shrink: 0; }
 
         /* SKELETON SHIMMER */
-        .skeleton { background: linear-gradient(90deg, rgba(0,255,255,0.05) 25%, rgba(0,255,255,0.2) 50%, rgba(0,255,255,0.05) 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 0.8vh; }
+        .skeleton { background: linear-gradient(90deg, rgba(255,255,255,0.05) 25%, rgba(255,255,255,0.2) 50%, rgba(255,255,255,0.05) 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 0.8vh; }
         @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
         .skel-text { height: 3vh; width: 40%; margin-bottom: 1.5vh; }
         .skel-img { width: 8.2vh; height: 8.2vh; border-radius: 50%; }
         .skel-row { display: flex; align-items: center; gap: 2vh; margin-bottom: 2vh; }
 
         /* OTHER SLIDES */
-        .rank-row { background: rgba(15, 20, 30, 0.45); backdrop-filter: blur(15px); border: 1px solid rgba(0, 255, 255, 0.3); border-radius: 1.2vh; margin-bottom: 1.5vh; width: 100%; display: flex; align-items: center; padding: 2vh 2.5vh; box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
-        .rank-num { font-size: 6.8vh; color: #facc15; font-weight: 900; width: 12vh; text-align: center; text-shadow: 0 0 15px #facc15; }
-        .rank-name { font-size: 5.4vh; color: #39ff14; font-weight: 900; flex: 1; text-transform: uppercase; text-shadow: 0 0 10px rgba(57,255,20,0.5); }
+        .rank-row { background: rgba(15, 20, 30, 0.45); backdrop-filter: blur(15px); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 1.2vh; margin-bottom: 1.5vh; width: 100%; display: flex; align-items: center; padding: 2vh 2.5vh; box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
+        .rank-num { font-size: 6.8vh; font-weight: 900; width: 12vh; text-align: center; }
+        .rank-name { font-size: 5.4vh; font-weight: 900; flex: 1; text-transform: uppercase; }
         
-        .division-block { background: rgba(10, 15, 25, 0.5); backdrop-filter: blur(15px); border: 1px solid rgba(0,255,255,0.3); border-radius: 1.5vh; padding: 2.5vh; margin-bottom: 2.5vh; box-shadow: 0 10px 25px rgba(0,0,0,0.6); }
-        .division-header { color: #facc15; font-size: 3.8vh; font-weight: 900; text-transform: uppercase; border-bottom: 2px solid rgba(250,204,21,0.4); margin-bottom: 1.5vh; padding-bottom: 1vh; text-shadow: 0 0 10px rgba(250,204,21,0.5); }
+        .division-block { background: rgba(10, 15, 25, 0.5); backdrop-filter: blur(15px); border: 1px solid rgba(255,255,255,0.1); border-radius: 1.5vh; padding: 2.5vh; margin-bottom: 2.5vh; box-shadow: 0 10px 25px rgba(0,0,0,0.6); }
+        .division-header { font-size: 3.8vh; font-weight: 900; text-transform: uppercase; border-bottom: 2px solid; margin-bottom: 1.5vh; padding-bottom: 1vh; }
         .st-row { display: flex; align-items: center; padding: 1.2vh 0; border-bottom: 1px solid rgba(255,255,255,0.1); font-size: 3.8vh; font-weight: 900; }
         
         @keyframes scrollVerticalOnePass { 0% { transform: translate3d(0,0,0); } 100% { transform: translate3d(0, var(--scroll-end), 0); } }
@@ -119,33 +139,33 @@
         <button id="fs-toggle" onclick="if(!document.fullscreenElement) document.documentElement.requestFullscreen(); else document.exitFullscreen();">⛶</button>
 
         <div id="live-game-screen" class="slide-screen">
-            <div class="screen-header" style="color: #00ffff; border-bottom-color: #00ffff; text-shadow: 0 0 20px #00ffff;">LIVE ACTION</div>
+            <div class="screen-header neon-text-cycle neon-border-cycle">LIVE ACTION</div>
             <div class="content-viewport" id="live-viewport"><div class="grid-track" id="live-grid-track"></div></div>
         </div>
 
         <div id="props-screen" class="slide-screen">
-            <div class="screen-header" style="color: #facc15; border-bottom-color: #facc15; text-shadow: 0 0 20px #facc15;">VEGAS PROP SHOP</div>
+            <div class="screen-header neon-text-cycle neon-border-cycle">VEGAS PROP SHOP</div>
             <div class="content-viewport" id="props-viewport"><div class="grid-track" id="props-grid-track"></div></div>
         </div>
 
         <div id="mysquad-screen" class="slide-screen">
-            <div class="screen-header" style="color: #39ff14; border-bottom-color: #39ff14; text-shadow: 0 0 20px #39ff14;">MY SQUAD DASHBOARD</div>
+            <div class="screen-header neon-text-cycle neon-border-cycle">MY SQUAD DASHBOARD</div>
             <div class="content-viewport" id="mysquad-viewport">
                 <div style="display: flex; width: 100%; height: 100%; gap: 4vw;">
                     <div style="flex: 1; display: flex; flex-direction: column; overflow: hidden;">
-                        <div style="font-size: 4vh; color: #00ffff; font-weight: 900; text-transform: uppercase; border-bottom: 2px solid rgba(0,255,255,0.4); padding-bottom: 1vh; margin-bottom: 2vh; text-align: center; text-shadow: 0 0 10px #00ffff;">ACTIVE MATCHUPS</div>
+                        <div class="neon-text-cycle neon-border-cycle" style="font-size: 4vh; font-weight: 900; text-transform: uppercase; border-bottom: 2px solid; padding-bottom: 1vh; margin-bottom: 2vh; text-align: center;">ACTIVE MATCHUPS</div>
                         <div id="squad-games-track" style="padding-bottom: 5vh; display: flex; flex-direction: column; gap: 1.5vh; will-change: transform;"></div>
                     </div>
                 </div>
             </div>
         </div>
         
-        <div id="nfl-screen" class="slide-screen"><div class="screen-header"><img src="https://a.espncdn.com/combiner/i?img=/i/teamlogos/leagues/500/nfl.png" class="league-logo" onerror="this.style.display='none'">NFL STANDINGS</div><div class="content-viewport" id="nfl-viewport"><div class="grid-track" style="gap: 2.5vw;" id="nfl-track"></div></div></div>
-        <div id="nba-screen" class="slide-screen"><div class="screen-header"><img src="https://a.espncdn.com/combiner/i?img=/i/teamlogos/leagues/500/nba.png" class="league-logo" onerror="this.style.display='none'">NBA STANDINGS</div><div class="content-viewport" id="nba-viewport"><div class="grid-track" style="gap: 2.5vw;" id="nba-track"></div></div></div>
-        <div id="mlb-screen" class="slide-screen"><div class="screen-header"><img src="https://a.espncdn.com/combiner/i?img=/i/teamlogos/leagues/500/mlb.png" class="league-logo" onerror="this.style.display='none'">MLB STANDINGS</div><div class="content-viewport" id="mlb-viewport"><div class="grid-track" style="gap: 2.5vw;" id="mlb-track"></div></div></div>
-        <div id="rankings-screen" class="slide-screen"><div class="screen-header" style="color:#ff007f; text-shadow: 0 0 20px #ff007f; border-bottom-color: #ff007f;">COLLEGE RANKINGS</div><div class="content-viewport" id="rankings-viewport"><div class="list-track" id="rankings-list-track"></div></div></div>
+        <div id="nfl-screen" class="slide-screen"><div class="screen-header neon-text-cycle neon-border-cycle"><img src="https://a.espncdn.com/combiner/i?img=/i/teamlogos/leagues/500/nfl.png" class="league-logo" onerror="this.style.display='none'">NFL STANDINGS</div><div class="content-viewport" id="nfl-viewport"><div class="grid-track" style="gap: 2.5vw;" id="nfl-track"></div></div></div>
+        <div id="nba-screen" class="slide-screen"><div class="screen-header neon-text-cycle neon-border-cycle"><img src="https://a.espncdn.com/combiner/i?img=/i/teamlogos/leagues/500/nba.png" class="league-logo" onerror="this.style.display='none'">NBA STANDINGS</div><div class="content-viewport" id="nba-viewport"><div class="grid-track" style="gap: 2.5vw;" id="nba-track"></div></div></div>
+        <div id="mlb-screen" class="slide-screen"><div class="screen-header neon-text-cycle neon-border-cycle"><img src="https://a.espncdn.com/combiner/i?img=/i/teamlogos/leagues/500/mlb.png" class="league-logo" onerror="this.style.display='none'">MLB STANDINGS</div><div class="content-viewport" id="mlb-viewport"><div class="grid-track" style="gap: 2.5vw;" id="mlb-track"></div></div></div>
+        <div id="rankings-screen" class="slide-screen"><div class="screen-header neon-text-cycle neon-border-cycle">COLLEGE RANKINGS</div><div class="content-viewport" id="rankings-viewport"><div class="list-track" id="rankings-list-track"></div></div></div>
 
-        <div id="sports-ticker"><div id="ticker-track"></div></div>
+        <div id="sports-ticker" class="neon-border-cycle"><div id="ticker-track"></div></div>
     </div>
 
     <script>
@@ -183,16 +203,23 @@
             }
         }
 
+        // --- TICKER SPEED AND ANIMATION FIX ---
         function applyTickerSpeed() {
             var track = document.getElementById('ticker-track');
             if(!track) return;
-            var trackWidth = track.scrollWidth / 2;
+            
+            // Clear current animation to force a browser repaint
+            track.style.animation = 'none';
+            void track.offsetWidth; 
+            
+            var trackWidth = track.scrollWidth / 2; // Divide by 2 because we duplicated the HTML
             if(trackWidth <= 0) return;
-            var speedMap = {1:30, 2:45, 3:65, 4:90, 5:120, 6:160, 7:210, 8:270, 9:340, 10:420};
-            var pixelsPerSec = speedMap[5] || 120; 
+            
+            var pixelsPerSec = 120; // Consistent readable speed
             var duration = trackWidth / pixelsPerSec;
             if (duration < 10) duration = 10;
-            track.style.animationDuration = duration + 's';
+            
+            track.style.animation = 'scrollTicker ' + duration + 's linear infinite';
         }
 
         function renderSkeletons() {
@@ -267,11 +294,8 @@
                             var hName = h.team.shortDisplayName, aName = a.team.shortDisplayName;
                             var tv = (comp.broadcasts && comp.broadcasts[0]) ? comp.broadcasts[0].names[0] : 'TV';
                             
-                            // LOGIC FIX: Baseball uses status.detail (Inning) instead of displayClock (0:00)
                             var clockStr = comp.status.displayClock || '';
-                            if (c.id === 'mlb' || c.id === 'clb') {
-                                clockStr = status.detail; 
-                            }
+                            if (c.id === 'mlb' || c.id === 'clb') clockStr = status.detail; 
                             if (!clockStr) clockStr = status.shortDetail || '';
 
                             var trendData = { type: null };
@@ -302,9 +326,9 @@
                             
                             if (status.state === 'in') {
                                 newLivePage.push(gameObj);
-                                allLive.push('<span class="score-item"><span class="live-pulse">●</span><div class="team-box"><img class="team-logo" src="' + aLogo + '"><span class="team-score">' + a.score + '</span></div><span class="vs-label">@</span><div class="team-box"><img class="team-logo" src="' + hLogo + '"><span class="team-score">' + h.score + '</span></div><span class="game-status">' + status.shortDetail + '</span></span>');
+                                allLive.push('<span class="score-item"><span class="live-pulse">●</span><div class="team-box"><img class="team-logo" src="' + aLogo + '"><span class="team-score">' + a.score + '</span></div><span class="vs-label">@</span><div class="team-box"><img class="team-logo" src="' + hLogo + '"><span class="team-score">' + h.score + '</span></div><span class="game-status neon-text-cycle">' + status.shortDetail + '</span></span>');
                             } else if (status.state === 'pre') {
-                                allSched.push('<span class="score-item"><div class="team-box"><img class="team-logo" src="' + aLogo + '"></div><span class="vs-label">@</span><div class="team-box"><img class="team-logo" src="' + hLogo + '"></div><span class="game-status" style="color:#00ffff">' + new Date(ev.date).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}) + '</span></span>');
+                                allSched.push('<span class="score-item"><div class="team-box"><img class="team-logo" src="' + aLogo + '"></div><span class="vs-label">@</span><div class="team-box"><img class="team-logo" src="' + hLogo + '"></div><span class="game-status neon-text-cycle">' + new Date(ev.date).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}) + '</span></span>');
                             }
 
                             comp.competitors.forEach(function(competitor) {
@@ -343,19 +367,18 @@
             globalPropsData = newLeaders.sort(function() { return 0.5 - Math.random(); }).slice(0, 6); 
             
             var trackHtml = "";
-            if (allLive.length > 0) trackHtml = '<span class="ticker-section-head" style="color:#ff007f;">LIVE NOW</span>' + allLive.join('');
-            else trackHtml = '<span class="ticker-section-head">UPCOMING</span>' + allSched.join('');
+            if (allLive.length > 0) trackHtml = '<span class="ticker-section-head neon-text-cycle">LIVE NOW</span>' + allLive.join('');
+            else trackHtml = '<span class="ticker-section-head neon-text-cycle">UPCOMING</span>' + allSched.join('');
             
             document.getElementById('ticker-track').innerHTML = trackHtml + trackHtml;
             setTimeout(applyTickerSpeed, 100);
         }
 
-        // --- FIXED BASEBALL SPREAD LAYOUT ---
         function buildTrendHtml(trend) {
             if (!trend || !trend.type) return '';
             
             if (trend.type === 'winprob') {
-                return '<div class="trend-container"><div class="trend-label" style="color:#00ffff;">' + trend.aProb.toFixed(1) + '%</div><div class="win-prob-track"><div class="win-prob-away" style="width:' + trend.aProb + '%"></div><div class="win-prob-home" style="width:' + trend.hProb + '%"></div></div><div class="trend-label" style="color:#ff007f;">' + trend.hProb.toFixed(1) + '%</div></div>';
+                return '<div class="trend-container"><div class="trend-label neon-text-cycle">' + trend.aProb.toFixed(1) + '%</div><div class="win-prob-track"><div class="win-prob-away" style="width:' + trend.aProb + '%"></div><div class="win-prob-home" style="width:' + trend.hProb + '%"></div></div><div class="trend-label neon-text-cycle">' + trend.hProb.toFixed(1) + '%</div></div>';
             }
             
             if (trend.type === 'mlb') {
@@ -368,14 +391,14 @@
                 var countStr = (trend.balls || 0) + ' - ' + (trend.strikes || 0);
                 
                 return '<div class="trend-container" style="justify-content: space-between; width: 100%;">' +
-                       '<div style="display:flex; flex-direction:column; align-items:center;"><span class="trend-label" style="color:#00ffff;">COUNT</span><span style="color:#39ff14; font-size:3.5vh; font-weight:900; text-shadow: 0 0 10px #39ff14;">' + countStr + '</span></div>' +
-                       '<div style="display:flex; flex-direction:column; align-items:center;"><span class="trend-label" style="color:#00ffff;">BASES</span>' + dHTML + '</div>' +
-                       '<div style="display:flex; flex-direction:column; align-items:center;"><span class="trend-label" style="color:#00ffff;">OUTS</span>' + oHTML + '</div>' +
+                       '<div style="display:flex; flex-direction:column; align-items:center;"><span class="trend-label neon-text-cycle">COUNT</span><span class="neon-text-cycle" style="font-size:3.5vh; font-weight:900;">' + countStr + '</span></div>' +
+                       '<div style="display:flex; flex-direction:column; align-items:center;"><span class="trend-label neon-text-cycle">BASES</span>' + dHTML + '</div>' +
+                       '<div style="display:flex; flex-direction:column; align-items:center;"><span class="trend-label neon-text-cycle">OUTS</span>' + oHTML + '</div>' +
                        '</div>';
             }
             
             if (trend.type === 'records') {
-                return '<div class="trend-container" style="justify-content:space-between; width:100%; background:transparent; padding:0; border:none;"><span class="trend-streak">' + trend.aRec + '</span><span class="trend-label" style="color:#00ffff;">SEASON RECORD</span><span class="trend-streak">' + trend.hRec + '</span></div>';
+                return '<div class="trend-container" style="justify-content:space-between; width:100%; background:transparent; padding:0; border:none;"><span class="trend-streak neon-text-cycle">' + trend.aRec + '</span><span class="trend-label neon-text-cycle">SEASON RECORD</span><span class="trend-streak neon-text-cycle">' + trend.hRec + '</span></div>';
             }
             return '';
         }
@@ -385,15 +408,14 @@
             var track = document.getElementById('live-grid-track');
             
             if (globalLiveGamesData.length === 0) {
-                track.innerHTML = '<div style="color:rgba(0,255,255,0.8); font-size:4vh; font-weight:900; text-align:center; grid-column: 1 / -1; padding-top: 10vh; text-shadow: 0 0 15px rgba(0,255,255,0.5);">NO LIVE GAMES</div>';
+                track.innerHTML = '<div class="neon-text-cycle" style="font-size:4vh; font-weight:900; text-align:center; grid-column: 1 / -1; padding-top: 10vh;">NO LIVE GAMES</div>';
                 slideTimer = setTimeout(nextSlide, 10000);
             } else {
                 track.innerHTML = globalLiveGamesData.map(function(g) { 
-                    return '<div class="glass-card"><div class="card-meta"><span style="color:#00ffff; text-shadow: 0 0 10px #00ffff;">● LIVE</span><span>' + g.league + '</span><span>' + g.status + '</span></div><div class="card-row"><div class="card-team"><img src="' + g.aLogo + '">' + g.away + '</div><div class="card-val-lg">' + g.aScore + '</div></div><div class="card-row"><div class="card-team"><img src="' + g.hLogo + '">' + g.home + '</div><div class="card-val-lg">' + g.hScore + '</div></div>' + buildTrendHtml(g.trend) + '<div class="card-footer" style="margin-top: 1.5vh;"><span>' + g.clock + '</span><span style="color:#facc15">' + g.tv + '</span></div></div>';
+                    return '<div class="glass-card"><div class="card-meta neon-text-cycle neon-border-cycle"><span style="text-shadow: 0 0 10px currentColor;">● LIVE</span><span>' + g.league + '</span><span>' + g.status + '</span></div><div class="card-row"><div class="card-team"><img src="' + g.aLogo + '">' + g.away + '</div><div class="card-val-lg">' + g.aScore + '</div></div><div class="card-row"><div class="card-team"><img src="' + g.hLogo + '">' + g.home + '</div><div class="card-val-lg">' + g.hScore + '</div></div>' + buildTrendHtml(g.trend) + '<div class="card-footer neon-text-cycle neon-border-cycle" style="margin-top: 1.5vh;"><span>' + g.clock + '</span><span>' + g.tv + '</span></div></div>';
                 }).join('');
                 
-                var vH = document.getElementById('live-viewport').clientHeight, fH = track.scrollHeight;
-                if (fH > vH) { var sD = fH - vH + 100; track.style.setProperty('--scroll-end', '-' + sD + 'px'); track.style.animation = 'scrollVerticalOnePass ' + (sD/50) + 's linear 2s forwards'; slideTimer = setTimeout(nextSlide, (sD/50 * 1000) + 5000); } else { slideTimer = setTimeout(nextSlide, 15000); }
+                applyScroll('live-viewport', 'live-grid-track', 15000);
             }
         }
 
@@ -402,17 +424,16 @@
             var track = document.getElementById('props-grid-track');
             
             if (globalPropsData.length === 0) {
-                track.innerHTML = '<div style="color:rgba(250,204,21,0.8); font-size:4vh; font-weight:900; text-align:center; grid-column: 1 / -1; padding-top: 10vh; text-shadow: 0 0 15px rgba(250,204,21,0.5);">PROPS UNAVAILABLE</div>';
+                track.innerHTML = '<div class="neon-text-cycle" style="font-size:4vh; font-weight:900; text-align:center; grid-column: 1 / -1; padding-top: 10vh;">PROPS UNAVAILABLE</div>';
                 slideTimer = setTimeout(nextSlide, 10000);
             } else {
                 track.innerHTML = globalPropsData.map(function(p) {
                     var valFloat = parseFloat(p.value);
                     var simLine = (!isNaN(valFloat) && valFloat > 0) ? (valFloat * 0.85).toFixed(1) : "0.5"; 
-                    return '<div class="prop-card"><img src="' + p.headshot + '" onerror="this.src=\'' + p.teamLogo + '\'; this.onerror=null;" class="prop-headshot"><div class="prop-details"><div class="prop-name">' + p.name + '</div><div class="prop-game">' + p.teamCode + ' vs ' + p.oppCode + '</div><div class="prop-line-container"><div class="prop-line">O/U ' + simLine + ' ' + p.statDesc + '</div><span class="prop-odds">' + p.baseOdds + '</span></div></div></div>';
+                    return '<div class="prop-card neon-border-cycle"><img src="' + p.headshot + '" onerror="this.src=\'' + p.teamLogo + '\'; this.onerror=null;" class="prop-headshot neon-border-cycle"><div class="prop-details"><div class="prop-name">' + p.name + '</div><div class="prop-game neon-text-cycle">' + p.teamCode + ' vs ' + p.oppCode + '</div><div class="prop-line-container neon-border-cycle"><div class="prop-line neon-text-cycle">O/U ' + simLine + ' ' + p.statDesc + '</div><span class="prop-odds neon-text-cycle">' + p.baseOdds + '</span></div></div></div>';
                 }).join('');
                 
-                var vH = document.getElementById('props-viewport').clientHeight, fH = track.scrollHeight;
-                if (fH > vH) { var sD = fH - vH + 100; track.style.setProperty('--scroll-end', '-' + sD + 'px'); track.style.animation = 'scrollVerticalOnePass ' + (sD/50) + 's linear 2s forwards'; slideTimer = setTimeout(nextSlide, (sD/50 * 1000) + 5000); } else { slideTimer = setTimeout(nextSlide, 15000); }
+                applyScroll('props-viewport', 'props-grid-track', 15000);
             }
         }
 
@@ -422,17 +443,15 @@
             globalRawGames.forEach(function(g) { 
                 for(var i=0; i<mySquadTeams.length; i++) {
                     if(g.searchString.indexOf(mySquadTeams[i]) > -1) { 
-                        gamesHtml += '<div class="glass-card squad-game-card"><div class="card-meta"><span>' + g.league + '</span><span style="color:#00ffff">' + g.tv + '</span></div><div class="card-row"><div class="card-team"><img src="' + g.aLogo + '">' + g.away + '</div><div class="card-val-lg">' + g.aScore + '</div></div><div class="card-row"><div class="card-team"><img src="' + g.hLogo + '">' + g.home + '</div><div class="card-val-lg">' + g.hScore + '</div></div>' + buildTrendHtml(g.trend) + '<div class="card-footer" style="margin-top:1.5vh; justify-content:center; color:#39ff14;">' + (g.state === 'in' ? 'LIVE NOW' : (g.state === 'post' ? 'FINAL' : g.status)) + '</div></div>';
+                        gamesHtml += '<div class="glass-card squad-game-card neon-border-cycle"><div class="card-meta neon-text-cycle neon-border-cycle"><span>' + g.league + '</span><span>' + g.tv + '</span></div><div class="card-row"><div class="card-team"><img src="' + g.aLogo + '">' + g.away + '</div><div class="card-val-lg">' + g.aScore + '</div></div><div class="card-row"><div class="card-team"><img src="' + g.hLogo + '">' + g.home + '</div><div class="card-val-lg">' + g.hScore + '</div></div>' + buildTrendHtml(g.trend) + '<div class="card-footer neon-text-cycle neon-border-cycle" style="margin-top:1.5vh; justify-content:center;">' + (g.state === 'in' ? 'LIVE NOW' : (g.state === 'post' ? 'FINAL' : g.status)) + '</div></div>';
                         break; 
                     }
                 }
             });
             var track = document.getElementById('squad-games-track');
-            track.innerHTML = gamesHtml || '<div style="text-align:center; color:#00ffff; font-weight:900; font-size:3vh; margin-top:5vh; border: 1px dashed rgba(0,255,255,0.4); padding: 4vh; border-radius: 1.5vh; text-shadow: 0 0 10px rgba(0,255,255,0.5);">NO ACTIVE/UPCOMING GAMES</div>';
+            track.innerHTML = gamesHtml || '<div class="neon-text-cycle neon-border-cycle" style="text-align:center; font-weight:900; font-size:3vh; margin-top:5vh; border: 1px dashed currentColor; padding: 4vh; border-radius: 1.5vh;">NO ACTIVE/UPCOMING GAMES</div>';
             
-            var vH = document.getElementById('mysquad-viewport').clientHeight;
-            var maxH = track.scrollHeight;
-            if (maxH > vH) { var sD = maxH - vH + 120; track.style.setProperty('--scroll-end', '-' + sD + 'px'); track.style.animation = 'scrollVerticalOnePass ' + (sD/30) + 's linear forwards'; slideTimer = setTimeout(nextSlide, (sD/30 * 1000) + 4000); } else { slideTimer = setTimeout(nextSlide, 15000); }
+            applyScroll('mysquad-viewport', 'squad-games-track', 12000);
         }
 
         async function showRankings() {
@@ -441,13 +460,12 @@
                 var res = await fetch('https://site.api.espn.com/apis/site/v2/sports/football/college-football/rankings');
                 var d = await res.json();
                 var html = d.rankings[0].ranks.slice(0, 15).map(function(r) { 
-                    return '<div class="rank-row"><span class="rank-num">' + r.current + '</span><img class="rank-logo" style="width:8vh; margin:0 3vh;" src="' + r.team.logo + '"><span><span class="rank-name">' + r.team.nickname + '</span></span><span style="margin-left:auto; font-size:4vh; color:#00ffff; font-weight:900; text-shadow: 0 0 10px rgba(0,255,255,0.5);">' + (r.recordSummary || '0-0') + '</span></div>'; 
+                    return '<div class="rank-row neon-border-cycle"><span class="rank-num neon-text-cycle">' + r.current + '</span><img class="rank-logo" style="width:8vh; margin:0 3vh;" src="' + r.team.logo + '"><span><span class="rank-name">' + r.team.nickname + '</span></span><span class="neon-text-cycle" style="margin-left:auto; font-size:4vh; font-weight:900;">' + (r.recordSummary || '0-0') + '</span></div>'; 
                 }).join('');
                 var track = document.getElementById('rankings-list-track');
                 track.innerHTML = html;
                 
-                var vH = document.getElementById('rankings-viewport').clientHeight, fH = track.scrollHeight;
-                if (fH > vH) { var sD = fH - vH + 100; track.style.setProperty('--scroll-end', '-' + sD + 'px'); track.style.animation = 'scrollVerticalOnePass ' + (sD/40) + 's linear forwards'; slideTimer = setTimeout(nextSlide, (sD/40 * 1000) + 3000); } else { slideTimer = setTimeout(nextSlide, 15000); }
+                applyScroll('rankings-viewport', 'rankings-list-track', 15000);
             } catch(e) { slideTimer = setTimeout(nextSlide, 5000); }
         }
 
@@ -463,15 +481,14 @@
                         var recText = '0-0';
                         var overallNode = t.stats.find(function(st) { return st.name === 'All Splits' || st.name === 'overall'; });
                         if (overallNode && overallNode.summary) recText = overallNode.summary;
-                        return '<div class="st-row"><img class="st-logo" style="width:4.8vh; margin:0 1.5vh;" src="' + t.team.logos[0].href + '"><div style="flex:1; color:white; font-size:3vh; text-shadow: 0 2px 4px rgba(0,0,0,0.8);">' + t.team.displayName + '</div><div style="color:#00ffff; text-shadow: 0 0 10px rgba(0,255,255,0.4);">' + recText + '</div></div>';
+                        return '<div class="st-row"><img class="st-logo" style="width:4.8vh; margin:0 1.5vh;" src="' + t.team.logos[0].href + '"><div class="st-name" style="flex:1; font-size:3vh;">' + t.team.displayName + '</div><div class="neon-text-cycle">' + recText + '</div></div>';
                     }).join('');
-                    return '<div class="division-block"><div class="division-header">' + (group.name || "STANDINGS") + '</div>' + rows + '</div>';
+                    return '<div class="division-block neon-border-cycle"><div class="division-header neon-text-cycle neon-border-cycle">' + (group.name || "STANDINGS") + '</div>' + rows + '</div>';
                 }).join('');
                 var track = document.getElementById(league + '-track');
                 track.innerHTML = html;
                 
-                var vH = document.getElementById(league + '-viewport').clientHeight, fH = track.scrollHeight;
-                if (fH > vH) { var sD = fH - vH + 100; track.style.setProperty('--scroll-end', '-' + sD + 'px'); track.style.animation = 'scrollVerticalOnePass ' + (sD/50) + 's linear 2s forwards'; slideTimer = setTimeout(nextSlide, (sD/50 * 1000) + 5000); } else { slideTimer = setTimeout(nextSlide, 15000); }
+                applyScroll(league + '-viewport', league + '-track', 15000);
             } catch(e) { slideTimer = setTimeout(nextSlide, 5000); }
         }
 
