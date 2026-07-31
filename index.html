@@ -6,50 +6,76 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
     <style>
-        /* --- ORIGINAL FAST BASE WITH CYBER GRID --- */
-        :root { --ticker-height: 22vh; }
-        body, html { margin: 0; padding: 0; width: 100vw; height: 100vh; background: #05050a; overflow: hidden; color: white; font-family: 'Inter', sans-serif; cursor: none; font-size: 3.5vh; }
+        /* --- CORE BASE & PERFORMANCE STYLES --- */
+        :root { 
+            --ticker-height: 22vh; 
+            --accent-color: #00ffff;
+            --accent-border: rgba(0, 255, 255, 0.4);
+            --accent-shadow: rgba(0, 255, 255, 0.2);
+        }
+
+        /* CPU-FRIENDLY THEME CYCLING (NO CONTINUOUS KEYFRAMES ON TEXT) */
+        body.theme-cyan {
+            --accent-color: #00ffff;
+            --accent-border: rgba(0, 255, 255, 0.4);
+            --accent-shadow: rgba(0, 255, 255, 0.2);
+        }
+        body.theme-pink {
+            --accent-color: #ff007f;
+            --accent-border: rgba(255, 0, 127, 0.4);
+            --accent-shadow: rgba(255, 0, 127, 0.2);
+        }
+        body.theme-green {
+            --accent-color: #39ff14;
+            --accent-border: rgba(57, 255, 20, 0.4);
+            --accent-shadow: rgba(57, 255, 20, 0.2);
+        }
+
+        body, html { 
+            margin: 0; padding: 0; width: 100vw; height: 100vh; 
+            background: #05050a; overflow: hidden; color: white; 
+            font-family: 'Inter', sans-serif; cursor: none; font-size: 3.5vh; 
+        }
         
+        /* LIGHTWEIGHT ICY DYNAMIC WALLPAPER (GPU Accelerated Radial Gradients) */
+        .icy-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: radial-gradient(circle at 50% 20%, #0f1c2e 0%, #050a12 85%),
+                        radial-gradient(circle at 80% 80%, rgba(0, 255, 255, 0.08), transparent 50%),
+                        radial-gradient(circle at 20% 20%, rgba(255, 0, 127, 0.08), transparent 50%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
         /* ORIGINAL 3D CYBER GRID OVERLAY */
         .cyber-grid-container { position: absolute; inset: 0; z-index: 0; overflow: hidden; perspective: 100vh; pointer-events: none; }
-        .cyber-grid { position: absolute; top: 0; left: -50%; width: 200%; height: 100%; background-image: linear-gradient(rgba(0, 255, 255, 0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 255, 255, 0.1) 1px, transparent 1px); background-size: 100px 100px; transform: rotateX(45deg); opacity: 0.5; }
+        .cyber-grid { position: absolute; top: 0; left: -50%; width: 200%; height: 100%; background-image: linear-gradient(rgba(0, 255, 255, 0.08) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 255, 255, 0.08) 1px, transparent 1px); background-size: 100px 100px; transform: rotateX(45deg); opacity: 0.5; }
         
         body.remote-active .tv-wrapper { display: none !important; }
         body:not(.remote-active) #remote-controller { display: none !important; }
         .tv-wrapper { position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; display: flex; justify-content: center; align-items: center; overflow: hidden; z-index: 2; }
 
-        /* RELIABLE TOP CONTROLS (INLINE SVG FOR ANDROID TV) */
-        #settings-gear { position: fixed; top: 2.5vh; right: 8vw; z-index: 25000; width: 4.5vh; height: 4.5vh; cursor: pointer; opacity: 0.8; transition: transform 0.3s ease; fill: #00ffff; }
+        /* RELIABLE TOP CONTROLS */
+        #settings-gear { position: fixed; top: 2.5vh; right: 8vw; z-index: 25000; width: 4.5vh; height: 4.5vh; cursor: pointer; opacity: 0.8; transition: transform 0.3s ease; fill: var(--accent-color); }
         #settings-gear:hover { opacity: 1; transform: rotate(90deg); fill: #ff007f; }
-        #fs-toggle { position: fixed; top: 2.5vh; right: 3vw; z-index: 25000; background: none; border: none; width: 4.5vh; height: 4.5vh; cursor: pointer; opacity: 0.8; transition: opacity 0.3s ease; fill: #00ffff; padding: 0; }
+        #fs-toggle { position: fixed; top: 2.5vh; right: 3vw; z-index: 25000; background: none; border: none; width: 4.5vh; height: 4.5vh; cursor: pointer; opacity: 0.8; transition: opacity 0.3s ease; fill: var(--accent-color); padding: 0; }
         #fs-toggle:hover { opacity: 1; fill: #ff007f; }
         #master-clock { position: fixed; top: 2.5vh; left: 3vw; z-index: 25000; color: #fff; font-family: 'Share Tech Mono', monospace; font-size: 4.5vh; font-weight: 900; letter-spacing: 0.2vw; text-shadow: 0 3px 6px rgba(0,0,0,0.8); }
 
-        /* --- LIGHTWEIGHT NEON COLOR CYCLING (NO YELLOW) --- */
-        @keyframes neonText {
-            0% { color: #00ffff; text-shadow: 0 0 10px rgba(0,255,255,0.5); }
-            33% { color: #ff007f; text-shadow: 0 0 10px rgba(255,0,127,0.5); }
-            66% { color: #39ff14; text-shadow: 0 0 10px rgba(57,255,20,0.5); }
-            100% { color: #00ffff; text-shadow: 0 0 10px rgba(0,255,255,0.5); }
-        }
-        @keyframes neonBorder {
-            0% { border-color: rgba(0,255,255,0.8); }
-            33% { border-color: rgba(255,0,127,0.8); }
-            66% { border-color: rgba(57,255,20,0.8); }
-            100% { border-color: rgba(0,255,255,0.8); }
-        }
-        .neon-text-cycle { animation: neonText 15s linear infinite; }
-        .neon-border-cycle { animation: neonBorder 15s linear infinite; }
+        /* NEON ACCENTS (ZERO REPAINT CPU COST) */
+        .neon-text-cycle { color: var(--accent-color) !important; transition: color 0.5s ease-in-out; }
+        .neon-border-cycle { border-color: var(--accent-border) !important; transition: border-color 0.5s ease-in-out; }
 
         /* SETTINGS MODAL */
         #settings-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.92); z-index: 30000; display: none; justify-content: center; align-items: center; }
-        .settings-card { background: #0c121c; border: 2px solid #00ffff; width: 85vw; max-height: 90vh; border-radius: 2vh; padding: 4vh; overflow-y: auto; }
+        .settings-card { background: #0c121c; border: 2px solid var(--accent-color); width: 85vw; max-height: 90vh; border-radius: 2vh; padding: 4vh; overflow-y: auto; }
         .settings-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 4vh; }
         .settings-section h3 { color: #ff007f; text-transform: uppercase; font-weight: 900; border-bottom: 1px solid rgba(255,255,255,0.2); margin-bottom: 2vh; font-size: 2.8vh; padding-bottom: 1vh; }
         .toggle-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5vh; font-size: 2.2vh; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 0.5vh; color: white; }
 
         /* TICKER */
-        #sports-ticker { position: absolute; bottom: 0; left: 0; width: 100%; height: var(--ticker-height); background: #080e18; border-top: 2px solid #00ffff; z-index: 100; display: flex; align-items: center; overflow: hidden; white-space: nowrap; }
+        #sports-ticker { position: absolute; bottom: 0; left: 0; width: 100%; height: var(--ticker-height); background: rgba(5, 10, 18, 0.95); border-top: 2px solid var(--accent-border); z-index: 100; display: flex; align-items: center; overflow: hidden; white-space: nowrap; transition: border-color 0.5s ease; }
         #ticker-track { display: inline-flex; height: 100%; align-items: center; width: max-content; will-change: transform; } 
         @keyframes scrollTicker { 0% { transform: translate3d(0, 0, 0); } 100% { transform: translate3d(-50%, 0, 0); } }
 
@@ -57,7 +83,7 @@
         .score-item { display: inline-flex !important; flex-direction: row !important; align-items: center !important; padding: 0 5vw; height: 100%; vertical-align: middle; flex-wrap: nowrap !important; }
         .team-box { display: flex !important; flex-direction: row !important; align-items: center !important; flex-wrap: nowrap !important; }
         
-        /* AGGRESSIVE WHITE OUTLINE STROKE FOR ALL LOGOS (Fixes Dark College Logos) */
+        /* AGGRESSIVE WHITE OUTLINE STROKE FOR ALL LOGOS */
         .team-logo, .card-team img, .st-logo, .rank-logo, .prop-headshot, .league-logo, .golf-headshot, .fighter-img, .tv-channel img {
             filter: drop-shadow(1px 1px 0px #fff) drop-shadow(-1px -1px 0px #fff) drop-shadow(1px -1px 0px #fff) drop-shadow(-1px 1px 0px #fff) drop-shadow(0px 4px 10px rgba(0,0,0,0.8));
         }
@@ -83,9 +109,9 @@
         .grid-track { display: grid; grid-template-columns: repeat(2, 1fr); gap: 2vw; }
         .list-track { display: flex; flex-direction: column; gap: 1.5vh; width: 90%; margin: 0 auto; }
 
-        /* FAST HIGH-CONTRAST PANELS FOR TV */
+        /* HIGH-PERFORMANCE ICY FROSTED GLASS PANELS FOR TV */
         .glass-card, .trivia-ans, .golf-row, .rank-row, .tv-row, .news-row, .division-block, .info-card, .prop-card, .ufc-card, .trivia-q-box { 
-            background: rgba(12, 18, 28, 0.95); border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 1.5vh; position: relative; overflow: hidden; 
+            background: rgba(12, 20, 32, 0.88); border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 1.5vh; position: relative; overflow: hidden; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
         }
         
         .glass-card { display: flex; flex-direction: column; padding: 2.5vh; }
@@ -191,14 +217,13 @@
         .r-btn { width: 100%; padding: 20px; margin-bottom: 10px; background: #1a1a1a; border: 1px solid #333; color: white; font-weight: bold; border-radius: 8px; font-size: 3vh; }
     </style>
 </head>
-<body>
+<body class="theme-cyan">
 
-    <!-- RESTORED ORIGINAL CYBER GRID WALLPAPER -->
+    <div class="icy-overlay"></div>
     <div class="cyber-grid-container"><div class="cyber-grid"></div></div>
     
     <div id="master-clock">12:00 PM</div>
 
-    <!-- INLINE VECTOR SVGS FOR SETTINGS & FULLSCREEN (GUARANTEED TO RENDER ON TV) -->
     <svg id="settings-gear" onclick="toggleSettings()" viewBox="0 0 24 24">
         <path d="M19.14 12.94c.04-.3.06-.61.04-.94l2.03-1.58a.49.49 0 0 0 .12-.61l-1.92-3.32a.488.488 0 0 0-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54a.484.488 0 0 0-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 9.81c-.12.21-.08.47.12.61l2.03 1.58c-.02.3-.02.61.04.94l-2.03 1.58a.49.49 0 0 0-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/>
     </svg>
@@ -207,7 +232,6 @@
         <svg viewBox="0 0 24 24"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg>
     </button>
 
-    <!-- SETTINGS UI & CONTROLS -->
     <div class="tv-wrapper" id="main-wrapper">
 
         <div id="live-game-screen" class="slide-screen">
@@ -233,7 +257,7 @@
         </div>
         
         <div id="trivia-screen" class="slide-screen">
-            <div class="screen-header neon-text-cycle">ARCADE TRIVIA CHALLENGE</div>
+            <div class="screen-header neon-text-cycle">TRIVIA BREAK!</div>
             <div class="content-viewport" style="display:flex; flex-direction:column; justify-content:center; padding-top:0; padding-bottom:0; height:65vh;">
                 <div class="trivia-q-box glass-card neon-border-cycle" id="trivia-q">Loading next challenge...</div>
                 <div class="trivia-ans-grid" id="trivia-options"></div>
@@ -310,7 +334,6 @@
         <div id="sports-ticker" class="neon-border-cycle"><div id="ticker-track"></div></div>
     </div>
 
-    <!-- SETTINGS MODAL ENGINE -->
     <div id="settings-modal" onclick="if(event.target === this) toggleSettings()">
         <div class="settings-card">
             <h2 class="neon-text-cycle" style="font-size: 5vh; font-weight: 900; margin-bottom: 4vh; text-align: center;">ARCADE CONTROL CENTER</h2>
@@ -318,15 +341,15 @@
                 <div class="settings-section">
                     <h3>Features</h3>
                     <div style="margin-bottom: 2vh;">
-                        <div style="display:flex; justify-content:space-between; align-items:center; font-size: 1.8vh; color: #00ffff; margin-bottom: 0.5vh; text-transform: uppercase;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; font-size: 1.8vh; color: var(--accent-color); margin-bottom: 0.5vh; text-transform: uppercase;">
                             <span>Bottom Ticker Speed:</span>
                             <span id="speed-display" style="color:white; font-weight:900; font-size:2vh;">5</span>
                         </div>
-                        <input type="range" id="set-tickerSpeed" min="1" max="10" step="1" style="width: 100%; accent-color: #00ffff;" oninput="document.getElementById('speed-display').innerText=this.value; updateSettings();">
+                        <input type="range" id="set-tickerSpeed" min="1" max="10" step="1" style="width: 100%; accent-color: var(--accent-color);" oninput="document.getElementById('speed-display').innerText=this.value; updateSettings();">
                     </div>
                     <div style="margin-bottom: 2vh;">
-                        <div style="font-size: 1.8vh; color: #00ffff; margin-bottom: 0.5vh; text-transform: uppercase;">Set Favorite Teams:</div>
-                        <input type="text" id="set-mySquadTeams" style="width: 100%; padding: 1vh; border-radius: 0.5vh; background: rgba(0,0,0,0.5); color: white; border: 1px solid #00ffff; font-family: 'Inter', sans-serif;" onchange="updateSettings()">
+                        <div style="font-size: 1.8vh; color: var(--accent-color); margin-bottom: 0.5vh; text-transform: uppercase;">Set Favorite Teams:</div>
+                        <input type="text" id="set-mySquadTeams" style="width: 100%; padding: 1vh; border-radius: 0.5vh; background: rgba(0,0,0,0.5); color: white; border: 1px solid var(--accent-color); font-family: 'Inter', sans-serif;" onchange="updateSettings()">
                     </div>
                     <div style="margin-bottom: 2vh;">
                         <div style="font-size: 1.8vh; color: #ff007f; margin-bottom: 0.5vh; text-transform: uppercase;">Custom Ticker Marquee:</div>
@@ -373,18 +396,17 @@
             </div>
             <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 4vh; border-top: 1px solid rgba(255,255,255,0.2); padding-top: 4vh;">
                 <div style="display: flex; align-items: center; gap: 3vh;">
-                    <img id="settings-qr" src="" style="width: 12vh; height: 12vh; border: 2px solid #00ffff; border-radius: 1vh; background: white;">
+                    <img id="settings-qr" src="" style="width: 12vh; height: 12vh; border: 2px solid var(--accent-color); border-radius: 1vh; background: white;">
                     <div>
-                        <div style="color: #00ffff; font-size: 3vh; font-weight: 900;">SCAN FOR REMOTE</div>
+                        <div style="color: var(--accent-color); font-size: 3vh; font-weight: 900;">SCAN FOR REMOTE</div>
                         <div style="color: rgba(255,255,255,0.6); font-size: 2vh;">Control the arcade ticker from your phone</div>
                     </div>
                 </div>
-                <button style="padding: 2vh 5vh; background: rgba(0,255,255,0.2); border: 2px solid #00ffff; color: #fff; font-weight: 900; border-radius: 1vh; font-size: 2.5vh; cursor: pointer;" onclick="toggleSettings()">SAVE & CLOSE</button>
+                <button style="padding: 2vh 5vh; background: rgba(0,255,255,0.2); border: 2px solid var(--accent-color); color: #fff; font-weight: 900; border-radius: 1vh; font-size: 2.5vh; cursor: pointer;" onclick="toggleSettings()">SAVE & CLOSE</button>
             </div>
         </div>
     </div>
 
-    <!-- REMOTE DIV -->
     <div id="remote-controller">
         <button class="r-btn" onclick="bc.postMessage({action:'forceNext'})">NEXT SLIDE</button>
     </div>
@@ -397,6 +419,9 @@
         var globalLiveGamesData = [], globalRawGames = [], globalPropsData = [];
         var globalTVGuideData = [], globalLeadersData = [], newMarqueeGames = [];
         var currentTrivia = null;
+
+        var neonThemes = ['theme-cyan', 'theme-pink', 'theme-green'];
+        var currentThemeIndex = 0;
 
         var defaultSettings = { 
             nfl:true, nba:true, nhl:true, mlb:true, rankings:true, odds:true, tvGuide:true, news:true, mySquad:true, ufc:true, command:true, leaders:true, pga:true, soccerSlide:true, trivia:true,
@@ -494,6 +519,89 @@
             } catch (e) {}
         }
 
+        /* 100% REAL OFFSHORE ODDS MATCHER (Strictly skips fake ESPN data) */
+        async function fetchRealProps() {
+            var realProps = [];
+            var sportsToTry = ['baseball/mlb', 'football/nfl', 'basketball/nba'];
+            
+            // Multiple Offshore Book Fallbacks (Same API architecture)
+            var offshoreDomains = ['www.bovada.lv', 'www.bodog.eu', 'www.ignitioncasino.eu'];
+
+            for (var s = 0; s < sportsToTry.length; s++) {
+                var sport = sportsToTry[s];
+                var dataLoadedForSport = false;
+                
+                // Attempt to scrape each domain sequentially if one fails
+                for (var d = 0; d < offshoreDomains.length; d++) {
+                    if (dataLoadedForSport) break; 
+                    
+                    try {
+                        var offshoreUrl = 'https://' + offshoreDomains[d] + '/services/sports/api/v1/events/sports/' + sport;
+                        var proxyUrl = 'https://api.allorigins.win/get?url=' + encodeURIComponent(offshoreUrl);
+
+                        var res = await fetch(proxyUrl);
+                        var data = await res.json();
+                        var parsedData = JSON.parse(data.contents);
+
+                        if (parsedData && parsedData.length > 0) {
+                            dataLoadedForSport = true; 
+                            parsedData.forEach(function(section) {
+                                if (section.events) {
+                                    section.events.forEach(function(ev) {
+                                        if (ev.displayGroups) {
+                                            ev.displayGroups.forEach(function(group) {
+                                                if (group.markets) {
+                                                    group.markets.forEach(function(market) {
+                                                        // Parse real player prop strings directly from the sportsbook
+                                                        if (market.description && market.description.toLowerCase().indexOf("player") > -1 && market.description.indexOf(" - ") > -1) {
+                                                            var parts = market.description.split(" - ");
+                                                            var statDesc = parts[0].replace("Player", "").trim();
+                                                            var playerName = parts[1].trim();
+
+                                                            if (market.outcomes && market.outcomes.length > 0) {
+                                                                var outcome = market.outcomes[0];
+                                                                var lineMatch = outcome.description.match(/[\d\.]+/);
+                                                                var line = lineMatch ? lineMatch[0] : "";
+                                                                var odds = (outcome.price && outcome.price.american) ? outcome.price.american : "-110";
+
+                                                                // Dedup entries and push valid real live props
+                                                                if (line && !realProps.some(function(p){ return p.name === playerName && p.statDesc === statDesc; })) {
+                                                                    realProps.push({
+                                                                        name: playerName,
+                                                                        statDesc: statDesc.toUpperCase(),
+                                                                        line: "O/U " + line,
+                                                                        odds: odds > 0 ? "+" + odds : odds,
+                                                                        game: ev.description, 
+                                                                        headshot: 'https://a.espncdn.com/combiner/i?img=/i/headshots/' + sport.split('/')[0] + '/players/full/default.png',
+                                                                        teamLogo: 'https://a.espncdn.com/combiner/i?img=/i/teamlogos/default-team-logo-500.png'
+                                                                    });
+                                                                }
+                                                            }
+                                                        }
+                                                    });
+                                                }
+                                            });
+                                        }
+                                    });
+                                }
+                            });
+                        }
+                    } catch (e) {
+                        console.log("Fallback " + offshoreDomains[d] + " failed for " + sport + ".");
+                    }
+                }
+            }
+
+            if (realProps.length > 0) {
+                realProps.sort(function() { return 0.5 - Math.random(); });
+                globalPropsData = realProps.slice(0, 10);
+            } else {
+                // If all offshore sites fail, absolutely no fake generated math data. 
+                // Return an empty array.
+                globalPropsData = [];
+            }
+        }
+
         function applyScroll(viewportId, trackId, baseDelay = 12000) {
             setTimeout(function() {
                 var vH = document.getElementById(viewportId).clientHeight;
@@ -543,6 +651,13 @@
             clearTimeout(slideTimer);
             clearTimeout(triviaRevealTimer);
             
+            // Clean, CPU-Friendly Neon Theme Rotation per slide
+            var neonThemes = ['theme-cyan', 'theme-pink', 'theme-green'];
+            document.body.classList.remove(...neonThemes);
+            if(typeof window.currentThemeIndex === 'undefined') window.currentThemeIndex = 0;
+            window.currentThemeIndex = (window.currentThemeIndex + 1) % neonThemes.length;
+            document.body.classList.add(neonThemes[window.currentThemeIndex]);
+
             var mc = document.getElementById('master-clock');
             if (mc) mc.style.display = 'block';
 
@@ -752,6 +867,10 @@
             
             globalLiveGamesData = newLivePage;
             globalTVGuideData = newTVGuide;
+            globalLeadersData = newLeaders.slice();
+
+            // Initiate our multi-book offshore odds fetcher (strictly no fake props anymore)
+            await fetchRealProps();
             
             newMarqueeGames.sort(function(a,b) { return b.weight - a.weight; });
             var marqueeHtml = newMarqueeGames.slice(0, 2).map(function(g) {
@@ -769,9 +888,6 @@
             }).join('');
             var marqueeTrack = document.getElementById('marquee-track');
             if(marqueeTrack) marqueeTrack.innerHTML = marqueeHtml || '<div style="color:#aaa; font-size:3vh; text-align:center; padding-top:2vh;">No Marquee Games Today</div>';
-
-            globalLeadersData = newLeaders.slice();
-            globalPropsData = newLeaders.sort(function() { return 0.5 - Math.random(); }).slice(0, 6); 
             
             var trackHtml = "";
             if (allLive.length > 0) trackHtml = '<span class="ticker-section-head neon-text-cycle">LIVE NOW</span>' + allLive.join('');
@@ -812,11 +928,12 @@
         function showProps() {
             document.getElementById('props-screen').style.display = 'flex';
             var track = document.getElementById('props-grid-track');
-            if (globalPropsData.length === 0) { track.innerHTML = '<div class="neon-text-cycle" style="font-size:4vh; font-weight:900; text-align:center; grid-column: 1 / -1; padding-top: 10vh;">PROPS UNAVAILABLE</div>'; applyScroll('props-viewport', 'props-grid-track', 10000); } 
-            else {
+            if (globalPropsData.length === 0) { 
+                track.innerHTML = '<div class="neon-text-cycle" style="font-size:4vh; font-weight:900; text-align:center; grid-column: 1 / -1; padding-top: 10vh;">NO ACTIVE PROPS CURRENTLY BOARDED</div>'; 
+                applyScroll('props-viewport', 'props-grid-track', 10000); 
+            } else {
                 track.innerHTML = globalPropsData.map(function(p) {
-                    var valFloat = parseFloat(p.value); var simLine = (!isNaN(valFloat) && valFloat > 0) ? (valFloat * 0.85).toFixed(1) : "0.5"; 
-                    return '<div class="prop-card"><img src="' + p.headshot + '" onerror="this.src=\'' + p.teamLogo + '\'; this.onerror=null;" class="prop-headshot"><div class="prop-details"><div class="prop-name">' + p.name + '</div><div class="prop-game neon-text-cycle">' + p.teamCode + ' vs ' + p.oppCode + '</div><div class="prop-line-container"><div class="prop-line neon-text-cycle">O/U ' + simLine + ' ' + p.statDesc + '</div><span class="prop-odds neon-text-cycle">' + p.baseOdds + '</span></div></div></div>';
+                    return '<div class="prop-card"><img src="' + p.headshot + '" onerror="this.src=\'' + p.teamLogo + '\'; this.onerror=null;" class="prop-headshot"><div class="prop-details"><div class="prop-name">' + p.name + '</div><div class="prop-game neon-text-cycle">' + p.game + '</div><div class="prop-line-container"><div class="prop-line neon-text-cycle">' + p.statDesc + ': ' + p.line + '</div><span class="prop-odds neon-text-cycle">' + p.odds + '</span></div></div></div>';
                 }).join('');
                 applyScroll('props-viewport', 'props-grid-track', 15000);
             }
