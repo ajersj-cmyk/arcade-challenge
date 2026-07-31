@@ -10,21 +10,23 @@
         :root { --ticker-height: 22vh; }
         body, html { margin: 0; padding: 0; width: 100vw; height: 100vh; background: #02050a; overflow: hidden; color: white; font-family: 'Inter', sans-serif; cursor: none; font-size: 3.5vh; }
         
-        #cinematic-bg { position: absolute; inset: -2%; width: 104%; height: 104%; z-index: 0; background-size: cover; background-position: center; filter: blur(15px) brightness(0.25); transition: background-image 2s ease-in-out; }
+        /* DUAL LAYER CROSSFADE BACKGROUNDS */
+        .bg-layer { position: absolute; inset: -2%; width: 104%; height: 104%; z-index: 0; background-size: cover; background-position: center; filter: blur(15px) brightness(0.25); transition: opacity 1.5s ease-in-out; }
+        
         .cyber-grid { position: absolute; top: 0; left: -50%; width: 200%; height: 100%; background-image: linear-gradient(rgba(0, 255, 255, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 255, 255, 0.05) 1px, transparent 1px); background-size: 100px 100px; transform: rotateX(45deg); z-index: 1; pointer-events: none; }
         .tv-wrapper { position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; display: flex; justify-content: center; align-items: center; overflow: hidden; z-index: 2; }
 
         #fs-toggle { position: fixed; top: 2.5vh; right: 3vw; z-index: 15000; background: none; border: none; color: #00ffff; font-size: 4vh; cursor: pointer; opacity: 0.5; transition: all 0.3s ease; text-shadow: 0 0 10px #00ffff; }
         #fs-toggle:hover { opacity: 1; color: #ff007f; text-shadow: 0 0 15px #ff007f; }
-        #master-clock { position: fixed; top: 2.5vh; left: 3vw; z-index: 15000; color: #fff; font-family: 'Share Tech Mono', monospace; font-size: 4.5vh; font-weight: 900; letter-spacing: 0.2vw; text-shadow: 0 2px 5px rgba(0,0,0,0.8); }
+        #master-clock { position: fixed; top: 2.5vh; left: 3vw; z-index: 15000; color: #fff; font-family: 'Share Tech Mono', monospace; font-size: 4.5vh; font-weight: 900; letter-spacing: 0.2vw; text-shadow: 0 3px 6px rgba(0,0,0,0.8); }
 
         /* --- ROTATING NEON ANIMATIONS --- */
         @keyframes neonText {
-            0% { color: #00ffff; text-shadow: 0 0 10px rgba(0,255,255,0.5); }
-            25% { color: #ff007f; text-shadow: 0 0 10px rgba(255,0,127,0.5); }
-            50% { color: #facc15; text-shadow: 0 0 10px rgba(250,204,21,0.5); }
-            75% { color: #39ff14; text-shadow: 0 0 10px rgba(57,255,20,0.5); }
-            100% { color: #00ffff; text-shadow: 0 0 10px rgba(0,255,255,0.5); }
+            0% { color: #00ffff; text-shadow: 0 0 15px rgba(0,255,255,0.6); }
+            25% { color: #ff007f; text-shadow: 0 0 15px rgba(255,0,127,0.6); }
+            50% { color: #facc15; text-shadow: 0 0 15px rgba(250,204,21,0.6); }
+            75% { color: #39ff14; text-shadow: 0 0 15px rgba(57,255,20,0.6); }
+            100% { color: #00ffff; text-shadow: 0 0 15px rgba(0,255,255,0.6); }
         }
         @keyframes neonBorder {
             0% { border-color: rgba(0,255,255,0.5); box-shadow: 0 -5px 25px rgba(0,255,255,0.2); }
@@ -64,7 +66,10 @@
 
         /* SLIDES */
         .slide-screen { position: absolute; inset: 0; z-index: 10; display: none; flex-direction: column; padding: 0 4vh; align-items: center; overflow: hidden; }
-        .screen-header { margin-top: 9vh; font-size: 9.5vh; font-weight: 900; text-transform: uppercase; letter-spacing: 1vh; margin-bottom: 2vh; z-index: 20; border-bottom: 2px solid; padding-bottom: 1vh; width: 95%; text-align: center; display: block; }
+        
+        /* CLEAN, BOX-FREE HEADERS */
+        .screen-header { margin-top: 9vh; font-size: 9.5vh; font-weight: 900; text-transform: uppercase; letter-spacing: 1vh; margin-bottom: 2vh; z-index: 20; padding-bottom: 1vh; width: 95%; text-align: center; display: block; text-shadow: 0 5px 15px rgba(0,0,0,0.8); }
+        
         .league-logo { height: 1em; margin-right: 1.5vw; display: inline-block; vertical-align: middle; margin-top: -1.5vh; }
         
         .content-viewport { width: 95%; height: 65vh; overflow: hidden; position: relative; z-index: 20; }
@@ -122,7 +127,7 @@
         .rank-name { font-size: 5.4vh; font-weight: 900; flex: 1; text-transform: uppercase; }
         
         .division-block { background: rgba(10, 15, 25, 0.5); backdrop-filter: blur(15px); border: 1px solid rgba(255,255,255,0.1); border-radius: 1.5vh; padding: 2.5vh; margin-bottom: 2.5vh; box-shadow: 0 10px 25px rgba(0,0,0,0.6); }
-        .division-header { font-size: 3.8vh; font-weight: 900; text-transform: uppercase; border-bottom: 2px solid; margin-bottom: 1.5vh; padding-bottom: 1vh; }
+        .division-header { font-size: 3.8vh; font-weight: 900; text-transform: uppercase; border-bottom: 2px solid rgba(255,255,255,0.1); margin-bottom: 1.5vh; padding-bottom: 1vh; }
         .st-row { display: flex; align-items: center; padding: 1.2vh 0; border-bottom: 1px solid rgba(255,255,255,0.1); font-size: 3.8vh; font-weight: 900; }
         
         @keyframes scrollVerticalOnePass { 0% { transform: translate3d(0,0,0); } 100% { transform: translate3d(0, var(--scroll-end), 0); } }
@@ -130,40 +135,42 @@
 </head>
 <body>
 
-    <div id="cinematic-bg"></div>
-    <div class="cyber-grid"></div>
+    <!-- Seamless Crossfade Layers -->
+    <div class="bg-layer" id="bg-layer-1" style="background-image: url('https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?q=80&w=2000&auto=format&fit=crop'); opacity: 1;"></div>
+    <div class="bg-layer" id="bg-layer-2" style="opacity: 0;"></div>
     
+    <div class="cyber-grid"></div>
     <div id="master-clock">12:00 PM</div>
 
     <div class="tv-wrapper" id="main-wrapper">
         <button id="fs-toggle" onclick="if(!document.fullscreenElement) document.documentElement.requestFullscreen(); else document.exitFullscreen();">⛶</button>
 
         <div id="live-game-screen" class="slide-screen">
-            <div class="screen-header neon-text-cycle neon-border-cycle">LIVE ACTION</div>
+            <div class="screen-header neon-text-cycle">LIVE ACTION</div>
             <div class="content-viewport" id="live-viewport"><div class="grid-track" id="live-grid-track"></div></div>
         </div>
 
         <div id="props-screen" class="slide-screen">
-            <div class="screen-header neon-text-cycle neon-border-cycle">VEGAS PROP SHOP</div>
+            <div class="screen-header neon-text-cycle">VEGAS PROP SHOP</div>
             <div class="content-viewport" id="props-viewport"><div class="grid-track" id="props-grid-track"></div></div>
         </div>
 
         <div id="mysquad-screen" class="slide-screen">
-            <div class="screen-header neon-text-cycle neon-border-cycle">MY SQUAD DASHBOARD</div>
+            <div class="screen-header neon-text-cycle">MY SQUAD DASHBOARD</div>
             <div class="content-viewport" id="mysquad-viewport">
                 <div style="display: flex; width: 100%; height: 100%; gap: 4vw;">
                     <div style="flex: 1; display: flex; flex-direction: column; overflow: hidden;">
-                        <div class="neon-text-cycle neon-border-cycle" style="font-size: 4vh; font-weight: 900; text-transform: uppercase; border-bottom: 2px solid; padding-bottom: 1vh; margin-bottom: 2vh; text-align: center;">ACTIVE MATCHUPS</div>
+                        <div class="neon-text-cycle" style="font-size: 4vh; font-weight: 900; text-transform: uppercase; border-bottom: 1px solid rgba(255,255,255,0.2); padding-bottom: 1vh; margin-bottom: 2vh; text-align: center;">ACTIVE MATCHUPS</div>
                         <div id="squad-games-track" style="padding-bottom: 5vh; display: flex; flex-direction: column; gap: 1.5vh; will-change: transform;"></div>
                     </div>
                 </div>
             </div>
         </div>
         
-        <div id="nfl-screen" class="slide-screen"><div class="screen-header neon-text-cycle neon-border-cycle"><img src="https://a.espncdn.com/combiner/i?img=/i/teamlogos/leagues/500/nfl.png" class="league-logo" onerror="this.style.display='none'">NFL STANDINGS</div><div class="content-viewport" id="nfl-viewport"><div class="grid-track" style="gap: 2.5vw;" id="nfl-track"></div></div></div>
-        <div id="nba-screen" class="slide-screen"><div class="screen-header neon-text-cycle neon-border-cycle"><img src="https://a.espncdn.com/combiner/i?img=/i/teamlogos/leagues/500/nba.png" class="league-logo" onerror="this.style.display='none'">NBA STANDINGS</div><div class="content-viewport" id="nba-viewport"><div class="grid-track" style="gap: 2.5vw;" id="nba-track"></div></div></div>
-        <div id="mlb-screen" class="slide-screen"><div class="screen-header neon-text-cycle neon-border-cycle"><img src="https://a.espncdn.com/combiner/i?img=/i/teamlogos/leagues/500/mlb.png" class="league-logo" onerror="this.style.display='none'">MLB STANDINGS</div><div class="content-viewport" id="mlb-viewport"><div class="grid-track" style="gap: 2.5vw;" id="mlb-track"></div></div></div>
-        <div id="rankings-screen" class="slide-screen"><div class="screen-header neon-text-cycle neon-border-cycle">COLLEGE RANKINGS</div><div class="content-viewport" id="rankings-viewport"><div class="list-track" id="rankings-list-track"></div></div></div>
+        <div id="nfl-screen" class="slide-screen"><div class="screen-header neon-text-cycle"><img src="https://a.espncdn.com/combiner/i?img=/i/teamlogos/leagues/500/nfl.png" class="league-logo" onerror="this.style.display='none'">NFL STANDINGS</div><div class="content-viewport" id="nfl-viewport"><div class="grid-track" style="gap: 2.5vw;" id="nfl-track"></div></div></div>
+        <div id="nba-screen" class="slide-screen"><div class="screen-header neon-text-cycle"><img src="https://a.espncdn.com/combiner/i?img=/i/teamlogos/leagues/500/nba.png" class="league-logo" onerror="this.style.display='none'">NBA STANDINGS</div><div class="content-viewport" id="nba-viewport"><div class="grid-track" style="gap: 2.5vw;" id="nba-track"></div></div></div>
+        <div id="mlb-screen" class="slide-screen"><div class="screen-header neon-text-cycle"><img src="https://a.espncdn.com/combiner/i?img=/i/teamlogos/leagues/500/mlb.png" class="league-logo" onerror="this.style.display='none'">MLB STANDINGS</div><div class="content-viewport" id="mlb-viewport"><div class="grid-track" style="gap: 2.5vw;" id="mlb-track"></div></div></div>
+        <div id="rankings-screen" class="slide-screen"><div class="screen-header neon-text-cycle">COLLEGE RANKINGS</div><div class="content-viewport" id="rankings-viewport"><div class="list-track" id="rankings-list-track"></div></div></div>
 
         <div id="sports-ticker" class="neon-border-cycle"><div id="ticker-track"></div></div>
     </div>
@@ -171,6 +178,7 @@
     <script>
         var rotationStep = 0, slideTimer;
         var globalLiveGamesData = [], globalRawGames = [], globalPropsData = [];
+        var activeBg = 1;
         
         var mySquadTeams = ["carolina hurricanes", "duke", "ecu", "east carolina"];
 
@@ -183,39 +191,41 @@
             if(clockEl) clockEl.innerText = h + ':' + m + ' ' + ampm;
         }
 
+        // --- FIXED DOM-AWARE SCROLLING WITH SETTIMEOUT BUFFER ---
         function applyScroll(viewportId, trackId, baseDelay = 12000) {
-            var vH = document.getElementById(viewportId).clientHeight;
-            var track = document.getElementById(trackId);
-            var fH = track.scrollHeight;
-            
-            track.style.animation = 'none';
-            track.style.transform = 'translate3d(0,0,0)';
-            
-            if (fH > vH) { 
-                var sD = fH - vH + 100;
-                track.style.setProperty('--scroll-end', '-' + sD + 'px'); 
-                var duration = (sD / 40); 
-                void track.offsetWidth;
-                track.style.animation = 'scrollVerticalOnePass ' + duration + 's linear 2s forwards'; 
-                slideTimer = setTimeout(nextSlide, (duration * 1000) + 4000); 
-            } else { 
-                slideTimer = setTimeout(nextSlide, baseDelay); 
-            }
+            setTimeout(function() {
+                var vH = document.getElementById(viewportId).clientHeight;
+                var track = document.getElementById(trackId);
+                var fH = track.scrollHeight;
+                
+                track.style.animation = 'none';
+                track.style.transform = 'translate3d(0,0,0)';
+                
+                if (fH > vH) { 
+                    var sD = fH - vH + 100;
+                    track.style.setProperty('--scroll-end', '-' + sD + 'px'); 
+                    var duration = (sD / 40); 
+                    void track.offsetWidth; // force browser repaint
+                    track.style.animation = 'scrollVerticalOnePass ' + duration + 's linear 2s forwards'; 
+                    slideTimer = setTimeout(nextSlide, (duration * 1000) + 4000); 
+                } else { 
+                    slideTimer = setTimeout(nextSlide, baseDelay); 
+                }
+            }, 50); // Small buffer to ensure elements are rendered before measuring height
         }
 
-        // --- TICKER SPEED AND ANIMATION FIX ---
+        // --- TICKER SPEED FIXED ---
         function applyTickerSpeed() {
             var track = document.getElementById('ticker-track');
             if(!track) return;
             
-            // Clear current animation to force a browser repaint
             track.style.animation = 'none';
             void track.offsetWidth; 
             
-            var trackWidth = track.scrollWidth / 2; // Divide by 2 because we duplicated the HTML
+            var trackWidth = track.scrollWidth / 2;
             if(trackWidth <= 0) return;
             
-            var pixelsPerSec = 120; // Consistent readable speed
+            var pixelsPerSec = 120;
             var duration = trackWidth / pixelsPerSec;
             if (duration < 10) duration = 10;
             
@@ -230,14 +240,31 @@
             document.getElementById('live-game-screen').style.display = 'flex';
         }
 
+        // --- GLITCH-FREE SEAMLESS BACKGROUND CROSSFADER ---
         function setCinematicBackground(slide) {
-            var bg = document.getElementById('cinematic-bg');
             var imgUrl = 'https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?q=80&w=2000&auto=format&fit=crop'; 
             if (slide === 'nba') imgUrl = 'https://images.unsplash.com/photo-1504450758481-7338eba7524a?q=80&w=2000&auto=format&fit=crop'; 
             else if (slide === 'nhl') imgUrl = 'https://images.unsplash.com/photo-1580748141549-71748dbe0bdc?q=80&w=2000&auto=format&fit=crop'; 
             else if (slide === 'mlb') imgUrl = 'https://images.unsplash.com/photo-1508344928928-7165b67de128?q=80&w=2000&auto=format&fit=crop'; 
             else if (slide === 'props') imgUrl = 'https://images.unsplash.com/photo-1595208031648-5222fc5be50c?q=80&w=2000&auto=format&fit=crop'; 
-            bg.style.backgroundImage = 'url(' + imgUrl + ')';
+            
+            var bg1 = document.getElementById('bg-layer-1');
+            var bg2 = document.getElementById('bg-layer-2');
+            
+            if (activeBg === 1 && bg1.style.backgroundImage.includes(imgUrl)) return;
+            if (activeBg === 2 && bg2.style.backgroundImage.includes(imgUrl)) return;
+
+            if (activeBg === 1) {
+                bg2.style.backgroundImage = 'url(' + imgUrl + ')';
+                bg2.style.opacity = 1;
+                bg1.style.opacity = 0;
+                activeBg = 2;
+            } else {
+                bg1.style.backgroundImage = 'url(' + imgUrl + ')';
+                bg1.style.opacity = 1;
+                bg2.style.opacity = 0;
+                activeBg = 1;
+            }
         }
 
         function nextSlide() {
@@ -409,7 +436,7 @@
             
             if (globalLiveGamesData.length === 0) {
                 track.innerHTML = '<div class="neon-text-cycle" style="font-size:4vh; font-weight:900; text-align:center; grid-column: 1 / -1; padding-top: 10vh;">NO LIVE GAMES</div>';
-                slideTimer = setTimeout(nextSlide, 10000);
+                applyScroll('live-viewport', 'live-grid-track', 10000);
             } else {
                 track.innerHTML = globalLiveGamesData.map(function(g) { 
                     return '<div class="glass-card"><div class="card-meta neon-text-cycle neon-border-cycle"><span style="text-shadow: 0 0 10px currentColor;">● LIVE</span><span>' + g.league + '</span><span>' + g.status + '</span></div><div class="card-row"><div class="card-team"><img src="' + g.aLogo + '">' + g.away + '</div><div class="card-val-lg">' + g.aScore + '</div></div><div class="card-row"><div class="card-team"><img src="' + g.hLogo + '">' + g.home + '</div><div class="card-val-lg">' + g.hScore + '</div></div>' + buildTrendHtml(g.trend) + '<div class="card-footer neon-text-cycle neon-border-cycle" style="margin-top: 1.5vh;"><span>' + g.clock + '</span><span>' + g.tv + '</span></div></div>';
@@ -425,7 +452,7 @@
             
             if (globalPropsData.length === 0) {
                 track.innerHTML = '<div class="neon-text-cycle" style="font-size:4vh; font-weight:900; text-align:center; grid-column: 1 / -1; padding-top: 10vh;">PROPS UNAVAILABLE</div>';
-                slideTimer = setTimeout(nextSlide, 10000);
+                applyScroll('props-viewport', 'props-grid-track', 10000);
             } else {
                 track.innerHTML = globalPropsData.map(function(p) {
                     var valFloat = parseFloat(p.value);
@@ -469,15 +496,19 @@
             } catch(e) { slideTimer = setTimeout(nextSlide, 5000); }
         }
 
+        // --- FIXED SLICING FOR STANDINGS TO ENABLE SCROLLING ---
         async function showStandings(league, sport) {
             document.getElementById(league + '-screen').style.display = 'flex';
             try {
                 var res = await fetch('https://site.api.espn.com/apis/v2/sports/' + sport + '/' + league + '/standings');
                 var d = await res.json();
                 var groups = d.children || [d];
-                var html = groups.slice(0,4).map(function(group) {
+                
+                // Removed the `.slice(0,4)` so ALL divisions are mapped, triggering the scroll math
+                var html = groups.map(function(group) {
                     var entries = group.standings ? group.standings.entries : (group.children ? group.children[0].standings.entries : []);
-                    var rows = entries.slice(0,5).map(function(t) {
+                    // Removed `.slice(0,5)` so ALL teams per division are shown
+                    var rows = entries.slice(0, 16).map(function(t) {
                         var recText = '0-0';
                         var overallNode = t.stats.find(function(st) { return st.name === 'All Splits' || st.name === 'overall'; });
                         if (overallNode && overallNode.summary) recText = overallNode.summary;
