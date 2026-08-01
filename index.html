@@ -355,18 +355,16 @@
                         <div style="font-size: 1.8vh; color: #ff007f; margin-bottom: 0.5vh; text-transform: uppercase;">Custom Ticker Marquee:</div>
                         <input type="text" id="set-marqueeMessage" style="width: 100%; padding: 1vh; border-radius: 0.5vh; background: rgba(0,0,0,0.5); color: white; border: 1px solid #ff007f; font-family: 'Inter', sans-serif;" onchange="updateSettings()">
                     </div>
+                    <div style="margin-bottom: 2vh;">
+                        <div style="font-size: 1.8vh; color: #39ff14; margin-bottom: 0.5vh; text-transform: uppercase;">The Odds API Key (For Prop Bets):</div>
+                        <input type="text" id="set-oddsApiKey" placeholder="Paste Free Key from the-odds-api.com" style="width: 100%; padding: 1vh; border-radius: 0.5vh; background: rgba(0,0,0,0.5); color: white; border: 1px solid #39ff14; font-family: 'Inter', sans-serif;" onchange="updateSettings()">
+                    </div>
                     
                     <div class="toggle-row"><span>My Squad Slide</span> <input type="checkbox" id="set-mySquad" onchange="updateSettings()"></div>
                     <div class="toggle-row"><span>Live Trivia Game</span> <input type="checkbox" id="set-trivia" onchange="updateSettings()"></div>
                     <div class="toggle-row"><span>Top Stats Leaders</span> <input type="checkbox" id="set-leaders" onchange="updateSettings()"></div>
                     <div class="toggle-row"><span>PGA Golf Slide</span> <input type="checkbox" id="set-pga" onchange="updateSettings()"></div>
-                    <div class="toggle-row"><span>Global Soccer Slide</span> <input type="checkbox" id="set-soccerSlide" onchange="updateSettings()"></div>
                     <div class="toggle-row"><span>Command Center</span> <input type="checkbox" id="set-command" onchange="updateSettings()"></div>
-                    <div class="toggle-row"><span>UFC Fight Card Slide</span> <input type="checkbox" id="set-ufc" onchange="updateSettings()"></div>
-                    <div class="toggle-row"><span>TV Guide Slide</span> <input type="checkbox" id="set-tvGuide" onchange="updateSettings()"></div>
-                    <div class="toggle-row"><span>Headlines Slide</span> <input type="checkbox" id="set-news" onchange="updateSettings()"></div>
-                    <div class="toggle-row"><span>Odds Slide</span> <input type="checkbox" id="set-odds" onchange="updateSettings()"></div>
-                    <div class="toggle-row"><span>Rankings Slide</span> <input type="checkbox" id="set-rankings" onchange="updateSettings()"></div>
                 </div>
                 <div class="settings-section">
                     <h3>Live/Ticker Data</h3>
@@ -392,6 +390,12 @@
                     <div class="toggle-row"><span>CBB Group 50</span> <input type="checkbox" id="set-cbb50" onchange="updateSettings()"></div>
                     <div class="toggle-row"><span>CFB Top 75</span> <input type="checkbox" id="set-cfb75" onchange="updateSettings()"></div>
                     <div class="toggle-row"><span>Base. Top 50</span> <input type="checkbox" id="set-clb50" onchange="updateSettings()"></div>
+                    <div class="toggle-row"><span>UFC Fight Card Slide</span> <input type="checkbox" id="set-ufc" onchange="updateSettings()"></div>
+                    <div class="toggle-row"><span>Global Soccer Slide</span> <input type="checkbox" id="set-soccerSlide" onchange="updateSettings()"></div>
+                    <div class="toggle-row"><span>TV Guide Slide</span> <input type="checkbox" id="set-tvGuide" onchange="updateSettings()"></div>
+                    <div class="toggle-row"><span>Headlines Slide</span> <input type="checkbox" id="set-news" onchange="updateSettings()"></div>
+                    <div class="toggle-row"><span>Odds Slide</span> <input type="checkbox" id="set-odds" onchange="updateSettings()"></div>
+                    <div class="toggle-row"><span>Rankings Slide</span> <input type="checkbox" id="set-rankings" onchange="updateSettings()"></div>
                 </div>
             </div>
             <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 4vh; border-top: 1px solid rgba(255,255,255,0.2); padding-top: 4vh;">
@@ -423,13 +427,15 @@
         var neonThemes = ['theme-cyan', 'theme-pink', 'theme-green'];
         var currentThemeIndex = 0;
 
+        // INJECTED API KEY DIRECTLY INTO DEFAULT SETTINGS
         var defaultSettings = { 
             nfl:true, nba:true, nhl:true, mlb:true, rankings:true, odds:true, tvGuide:true, news:true, mySquad:true, ufc:true, command:true, leaders:true, pga:true, soccerSlide:true, trivia:true,
             showWorldCup:true, showEPL:true, showUCL:true, showATP:true, showWTA:true, showNFL:true, showNBA:true, showNHL:true, showMLB:true, showCFB:true, showCBB:true, showCLB:true,
             cbb50:true, cfb75:true, clb50:true, apiBase:"https://site.api.espn.com/apis",
             mySquadTeams: "Carolina Hurricanes, Duke, ECU, East Carolina",
             marqueeMessage: "WELCOME TO AHLERS ARCADE",
-            tickerSpeed: 5 
+            tickerSpeed: 5,
+            oddsApiKey: "62878ba22187dd156da6e814f18ef9f3" 
         };
         
         var settings = defaultSettings;
@@ -438,6 +444,10 @@
             if (saved) settings = Object.assign({}, defaultSettings, JSON.parse(saved));
             if (settings.mySquadTeams === "Hurricanes, Duke, ECU, East Carolina" || settings.mySquadTeams === "Hurricanes, Duke, ECU") {
                 settings.mySquadTeams = "Carolina Hurricanes, Duke, ECU, East Carolina";
+            }
+            // Always enforce the newly provided API key if missing from local storage
+            if (!settings.oddsApiKey || settings.oddsApiKey === "") {
+                settings.oddsApiKey = defaultSettings.oddsApiKey;
             }
         } catch(e) {}
 
@@ -453,6 +463,8 @@
             try { localStorage.setItem('ahlersArcadeSettings', JSON.stringify(settings)); } catch(e) {}
             if(bc) bc.postMessage({ action: 'settingsUpdated', args: [settings] });
             loadSettingsUI(); applyTickerSpeed();
+            // Clear props cache so new key forces a fresh pull immediately
+            localStorage.removeItem('ahlersPropsCache');
         }
         
         function loadSettingsUI() { 
@@ -519,86 +531,88 @@
             } catch (e) {}
         }
 
-        /* 100% REAL OFFSHORE ODDS MATCHER (Strictly skips fake ESPN data) */
-        async function fetchRealProps() {
+        /* 100% BULLETPROOF OFFICIAL ODDS API FETCH (WITH ESPN PICTURE MATCHING) */
+        async function fetchRealProps(espnLeaders) {
+            var apiKey = settings.oddsApiKey || '';
+            if (!apiKey || apiKey.trim() === '') {
+                globalPropsData = [{ name: "API KEY REQUIRED", statDesc: "GO TO SETTINGS TO CONFIGURE", line: "ENTER FREE KEY", odds: "", game: "GET A FREE KEY FROM THE-ODDS-API.COM", headshot: "https://a.espncdn.com/combiner/i?img=/i/teamlogos/default-team-logo-500.png", teamLogo: "" }];
+                return;
+            }
+
+            // Aggressive Caching: Only pull from the API once every 4 hours to preserve free limits (500/month)
+            var cached = localStorage.getItem('ahlersPropsCache');
+            if (cached) {
+                try {
+                    var cacheObj = JSON.parse(cached);
+                    if (new Date().getTime() - cacheObj.timestamp < 14400000) { 
+                        globalPropsData = cacheObj.data;
+                        if (globalPropsData.length > 0) return;
+                    }
+                } catch(e) {}
+            }
+
             var realProps = [];
-            var sportsToTry = ['baseball/mlb', 'football/nfl', 'basketball/nba'];
-            
-            // Multiple Offshore Book Fallbacks (Same API architecture)
-            var offshoreDomains = ['www.bovada.lv', 'www.bodog.eu', 'www.ignitioncasino.eu'];
+            var sportsMap = [
+                { key: 'baseball_mlb', markets: 'batter_home_runs,batter_hits,pitcher_strikeouts' },
+                { key: 'americanfootball_nfl', markets: 'player_pass_yds,player_rush_yds,player_receptions' },
+                { key: 'basketball_nba', markets: 'player_points,player_rebounds,player_assists' }
+            ];
 
-            for (var s = 0; s < sportsToTry.length; s++) {
-                var sport = sportsToTry[s];
-                var dataLoadedForSport = false;
-                
-                // Attempt to scrape each domain sequentially if one fails
-                for (var d = 0; d < offshoreDomains.length; d++) {
-                    if (dataLoadedForSport) break; 
+            for (var s=0; s<sportsMap.length; s++) {
+                if (realProps.length >= 10) break;
+                try {
+                    var eventsRes = await fetch('https://api.the-odds-api.com/v4/sports/' + sportsMap[s].key + '/events?apiKey=' + apiKey);
+                    if (!eventsRes.ok) continue;
+                    var events = await eventsRes.json();
                     
-                    try {
-                        var offshoreUrl = 'https://' + offshoreDomains[d] + '/services/sports/api/v1/events/sports/' + sport;
-                        var proxyUrl = 'https://api.allorigins.win/get?url=' + encodeURIComponent(offshoreUrl);
+                    if (events && events.length > 0) {
+                        // Only fetch props for the biggest 2 upcoming games to conserve API credits
+                        for (var e=0; e < Math.min(2, events.length); e++) {
+                            var ev = events[e];
+                            var propsRes = await fetch('https://api.the-odds-api.com/v4/sports/' + sportsMap[s].key + '/events/' + ev.id + '/odds?apiKey=' + apiKey + '&regions=us&markets=' + sportsMap[s].markets + '&oddsFormat=american');
+                            if (!propsRes.ok) continue;
+                            var propsData = await propsRes.json();
 
-                        var res = await fetch(proxyUrl);
-                        var data = await res.json();
-                        var parsedData = JSON.parse(data.contents);
+                            if (propsData && propsData.bookmakers && propsData.bookmakers.length > 0) {
+                                var book = propsData.bookmakers[0]; 
+                                book.markets.forEach(function(market) {
+                                    var statName = market.key.replace(/_/g, ' ').toUpperCase();
+                                    market.outcomes.forEach(function(outcome) {
+                                        if (outcome.name === 'Over' || outcome.name === 'Yes') {
+                                            var playerName = outcome.description || "Player";
+                                            var line = outcome.point ? "O/U " + outcome.point : "YES";
+                                            var odds = outcome.price > 0 ? "+" + outcome.price : outcome.price;
 
-                        if (parsedData && parsedData.length > 0) {
-                            dataLoadedForSport = true; 
-                            parsedData.forEach(function(section) {
-                                if (section.events) {
-                                    section.events.forEach(function(ev) {
-                                        if (ev.displayGroups) {
-                                            ev.displayGroups.forEach(function(group) {
-                                                if (group.markets) {
-                                                    group.markets.forEach(function(market) {
-                                                        // Parse real player prop strings directly from the sportsbook
-                                                        if (market.description && market.description.toLowerCase().indexOf("player") > -1 && market.description.indexOf(" - ") > -1) {
-                                                            var parts = market.description.split(" - ");
-                                                            var statDesc = parts[0].replace("Player", "").trim();
-                                                            var playerName = parts[1].trim();
+                                            // MATCHING LOGIC: Search ESPN data for the player's face
+                                            var matchedLeader = espnLeaders.find(l => l.name.toLowerCase() === playerName.toLowerCase());
+                                            var playerPic = matchedLeader ? matchedLeader.headshot : 'https://a.espncdn.com/combiner/i?img=/i/headshots/' + sportsMap[s].key.split('_')[1] + '/players/full/default.png';
 
-                                                            if (market.outcomes && market.outcomes.length > 0) {
-                                                                var outcome = market.outcomes[0];
-                                                                var lineMatch = outcome.description.match(/[\d\.]+/);
-                                                                var line = lineMatch ? lineMatch[0] : "";
-                                                                var odds = (outcome.price && outcome.price.american) ? outcome.price.american : "-110";
-
-                                                                // Dedup entries and push valid real live props
-                                                                if (line && !realProps.some(function(p){ return p.name === playerName && p.statDesc === statDesc; })) {
-                                                                    realProps.push({
-                                                                        name: playerName,
-                                                                        statDesc: statDesc.toUpperCase(),
-                                                                        line: "O/U " + line,
-                                                                        odds: odds > 0 ? "+" + odds : odds,
-                                                                        game: ev.description, 
-                                                                        headshot: 'https://a.espncdn.com/combiner/i?img=/i/headshots/' + sport.split('/')[0] + '/players/full/default.png',
-                                                                        teamLogo: 'https://a.espncdn.com/combiner/i?img=/i/teamlogos/default-team-logo-500.png'
-                                                                    });
-                                                                }
-                                                            }
-                                                        }
-                                                    });
-                                                }
-                                            });
+                                            if (!realProps.some(function(p){ return p.name === playerName && p.statDesc === statName; })) {
+                                                realProps.push({
+                                                    name: playerName,
+                                                    statDesc: statName,
+                                                    line: line,
+                                                    odds: odds,
+                                                    game: ev.away_team + " @ " + ev.home_team,
+                                                    headshot: playerPic,
+                                                    teamLogo: 'https://a.espncdn.com/combiner/i?img=/i/teamlogos/default-team-logo-500.png'
+                                                });
+                                            }
                                         }
                                     });
-                                }
-                            });
+                                });
+                            }
                         }
-                    } catch (e) {
-                        console.log("Fallback " + offshoreDomains[d] + " failed for " + sport + ".");
                     }
-                }
+                } catch (err) { console.log(err); }
             }
 
             if (realProps.length > 0) {
                 realProps.sort(function() { return 0.5 - Math.random(); });
                 globalPropsData = realProps.slice(0, 10);
+                localStorage.setItem('ahlersPropsCache', JSON.stringify({ timestamp: new Date().getTime(), data: globalPropsData }));
             } else {
-                // If all offshore sites fail, absolutely no fake generated math data. 
-                // Return an empty array.
-                globalPropsData = [];
+                globalPropsData = [{ name: "NO PROPS BOARDED YET", statDesc: "CHECK BACK LATER", line: "", odds: "", game: "ODDS REFRESH AUTOMATICALLY", headshot: "https://a.espncdn.com/combiner/i?img=/i/teamlogos/default-team-logo-500.png", teamLogo: "" }];
             }
         }
 
@@ -869,8 +883,8 @@
             globalTVGuideData = newTVGuide;
             globalLeadersData = newLeaders.slice();
 
-            // Initiate our multi-book offshore odds fetcher (strictly no fake props anymore)
-            await fetchRealProps();
+            // Initiate OFFICIAL authenticated Odds API Fetcher (with ESPN leader matching for headshots)
+            await fetchRealProps(newLeaders);
             
             newMarqueeGames.sort(function(a,b) { return b.weight - a.weight; });
             var marqueeHtml = newMarqueeGames.slice(0, 2).map(function(g) {
