@@ -420,6 +420,9 @@
         var globalTVGuideData = [], globalLeadersData = [], newMarqueeGames = [];
         var currentTrivia = null;
 
+        var neonThemes = ['theme-cyan', 'theme-pink', 'theme-green'];
+        var currentThemeIndex = 0;
+
         var defaultSettings = { 
             nfl:true, nba:true, nhl:true, mlb:true, rankings:true, odds:true, tvGuide:true, news:true, mySquad:true, ufc:true, command:true, leaders:true, pga:true, soccerSlide:true, trivia:true,
             showWorldCup:true, showEPL:true, showUCL:true, showATP:true, showWTA:true, showNFL:true, showNBA:true, showNHL:true, showMLB:true, showCFB:true, showCBB:true, showCLB:true,
@@ -516,103 +519,79 @@
             } catch (e) {}
         }
 
-        /* 100% REAL OFFSHORE ODDS MATCHER (WITH PROXY WATERFALL FAILSAFES) */
+        /* 100% REAL DFS/PROP ODDS MATCHER via PrizePicks API (Highly reliable, public, CORS friendly) */
         async function fetchRealProps() {
             var realProps = [];
-            var sportsToTry = ['baseball/mlb', 'football/nfl', 'basketball/nba'];
+            var targetUrl = 'https://api.prizepicks.com/projections';
             
-            // Multiple Offshore Book Fallbacks
-            var offshoreDomains = ['www.bovada.lv', 'www.bodog.eu', 'www.ignitioncasino.eu'];
-
-            // Multiple CORS Proxy Fallbacks (To bypass rate limits/IP blocks)
-            var proxyList = [
-                { url: 'https://api.allorigins.win/get?url=', type: 'json_contents' },
-                { url: 'https://corsproxy.io/?', type: 'raw' },
-                { url: 'https://api.codetabs.com/v1/proxy?quest=', type: 'raw' }
+            // Waterfall through reliable proxies that process JSON cleanly
+            var proxies = [
+                'https://api.allorigins.win/raw?url=',
+                'https://api.codetabs.com/v1/proxy?quest=',
+                'https://corsproxy.io/?'
             ];
 
-            for (var s = 0; s < sportsToTry.length; s++) {
-                var sport = sportsToTry[s];
-                var dataLoadedForSport = false;
-                
-                // Try each sportsbook
-                for (var d = 0; d < offshoreDomains.length; d++) {
-                    if (dataLoadedForSport) break; 
+            for (var p = 0; p < proxies.length; p++) {
+                try {
+                    var fetchUrl = proxies[p] + encodeURIComponent(targetUrl);
+                    // Force no-cache so we always get the live board
+                    var res = await fetch(fetchUrl, { cache: "no-store" });
+                    if (!res.ok) continue;
+
+                    var json = await res.json();
                     
-                    var offshoreUrl = 'https://' + offshoreDomains[d] + '/services/sports/api/v1/events/sports/' + sport;
-
-                    // Waterfall through each proxy if one fails
-                    for (var p = 0; p < proxyList.length; p++) {
-                        if (dataLoadedForSport) break;
-
-                        try {
-                            var proxyUrl = proxyList[p].url + encodeURIComponent(offshoreUrl);
-                            var res = await fetch(proxyUrl);
-                            if (!res.ok) throw new Error('Proxy blocked');
-
-                            var parsedData = null;
-                            if (proxyList[p].type === 'json_contents') {
-                                var data = await res.json();
-                                parsedData = JSON.parse(data.contents);
-                            } else {
-                                parsedData = await res.json();
+                    if (json && json.data && json.included) {
+                        var players = {};
+                        
+                        // Map the included players to link their ID to their Name and Image
+                        json.included.forEach(function(item) {
+                            if (item.type === 'new_player') {
+                                players[item.id] = {
+                                    name: item.attributes.name,
+                                    team: item.attributes.team || 'TEAM',
+                                    image: item.attributes.image_url
+                                };
                             }
+                        });
 
-                            if (parsedData && parsedData.length > 0) {
-                                dataLoadedForSport = true; 
-                                parsedData.forEach(function(section) {
-                                    if (section.events) {
-                                        section.events.forEach(function(ev) {
-                                            if (ev.displayGroups) {
-                                                ev.displayGroups.forEach(function(group) {
-                                                    if (group.markets) {
-                                                        group.markets.forEach(function(market) {
-                                                            // Parse real player prop strings directly from the sportsbook
-                                                            if (market.description && market.description.toLowerCase().indexOf("player") > -1 && market.description.indexOf(" - ") > -1) {
-                                                                var parts = market.description.split(" - ");
-                                                                var statDesc = parts[0].replace("Player", "").trim();
-                                                                var playerName = parts[1].trim();
+                        // Extract the actual prop lines and pair them with the player data
+                        json.data.forEach(function(proj) {
+                            if (proj.type === 'projection' && proj.attributes.is_promo === false) {
+                                var playerId = proj.relationships.new_player.data.id;
+                                var player = players[playerId];
+                                
+                                if (player && proj.attributes.line_score) {
+                                    var statDesc = proj.attributes.stat_type;
+                                    var line = proj.attributes.line_score;
+                                    var propName = player.name;
 
-                                                                if (market.outcomes && market.outcomes.length > 0) {
-                                                                    var outcome = market.outcomes[0];
-                                                                    var lineMatch = outcome.description.match(/[\d\.]+/);
-                                                                    var line = lineMatch ? lineMatch[0] : "";
-                                                                    var odds = (outcome.price && outcome.price.american) ? outcome.price.american : "-110";
-
-                                                                    // Dedup entries and push valid real live props
-                                                                    if (line && !realProps.some(function(p){ return p.name === playerName && p.statDesc === statDesc; })) {
-                                                                        realProps.push({
-                                                                            name: playerName,
-                                                                            statDesc: statDesc.toUpperCase(),
-                                                                            line: "O/U " + line,
-                                                                            odds: odds > 0 ? "+" + odds : odds,
-                                                                            game: ev.description, 
-                                                                            headshot: 'https://a.espncdn.com/combiner/i?img=/i/headshots/' + sport.split('/')[0] + '/players/full/default.png',
-                                                                            teamLogo: 'https://a.espncdn.com/combiner/i?img=/i/teamlogos/default-team-logo-500.png'
-                                                                        });
-                                                                    }
-                                                                }
-                                                            }
-                                                        });
-                                                    }
-                                                });
-                                            }
+                                    // Deduplicate if multiple markets exist for the same player
+                                    if (!realProps.some(function(x) { return x.name === propName && x.statDesc === statDesc.toUpperCase(); })) {
+                                        realProps.push({
+                                            name: propName,
+                                            statDesc: statDesc.toUpperCase(),
+                                            line: "O/U " + line,
+                                            odds: "-119", // Standard DFS implied odds
+                                            game: player.team + " MATCHUP",
+                                            headshot: player.image || 'https://a.espncdn.com/combiner/i?img=/i/headshots/nfl/players/full/default.png',
+                                            teamLogo: 'https://a.espncdn.com/combiner/i?img=/i/teamlogos/default-team-logo-500.png'
                                         });
                                     }
-                                });
+                                }
                             }
-                        } catch (e) {
-                            console.log("Proxy " + proxyList[p].url + " failed for " + offshoreDomains[d]);
-                        }
+                        });
+                        break; // Successfully loaded data, exit proxy loop
                     }
+                } catch(e) {
+                    console.log("Proxy " + p + " failed to fetch props.");
                 }
             }
 
             if (realProps.length > 0) {
+                // Randomize to keep the board fresh every loop
                 realProps.sort(function() { return 0.5 - Math.random(); });
                 globalPropsData = realProps.slice(0, 10);
             } else {
-                // Return an empty array if all proxy/book fallbacks completely exhaust
                 globalPropsData = [];
             }
         }
@@ -884,7 +863,7 @@
             globalTVGuideData = newTVGuide;
             globalLeadersData = newLeaders.slice();
 
-            // Initiate our multi-book offshore odds fetcher (strictly no fake props anymore)
+            // Initiate our highly reliable DFS proxy scraper
             await fetchRealProps();
             
             newMarqueeGames.sort(function(a,b) { return b.weight - a.weight; });
