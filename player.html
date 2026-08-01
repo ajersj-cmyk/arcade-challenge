@@ -531,15 +531,15 @@
             } catch (e) {}
         }
 
-        /* 100% BULLETPROOF OFFICIAL ODDS API FETCH (NO CORS PROXY ERRORS) */
-        async function fetchRealProps() {
+        /* 100% BULLETPROOF OFFICIAL ODDS API FETCH (WITH ESPN PICTURE MATCHING) */
+        async function fetchRealProps(espnLeaders) {
             var apiKey = settings.oddsApiKey || '';
             if (!apiKey || apiKey.trim() === '') {
                 globalPropsData = [{ name: "API KEY REQUIRED", statDesc: "GO TO SETTINGS TO CONFIGURE", line: "ENTER FREE KEY", odds: "", game: "GET A FREE KEY FROM THE-ODDS-API.COM", headshot: "https://a.espncdn.com/combiner/i?img=/i/teamlogos/default-team-logo-500.png", teamLogo: "" }];
                 return;
             }
 
-            // aggressive Caching: Only pull from the API once every 4 hours to preserve free limits (500/month)
+            // Aggressive Caching: Only pull from the API once every 4 hours to preserve free limits (500/month)
             var cached = localStorage.getItem('ahlersPropsCache');
             if (cached) {
                 try {
@@ -583,6 +583,10 @@
                                             var line = outcome.point ? "O/U " + outcome.point : "YES";
                                             var odds = outcome.price > 0 ? "+" + outcome.price : outcome.price;
 
+                                            // MATCHING LOGIC: Search ESPN data for the player's face
+                                            var matchedLeader = espnLeaders.find(l => l.name.toLowerCase() === playerName.toLowerCase());
+                                            var playerPic = matchedLeader ? matchedLeader.headshot : 'https://a.espncdn.com/combiner/i?img=/i/headshots/' + sportsMap[s].key.split('_')[1] + '/players/full/default.png';
+
                                             if (!realProps.some(function(p){ return p.name === playerName && p.statDesc === statName; })) {
                                                 realProps.push({
                                                     name: playerName,
@@ -590,7 +594,7 @@
                                                     line: line,
                                                     odds: odds,
                                                     game: ev.away_team + " @ " + ev.home_team,
-                                                    headshot: 'https://a.espncdn.com/combiner/i?img=/i/headshots/' + sportsMap[s].key.split('_')[1] + '/players/full/default.png',
+                                                    headshot: playerPic,
                                                     teamLogo: 'https://a.espncdn.com/combiner/i?img=/i/teamlogos/default-team-logo-500.png'
                                                 });
                                             }
@@ -879,8 +883,8 @@
             globalTVGuideData = newTVGuide;
             globalLeadersData = newLeaders.slice();
 
-            // Initiate OFFICIAL authenticated Odds API Fetcher
-            await fetchRealProps();
+            // Initiate OFFICIAL authenticated Odds API Fetcher (with ESPN leader matching for headshots)
+            await fetchRealProps(newLeaders);
             
             newMarqueeGames.sort(function(a,b) { return b.weight - a.weight; });
             var marqueeHtml = newMarqueeGames.slice(0, 2).map(function(g) {
