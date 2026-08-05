@@ -279,6 +279,11 @@
             <div class="screen-header neon-text-cycle" id="ufc-title">UFC FIGHT NIGHT</div>
             <div class="content-viewport" id="ufc-viewport"><div class="grid-track" id="ufc-grid-track"></div></div>
         </div>
+
+        <div id="wwe-screen" class="slide-screen">
+            <div class="screen-header neon-text-cycle">WWE UNIVERSE</div>
+            <div class="content-viewport" id="wwe-viewport"><div id="wwe-track" style="width: 100%; will-change: transform; padding-bottom: 5vh;"></div></div>
+        </div>
         
         <div id="command-screen" class="slide-screen">
             <div class="screen-header neon-text-cycle">AHLERS COMMAND CENTER</div>
@@ -364,6 +369,7 @@
                     <div class="toggle-row"><span>Live Trivia Game</span> <input type="checkbox" id="set-trivia" onchange="updateSettings()"></div>
                     <div class="toggle-row"><span>Top Stats Leaders</span> <input type="checkbox" id="set-leaders" onchange="updateSettings()"></div>
                     <div class="toggle-row"><span>PGA Golf Slide</span> <input type="checkbox" id="set-pga" onchange="updateSettings()"></div>
+                    <div class="toggle-row"><span>WWE Split Screen</span> <input type="checkbox" id="set-wwe" onchange="updateSettings()"></div>
                     <div class="toggle-row"><span>Command Center</span> <input type="checkbox" id="set-command" onchange="updateSettings()"></div>
                 </div>
                 <div class="settings-section">
@@ -427,9 +433,8 @@
         var neonThemes = ['theme-cyan', 'theme-pink', 'theme-green'];
         var currentThemeIndex = 0;
 
-        // INJECTED API KEY DIRECTLY INTO DEFAULT SETTINGS
         var defaultSettings = { 
-            nfl:true, nba:true, nhl:true, mlb:true, rankings:true, odds:true, tvGuide:true, news:true, mySquad:true, ufc:true, command:true, leaders:true, pga:true, soccerSlide:true, trivia:true,
+            nfl:true, nba:true, nhl:true, mlb:true, rankings:true, odds:true, tvGuide:true, news:true, mySquad:true, ufc:true, command:true, leaders:true, pga:true, soccerSlide:true, trivia:true, wwe:true,
             showWorldCup:true, showEPL:true, showUCL:true, showATP:true, showWTA:true, showNFL:true, showNBA:true, showNHL:true, showMLB:true, showCFB:true, showCBB:true, showCLB:true,
             cbb50:true, cfb75:true, clb50:true, apiBase:"https://site.api.espn.com/apis",
             mySquadTeams: "Carolina Hurricanes, Duke, ECU, East Carolina",
@@ -445,7 +450,6 @@
             if (settings.mySquadTeams === "Hurricanes, Duke, ECU, East Carolina" || settings.mySquadTeams === "Hurricanes, Duke, ECU") {
                 settings.mySquadTeams = "Carolina Hurricanes, Duke, ECU, East Carolina";
             }
-            // Always enforce the newly provided API key if missing from local storage
             if (!settings.oddsApiKey || settings.oddsApiKey === "") {
                 settings.oddsApiKey = defaultSettings.oddsApiKey;
             }
@@ -463,7 +467,6 @@
             try { localStorage.setItem('ahlersArcadeSettings', JSON.stringify(settings)); } catch(e) {}
             if(bc) bc.postMessage({ action: 'settingsUpdated', args: [settings] });
             loadSettingsUI(); applyTickerSpeed();
-            // Clear props cache so new key forces a fresh pull immediately
             localStorage.removeItem('ahlersPropsCache');
         }
         
@@ -531,7 +534,7 @@
             } catch (e) {}
         }
 
-        /* 100% BULLETPROOF OFFICIAL ODDS API FETCH (WITH ESPN PICTURE MATCHING) */
+        /* BULLETPROOF PROP FETCHER WITH GUARANTEED PHOTO FALLBACKS */
         async function fetchRealProps(espnLeaders) {
             var apiKey = settings.oddsApiKey || '';
             if (!apiKey || apiKey.trim() === '') {
@@ -539,7 +542,6 @@
                 return;
             }
 
-            // Aggressive Caching: Only pull from the API once every 4 hours to preserve free limits (500/month)
             var cached = localStorage.getItem('ahlersPropsCache');
             if (cached) {
                 try {
@@ -566,7 +568,6 @@
                     var events = await eventsRes.json();
                     
                     if (events && events.length > 0) {
-                        // Only fetch props for the biggest 2 upcoming games to conserve API credits
                         for (var e=0; e < Math.min(2, events.length); e++) {
                             var ev = events[e];
                             var propsRes = await fetch('https://api.the-odds-api.com/v4/sports/' + sportsMap[s].key + '/events/' + ev.id + '/odds?apiKey=' + apiKey + '&regions=us&markets=' + sportsMap[s].markets + '&oddsFormat=american');
@@ -583,19 +584,19 @@
                                             var line = outcome.point ? "O/U " + outcome.point : "YES";
                                             var odds = outcome.price > 0 ? "+" + outcome.price : outcome.price;
 
-                                            // MATCHING LOGIC: Search ESPN data for the player's face
-                                            var matchedLeader = espnLeaders.find(l => l.name.toLowerCase() === playerName.toLowerCase());
-                                            var playerPic = matchedLeader ? matchedLeader.headshot : 'https://a.espncdn.com/combiner/i?img=/i/headshots/' + sportsMap[s].key.split('_')[1] + '/players/full/default.png';
+                                            // FUZZY PHOTO MATCHING LOGIC (Checks last names to guarantee a match)
+                                            var pLastName = playerName.split(' ').pop().toLowerCase();
+                                            var matchedLeader = espnLeaders.find(l => l.name.toLowerCase().includes(pLastName));
+                                            
+                                            // IF NO HEADSHOT FOUND, GRAB THE ACTUAL TEAM LOGO FOR THE GAME AS A FAILSAFE
+                                            var matchedGame = globalRawGames.find(g => g.home.toLowerCase().includes(ev.home_team.toLowerCase().split(' ').pop()) || g.away.toLowerCase().includes(ev.away_team.toLowerCase().split(' ').pop()));
+                                            var fallbackTeamLogo = matchedGame ? (ev.home_team.includes(matchedGame.home) ? matchedGame.hLogo : matchedGame.aLogo) : 'https://a.espncdn.com/combiner/i?img=/i/teamlogos/default-team-logo-500.png';
+
+                                            var playerPic = matchedLeader ? matchedLeader.headshot : fallbackTeamLogo;
 
                                             if (!realProps.some(function(p){ return p.name === playerName && p.statDesc === statName; })) {
                                                 realProps.push({
-                                                    name: playerName,
-                                                    statDesc: statName,
-                                                    line: line,
-                                                    odds: odds,
-                                                    game: ev.away_team + " @ " + ev.home_team,
-                                                    headshot: playerPic,
-                                                    teamLogo: 'https://a.espncdn.com/combiner/i?img=/i/teamlogos/default-team-logo-500.png'
+                                                    name: playerName, statDesc: statName, line: line, odds: odds, game: ev.away_team + " @ " + ev.home_team, headshot: playerPic, teamLogo: fallbackTeamLogo
                                                 });
                                             }
                                         }
@@ -604,7 +605,7 @@
                             }
                         }
                     }
-                } catch (err) { console.log(err); }
+                } catch (err) {}
             }
 
             if (realProps.length > 0) {
@@ -665,7 +666,6 @@
             clearTimeout(slideTimer);
             clearTimeout(triviaRevealTimer);
             
-            // Clean, CPU-Friendly Neon Theme Rotation per slide
             var neonThemes = ['theme-cyan', 'theme-pink', 'theme-green'];
             document.body.classList.remove(...neonThemes);
             if(typeof window.currentThemeIndex === 'undefined') window.currentThemeIndex = 0;
@@ -676,7 +676,7 @@
             if (mc) mc.style.display = 'block';
 
             var screens = [
-                'live', 'props', 'mySquad', 'trivia', 'leaders', 'pga', 'ufc', 'command',
+                'live', 'props', 'mySquad', 'trivia', 'leaders', 'wwe', 'pga', 'ufc', 'command',
                 'soccerSlide', 'tvGuide', 'news', 'odds', 'rankings', 'nfl', 'nba', 'nhl', 'mlb'
             ];
             
@@ -694,6 +694,7 @@
             else if (current === 'mySquad') showMySquad();
             else if (current === 'trivia') showTrivia();
             else if (current === 'leaders') showLeaders();
+            else if (current === 'wwe') showWWE();
             else if (current === 'pga') showPGA();
             else if (current === 'ufc') showUFC();
             else if (current === 'command') showCommand();
@@ -883,7 +884,6 @@
             globalTVGuideData = newTVGuide;
             globalLeadersData = newLeaders.slice();
 
-            // Initiate OFFICIAL authenticated Odds API Fetcher (with ESPN leader matching for headshots)
             await fetchRealProps(newLeaders);
             
             newMarqueeGames.sort(function(a,b) { return b.weight - a.weight; });
@@ -913,6 +913,70 @@
             
             document.getElementById('ticker-track').innerHTML = trackHtml + trackHtml;
             setTimeout(applyTickerSpeed, 100);
+        }
+
+        /* NEW DEDICATED WWE SPLIT-SCREEN FETCHER */
+        async function showWWE() {
+            document.getElementById('wwe-screen').style.display = 'flex';
+            var wweTrack = document.getElementById('wwe-track');
+            var apiKey = settings.oddsApiKey || '';
+            
+            var wweHtml = `<div style="display:flex; width:100%; gap:4vw; height:100%;">`;
+            
+            // COLUMN 1: LIVE VEGAS ODDS
+            wweHtml += `<div style="flex:1; display:flex; flex-direction:column; gap:1.5vh;">`;
+            wweHtml += `<div class="neon-text-cycle" style="font-size:3vh; font-weight:900; text-align:center; border-bottom: 2px solid rgba(255,255,255,0.2); padding-bottom: 1vh; margin-bottom: 1vh;">UPCOMING MATCH ODDS</div>`;
+            try {
+                var oddsRes = await fetch('https://api.the-odds-api.com/v4/sports/wwe_wrestling/odds?apiKey=' + apiKey + '&regions=us&markets=h2h&oddsFormat=american');
+                var oddsData = await oddsRes.json();
+                if(oddsData && oddsData.length > 0) {
+                    var matchesHtml = oddsData.slice(0, 4).map(function(match) {
+                        var book = match.bookmakers[0];
+                        if(!book) return '';
+                        var outcomes = book.markets[0].outcomes;
+                        return `<div class="glass-card" style="padding:2vh; display:flex; justify-content:space-between; align-items:center;">
+                            <div style="display:flex; flex-direction:column; align-items:center; flex:1;">
+                                <div class="white-text" style="font-size:2.8vh; font-weight:900; text-align:center; margin-bottom:1vh;">${outcomes[0].name}</div>
+                                <div class="neon-text-cycle" style="font-size:4vh; font-weight:900;">${outcomes[0].price > 0 ? '+'+outcomes[0].price : outcomes[0].price}</div>
+                            </div>
+                            <div class="neon-text-cycle" style="font-size:2.5vh; font-weight:900; margin:0 2vw; font-style:italic;">VS</div>
+                            <div style="display:flex; flex-direction:column; align-items:center; flex:1;">
+                                <div class="white-text" style="font-size:2.8vh; font-weight:900; text-align:center; margin-bottom:1vh;">${outcomes[1].name}</div>
+                                <div class="neon-text-cycle" style="font-size:4vh; font-weight:900;">${outcomes[1].price > 0 ? '+'+outcomes[1].price : outcomes[1].price}</div>
+                            </div>
+                        </div>`;
+                    }).join('');
+                    wweHtml += matchesHtml;
+                } else {
+                    wweHtml += `<div class="glass-card white-text" style="text-align:center; padding: 4vh; font-size:3vh; font-weight:bold;">NO PLE ODDS CURRENTLY BOARDED</div>`;
+                }
+            } catch(e) {
+                wweHtml += `<div class="glass-card white-text" style="text-align:center; padding: 4vh; font-size:3vh; font-weight:bold;">NO PLE ODDS CURRENTLY BOARDED</div>`;
+            }
+            wweHtml += `</div>`;
+            
+            // COLUMN 2: LIVE NEWS RSS
+            wweHtml += `<div style="flex:1; display:flex; flex-direction:column; gap:1.5vh;">`;
+            wweHtml += `<div class="neon-text-cycle" style="font-size:3vh; font-weight:900; text-align:center; border-bottom: 2px solid rgba(255,255,255,0.2); padding-bottom: 1vh; margin-bottom: 1vh;">LATEST RUMORS & NEWS</div>`;
+            try {
+                var newsRes = await fetch('https://api.rss2json.com/v1/api.json?rss_url=https%3A%2F%2Fwww.wrestlinginc.com%2Ffeed%2F');
+                var newsData = await newsRes.json();
+                if(newsData.status === 'ok') {
+                    var newsItems = newsData.items.slice(0, 4).map(function(item) {
+                        return `<div class="news-row glass-card" style="padding:1.5vh; margin-bottom:0;">
+                            <div class="news-content">
+                                <div class="news-title" style="font-size:2.8vh; line-height:1.3;">${item.title}</div>
+                                <div class="news-source neon-text-cycle" style="font-size:2vh; margin-top:0.5vh;">WRESTLING INC</div>
+                            </div>
+                        </div>`;
+                    }).join('');
+                    wweHtml += newsItems;
+                }
+            } catch(e) {}
+            wweHtml += `</div></div>`;
+            
+            wweTrack.innerHTML = wweHtml;
+            applyScroll('wwe-viewport', 'wwe-track', 15000);
         }
 
         function buildTrendHtml(trend) {
