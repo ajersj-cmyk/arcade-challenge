@@ -1,248 +1,630 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Arcade Challenge Player</title>
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&display=swap" rel="stylesheet">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SCOREBOARD PRO · Live Sports</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;600;700;800;900&display=swap" rel="stylesheet" />
     <style>
-        body { background: linear-gradient(135deg, #0f0c29, #302b63, #24243e); color: #fff; font-family: 'Cinzel', serif; display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 100vh; margin: 0; text-align: center; padding: 20px; box-sizing: border-box; }
-        .container { 
-            background: rgba(0, 0, 0, 0.4); border: 5px solid #ff007f; border-radius: 40px; padding: 20px; box-shadow: 0 0 30px rgba(255, 0, 127, 0.5); max-width: 90%; width: 100%; position: relative;
-            background-size: contain; background-position: center; background-repeat: no-repeat;
-            transition: background-image 0.5s ease-in-out;
-            background-color: #0f0c29;
+        /* ===== RESET & BASE ===== */
+        * { margin:0; padding:0; box-sizing:border-box; }
+        :root {
+            --bg-primary: #0a0a12;
+            --bg-secondary: #111122;
+            --bg-card: rgba(255,255,255,0.04);
+            --bg-card-hover: rgba(255,255,255,0.07);
+            --bg-glass: rgba(255,255,255,0.03);
+            --border-glass: rgba(255,255,255,0.06);
+            --gold: #f5a623;
+            --gold-dim: rgba(245,166,35,0.15);
+            --gold-glow: rgba(245,166,35,0.3);
+            --blue: #4a90d9;
+            --blue-dim: rgba(74,144,217,0.15);
+            --red: #e74c3c;
+            --red-dim: rgba(231,76,60,0.2);
+            --green: #2ecc71;
+            --green-dim: rgba(46,204,113,0.15);
+            --text-primary: #ffffff;
+            --text-secondary: #a0a0b8;
+            --text-muted: #6a6a82;
+            --radius: 16px;
+            --radius-sm: 10px;
+            --shadow: 0 8px 32px rgba(0,0,0,0.5);
+            --transition: 0.3s cubic-bezier(0.4,0,0.2,1);
         }
-        #main-title { margin-bottom: 20px; flex-shrink: 0; }
-        #main-title img { max-width: 100%; max-height: 20vh; height: auto; }
-        #player-display { 
-            font-size: 3.5vw; 
-            font-weight: bold;
-            color: #ff007f;
-            margin-bottom: 15px;
-            animation: purple-text-pulse 4s infinite alternate;
-        }
-        .challenge-section { 
-            background: rgba(0, 0, 0, 0.6); 
-            color: #fff; 
-            border-radius: 20px; 
-            padding: 20px; 
-            min-height: 200px; 
-            display: flex; 
-            flex-direction: column; 
-            justify-content: center; 
-            margin-bottom: 20px; 
-            box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.5);
-            border: 2px solid rgba(255, 255, 255, 0.5);
-        }
-        #challenge-text { font-size: 4vw; font-weight: bold; margin: 0; }
-        #challenge-details { font-size: 2.2vw; margin-top: 15px; opacity: 0.9; }
-        .btn-container, .challenge-action-form { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-top: 15px; }
-        button { 
-            background: #ff007f; color: #fff; font-family: 'Cinzel', serif; font-weight: bold; border: none; padding: 20px; font-size: 2.5vw; cursor: pointer; border-radius: 12px; text-transform: uppercase; transition: transform 0.2s, box-shadow 0.2s; 
-            box-shadow: 0 6px 0 #cc0066; 
-        }
-        button:active { transform: translateY(3px); box-shadow: 0 3px 0 #cc0066; }
-        #done-btn { 
-            background: #ff007f;
-            color: #fff; 
-            animation: purple-button-pulse 4s infinite alternate;
-        }
-        #impossible-btn { background-color: #9d00ff; box-shadow: 0 6px 0 #6e00b3; }
-        .name-entry-form { padding: 20px; margin-top: 15px; display: flex; flex-direction: column; gap: 15px; align-items: center; }
-        .name-entry-form input[type="text"] { background: #fff; color: #000; border: none; padding: 15px; border-radius: 10px; font-family: 'Cinzel', serif; font-size: 3vw; width: 80%; }
-        
-        /* NEW: Styles for the fullscreen intro screen */
-        #intro-screen {
-            display: none; /* Hidden by default */
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-size: cover;
-            background-position: center;
-            z-index: 100; /* On top of everything */
-            display: none; /* Re-declared to be safe */
-            flex-direction: column;
-            justify-content: flex-end; /* Pushes button to the bottom */
-            align-items: center;
-            padding-bottom: 5vh;
-        }
-        #start-quest-btn {
-            padding: 20px 40px;
-            font-size: 4vw;
-            background-color: #00ffff;
-            color: #302b63;
-            border: 3px solid #fff;
-            animation: rainbow-pulse 4s linear infinite;
-        }
-        
-        @keyframes purple-text-pulse {
-            from { text-shadow: 0 0 4px #4b0082, 0 0 8px #4b0082; }
-            to { text-shadow: 0 0 8px #4b0082, 0 0 16px #4b0082, 0 0 24px #4b0082; }
-        }
-        @keyframes purple-button-pulse {
-            from { box-shadow: 0 6px 0 #6e00b3, 0 0 10px #4b0082, 0 0 20px #4b0082; }
-            to { box-shadow: 0 6px 0 #6e00b3, 0 0 20px #4b0082, 0 0 40px #4b0082, 0 0 60px #4b0082; }
-        }
-        @keyframes rainbow-pulse { 0% { box-shadow: 0 0 15px 5px #ff0000, 0 6px 0 #00cccc; } 16% { box-shadow: 0 0 15px 5px #ff7f00, 0 6px 0 #00cccc; } 33% { box-shadow: 0 0 15px 5px #ffff00, 0 6px 0 #00cccc; } 50% { box-shadow: 0 0 15px 5px #00ff00, 0 6px 0 #00cccc; } 66% { box-shadow: 0 0 15px 5px #0000ff, 0 6px 0 #00cccc; } 83% { box-shadow: 0 0 15px 5px #4b0082, 0 6px 0 #00cccc; } 100% { box-shadow: 0 0 15px 5px #ff0000, 0 6px 0 #00cccc; } }
-
+        html { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg-primary); color: var(--text-primary); }
+        body { min-height:100vh; background: radial-gradient(ellipse at 20% 20%, #141428 0%, #0a0a12 70%); padding:16px 24px 0; overflow-x:hidden; }
+        ::-webkit-scrollbar { width:6px; } ::-webkit-scrollbar-track { background:transparent; } ::-webkit-scrollbar-thumb { background:var(--gold-dim); border-radius:10px; } ::-webkit-scrollbar-thumb:hover { background:var(--gold); }
+        .glass { background:var(--bg-glass); backdrop-filter:blur(16px); border:1px solid var(--border-glass); border-radius:var(--radius); }
+        .glass-card { background:var(--bg-card); backdrop-filter:blur(12px); border:1px solid var(--border-glass); border-radius:var(--radius); transition:all var(--transition); }
+        .glass-card:hover { background:var(--bg-card-hover); border-color:rgba(255,255,255,0.12); transform:translateY(-2px); box-shadow:var(--shadow); }
+        .flex { display:flex; } .flex-center { display:flex; align-items:center; justify-content:center; } .flex-between { display:flex; align-items:center; justify-content:space-between; } .flex-col { display:flex; flex-direction:column; }
+        .gap-2 { gap:8px; } .gap-3 { gap:12px; } .gap-4 { gap:16px; } .gap-6 { gap:24px; } .gap-8 { gap:32px; }
+        .text-gold { color:var(--gold); } .text-blue { color:var(--blue); } .text-red { color:var(--red); } .text-green { color:var(--green); } .text-muted { color:var(--text-muted); } .text-secondary { color:var(--text-secondary); }
+        .fw-700 { font-weight:700; } .fw-800 { font-weight:800; } .fw-900 { font-weight:900; }
+        .fs-small { font-size:0.75rem; } .fs-sm { font-size:0.825rem; } .fs-base { font-size:0.925rem; } .fs-lg { font-size:1.1rem; } .fs-xl { font-size:1.4rem; } .fs-2xl { font-size:1.8rem; } .fs-3xl { font-size:2.4rem; }
+        .tracking-wide { letter-spacing:0.04em; } .tracking-wider { letter-spacing:0.08em; } .uppercase { text-transform:uppercase; }
+        @keyframes pulse-dot { 0%,100% { opacity:1; transform:scale(1); } 50% { opacity:0.3; transform:scale(0.7); } }
+        .pulse-dot { display:inline-block; width:10px; height:10px; border-radius:50%; background:var(--red); animation:pulse-dot 1.2s ease-in-out infinite; box-shadow:0 0 16px var(--red-dim); flex-shrink:0; }
+        @keyframes pulse-ring { 0% { box-shadow:0 0 0 0 rgba(231,76,60,0.4); } 70% { box-shadow:0 0 0 12px rgba(231,76,60,0); } 100% { box-shadow:0 0 0 0 rgba(231,76,60,0); } }
+        header { max-width:1440px; margin:0 auto 16px; padding:16px 24px; border-radius:var(--radius); background:rgba(255,255,255,0.02); backdrop-filter:blur(20px); border:1px solid rgba(255,255,255,0.04); box-shadow:0 4px 30px rgba(0,0,0,0.3); }
+        .header-left { gap:20px; } .logo { font-size:1.4rem; font-weight:900; background:linear-gradient(135deg, var(--gold), #f7c948, var(--gold)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; text-shadow:0 0 40px var(--gold-glow); } .logo span { font-weight:300; -webkit-text-fill-color:rgba(255,255,255,0.3); background:none; }
+        .live-badge { padding:4px 14px 4px 10px; border-radius:100px; background:var(--red-dim); border:1px solid rgba(231,76,60,0.25); font-size:0.7rem; font-weight:700; color:#ff6b6b; gap:6px; } .live-badge .pulse-dot { width:7px; height:7px; }
+        .header-time { font-size:0.8rem; font-weight:400; color:var(--text-secondary); letter-spacing:0.04em; font-variant-numeric:tabular-nums; }
+        .header-icon { width:38px; height:38px; border-radius:50%; background:var(--bg-card); border:1px solid var(--border-glass); color:var(--text-secondary); font-size:1rem; cursor:pointer; transition:all var(--transition); display:flex; align-items:center; justify-content:center; }
+        .header-icon:hover { background:var(--bg-card-hover); color:var(--text-primary); border-color:rgba(255,255,255,0.15); transform:scale(1.05); }
+        .header-icon.avatar { background:linear-gradient(135deg, var(--gold-dim), var(--blue-dim)); border-color:rgba(245,166,35,0.2); font-weight:700; font-size:0.85rem; color:var(--gold); }
+        nav { max-width:1440px; margin:0 auto 20px; padding:0 4px; gap:4px; flex-wrap:wrap; }
+        .nav-tab { padding:10px 24px; border-radius:100px; font-size:0.8rem; font-weight:600; letter-spacing:0.04em; color:var(--text-muted); cursor:pointer; transition:all var(--transition); border:1px solid transparent; background:transparent; }
+        .nav-tab:hover { color:var(--text-secondary); background:var(--bg-card); }
+        .nav-tab.active { color:var(--text-primary); background:var(--bg-card); border-color:rgba(245,166,35,0.2); box-shadow:0 0 30px rgba(245,166,35,0.05); }
+        .nav-tab .badge-count { background:var(--red-dim); color:var(--red); font-size:0.6rem; font-weight:700; padding:1px 8px; border-radius:100px; margin-left:6px; }
+        .main-grid { max-width:1440px; margin:0 auto; display:grid; grid-template-columns:1fr 1fr; gap:24px; align-items:start; }
+        @media (max-width:1024px) { .main-grid { grid-template-columns:1fr; } body { padding:12px 16px 0; } header { padding:12px 16px; flex-wrap:wrap; gap:8px; } .header-left { flex-wrap:wrap; } .logo { font-size:1.1rem; } .nav-tab { padding:8px 16px; font-size:0.7rem; } }
+        @media (max-width:480px) { header { flex-direction:column; align-items:stretch; gap:10px; } .header-left { justify-content:space-between; } .header-right { justify-content:flex-end; } .nav-tab { padding:6px 12px; font-size:0.65rem; } .main-grid { gap:16px; } }
+        .section-header { padding:14px 20px; border-bottom:1px solid var(--border-glass); gap:12px; flex-wrap:wrap; }
+        .section-header h2 { font-size:1rem; font-weight:700; letter-spacing:0.04em; }
+        .section-header .sub { font-size:0.7rem; color:var(--text-muted); font-weight:400; letter-spacing:0.02em; }
+        .section-header .action-btn { font-size:0.7rem; color:var(--text-muted); padding:4px 12px; border-radius:100px; border:1px solid var(--border-glass); background:transparent; cursor:pointer; transition:all var(--transition); }
+        .section-header .action-btn:hover { color:var(--text-secondary); border-color:rgba(255,255,255,0.15); }
+        .section-header .last-updated { font-size:0.65rem; color:var(--text-muted); font-weight:400; }
+        .game-card { padding:16px 20px; margin:0 4px 12px; border-radius:var(--radius-sm); background:var(--bg-card); border:1px solid var(--border-glass); transition:all var(--transition); }
+        .game-card:last-child { margin-bottom:4px; }
+        .game-card:hover { background:var(--bg-card-hover); border-color:rgba(255,255,255,0.08); }
+        .game-card .top-row { gap:12px; flex-wrap:wrap; }
+        .game-card .team { gap:8px; min-width:0; }
+        .game-card .team .logo-placeholder { width:28px; height:28px; border-radius:50%; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:0.7rem; font-weight:700; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.06); text-transform:uppercase; }
+        .game-card .team .name { font-weight:600; font-size:0.85rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+        .game-card .team .record { font-size:0.65rem; color:var(--text-muted); font-weight:400; }
+        .game-card .score { font-weight:900; font-size:1.5rem; letter-spacing:-0.02em; font-variant-numeric:tabular-nums; min-width:36px; text-align:center; }
+        .game-card .score.winner { color:var(--gold); }
+        .game-card .status { font-size:0.65rem; font-weight:600; color:var(--text-muted); letter-spacing:0.04em; padding:2px 10px; border-radius:100px; background:rgba(255,255,255,0.03); border:1px solid var(--border-glass); white-space:nowrap; }
+        .game-card .status.live { color:#ff6b6b; border-color:var(--red-dim); background:var(--red-dim); }
+        .game-card .status.final { color:var(--text-secondary); }
+        .game-card .status.upcoming { color:var(--blue); border-color:var(--blue-dim); background:var(--blue-dim); }
+        .props-toggle { margin-top:12px; padding-top:12px; border-top:1px solid var(--border-glass); font-size:0.7rem; color:var(--text-muted); cursor:pointer; user-select:none; transition:all var(--transition); gap:6px; width:fit-content; }
+        .props-toggle:hover { color:var(--text-secondary); }
+        .props-toggle .arrow { transition:transform var(--transition); display:inline-block; }
+        .props-toggle .arrow.open { transform:rotate(180deg); }
+        .props-grid { margin-top:12px; display:grid; grid-template-columns:1fr 1fr; gap:8px; overflow:hidden; max-height:0; opacity:0; transition:all 0.4s ease; }
+        .props-grid.open { max-height:600px; opacity:1; }
+        .prop-item { padding:8px 12px; border-radius:var(--radius-sm); background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.04); gap:4px; }
+        .prop-item .prop-player { font-size:0.75rem; font-weight:600; }
+        .prop-item .prop-type { font-size:0.6rem; color:var(--text-muted); font-weight:400; letter-spacing:0.03em; text-transform:uppercase; }
+        .prop-item .prop-line { font-size:0.8rem; font-weight:700; color:var(--text-secondary); }
+        .prop-item .prop-status { font-size:0.6rem; font-weight:700; padding:1px 8px; border-radius:100px; text-transform:uppercase; letter-spacing:0.04em; }
+        .prop-item .prop-status.over { color:var(--green); background:var(--green-dim); }
+        .prop-item .prop-status.under { color:var(--red); background:var(--red-dim); }
+        .prop-item .prop-status.push { color:var(--text-muted); background:rgba(255,255,255,0.04); }
+        .prop-item .prop-status.live { color:var(--blue); background:var(--blue-dim); }
+        @media (max-width:600px) { .props-grid { grid-template-columns:1fr; } .game-card .top-row { flex-wrap:wrap; } .game-card .score { font-size:1.2rem; min-width:28px; } .game-card .team .name { font-size:0.75rem; } }
+        .mlb-inning-row { display:flex; gap:4px; flex-wrap:wrap; margin:8px 0 4px; }
+        .mlb-inning-row .inning-label { font-size:0.55rem; color:var(--text-muted); font-weight:600; letter-spacing:0.02em; text-transform:uppercase; min-width:20px; text-align:center; }
+        .mlb-inning-row .inning-score { font-size:0.7rem; font-weight:600; color:var(--text-secondary); min-width:24px; text-align:center; padding:2px 4px; border-radius:4px; background:rgba(255,255,255,0.02); }
+        .mlb-inning-row .inning-score.runs { color:var(--gold); }
+        .mlb-stats { display:flex; gap:16px; margin-top:6px; font-size:0.7rem; color:var(--text-muted); flex-wrap:wrap; }
+        .mlb-stats span { display:flex; align-items:center; gap:4px; }
+        .mlb-stats .stat-value { color:var(--text-secondary); font-weight:600; }
+        .ticker-wrap { max-width:1440px; margin:24px auto 0; padding:12px 16px; border-radius:var(--radius); background:rgba(255,255,255,0.015); border:1px solid rgba(255,255,255,0.03); overflow:hidden; backdrop-filter:blur(8px); }
+        .ticker { display:flex; align-items:center; gap:24px; white-space:nowrap; animation:ticker-scroll 28s linear infinite; }
+        .ticker-item { display:flex; align-items:center; gap:10px; font-size:0.8rem; color:var(--text-secondary); }
+        .ticker-item .ticker-label { color:var(--gold); font-weight:600; font-size:0.65rem; letter-spacing:0.06em; text-transform:uppercase; }
+        .ticker-item .ticker-text { color:var(--text-secondary); } .ticker-item .ticker-text strong { color:var(--text-primary); font-weight:600; }
+        @keyframes ticker-scroll { 0% { transform:translateX(0); } 100% { transform:translateX(-50%); } }
+        .ticker-wrap:hover .ticker { animation-play-state:paused; }
+        @keyframes flash-update { 0% { background:rgba(245,166,35,0.15); } 100% { background:transparent; } }
+        .flash-update { animation:flash-update 0.6s ease-out; }
+        .loading-spinner { display:flex; justify-content:center; padding:24px 0; color:var(--text-muted); font-size:0.9rem; gap:12px; align-items:center; }
+        .spinner { width:20px; height:20px; border:2px solid var(--border-glass); border-top-color:var(--gold); border-radius:50%; animation:spin 0.8s linear infinite; }
+        @keyframes spin { to { transform:rotate(360deg); } }
+        .empty-state { padding:32px 20px; text-align:center; color:var(--text-muted); font-size:0.85rem; }
+        .error-banner { background:var(--red-dim); border:1px solid rgba(231,76,60,0.3); border-radius:var(--radius-sm); padding:12px 16px; margin:8px 8px 0; color:#ff6b6b; font-size:0.8rem; }
     </style>
 </head>
 <body>
-    <div id="intro-screen">
-        <button id="start-quest-btn">Start Quest</button>
-    </div>
 
-    <div class="container" id="main-container">
-        <h1 id="main-title"><img src="https://raw.githubusercontent.com/ajersj-cmyk/arcade-challenge/main/header.PNG" alt="Ahlers Arcade Challenge"></h1>
-        <p id="player-display" style="display: none;"></p>
-        <div class="challenge-section" id="challenge-box">
-            <p id="challenge-text">What is your name, Adventurer?</p>
-            <div id="challenge-details"></div>
-            <div class="name-entry-form" id="name-entry-form"><input type="text" id="player-name-input" placeholder="Enter Your Name"><button id="start-session-btn">Start / Continue</button></div>
-            <div class="challenge-action-form" id="challenge-action-form" style="display: none;"><button id="complete-challenge-btn">Completed!</button><button id="skip-challenge-btn">Skip (-5 pts)</button><button id="impossible-btn">This is Impossible</button></div>
-            <div class="success-screen" id="success-screen" style="display: none;"><button id="next-quest-btn">Next Quest</button></div>
+    <header class="flex-between">
+        <div class="flex-center header-left">
+            <div class="logo">SCORE<span>BOARD</span> PRO</div>
+            <div class="live-badge flex-center"><span class="pulse-dot"></span>LIVE</div>
+            <span class="header-time" id="headerTime">--:--:--</span>
         </div>
-        <div class="btn-container"><button class="mode-toggle-btn" id="mode-toggle">Switch to Adult Mode</button><button id="done-btn" style="display: none;">Save & Quit</button></div>
+        <div class="flex-center header-right">
+            <button class="header-icon" title="Refresh all" id="globalRefresh">↻</button>
+            <button class="header-icon" title="Settings">⚙️</button>
+            <button class="header-icon avatar">JD</button>
+        </div>
+    </header>
+
+    <nav class="flex">
+        <button class="nav-tab active" data-tab="ncaaf">🏈 NCAAF <span class="nav-indicator"></span></button>
+        <button class="nav-tab" data-tab="mlb">⚾ MLB <span class="badge-count" id="mlbCount">0</span></button>
+        <button class="nav-tab" data-tab="props">🎯 Props <span class="badge-count" id="propCount">0</span></button>
+        <button class="nav-tab" data-tab="scores">📊 Scores</button>
+    </nav>
+
+    <div class="main-grid" id="mainGrid">
+        <section class="glass-card" id="ncaafSection">
+            <div class="section-header flex-between">
+                <div class="flex-center gap-2">
+                    <h2>🏈 College Football</h2>
+                    <span class="sub" id="ncaafSub">· loading...</span>
+                </div>
+                <div class="flex-center gap-3">
+                    <span class="last-updated" id="ncaafUpdated">⏱ --</span>
+                    <button class="action-btn" id="refreshNcaaf">↻</button>
+                </div>
+            </div>
+            <div id="ncaafContainer" style="padding:4px 0 8px;"></div>
+        </section>
+
+        <section class="glass-card" id="mlbSection">
+            <div class="section-header flex-between">
+                <div class="flex-center gap-2">
+                    <h2>⚾ MLB</h2>
+                    <span class="sub" id="mlbSub">· loading...</span>
+                </div>
+                <div class="flex-center gap-3">
+                    <span class="last-updated" id="mlbUpdated">⏱ --</span>
+                    <button class="action-btn" id="refreshMlb">↻</button>
+                </div>
+            </div>
+            <div id="mlbContainer" style="padding:4px 0 8px;"></div>
+        </section>
     </div>
+
+    <div class="ticker-wrap">
+        <div class="ticker" id="ticker"></div>
+    </div>
+
     <script>
-    document.addEventListener('DOMContentLoaded', () => {
-        const scoresApiUrl = "https://script.google.com/macros/s/AKfycbzVzQirgLxs7Pse85u7RStzQFL-yJz8ZD9-PuVrfko9wBCm7lKbS9N5dQxZSvXj_eMW/exec";
-        const challengesUrl = "https://script.google.com/macros/s/AKfycbxj_xzLgkkQqsXKyBA4mJLvuTbzuDemZv8SYXMVD6gPeTzQOsJjH8iiEYDaaaNFpjIc/exec"; 
+        // ============================================================
+        //  CONFIG — PASTE YOUR FREE ODDS API KEY HERE
+        // ============================================================
+        const ODDS_API_KEY = 'YOUR_API_KEY_HERE';  // ← Get from the-odds-api.com
 
-        const mainContainer = document.getElementById('main-container');
-        const challengeText = document.getElementById('challenge-text');
-        const challengeDetails = document.getElementById('challenge-details');
-        const nameEntryForm = document.getElementById('name-entry-form');
-        const challengeActionForm = document.getElementById('challenge-action-form');
-        const playerNameInput = document.getElementById('player-name-input');
-        const startSessionBtn = document.getElementById('start-session-btn');
-        const playerDisplay = document.getElementById('player-display');
-        const doneBtn = document.getElementById('done-btn');
-        const modeToggleBtn = document.getElementById('mode-toggle');
-        const successScreen = document.getElementById('success-screen');
-        const nextQuestBtn = document.getElementById('next-quest-btn');
-        // NEW: Element references for the intro screen
-        const introScreen = document.getElementById('intro-screen');
-        const startQuestBtn = document.getElementById('start-quest-btn');
-        
-        let allChallenges = []; 
-        let isKidMode = true; 
-        let currentPlayerName = null; 
-        let currentChallenge = null; 
-        let historicalScore = 0; 
-        let sessionScore = 0; 
-        let hiddenChallenges = JSON.parse(localStorage.getItem('hiddenChallenges')) || {};
-        let challengeCounter = 0;
-        
-        const getRandomImageNumber = (max) => { const count = Number(max) || 1; return Math.floor(Math.random() * count) + 1; };
-        const getCharacterFolderName = (character) => character.toLowerCase().replace(/\s+/g, '');
-        
-        const fetchChallenges = async () => { try { const response = await fetch(challengesUrl); if (!response.ok) throw new Error('Network response was not ok'); allChallenges = await response.json(); challengeText.textContent = "What is your name, Adventurer?"; } catch (error) { console.error("Failed to fetch challenges:", error); challengeText.textContent = "Error: Could not load challenges. Please refresh."; } };
-        const lookupPlayerScore = async (name) => { startSessionBtn.textContent = "Loading..."; try { const response = await fetch(scoresApiUrl); const data = await response.json(); const playerScores = (data.sheet1 || []).filter(entry => entry.playername === name); return playerScores.reduce((total, entry) => total + (Number(entry.score) || 0), 0); } catch (error) { console.error("Could not look up score:", error); return 0; } finally { startSessionBtn.textContent = "Start / Continue"; } };
-        
-        const addScoreToSheet = async (playerName, score, mode) => {
-            if (score === 0) { window.location.reload(); return; }
-            try {
-                await fetch(scoresApiUrl, {
-                    method: 'POST',
-                    mode: 'no-cors',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ playername: playerName, score: score, mode: mode })
-                });
-            } catch (error) { console.error('FETCH FAILED:', error); } 
-            finally { window.location.reload(); }
-        };
+        // ============================================================
+        //  STATE
+        // ============================================================
+        let cfbGames = [];
+        let mlbGames = [];
+        let propsData = [];
 
-        const startNewChallenge = () => {
-            let desiredMode = isKidMode ? 'Kid' : 'Adult';
-            let challengePool = allChallenges.filter(c => c.mode === desiredMode);
-            const activeChallenges = challengePool.filter(c => !hiddenChallenges[c.uniqueId]);
-            if (activeChallenges.length === 0) {
-                challengeText.textContent = "Wow! You've completed all challenges in this mode!";
-                challengeDetails.innerHTML = '';
-                challengeActionForm.style.display = 'none';
+        // ============================================================
+        //  FETCH HELPERS
+        // ============================================================
+        async function fetchJson(url) {
+            const res = await fetch(url);
+            if (!res.ok) throw new Error(`HTTP ${res.status} from ${url}`);
+            return res.json();
+        }
+
+        // ---------- COLLEGE FOOTBALL (ESPN) ----------
+        async function fetchCfb() {
+            const url = 'https://site.api.espn.com/apis/site/v2/sports/football/college-football/scoreboard';
+            const data = await fetchJson(url);
+            const events = data.events || [];
+            return events.map(ev => {
+                const comp = ev.competitions?.[0];
+                const away = comp?.competitors?.find(c => c.homeAway === 'away');
+                const home = comp?.competitors?.find(c => c.homeAway === 'home');
+                const status = comp?.status?.type?.description || 'Scheduled';
+                const clock = comp?.status?.displayClock || '';
+                const period = comp?.status?.period || 0;
+                const isLive = status === 'In Progress' || status === 'Halftime';
+                const isFinal = status === 'Final' || status === 'End';
+                return {
+                    id: ev.id,
+                    away: {
+                        name: away?.team?.displayName || 'Away',
+                        abbrev: away?.team?.abbreviation || 'AW',
+                        record: away?.records?.[0]?.summary || '',
+                        logo: away?.team?.logo || '🏈'
+                    },
+                    home: {
+                        name: home?.team?.displayName || 'Home',
+                        abbrev: home?.team?.abbreviation || 'HM',
+                        record: home?.records?.[0]?.summary || '',
+                        logo: home?.team?.logo || '🏈'
+                    },
+                    awayScore: parseInt(away?.score) || 0,
+                    homeScore: parseInt(home?.score) || 0,
+                    status: isFinal ? 'Final' : isLive ? `${period}${clock ? ' · '+clock : ''}` : status,
+                    isLive: isLive,
+                    clock: clock,
+                    period: period,
+                    isFinal: isFinal
+                };
+            });
+        }
+
+        // ---------- MLB (MLB Stats API) ----------
+        async function fetchMlb() {
+            const today = new Date().toISOString().slice(0, 10);
+            const url = `https://statsapi.mlb.com/api/v1/schedule?sportId=1&date=${today}`;
+            const data = await fetchJson(url);
+            const dates = data.dates || [];
+            const games = dates.flatMap(d => d.games || []);
+            return games.map(g => {
+                const away = g.teams?.away?.team;
+                const home = g.teams?.home?.team;
+                const linescore = g.linescore || {};
+                const innings = linescore.innings || [];
+                const awayScore = linescore.teams?.away?.runs || 0;
+                const homeScore = linescore.teams?.home?.runs || 0;
+                const status = g.status?.detailedState || 'Scheduled';
+                const isLive = status === 'In Progress' || status === 'Live';
+                const isFinal = status === 'Final' || status === 'Game Over';
+                return {
+                    id: g.gamePk,
+                    away: {
+                        name: away?.name || 'Away',
+                        abbrev: away?.abbreviation || 'AW',
+                        logo: '⚾'
+                    },
+                    home: {
+                        name: home?.name || 'Home',
+                        abbrev: home?.abbreviation || 'HM',
+                        logo: '⚾'
+                    },
+                    awayScore: awayScore,
+                    homeScore: homeScore,
+                    inning: linescore.currentInningOrdinal || status,
+                    isLive: isLive,
+                    isFinal: isFinal,
+                    outs: linescore.outs || 0,
+                    balls: linescore.balls || 0,
+                    strikes: linescore.strikes || 0,
+                    innings: innings.map((inn, idx) => ({
+                        inning: idx + 1,
+                        away: inn.away?.runs || 0,
+                        home: inn.home?.runs || 0
+                    })),
+                    hits: {
+                        away: linescore.teams?.away?.hits || 0,
+                        home: linescore.teams?.home?.hits || 0
+                    },
+                    errors: {
+                        away: linescore.teams?.away?.errors || 0,
+                        home: linescore.teams?.home?.errors || 0
+                    },
+                    pitcher: {
+                        away: g.teams?.away?.pitcher?.fullName || '--',
+                        home: g.teams?.home?.pitcher?.fullName || '--'
+                    }
+                };
+            });
+        }
+
+        // ---------- PLAYER PROPS (The Odds API) ----------
+        async function fetchProps() {
+            if (!ODDS_API_KEY || ODDS_API_KEY === 'YOUR_API_KEY_HERE') {
+                console.warn('⛔ No Odds API key — props will be skipped.');
+                return [];
+            }
+            // Use college football props endpoint (American football)
+            const sport = 'americanfootball_ncaaf'; // or 'baseball_mlb' for MLB
+            const regions = 'us';
+            const markets = 'player_pass_tds,player_pass_yds,player_rush_yds,player_rec_yds';
+            const url = `https://api.the-odds-api.com/v4/sports/${sport}/events?apiKey=${ODDS_API_KEY}&regions=${regions}&markets=${markets}`;
+            const data = await fetchJson(url);
+            // Flatten all props from all events
+            const props = [];
+            for (const event of data) {
+                const bookmakers = event.bookmakers || [];
+                for (const bm of bookmakers) {
+                    for (const market of bm.markets || []) {
+                        for (const outcome of market.outcomes || []) {
+                            props.push({
+                                eventId: event.id,
+                                homeTeam: event.home_team,
+                                awayTeam: event.away_team,
+                                player: outcome.description || 'Player',
+                                type: market.key.replace('player_', '').toUpperCase(),
+                                line: outcome.point || '--',
+                                price: outcome.price || 0,
+                                status: 'live' // we'll derive over/under later if needed
+                            });
+                        }
+                    }
+                }
+            }
+            return props.slice(0, 30); // limit for display
+        }
+
+        // ============================================================
+        //  RENDER FUNCTIONS
+        // ============================================================
+
+        function renderCfb() {
+            const container = document.getElementById('ncaafContainer');
+            if (!cfbGames.length) {
+                container.innerHTML = `<div class="empty-state">No college football games today.</div>`;
                 return;
             }
-            currentChallenge = activeChallenges[Math.floor(Math.random() * activeChallenges.length)];
-            const charFolder = getCharacterFolderName(currentChallenge.character);
-            const imgNum = getRandomImageNumber(currentChallenge.introimagecount); 
-            const imageUrl = `https://raw.githubusercontent.com/ajersj-cmyk/arcade-challenge/main/quest/${charFolder}intro/${imgNum}.jpg`;
-            mainContainer.style.backgroundImage = `url('${imageUrl}')`;
-            challengeText.textContent = currentChallenge.text;
-            challengeDetails.innerHTML = `Difficulty: ${currentChallenge.difficulty} | Points: ${currentChallenge.points}`;
-            nameEntryForm.style.display = 'none';
-            doneBtn.style.display = 'inline-block';
-            modeToggleBtn.style.display = 'none';
-            challengeActionForm.style.display = 'flex';
-            successScreen.style.display = 'none';
-        };
+            container.innerHTML = cfbGames.map(game => {
+                const statusClass = game.isLive ? 'live' : (game.isFinal ? 'final' : 'upcoming');
+                const statusLabel = game.isLive ? `🟢 ${game.status}` : game.status;
 
-        const showWinScreen = () => {
-            const charFolder = getCharacterFolderName(currentChallenge.character);
-            const imgNum = getRandomImageNumber(currentChallenge.winimagecount);
-            const imageUrl = `https://raw.githubusercontent.com/ajersj-cmyk/arcade-challenge/main/quest/${charFolder}win/${imgNum}.jpg`;
-            mainContainer.style.backgroundImage = `url('${imageUrl}')`;
-            challengeText.textContent = currentChallenge.successQuote;
-            challengeDetails.innerHTML = `+${currentChallenge.points} points!`;
-            challengeActionForm.style.display = 'none';
-            successScreen.style.display = 'flex';
-        };
-        
-        const updateScore = (points) => {
-            if (currentChallenge) {
-                hiddenChallenges[currentChallenge.uniqueId] = true;
-                localStorage.setItem('hiddenChallenges', JSON.stringify(hiddenChallenges));
-            }
-            sessionScore += points;
-            const totalScore = historicalScore + sessionScore;
-            playerDisplay.innerHTML = `Player: ${currentPlayerName} | Total Score: ${totalScore}`;
-            if (points > 0) {
-                showWinScreen();
-            } else {
-                startNewChallenge();
-            }
-        };
+                // Build props for this game from propsData (match by team names)
+                const gameProps = propsData.filter(p =>
+                    p.awayTeam?.toLowerCase().includes(game.away.abbrev.toLowerCase()) ||
+                    p.homeTeam?.toLowerCase().includes(game.home.abbrev.toLowerCase())
+                ).slice(0, 6);
 
-        // MODIFIED: This function now shows the intro screen.
-        startSessionBtn.addEventListener('click', async () => {
-            const name = playerNameInput.value.trim();
-            if (!name) { alert('Please enter your name.'); return; }
-            if (allChallenges.length === 0) { alert('Challenges are still loading, please wait a moment!'); return; }
-            currentPlayerName = name;
-            historicalScore = await lookupPlayerScore(name);
-            sessionScore = 0;
-            playerDisplay.innerHTML = `Player: ${currentPlayerName} | Total Score: ${historicalScore}`;
-            
-            // --- NEW LOGIC STARTS HERE ---
-            mainContainer.style.display = 'none'; // Hide the main game container
-            const introImageUrl = 'https://raw.githubusercontent.com/ajersj-cmyk/arcade-challenge/main/quest/intro/intro.jpg';
-            introScreen.style.backgroundImage = `url('${introImageUrl}')`;
-            introScreen.style.display = 'flex';
-            // --- NEW LOGIC ENDS HERE ---
+                const propsHtml = gameProps.map(p => {
+                    const statusMap = { over: 'over', under: 'under' };
+                    const cls = statusMap[p.status] || 'live';
+                    return `
+                        <div class="prop-item flex-between">
+                            <div class="flex-col">
+                                <span class="prop-player">${p.player}</span>
+                                <span class="prop-type">${p.type}</span>
+                            </div>
+                            <div class="flex-center gap-2">
+                                <span class="prop-line">o/u ${p.line}</span>
+                                <span class="prop-status ${cls}">${p.status || 'live'}</span>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+
+                const hasProps = gameProps.length > 0;
+
+                return `
+                    <div class="game-card" data-game="${game.id}">
+                        <div class="top-row flex-between">
+                            <div class="flex-center gap-4" style="flex:1;min-width:0;">
+                                <div class="flex-center team">
+                                    <span class="logo-placeholder">${game.away.logo || '🏈'}</span>
+                                    <span class="name">${game.away.name}</span>
+                                    <span class="record">${game.away.record ? '('+game.away.record+')' : ''}</span>
+                                </div>
+                                <span class="score ${game.awayScore > game.homeScore ? 'winner' : ''}">${game.awayScore}</span>
+                            </div>
+                            <div class="flex-center gap-2">
+                                <span class="status ${statusClass}">${statusLabel}</span>
+                            </div>
+                            <div class="flex-center gap-4" style="flex:1;min-width:0;justify-content:flex-end;">
+                                <span class="score ${game.homeScore > game.awayScore ? 'winner' : ''}">${game.homeScore}</span>
+                                <div class="flex-center team">
+                                    <span class="name">${game.home.name}</span>
+                                    <span class="record">${game.home.record ? '('+game.home.record+')' : ''}</span>
+                                    <span class="logo-placeholder">${game.home.logo || '🏈'}</span>
+                                </div>
+                            </div>
+                        </div>
+                        ${hasProps ? `
+                        <div class="props-toggle flex-center" data-target="${game.id}">
+                            <span>📊 Player Props</span>
+                            <span class="arrow open">▾</span>
+                        </div>
+                        <div class="props-grid open" id="props-${game.id}">
+                            ${propsHtml}
+                        </div>
+                        ` : `
+                        <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border-glass);font-size:0.65rem;color:var(--text-muted);text-align:center;">No props available</div>
+                        `}
+                    </div>
+                `;
+            }).join('');
+
+            // Toggle logic
+            document.querySelectorAll('.props-toggle').forEach(el => {
+                el.addEventListener('click', function(e) {
+                    const targetId = this.dataset.target;
+                    const grid = document.getElementById(`props-${targetId}`);
+                    const arrow = this.querySelector('.arrow');
+                    if (grid) {
+                        grid.classList.toggle('open');
+                        if (arrow) arrow.classList.toggle('open');
+                    }
+                });
+            });
+
+            document.getElementById('ncaafSub').textContent = `· ${cfbGames.length} games`;
+            document.getElementById('ncaafUpdated').textContent = `⏱ ${new Date().toLocaleTimeString()}`;
+        }
+
+        function renderMlb() {
+            const container = document.getElementById('mlbContainer');
+            if (!mlbGames.length) {
+                container.innerHTML = `<div class="empty-state">No MLB games today.</div>`;
+                document.getElementById('mlbCount').textContent = '0';
+                return;
+            }
+            document.getElementById('mlbCount').textContent = mlbGames.length;
+            container.innerHTML = mlbGames.map(game => {
+                const statusClass = game.isLive ? 'live' : (game.isFinal ? 'final' : 'upcoming');
+                const statusLabel = game.isLive ? `🟢 ${game.inning}` : game.inning;
+
+                const totalInnings = Math.max(game.innings.length, 9);
+                const awayInnings = game.innings.map(i => i.away);
+                const homeInnings = game.innings.map(i => i.home);
+                // Pad to 9 innings
+                while (awayInnings.length < 9) awayInnings.push(0);
+                while (homeInnings.length < 9) homeInnings.push(0);
+
+                return `
+                    <div class="game-card" data-game="${game.id}">
+                        <div class="top-row flex-between">
+                            <div class="flex-center gap-4" style="flex:1;min-width:0;">
+                                <div class="flex-center team">
+                                    <span class="logo-placeholder">${game.away.logo || '⚾'}</span>
+                                    <span class="name">${game.away.abbrev}</span>
+                                </div>
+                                <span class="score ${game.awayScore > game.homeScore ? 'winner' : ''}">${game.awayScore}</span>
+                            </div>
+                            <div class="flex-center gap-2">
+                                <span class="status ${statusClass}">${statusLabel}</span>
+                            </div>
+                            <div class="flex-center gap-4" style="flex:1;min-width:0;justify-content:flex-end;">
+                                <span class="score ${game.homeScore > game.awayScore ? 'winner' : ''}">${game.homeScore}</span>
+                                <div class="flex-center team">
+                                    <span class="name">${game.home.abbrev}</span>
+                                    <span class="logo-placeholder">${game.home.logo || '⚾'}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mlb-inning-row" style="margin-top:10px;">
+                            <span class="inning-label">#</span>
+                            ${Array.from({length:9}, (_,i) => `<span class="inning-label">${i+1}</span>`).join('')}
+                            <span class="inning-label" style="margin-left:8px;">R</span>
+                            <span class="inning-label">H</span>
+                            <span class="inning-label">E</span>
+                        </div>
+                        <div class="mlb-inning-row">
+                            <span class="inning-label">A</span>
+                            ${awayInnings.map((r, i) => `<span class="inning-score ${r>0?'runs':''}">${r}</span>`).join('')}
+                            <span class="inning-label" style="margin-left:8px;font-weight:700;color:var(--gold);">${game.awayScore}</span>
+                            <span class="inning-label" style="font-weight:600;color:var(--text-secondary);">${game.hits.away}</span>
+                            <span class="inning-label" style="font-weight:600;color:var(--text-secondary);">${game.errors.away}</span>
+                        </div>
+                        <div class="mlb-inning-row">
+                            <span class="inning-label">H</span>
+                            ${homeInnings.map((r, i) => `<span class="inning-score ${r>0?'runs':''}">${r}</span>`).join('')}
+                            <span class="inning-label" style="margin-left:8px;font-weight:700;color:var(--gold);">${game.homeScore}</span>
+                            <span class="inning-label" style="font-weight:600;color:var(--text-secondary);">${game.hits.home}</span>
+                            <span class="inning-label" style="font-weight:600;color:var(--text-secondary);">${game.errors.home}</span>
+                        </div>
+
+                        <div class="mlb-stats">
+                            <span>⚾ <span class="stat-value">${game.pitcher.away}</span></span>
+                            <span>⚾ <span class="stat-value">${game.pitcher.home}</span></span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            document.getElementById('mlbSub').textContent = `· ${mlbGames.length} games`;
+            document.getElementById('mlbUpdated').textContent = `⏱ ${new Date().toLocaleTimeString()}`;
+        }
+
+        function renderTicker() {
+            const container = document.getElementById('ticker');
+            const items = [];
+            // Build from actual game data
+            for (const g of cfbGames.slice(0, 3)) {
+                const winner = g.awayScore > g.homeScore ? g.away.name : g.home.name;
+                items.push({ label: 'CFB', text: `${g.away.name} ${g.awayScore} – ${g.homeScore} ${g.home.name} · ${winner} leads` });
+            }
+            for (const g of mlbGames.slice(0, 3)) {
+                const winner = g.awayScore > g.homeScore ? g.away.abbrev : g.home.abbrev;
+                items.push({ label: 'MLB', text: `${g.away.abbrev} ${g.awayScore} – ${g.homeScore} ${g.home.abbrev} · ${winner} ${g.isLive ? 'leading' : 'won'}` });
+            }
+            if (propsData.length) {
+                const topProp = propsData.slice(0, 2).map(p => `${p.player} ${p.type} o/u ${p.line}`).join(' | ');
+                items.push({ label: 'PROPS', text: topProp || 'Player props loaded' });
+            }
+            if (!items.length) items.push({ label: 'LIVE', text: 'Waiting for games...' });
+
+            // Duplicate for seamless loop
+            const doubled = [...items, ...items];
+            container.innerHTML = doubled.map(item => `
+                <span class="ticker-item">
+                    <span class="ticker-label">${item.label}</span>
+                    <span class="ticker-text">${item.text}</span>
+                </span>
+            `).join('');
+        }
+
+        // ============================================================
+        //  MAIN UPDATE LOOP
+        // ============================================================
+
+        async function refreshAll() {
+            try {
+                // Show loading states
+                document.getElementById('ncaafContainer').innerHTML = `<div class="loading-spinner"><span class="spinner"></span> Loading NCAAF...</div>`;
+                document.getElementById('mlbContainer').innerHTML = `<div class="loading-spinner"><span class="spinner"></span> Loading MLB...</div>`;
+
+                // Fetch in parallel
+                const [cfb, mlb, props] = await Promise.all([
+                    fetchCfb(),
+                    fetchMlb(),
+                    fetchProps().catch(() => [])
+                ]);
+
+                cfbGames = cfb;
+                mlbGames = mlb;
+                propsData = props;
+
+                renderCfb();
+                renderMlb();
+                renderTicker();
+
+                // Update badge counts
+                document.getElementById('mlbCount').textContent = mlbGames.length;
+                document.getElementById('propCount').textContent = propsData.length;
+
+                // Update header time
+                document.getElementById('headerTime').textContent = new Date().toLocaleTimeString();
+
+            } catch (err) {
+                console.error('Refresh error:', err);
+                // Show error in containers
+                document.getElementById('ncaafContainer').innerHTML = `<div class="error-banner">⚠️ Error loading college football: ${err.message}</div>`;
+                document.getElementById('mlbContainer').innerHTML = `<div class="error-banner">⚠️ Error loading MLB: ${err.message}</div>`;
+            }
+        }
+
+        // ============================================================
+        //  CLOCK UPDATER
+        // ============================================================
+
+        function updateClock() {
+            document.getElementById('headerTime').textContent = new Date().toLocaleTimeString();
+        }
+
+        // ============================================================
+        //  EVENT BINDING
+        // ============================================================
+
+        document.getElementById('refreshNcaaf').addEventListener('click', () => {
+            refreshAll();
+            document.getElementById('refreshNcaaf').textContent = '✓';
+            setTimeout(() => document.getElementById('refreshNcaaf').textContent = '↻', 800);
         });
-        
-        // NEW: Event listener for the "Start Quest" button on the intro screen.
-        startQuestBtn.addEventListener('click', () => {
-            introScreen.style.display = 'none'; // Hide the intro
-            mainContainer.style.display = 'block'; // Show the main game (changed to block for original layout)
-            playerDisplay.style.display = 'block';
-            challengeCounter = 1;
-            startNewChallenge(); // Jump into the first challenge
+        document.getElementById('refreshMlb').addEventListener('click', () => {
+            refreshAll();
+            document.getElementById('refreshMlb').textContent = '✓';
+            setTimeout(() => document.getElementById('refreshMlb').textContent = '↻', 800);
         });
-        
-        document.getElementById('complete-challenge-btn').addEventListener('click', () => updateScore(currentChallenge.points));
-        document.getElementById('skip-challenge-btn').addEventListener('click', () => updateScore(-5));
-        document.getElementById('impossible-btn').addEventListener('click', () => updateScore(0));
-        nextQuestBtn.addEventListener('click', startNewChallenge);
-        doneBtn.addEventListener('click', async () => { if (currentPlayerName) { const mode = isKidMode ? 'Kid' : 'Adult'; await addScoreToSheet(currentPlayerName, sessionScore, mode); } else { window.location.reload(); } });
-        modeToggleBtn.addEventListener('click', () => { isKidMode = !isKidMode; modeToggleBtn.textContent = isKidMode ? 'Switch to Adult Mode' : 'Switch to Kid Mode'; });
-        
-        challengeText.textContent = "Loading challenges...";
-        fetchChallenges();
-    });
+        document.getElementById('globalRefresh').addEventListener('click', refreshAll);
+
+        // Nav tabs (smooth scroll)
+        document.querySelectorAll('.nav-tab').forEach(tab => {
+            tab.addEventListener('click', function() {
+                document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+                this.classList.add('active');
+                const tabName = this.dataset.tab;
+                if (tabName === 'ncaaf' || tabName === 'props') {
+                    document.getElementById('ncaafSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
+                } else if (tabName === 'mlb' || tabName === 'scores') {
+                    document.getElementById('mlbSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            });
+        });
+
+        // ============================================================
+        //  BOOT
+        // ============================================================
+
+        // Check API key
+        if (!ODDS_API_KEY || ODDS_API_KEY === 'YOUR_API_KEY_HERE') {
+            document.getElementById('propCount').textContent = '⚠️';
+            console.warn('🔑 Set your Odds API key in the ODDS_API_KEY variable.');
+        }
+
+        refreshAll();
+        setInterval(updateClock, 1000);
+        setInterval(refreshAll, 30000); // refresh every 30 seconds
+
+        console.log('🏈 SCOREBOARD PRO · Live College Football & MLB');
+        console.log('📡 Data sources: ESPN, MLB Stats API, The Odds API');
     </script>
 </body>
 </html>
