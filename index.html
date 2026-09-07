@@ -240,7 +240,7 @@
         </div>
 
         <div id="props-screen" class="slide-screen">
-            <div class="screen-header neon-text-cycle">VEGAS PROP SHOP</div>
+            <div class="screen-header neon-text-cycle">LIVE LEADERS</div>
             <div class="content-viewport" id="props-viewport"><div class="grid-track" id="props-grid-track"></div></div>
         </div>
 
@@ -356,8 +356,7 @@
                         <input type="text" id="set-marqueeMessage" style="width: 100%; padding: 1vh; border-radius: 0.5vh; background: rgba(0,0,0,0.5); color: white; border: 1px solid #ff007f; font-family: 'Inter', sans-serif;" onchange="updateSettings()">
                     </div>
                     <div style="margin-bottom: 2vh;">
-                        <div style="font-size: 1.8vh; color: #39ff14; margin-bottom: 0.5vh; text-transform: uppercase;">The Odds API Key (For Prop Bets):</div>
-                        <input type="text" id="set-oddsApiKey" placeholder="Paste Free Key from the-odds-api.com" style="width: 100%; padding: 1vh; border-radius: 0.5vh; background: rgba(0,0,0,0.5); color: white; border: 1px solid #39ff14; font-family: 'Inter', sans-serif;" onchange="updateSettings()">
+                        <div style="font-size: 1.8vh; color: #39ff14; margin-bottom: 0.5vh; text-transform: uppercase;">Props slide uses ESPN live leaders (no book key)</div>
                     </div>
                     
                     <div class="toggle-row"><span>My Squad Slide</span> <input type="checkbox" id="set-mySquad" onchange="updateSettings()"></div>
@@ -427,15 +426,13 @@
         var neonThemes = ['theme-cyan', 'theme-pink', 'theme-green'];
         var currentThemeIndex = 0;
 
-        // INJECTED API KEY DIRECTLY INTO DEFAULT SETTINGS
         var defaultSettings = { 
             nfl:true, nba:true, nhl:true, mlb:true, rankings:true, odds:true, tvGuide:true, news:true, mySquad:true, ufc:true, command:true, leaders:true, pga:true, soccerSlide:true, trivia:true,
             showWorldCup:true, showEPL:true, showUCL:true, showATP:true, showWTA:true, showNFL:true, showNBA:true, showNHL:true, showMLB:true, showCFB:true, showCBB:true, showCLB:true,
             cbb50:true, cfb75:true, clb50:true, apiBase:"https://site.api.espn.com/apis",
             mySquadTeams: "Carolina Hurricanes, Duke, ECU, East Carolina",
             marqueeMessage: "WELCOME TO AHLERS ARCADE",
-            tickerSpeed: 5,
-            oddsApiKey: "62878ba22187dd156da6e814f18ef9f3" 
+            tickerSpeed: 5
         };
         
         var settings = defaultSettings;
@@ -445,10 +442,11 @@
             if (settings.mySquadTeams === "Hurricanes, Duke, ECU, East Carolina" || settings.mySquadTeams === "Hurricanes, Duke, ECU") {
                 settings.mySquadTeams = "Carolina Hurricanes, Duke, ECU, East Carolina";
             }
-            // Always enforce the newly provided API key if missing from local storage
-            if (!settings.oddsApiKey || settings.oddsApiKey === "") {
-                settings.oddsApiKey = defaultSettings.oddsApiKey;
+            if (settings.oddsApiKey) {
+                delete settings.oddsApiKey;
+                try { localStorage.setItem('ahlersArcadeSettings', JSON.stringify(settings)); } catch(e2) {}
             }
+            try { localStorage.removeItem('ahlersPropsCache'); } catch(e3) {}
         } catch(e) {}
 
         function updateSettings() {
@@ -463,8 +461,6 @@
             try { localStorage.setItem('ahlersArcadeSettings', JSON.stringify(settings)); } catch(e) {}
             if(bc) bc.postMessage({ action: 'settingsUpdated', args: [settings] });
             loadSettingsUI(); applyTickerSpeed();
-            // Clear props cache so new key forces a fresh pull immediately
-            localStorage.removeItem('ahlersPropsCache');
         }
         
         function loadSettingsUI() { 
@@ -531,89 +527,109 @@
             } catch (e) {}
         }
 
-        /* 100% BULLETPROOF OFFICIAL ODDS API FETCH (WITH ESPN PICTURE MATCHING) */
-        async function fetchRealProps(espnLeaders) {
-            var apiKey = settings.oddsApiKey || '';
-            if (!apiKey || apiKey.trim() === '') {
-                globalPropsData = [{ name: "API KEY REQUIRED", statDesc: "GO TO SETTINGS TO CONFIGURE", line: "ENTER FREE KEY", odds: "", game: "GET A FREE KEY FROM THE-ODDS-API.COM", headshot: "https://a.espncdn.com/combiner/i?img=/i/teamlogos/default-team-logo-500.png", teamLogo: "" }];
-                return;
+        function formatMoneyline(val) {
+            if (val === undefined || val === null || val === '') return '';
+            var n = Number(val);
+            if (isNaN(n)) return String(val);
+            return (n > 0 ? '+' : '') + n;
+        }
+
+        function pickBroadcast(comp) {
+            if (comp.broadcasts && comp.broadcasts.length) {
+                var b0 = comp.broadcasts[0];
+                if (b0.names && b0.names.length) return b0.names.join('/');
+                if (b0.media && b0.media.shortName) return b0.media.shortName;
             }
-
-            // Aggressive Caching: Only pull from the API once every 4 hours to preserve free limits (500/month)
-            var cached = localStorage.getItem('ahlersPropsCache');
-            if (cached) {
-                try {
-                    var cacheObj = JSON.parse(cached);
-                    if (new Date().getTime() - cacheObj.timestamp < 14400000) { 
-                        globalPropsData = cacheObj.data;
-                        if (globalPropsData.length > 0) return;
-                    }
-                } catch(e) {}
+            if (comp.geoBroadcasts && comp.geoBroadcasts.length) {
+                var names = [];
+                for (var i = 0; i < comp.geoBroadcasts.length; i++) {
+                    var gb = comp.geoBroadcasts[i];
+                    var n = (gb.media && (gb.media.shortName || gb.media.name)) || (gb.type && gb.type.shortName) || '';
+                    if (n && names.indexOf(n) === -1) names.push(n);
+                }
+                if (names.length) return names.slice(0, 2).join('/');
             }
+            if (comp.broadcast) return comp.broadcast;
+            return '';
+        }
 
-            var realProps = [];
-            var sportsMap = [
-                { key: 'baseball_mlb', markets: 'batter_home_runs,batter_hits,pitcher_strikeouts' },
-                { key: 'americanfootball_nfl', markets: 'player_pass_yds,player_rush_yds,player_receptions' },
-                { key: 'basketball_nba', markets: 'player_points,player_rebounds,player_assists' }
-            ];
-
-            for (var s=0; s<sportsMap.length; s++) {
-                if (realProps.length >= 10) break;
-                try {
-                    var eventsRes = await fetch('https://api.the-odds-api.com/v4/sports/' + sportsMap[s].key + '/events?apiKey=' + apiKey);
-                    if (!eventsRes.ok) continue;
-                    var events = await eventsRes.json();
-                    
-                    if (events && events.length > 0) {
-                        // Only fetch props for the biggest 2 upcoming games to conserve API credits
-                        for (var e=0; e < Math.min(2, events.length); e++) {
-                            var ev = events[e];
-                            var propsRes = await fetch('https://api.the-odds-api.com/v4/sports/' + sportsMap[s].key + '/events/' + ev.id + '/odds?apiKey=' + apiKey + '&regions=us&markets=' + sportsMap[s].markets + '&oddsFormat=american');
-                            if (!propsRes.ok) continue;
-                            var propsData = await propsRes.json();
-
-                            if (propsData && propsData.bookmakers && propsData.bookmakers.length > 0) {
-                                var book = propsData.bookmakers[0]; 
-                                book.markets.forEach(function(market) {
-                                    var statName = market.key.replace(/_/g, ' ').toUpperCase();
-                                    market.outcomes.forEach(function(outcome) {
-                                        if (outcome.name === 'Over' || outcome.name === 'Yes') {
-                                            var playerName = outcome.description || "Player";
-                                            var line = outcome.point ? "O/U " + outcome.point : "YES";
-                                            var odds = outcome.price > 0 ? "+" + outcome.price : outcome.price;
-
-                                            // MATCHING LOGIC: Search ESPN data for the player's face
-                                            var matchedLeader = espnLeaders.find(l => l.name.toLowerCase() === playerName.toLowerCase());
-                                            var playerPic = matchedLeader ? matchedLeader.headshot : 'https://a.espncdn.com/combiner/i?img=/i/headshots/' + sportsMap[s].key.split('_')[1] + '/players/full/default.png';
-
-                                            if (!realProps.some(function(p){ return p.name === playerName && p.statDesc === statName; })) {
-                                                realProps.push({
-                                                    name: playerName,
-                                                    statDesc: statName,
-                                                    line: line,
-                                                    odds: odds,
-                                                    game: ev.away_team + " @ " + ev.home_team,
-                                                    headshot: playerPic,
-                                                    teamLogo: 'https://a.espncdn.com/combiner/i?img=/i/teamlogos/default-team-logo-500.png'
-                                                });
-                                            }
-                                        }
-                                    });
-                                });
-                            }
-                        }
-                    }
-                } catch (err) { console.log(err); }
+        function periodLabel(period, sportId) {
+            var p = Number(period) || 0;
+            if (!p) return '';
+            if (sportId === 'nhl') {
+                if (p === 1) return '1ST';
+                if (p === 2) return '2ND';
+                if (p === 3) return '3RD';
+                return 'OT';
             }
+            if (p === 1) return '1ST';
+            if (p === 2) return '2ND';
+            if (p === 3) return '3RD';
+            if (p === 4) return '4TH';
+            if (p > 4) return 'OT';
+            return '';
+        }
 
-            if (realProps.length > 0) {
-                realProps.sort(function() { return 0.5 - Math.random(); });
-                globalPropsData = realProps.slice(0, 10);
-                localStorage.setItem('ahlersPropsCache', JSON.stringify({ timestamp: new Date().getTime(), data: globalPropsData }));
-            } else {
-                globalPropsData = [{ name: "NO PROPS BOARDED YET", statDesc: "CHECK BACK LATER", line: "", odds: "", game: "ODDS REFRESH AUTOMATICALLY", headshot: "https://a.espncdn.com/combiner/i?img=/i/teamlogos/default-team-logo-500.png", teamLogo: "" }];
+        function buildGameClock(status, rawStatus, sit, c, startTimeStr) {
+            if (status.state === 'pre') return startTimeStr;
+            if (status.state === 'post') return 'FINAL';
+            if (c.id === 'mlb' || c.id === 'clb') {
+                return status.detail || status.shortDetail || '';
             }
+            if (c.s === 'tennis') return status.detail || status.shortDetail || '';
+            var clock = (rawStatus && rawStatus.displayClock) ? rawStatus.displayClock : '';
+            if (clock === '0:00' || clock === '0.00') clock = '';
+            var per = periodLabel(rawStatus && rawStatus.period, c.id);
+            var shortD = status.shortDetail || status.detail || '';
+            if (shortD && shortD !== '0:00') return shortD;
+            var bits = [];
+            if (per) bits.push(per);
+            if (clock) bits.push(clock);
+            if (sit && sit.shortDownDistanceText) bits.push(sit.shortDownDistanceText);
+            return bits.join(' ') || shortD || clock || 'LIVE';
+        }
+
+        function isUsefulLeaderStat(cat, value) {
+            var label = ((cat && (cat.displayName || cat.name)) || '').toLowerCase();
+            var key = ((cat && cat.name) || '').toLowerCase();
+            var skipBits = ['batting average', 'avg', 'obp', 'slg', 'ops', 'era', 'whip', 'fielding', 'percentage', 'pct', 'win probability', 'rating'];
+            var i;
+            for (i = 0; i < skipBits.length; i++) {
+                if (label.indexOf(skipBits[i]) !== -1 || key.indexOf(skipBits[i]) !== -1) return false;
+            }
+            if (label === 'ba' || key === 'avg' || key === 'battingaverage') return false;
+            var v = String(value == null ? '' : value).trim();
+            if (!v || v === '0' || v === '0.0' || v === '.000' || v === '0.000' || v === '0-0') return false;
+            if (/^0-\d+/.test(v)) return false;
+            return true;
+        }
+
+        function formatCardLines(g) {
+            var parts = [];
+            if (g.odds && g.odds !== 'EVEN' && g.odds !== '--') parts.push(g.odds);
+            if (g.ou && g.ou !== '--') parts.push('O/U ' + g.ou);
+            if (g.mlAway || g.mlHome) {
+                var ml = [];
+                if (g.mlAway) ml.push(g.mlAway);
+                if (g.mlHome) ml.push(g.mlHome);
+                if (ml.length) parts.push('ML ' + ml.join('/'));
+            }
+            return parts.join('   ');
+        }
+
+        function buildPropsFromLeaders(espnLeaders) {
+            var list = espnLeaders || [];
+            globalPropsData = list.slice(0, 10).map(function(l) {
+                return {
+                    name: l.name || 'PLAYER',
+                    statDesc: (l.statDesc || 'STAT').toUpperCase(),
+                    line: l.value || '',
+                    odds: '',
+                    game: ((l.teamCode || '') + (l.oppCode ? ' vs ' + l.oppCode : '') + (l.league ? '  •  ' + l.league : '')).trim(),
+                    headshot: l.headshot || '',
+                    teamLogo: l.teamLogo || 'https://a.espncdn.com/combiner/i?img=/i/teamlogos/default-team-logo-500.png'
+                };
+            });
         }
 
         function applyScroll(viewportId, trackId, baseDelay = 12000) {
@@ -786,18 +802,24 @@
 
                             var hName = (h.team && h.team.shortDisplayName) ? h.team.shortDisplayName : (h.athlete ? (h.athlete.shortName || h.athlete.displayName) : 'TBD');
                             var aName = (a.team && a.team.shortDisplayName) ? a.team.shortDisplayName : (a.athlete ? (a.athlete.shortName || a.athlete.displayName) : 'TBD');
-                            var tv = (comp.broadcasts && comp.broadcasts[0]) ? comp.broadcasts[0].names[0] : 'TV';
-                            
-                            var clockStr = comp.status.displayClock || '';
-                            if (c.id === 'mlb' || c.id === 'clb' || c.s === 'tennis') clockStr = status.detail; 
-                            if (!clockStr) clockStr = status.shortDetail || '';
+                            var tv = pickBroadcast(comp);
+                            var startTimeStr = new Date(ev.date).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+                            var sit = comp.situation || {};
+                            var clockStr = buildGameClock(status, comp.status, sit, c, startTimeStr);
 
                             var trendData = { type: null };
                             if (status.state === 'in') {
-                                if (c.id === 'mlb' && comp.situation) {
-                                    trendData = { type: 'mlb', b1: comp.situation.onFirst, b2: comp.situation.onSecond, b3: comp.situation.onThird, outs: comp.situation.outs, balls: comp.situation.balls, strikes: comp.situation.strikes };
-                                } else if (comp.situation && comp.situation.lastPlay && comp.situation.lastPlay.probability) {
-                                    trendData = { type: 'winprob', aProb: comp.situation.lastPlay.probability.awayWinPercentage * 100, hProb: comp.situation.lastPlay.probability.homeWinPercentage * 100 };
+                                if ((c.id === 'mlb' || c.id === 'clb') && sit) {
+                                    trendData = { type: 'mlb', b1: sit.onFirst, b2: sit.onSecond, b3: sit.onThird, outs: sit.outs, balls: sit.balls, strikes: sit.strikes };
+                                } else if ((c.s === 'football' || c.id === 'nfl' || c.id === 'cfb') && (sit.down || sit.shortDownDistanceText || sit.possessionText)) {
+                                    trendData = {
+                                        type: 'football',
+                                        downDist: sit.shortDownDistanceText || ((sit.down && sit.distance != null) ? (sit.down + ' & ' + sit.distance) : ''),
+                                        spot: sit.possessionText || sit.yardLine || '',
+                                        lastPlay: (sit.lastPlay && sit.lastPlay.text) ? sit.lastPlay.text : ''
+                                    };
+                                } else if (sit.lastPlay && sit.lastPlay.probability) {
+                                    trendData = { type: 'winprob', aProb: sit.lastPlay.probability.awayWinPercentage * 100, hProb: sit.lastPlay.probability.homeWinPercentage * 100 };
                                 } 
                             } else if (status.state === 'pre') {
                                 var aRec = (a.records && a.records[0]) ? a.records[0].summary : '0-0';
@@ -818,10 +840,12 @@
                             var gameObj = {
                                 league: displayLeague, home: hName, hLogo: hLogo, hFallback: hFallback, hScore: h.score || '', 
                                 away: aName, aLogo: aLogo, aFallback: aFallback, aScore: a.score || '', status: status.detail, 
-                                clock: clockStr, tv: tv, state: status.state,
+                                clock: clockStr, tv: tv || 'TBD', state: status.state,
                                 trend: trendData, searchString: (hName + " " + aName).toLowerCase(),
-                                weight: mWeight, odds: (comp.odds && comp.odds[0]) ? comp.odds[0].details : 'EVEN',
-                                ou: (comp.odds && comp.odds[0] && comp.odds[0].overUnder) ? comp.odds[0].overUnder : '--',
+                                weight: mWeight, odds: (comp.odds && comp.odds[0] && comp.odds[0].details) ? comp.odds[0].details : 'EVEN',
+                                ou: (comp.odds && comp.odds[0] && comp.odds[0].overUnder != null) ? comp.odds[0].overUnder : '--',
+                                mlAway: (comp.odds && comp.odds[0] && comp.odds[0].awayTeamOdds) ? formatMoneyline(comp.odds[0].awayTeamOdds.moneyLine) : '',
+                                mlHome: (comp.odds && comp.odds[0] && comp.odds[0].homeTeamOdds) ? formatMoneyline(comp.odds[0].homeTeamOdds.moneyLine) : '',
                                 time: new Date(ev.date).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})
                             };
 
@@ -841,12 +865,13 @@
                                 }
                             }
 
+                            if (status.state === 'in' || status.state === 'post') {
                             comp.competitors.forEach(function(competitor) {
                                 if (competitor.leaders && competitor.leaders.length > 0) {
                                     competitor.leaders.forEach(function(cat) {
                                         if (cat.leaders && cat.leaders.length > 0) {
                                             var topDude = cat.leaders[0];
-                                            if (topDude && topDude.athlete) {
+                                            if (topDude && topDude.athlete && isUsefulLeaderStat(cat, topDude.displayValue)) {
                                                 var headshotUrl = '';
                                                 var lId = topDude.athlete.id ? topDude.athlete.id : null;
                                                 
@@ -859,21 +884,23 @@
                                                 }
                                                 var fallbackLogo = competitor.team ? competitor.team.logo : 'https://a.espncdn.com/combiner/i?img=/i/teamlogos/default-team-logo-500.png';
                                                 var playerName = topDude.athlete.displayName || topDude.athlete.shortName;
+                                                var statLabel = cat.displayName || cat.name || "STAT";
                                                 
                                                 var lObj = {
                                                     league: displayLeague, name: playerName, headshot: headshotUrl, teamLogo: fallbackLogo,
-                                                    statDesc: cat.displayName || cat.name || "STAT",
+                                                    statDesc: statLabel,
                                                     teamCode: (competitor.team && competitor.team.abbreviation) ? competitor.team.abbreviation : "TEAM",
                                                     oppCode: (competitor.id === h.id) ? (a.team && a.team.abbreviation ? a.team.abbreviation : "OPP") : (h.team && h.team.abbreviation ? h.team.abbreviation : "OPP"),
                                                     value: topDude.displayValue, baseOdds: "-115"
                                                 };
 
-                                                if (!newLeaders.some(l => l.name === playerName)) newLeaders.push(lObj);
+                                                if (!newLeaders.some(function(l) { return l.name === playerName && l.statDesc === statLabel; })) newLeaders.push(lObj);
                                             }
                                         }
                                     });
                                 }
                             });
+                            }
                         } catch(e) {}
                     });
                 } catch(e) {} 
@@ -883,8 +910,7 @@
             globalTVGuideData = newTVGuide;
             globalLeadersData = newLeaders.slice();
 
-            // Initiate OFFICIAL authenticated Odds API Fetcher (with ESPN leader matching for headshots)
-            await fetchRealProps(newLeaders);
+            buildPropsFromLeaders(newLeaders);
             
             newMarqueeGames.sort(function(a,b) { return b.weight - a.weight; });
             var marqueeHtml = newMarqueeGames.slice(0, 2).map(function(g) {
@@ -924,6 +950,9 @@
                 return '<div class="trend-container" style="justify-content: space-between; width: 100%;"><div style="display:flex; flex-direction:column; align-items:center;"><span class="trend-label neon-text-cycle">COUNT</span><span class="neon-text-cycle" style="font-size:3.5vh; font-weight:900;">' + (trend.balls||0) + '-' + (trend.strikes||0) + '</span></div><div style="display:flex; flex-direction:column; align-items:center;"><span class="trend-label neon-text-cycle">BASES</span>' + dHTML + '</div><div style="display:flex; flex-direction:column; align-items:center;"><span class="trend-label neon-text-cycle">OUTS</span>' + oHTML + '</div></div>';
             }
             if (trend.type === 'records') return '<div class="trend-container" style="justify-content:space-between; width:100%; background:transparent; padding:0; border:none;"><span class="trend-streak neon-text-cycle">' + trend.aRec + '</span><span class="trend-label neon-text-cycle">SEASON RECORD</span><span class="trend-streak neon-text-cycle">' + trend.hRec + '</span></div>';
+            if (trend.type === 'football') {
+                return '<div class="trend-container" style="justify-content:space-between; width:100%;"><div style="display:flex;flex-direction:column;"><span class="trend-label neon-text-cycle">DOWN</span><span class="trend-streak neon-text-cycle">' + (trend.downDist || '--') + '</span></div><div style="display:flex;flex-direction:column;align-items:flex-end;"><span class="trend-label neon-text-cycle">SPOT</span><span class="trend-streak neon-text-cycle">' + (trend.spot || '--') + '</span></div></div>';
+            }
             return '';
         }
 
@@ -933,7 +962,8 @@
             if (globalLiveGamesData.length === 0) { track.innerHTML = '<div class="neon-text-cycle" style="font-size:4vh; font-weight:900; text-align:center; grid-column: 1 / -1; padding-top: 10vh;">NO LIVE GAMES</div>'; applyScroll('live-viewport', 'live-grid-track', 10000); } 
             else {
                 track.innerHTML = globalLiveGamesData.map(function(g) { 
-                    return '<div class="glass-card"><div class="card-meta neon-text-cycle"><span>● LIVE</span><span>' + g.league + '</span><span>' + g.status + '</span></div><div class="card-row"><div class="card-team"><img src="' + g.aLogo + '" onerror="this.src=\'' + g.aFallback + '\'; this.onerror=null;">' + g.away + '</div><div class="card-val-lg">' + g.aScore + '</div></div><div class="card-row"><div class="card-team"><img src="' + g.hLogo + '" onerror="this.src=\'' + g.hFallback + '\'; this.onerror=null;">' + g.home + '</div><div class="card-val-lg">' + g.hScore + '</div></div>' + buildTrendHtml(g.trend) + '<div class="card-footer neon-text-cycle" style="margin-top: 1.5vh;"><span>' + g.clock + '</span><span>' + g.tv + '</span></div></div>';
+                    var lines = formatCardLines(g);
+                    return '<div class="glass-card"><div class="card-meta neon-text-cycle"><span>● LIVE</span><span>' + g.league + '</span><span>' + g.status + '</span></div><div class="card-row"><div class="card-team"><img src="' + g.aLogo + '" onerror="this.src=\'' + g.aFallback + '\'; this.onerror=null;">' + g.away + '</div><div class="card-val-lg">' + g.aScore + '</div></div><div class="card-row"><div class="card-team"><img src="' + g.hLogo + '" onerror="this.src=\'' + g.hFallback + '\'; this.onerror=null;">' + g.home + '</div><div class="card-val-lg">' + g.hScore + '</div></div>' + buildTrendHtml(g.trend) + '<div class="card-footer neon-text-cycle" style="margin-top: 1.5vh;"><span>' + g.clock + '</span>' + (lines ? '<span>' + lines + '</span>' : '') + '<span>' + g.tv + '</span></div></div>';
                 }).join('');
                 applyScroll('live-viewport', 'live-grid-track', 15000);
             }
@@ -943,7 +973,7 @@
             document.getElementById('props-screen').style.display = 'flex';
             var track = document.getElementById('props-grid-track');
             if (globalPropsData.length === 0) { 
-                track.innerHTML = '<div class="neon-text-cycle" style="font-size:4vh; font-weight:900; text-align:center; grid-column: 1 / -1; padding-top: 10vh;">NO ACTIVE PROPS CURRENTLY BOARDED</div>'; 
+                track.innerHTML = '<div class="neon-text-cycle" style="font-size:4vh; font-weight:900; text-align:center; grid-column: 1 / -1; padding-top: 10vh;">NO LIVE LEADERS RIGHT NOW</div>'; 
                 applyScroll('props-viewport', 'props-grid-track', 10000); 
             } else {
                 track.innerHTML = globalPropsData.map(function(p) {
@@ -1117,7 +1147,8 @@
             if (oddsGames.length === 0) { rotationStep++; nextSlide(); return; }
             document.getElementById('odds-screen').style.display = 'flex';
             document.getElementById('odds-grid-track').innerHTML = oddsGames.map(function(g) { 
-                return '<div class="glass-card"><div class="card-meta neon-text-cycle"><span>' + g.league + '</span><span>' + g.tv + '</span></div><div class="card-row"><div class="card-team"><img src="' + g.aLogo + '" onerror="this.src=\'' + g.aFallback + '\'; this.onerror=null;">' + g.away + '</div></div><div class="card-row"><div class="card-team"><img src="' + g.hLogo + '" onerror="this.src=\'' + g.hFallback + '\'; this.onerror=null;">' + g.home + '</div></div><div class="card-footer neon-text-cycle" style="margin-top:1.5vh;"><span>' + g.clock + '</span><span>' + g.odds + ' (O/U ' + (g.ou||'--') + ')</span></div></div>'; 
+                var lines = formatCardLines(g) || (g.odds + ' (O/U ' + (g.ou||'--') + ')');
+                return '<div class="glass-card"><div class="card-meta neon-text-cycle"><span>' + g.league + '</span><span>' + g.tv + '</span></div><div class="card-row"><div class="card-team"><img src="' + g.aLogo + '" onerror="this.src=\'' + g.aFallback + '\'; this.onerror=null;">' + g.away + '</div></div><div class="card-row"><div class="card-team"><img src="' + g.hLogo + '" onerror="this.src=\'' + g.hFallback + '\'; this.onerror=null;">' + g.home + '</div></div><div class="card-footer neon-text-cycle" style="margin-top:1.5vh;"><span>' + g.clock + '</span><span>' + lines + '</span></div></div>'; 
             }).join('');
             applyScroll('odds-viewport', 'odds-grid-track', 12000);
         }
