@@ -341,11 +341,13 @@
                 <div class="settings-section">
                     <h3>Features</h3>
                     <div style="margin-bottom: 2vh;">
-                        <div style="display:flex; justify-content:space-between; align-items:center; font-size: 1.8vh; color: var(--accent-color); margin-bottom: 0.5vh; text-transform: uppercase;">
-                            <span>Bottom Ticker Speed:</span>
-                            <span id="speed-display" style="color:white; font-weight:900; font-size:2vh;">5</span>
+                        <div style="font-size: 1.8vh; color: var(--accent-color); margin-bottom: 0.5vh; text-transform: uppercase;">Bottom Ticker Speed:</div>
+                        <div style="display:flex; align-items:center; gap:2vh;">
+                            <button type="button" onclick="nudgeSpeed(-1)" style="width:6vh;height:6vh;font-size:3vh;font-weight:900;background:rgba(0,0,0,0.5);color:#fff;border:2px solid var(--accent-color);border-radius:0.8vh;">-</button>
+                            <span id="speed-display" style="color:white; font-weight:900; font-size:3vh; min-width:4vh; text-align:center;">5</span>
+                            <button type="button" onclick="nudgeSpeed(1)" style="width:6vh;height:6vh;font-size:3vh;font-weight:900;background:rgba(0,0,0,0.5);color:#fff;border:2px solid var(--accent-color);border-radius:0.8vh;">+</button>
                         </div>
-                        <input type="range" id="set-tickerSpeed" min="1" max="10" step="1" style="width: 100%; accent-color: var(--accent-color);" oninput="document.getElementById('speed-display').innerText=this.value; updateSettings();">
+                        <input type="range" id="set-tickerSpeed" min="1" max="10" step="1" tabindex="-1" aria-hidden="true" style="display:none;">
                     </div>
                     <div style="margin-bottom: 2vh;">
                         <div style="font-size: 1.8vh; color: var(--accent-color); margin-bottom: 0.5vh; text-transform: uppercase;">Set Favorite Teams:</div>
@@ -448,6 +450,18 @@
             }
             try { localStorage.removeItem('ahlersPropsCache'); } catch(e3) {}
         } catch(e) {}
+
+        function nudgeSpeed(dir) {
+            var el = document.getElementById('set-tickerSpeed');
+            if (!el) return;
+            var next = parseInt(el.value || settings.tickerSpeed || 5, 10) + dir;
+            if (next < 1) next = 1;
+            if (next > 10) next = 10;
+            el.value = next;
+            var disp = document.getElementById('speed-display');
+            if (disp) disp.innerText = next;
+            updateSettings();
+        }
 
         function updateSettings() {
             Object.keys(defaultSettings).forEach(function(k) { 
