@@ -1331,19 +1331,59 @@
             var m = String(ref || '').match(/\/teams\/(\d+)/);
             return m ? m[1] : '';
         }
-        async function loadTeamMap(sport, league) {
+        function espnTeamLogo(league, abbr, id) {
+            if (league === 'college-football' && id) return 'https://a.espncdn.com/i/teamlogos/ncaa/500/' + id + '.png';
+            var folder = { nfl: 'nfl', nba: 'nba', mlb: 'mlb', nhl: 'nhl' }[league] || 'ncaa';
+            var slug = String(abbr || '').toLowerCase();
+            if (slug === 'utah') slug = 'utah';
+            if (slug === 'tbl') slug = 'tb';
+            if (slug === 'lak') slug = 'la';
+            if (slug === 'sjs') slug = 'sj';
+            if (slug === 'vgk') slug = 'vgs';
+            return 'https://a.espncdn.com/i/teamlogos/' + folder + '/500/' + slug + '.png';
+        }
+        function packTeams(league, rows) {
             var map = {};
+            Object.keys(rows).forEach(function(id) {
+                var r = rows[id];
+                map[id] = { name: r[1], abbr: r[0], logo: espnTeamLogo(league, r[0], id) };
+            });
+            return map;
+        }
+        function builtinTeamMap(league) {
+            if (league === 'nfl') return packTeams('nfl', {1:['ATL','Atlanta Falcons'],2:['BUF','Buffalo Bills'],3:['CHI','Chicago Bears'],4:['CIN','Cincinnati Bengals'],5:['CLE','Cleveland Browns'],6:['DAL','Dallas Cowboys'],7:['DEN','Denver Broncos'],8:['DET','Detroit Lions'],9:['GB','Green Bay Packers'],10:['TEN','Tennessee Titans'],11:['IND','Indianapolis Colts'],12:['KC','Kansas City Chiefs'],13:['LV','Las Vegas Raiders'],14:['LAR','Los Angeles Rams'],15:['MIA','Miami Dolphins'],16:['MIN','Minnesota Vikings'],17:['NE','New England Patriots'],18:['NO','New Orleans Saints'],19:['NYG','New York Giants'],20:['NYJ','New York Jets'],21:['PHI','Philadelphia Eagles'],22:['ARI','Arizona Cardinals'],23:['PIT','Pittsburgh Steelers'],24:['LAC','Los Angeles Chargers'],25:['SF','San Francisco 49ers'],26:['SEA','Seattle Seahawks'],27:['TB','Tampa Bay Buccaneers'],28:['WSH','Washington Commanders'],29:['CAR','Carolina Panthers'],30:['JAX','Jacksonville Jaguars'],33:['BAL','Baltimore Ravens'],34:['HOU','Houston Texans']});
+            if (league === 'nba') return packTeams('nba', {1:['ATL','Atlanta Hawks'],2:['BOS','Boston Celtics'],3:['NO','New Orleans Pelicans'],4:['CHI','Chicago Bulls'],5:['CLE','Cleveland Cavaliers'],6:['DAL','Dallas Mavericks'],7:['DEN','Denver Nuggets'],8:['DET','Detroit Pistons'],9:['GS','Golden State Warriors'],10:['HOU','Houston Rockets'],11:['IND','Indiana Pacers'],12:['LAC','LA Clippers'],13:['LAL','Los Angeles Lakers'],14:['MIA','Miami Heat'],15:['MIL','Milwaukee Bucks'],16:['MIN','Minnesota Timberwolves'],17:['BKN','Brooklyn Nets'],18:['NY','New York Knicks'],19:['ORL','Orlando Magic'],20:['PHI','Philadelphia 76ers'],21:['PHX','Phoenix Suns'],22:['POR','Portland Trail Blazers'],23:['SAC','Sacramento Kings'],24:['SA','San Antonio Spurs'],25:['OKC','Oklahoma City Thunder'],26:['UTAH','Utah Jazz'],27:['WSH','Washington Wizards'],28:['TOR','Toronto Raptors'],29:['MEM','Memphis Grizzlies'],30:['CHA','Charlotte Hornets']});
+            if (league === 'mlb') return packTeams('mlb', {1:['BAL','Baltimore Orioles'],2:['BOS','Boston Red Sox'],3:['LAA','Los Angeles Angels'],4:['CWS','Chicago White Sox'],5:['CLE','Cleveland Guardians'],6:['DET','Detroit Tigers'],7:['KC','Kansas City Royals'],8:['MIL','Milwaukee Brewers'],9:['MIN','Minnesota Twins'],10:['NYY','New York Yankees'],11:['OAK','Athletics'],12:['SEA','Seattle Mariners'],13:['TEX','Texas Rangers'],14:['TOR','Toronto Blue Jays'],15:['ATL','Atlanta Braves'],16:['CHC','Chicago Cubs'],17:['CIN','Cincinnati Reds'],18:['HOU','Houston Astros'],19:['LAD','Los Angeles Dodgers'],20:['WSH','Washington Nationals'],21:['NYM','New York Mets'],22:['PHI','Philadelphia Phillies'],23:['PIT','Pittsburgh Pirates'],24:['STL','St. Louis Cardinals'],25:['SD','San Diego Padres'],26:['SF','San Francisco Giants'],27:['COL','Colorado Rockies'],28:['MIA','Miami Marlins'],29:['ARI','Arizona Diamondbacks'],30:['TB','Tampa Bay Rays']});
+            if (league === 'nhl') return packTeams('nhl', {1:['NJD','New Jersey Devils'],2:['NYI','New York Islanders'],3:['NYR','New York Rangers'],4:['PHI','Philadelphia Flyers'],5:['PIT','Pittsburgh Penguins'],6:['BOS','Boston Bruins'],7:['BUF','Buffalo Sabres'],8:['MTL','Montreal Canadiens'],9:['OTT','Ottawa Senators'],10:['TOR','Toronto Maple Leafs'],12:['CAR','Carolina Hurricanes'],13:['FLA','Florida Panthers'],14:['TBL','Tampa Bay Lightning'],15:['WSH','Washington Capitals'],16:['CHI','Chicago Blackhawks'],17:['DET','Detroit Red Wings'],18:['NSH','Nashville Predators'],19:['STL','St. Louis Blues'],20:['CGY','Calgary Flames'],21:['COL','Colorado Avalanche'],22:['EDM','Edmonton Oilers'],23:['VAN','Vancouver Canucks'],24:['ANA','Anaheim Ducks'],25:['DAL','Dallas Stars'],26:['LAK','Los Angeles Kings'],28:['SJS','San Jose Sharks'],29:['CBJ','Columbus Blue Jackets'],30:['MIN','Minnesota Wild'],52:['WPG','Winnipeg Jets'],53:['ARI','Utah Hockey Club'],54:['VGK','Vegas Golden Knights'],55:['SEA','Seattle Kraken'],59:['UTA','Utah Hockey Club']});
+            return {};
+        }
+        function collectTeams(node, map, league) {
+            if (!node) return;
+            if (Object.prototype.toString.call(node) === '[object Array]') {
+                node.forEach(function(n) { collectTeams(n, map, league); });
+                return;
+            }
+            if (typeof node !== 'object') return;
+            var t = node.team || node;
+            if (t && t.id && (t.displayName || t.shortDisplayName || t.abbreviation)) {
+                var id = String(t.id);
+                var logo = (t.logos && t.logos[0] && t.logos[0].href) ? t.logos[0].href : espnTeamLogo(league, t.abbreviation, id);
+                map[id] = { name: t.displayName || t.shortDisplayName, abbr: t.abbreviation || '', logo: logo };
+            }
+            Object.keys(node).forEach(function(k) {
+                if (k === 'links' || k === 'logos' || k === 'records') return;
+                var v = node[k];
+                if (v && typeof v === 'object') collectTeams(v, map, league);
+            });
+        }
+        async function loadTeamMap(sport, league) {
+            var map = builtinTeamMap(league);
             try {
-                var res = await fetch('https://site.api.espn.com/apis/site/v2/sports/' + sport + '/' + league + '/teams?limit=400');
+                var url = 'https://site.api.espn.com/apis/site/v2/sports/' + sport + '/' + league + '/teams?limit=400';
+                if (league === 'college-football') url += '&groups=80';
+                var res = await fetch(url);
                 var d = await res.json();
-                var teams = (((d.sports || [])[0] || {}).leagues || [])[0];
-                teams = (teams && teams.teams) ? teams.teams : [];
-                teams.forEach(function(wrap) {
-                    var t = wrap.team || wrap;
-                    if (!t || !t.id) return;
-                    map[String(t.id)] = t.abbreviation || t.shortDisplayName || t.displayName || ('TEAM ' + t.id);
-                    map[t.displayName] = map[String(t.id)];
-                });
+                collectTeams(d, map, league);
             } catch (e) {}
             return map;
         }
@@ -1365,16 +1405,16 @@
             var rows = [];
             books.forEach(function(b) {
                 var tid = teamIdFromRef(b.team && b.team.$ref);
-                var name = (tid && teamMap[tid]) ? teamMap[tid] : (tid ? ('ID ' + tid) : '');
-                if (!name || !b.value) return;
-                rows.push({ name: name, odds: b.value });
+                var info = tid ? teamMap[tid] : null;
+                if (!info || !info.name || !b.value) return;
+                rows.push({ name: info.name, logo: info.logo || espnTeamLogo(league, info.abbr, tid), odds: b.value });
             });
             return sortFuturesRows(rows).slice(0, 8);
         }
         async function loadFuturesBoard() {
             var now = Date.now();
             try {
-                var cached = localStorage.getItem('ahlersFutures');
+                var cached = localStorage.getItem('ahlersFutures3');
                 if (cached) {
                     var obj = JSON.parse(cached);
                     if (obj && obj.at && (now - obj.at) < 86400000 && obj.sections && obj.sections.length) return obj;
@@ -1400,7 +1440,7 @@
                 } catch (e1) {}
             }
             var data = { at: now, sections: sections };
-            try { localStorage.setItem('ahlersFutures', JSON.stringify(data)); } catch (e2) {}
+            try { localStorage.setItem('ahlersFutures3', JSON.stringify(data)); } catch (e2) {}
             return data;
         }
         async function showFutures(gen) {
@@ -1415,7 +1455,8 @@
                 }
                 document.getElementById('futures-track').innerHTML = data.sections.map(function(sec) {
                     var rows = sec.rows.map(function(r, idx) {
-                        return '<div class="st-row"><span class="neon-text-cycle" style="width:4vh; text-align:right; font-weight:900;">' + (idx + 1) + '</span><div class="st-name" style="flex:1; font-size:3vh; padding-left:2vh;">' + r.name + '</div><div class="neon-text-cycle">' + r.odds + '</div></div>';
+                        var logo = r.logo || 'https://a.espncdn.com/combiner/i?img=/i/teamlogos/default-team-logo-500.png';
+                        return '<div class="st-row"><span class="neon-text-cycle" style="width:4vh; text-align:right; font-weight:900;">' + (idx + 1) + '</span><img class="st-logo" style="width:4.8vh; margin:0 1.5vh;" src="' + logo + '" onerror="this.src=\'https://a.espncdn.com/combiner/i?img=/i/teamlogos/default-team-logo-500.png\'; this.onerror=null;"><div class="st-name" style="flex:1; font-size:3vh;">' + r.name + '</div><div class="neon-text-cycle">' + r.odds + '</div></div>';
                     }).join('');
                     return '<div class="division-block glass-card"><div class="division-header neon-text-cycle">' + sec.title + '</div>' + rows + '</div>';
                 }).join('');
@@ -1539,9 +1580,64 @@
             else if (league === 'mlb') keep = ((kind === 'division' || kind === 'wildcard') && entries.length);
             else if (league === 'nhl') keep = (kind === 'division' && entries.length);
             else keep = (kind === 'division' && entries.length);
-            if (!keep && entries.length && kids.length === 0) keep = true;
+            if (!keep && entries.length && kids.length === 0 && league === 'nba') keep = true;
             if (keep) out.push({ name: name, entries: sortStandingsEntries(entries), kind: kind });
             kids.forEach(function(ch) { collectStandingsGroups(ch, league, out); });
+        }
+
+        function divisionBook() {
+            return {
+                nfl: {
+                    'AFC EAST': ['BUF','MIA','NE','NYJ'],
+                    'AFC NORTH': ['BAL','CIN','CLE','PIT'],
+                    'AFC SOUTH': ['HOU','IND','JAX','TEN'],
+                    'AFC WEST': ['DEN','KC','LAC','LV'],
+                    'NFC EAST': ['DAL','NYG','PHI','WSH'],
+                    'NFC NORTH': ['CHI','DET','GB','MIN'],
+                    'NFC SOUTH': ['ATL','CAR','NO','TB'],
+                    'NFC WEST': ['ARI','LAR','SEA','SF']
+                },
+                mlb: {
+                    'AL EAST': ['BAL','BOS','NYY','TB','TOR'],
+                    'AL CENTRAL': ['CWS','CLE','DET','KC','MIN'],
+                    'AL WEST': ['HOU','LAA','ATH','OAK','SEA','TEX'],
+                    'NL EAST': ['ATL','MIA','NYM','PHI','WSH'],
+                    'NL CENTRAL': ['CHC','CIN','MIL','PIT','STL'],
+                    'NL WEST': ['ARI','COL','LAD','SD','SF']
+                },
+                nhl: {
+                    'ATLANTIC': ['BOS','BUF','DET','FLA','MTL','OTT','TBL','TOR'],
+                    'METROPOLITAN': ['CAR','CBJ','NJD','NYI','NYR','PHI','PIT','WSH'],
+                    'CENTRAL': ['CHI','COL','DAL','MIN','NSH','STL','UTA','WPG'],
+                    'PACIFIC': ['ANA','CGY','EDM','LAK','SJS','SEA','VAN','VGK']
+                }
+            };
+        }
+        function flattenEntries(node, acc) {
+            if (!node) return acc;
+            var entries = (node.standings && node.standings.entries) ? node.standings.entries : [];
+            entries.forEach(function(e) { acc.push(e); });
+            (node.children || []).forEach(function(ch) { flattenEntries(ch, acc); });
+            return acc;
+        }
+        function bucketByDivision(league, root) {
+            var book = divisionBook()[league];
+            if (!book) return [];
+            var all = flattenEntries(root, []);
+            var used = {};
+            var groups = [];
+            Object.keys(book).forEach(function(div) {
+                var abbrs = book[div];
+                var entries = all.filter(function(t) {
+                    var ab = t.team && t.team.abbreviation ? String(t.team.abbreviation).toUpperCase() : '';
+                    if (abbrs.indexOf(ab) === -1) return false;
+                    if (used[ab]) return false;
+                    used[ab] = true;
+                    return true;
+                });
+                if (entries.length) groups.push({ name: div, entries: sortStandingsEntries(entries), kind: 'division' });
+            });
+            return groups;
         }
 
         async function showStandings(league, sport, gen) {
@@ -1554,12 +1650,12 @@
                 var d = await res.json();
                 if (!isCurrentSlide(gen)) return;
                 var groups = [];
-                collectStandingsGroups(d, league, groups);
+                if (league === 'nfl' || league === 'nhl' || league === 'mlb') {
+                    groups = bucketByDivision(league, d);
+                }
+                if (!groups.length) collectStandingsGroups(d, league, groups);
                 if (league === 'mlb') {
-                    groups.sort(function(a, b) {
-                        if (a.kind === b.kind) return a.name.localeCompare(b.name);
-                        return a.kind === 'wildcard' ? 1 : -1;
-                    });
+                    groups = groups.filter(function(g) { return g.kind !== 'wildcard' && g.kind !== 'league'; });
                 }
                 if (!groups.length) {
                     track.innerHTML = '<div class="neon-text-cycle" style="font-size:4vh; font-weight:900; text-align:center; padding-top:8vh;">NO STANDINGS</div>';
