@@ -57,10 +57,9 @@
         .tv-wrapper { position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; display: flex; justify-content: center; align-items: center; overflow: hidden; z-index: 2; }
 
         /* RELIABLE TOP CONTROLS */
-        #settings-gear { position: fixed; top: 1.5vh; right: 8vw; z-index: 25000; width: 7vh; height: 7vh; cursor: pointer; opacity: 0.95; transition: transform 0.3s ease; color: var(--accent-color); background: rgba(0,0,0,0.55); border: 0.3vh solid var(--accent-color); border-radius: 1vh; padding: 0.8vh; }
-        #settings-gear:hover, #settings-gear:focus { opacity: 1; transform: rotate(20deg); fill: #ff007f; outline: 0.4vh solid #ff007f; }
-        #fs-toggle, #settings-open { position: fixed; top: 1.5vh; right: 3vw; z-index: 25000; background: rgba(0,0,0,0.55); border: 0.3vh solid var(--accent-color); color: var(--accent-color); min-width: 10vh; height: 7vh; cursor: pointer; opacity: 0.95; padding: 0 1.2vh; font-weight: 900; font-size: 2vh; letter-spacing: 0.08em; }
-        #fs-toggle:hover { opacity: 1; fill: #ff007f; }
+        #settings-gear { position: fixed; top: 1.5vh; right: 3vw; z-index: 25000; width: 7vh; height: 7vh; cursor: pointer; opacity: 0.95; transition: transform 0.3s ease; color: var(--accent-color); background: rgba(0,0,0,0.55); border: 0.3vh solid var(--accent-color); border-radius: 1vh; padding: 0.8vh; }
+        #settings-gear:hover, #settings-gear:focus { opacity: 1; transform: rotate(20deg); outline: 0.4vh solid #ff007f; }
+        #fs-toggle { display: none !important; }
         #master-clock { position: fixed; top: 2.5vh; left: 3vw; z-index: 25000; color: #fff; font-family: 'Share Tech Mono', monospace; font-size: 4.5vh; font-weight: 900; letter-spacing: 0.2vw; text-shadow: 0 3px 6px rgba(0,0,0,0.8); }
 
         /* NEON ACCENTS (ZERO REPAINT CPU COST) */
@@ -231,7 +230,7 @@
         </svg>
     </button>
 
-    <button type="button" id="settings-open" tabindex="1" onclick="toggleSettings()">SETTINGS</button>
+    <button type="button" id="fs-toggle" tabindex="-1" aria-hidden="true"></button>
 
     <div class="tv-wrapper" id="main-wrapper">
 
@@ -494,7 +493,7 @@
             var k = e.key || '';
             var code = e.keyCode || e.which;
             var id = (document.activeElement && document.activeElement.id) || '';
-            var onBtn = (id === 'settings-gear' || id === 'settings-open');
+            var onBtn = (id === 'settings-gear');
             if (onBtn && (k === 'Enter' || code === 13 || code === 23 || code === 66)) return true;
             if (k === 's' || k === 'S' || k === 'ContextMenu' || code === 82 || code === 139 || code === 176 || code === 221) return true;
             return false;
@@ -510,7 +509,7 @@
                 e.preventDefault();
             }
         });
-        ['settings-gear', 'settings-open'].forEach(function(id) {
+        ['settings-gear'].forEach(function(id) {
             var el = document.getElementById(id);
             if (!el) return;
             el.addEventListener('click', function(ev) { ev.preventDefault(); toggleSettings(); });
