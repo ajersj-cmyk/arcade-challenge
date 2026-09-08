@@ -321,6 +321,11 @@
             <div class="content-viewport" id="news-viewport"><div class="list-track" id="news-list-track"></div></div>
         </div>
 
+        <div id="futures-screen" class="slide-screen">
+            <div class="screen-header neon-text-cycle">FUTURES</div>
+            <div class="content-viewport" id="futures-viewport"><div class="list-track" id="futures-track"></div></div>
+        </div>
+
         <div id="odds-screen" class="slide-screen">
             <div class="screen-header neon-text-cycle">TODAY'S LINES</div>
             <div class="content-viewport" id="odds-viewport"><div class="grid-track" id="odds-grid-track"></div></div>
@@ -401,6 +406,7 @@
                     <div class="toggle-row"><span>TV Guide Slide</span> <input type="checkbox" id="set-tvGuide" onchange="updateSettings()"></div>
                     <div class="toggle-row"><span>Headlines Slide</span> <input type="checkbox" id="set-news" onchange="updateSettings()"></div>
                     <div class="toggle-row"><span>Odds Slide</span> <input type="checkbox" id="set-odds" onchange="updateSettings()"></div>
+                    <div class="toggle-row"><span>Futures Slide</span> <input type="checkbox" id="set-futures" onchange="updateSettings()"></div>
                     <div class="toggle-row"><span>Rankings Slide</span> <input type="checkbox" id="set-rankings" onchange="updateSettings()"></div>
                 </div>
             </div>
@@ -434,7 +440,7 @@
         var currentThemeIndex = 0;
 
         var defaultSettings = { 
-            nfl:true, nba:true, nhl:true, mlb:true, rankings:true, odds:true, tvGuide:true, news:true, mySquad:true, ufc:true, command:true, leaders:true, pga:true, soccerSlide:true, trivia:true,
+            nfl:true, nba:true, nhl:true, mlb:true, rankings:true, odds:true, futures:true, tvGuide:true, news:true, mySquad:true, ufc:true, command:true, leaders:true, pga:true, soccerSlide:true, trivia:true,
             showWorldCup:true, showEPL:true, showUCL:true, showATP:true, showWTA:true, showNFL:true, showNBA:true, showNHL:true, showMLB:true, showCFB:true, showCBB:true, showCLB:true,
             cbb50:true, cfb75:true, clb50:true, apiBase:"https://site.api.espn.com/apis",
             mySquadTeams: "Carolina Hurricanes, Duke, ECU, East Carolina",
@@ -801,7 +807,7 @@
 
             var screens = [
                 'live', 'props', 'mySquad', 'trivia', 'leaders', 'pga', 'ufc', 'command',
-                'soccerSlide', 'tvGuide', 'news', 'odds', 'rankings', 'nfl', 'nba', 'nhl', 'mlb'
+                'soccerSlide', 'tvGuide', 'news', 'odds', 'futures', 'rankings', 'nfl', 'nba', 'nhl', 'mlb'
             ];
             
             if (rotationStep >= screens.length) rotationStep = 0;
@@ -827,6 +833,7 @@
                 else if (current === 'tvGuide') showTVGuide();
                 else if (current === 'news') showNews(gen);
                 else if (current === 'odds') showOdds();
+                else if (current === 'futures') showFutures(gen);
                 else if (current === 'rankings') showRankings(gen);
                 else if (current === 'nfl') showStandings('nfl', 'football', gen);
                 else if (current === 'nba') showStandings('nba', 'basketball', gen);
@@ -1304,6 +1311,120 @@
                 document.getElementById('news-screen').style.display = 'flex';
                 document.getElementById('news-list-track').innerHTML = '<div class="neon-text-cycle" style="font-size:4vh; font-weight:900; text-align:center; padding-top:8vh;">NEWS FEED DOWN</div>';
                 slideTimer = setTimeout(nextSlide, 6000);
+            }
+        }
+
+        function parseAmerican(v) {
+            var n = parseInt(String(v).replace(/[^0-9+-]/g, ''), 10);
+            return isNaN(n) ? 999999 : n;
+        }
+        function sortFuturesRows(rows) {
+            return rows.slice().sort(function(a, b) {
+                var na = parseAmerican(a.odds), nb = parseAmerican(b.odds);
+                if (na < 0 && nb < 0) return na - nb;
+                if (na < 0) return -1;
+                if (nb < 0) return 1;
+                return na - nb;
+            });
+        }
+        function teamIdFromRef(ref) {
+            var m = String(ref || '').match(/\/teams\/(\d+)/);
+            return m ? m[1] : '';
+        }
+        async function loadTeamMap(sport, league) {
+            var map = {};
+            try {
+                var res = await fetch('https://site.api.espn.com/apis/site/v2/sports/' + sport + '/' + league + '/teams?limit=400');
+                var d = await res.json();
+                var teams = (((d.sports || [])[0] || {}).leagues || [])[0];
+                teams = (teams && teams.teams) ? teams.teams : [];
+                teams.forEach(function(wrap) {
+                    var t = wrap.team || wrap;
+                    if (!t || !t.id) return;
+                    map[String(t.id)] = t.abbreviation || t.shortDisplayName || t.displayName || ('TEAM ' + t.id);
+                    map[t.displayName] = map[String(t.id)];
+                });
+            } catch (e) {}
+            return map;
+        }
+        async function loadLeagueFutures(sport, league, year, wantNames, teamMap) {
+            var res = await fetch('https://sports.core.api.espn.com/v2/sports/' + sport + '/leagues/' + league + '/seasons/' + year + '/futures?limit=50');
+            var d = await res.json();
+            var items = d.items || [];
+            var picked = null;
+            var i, j;
+            for (i = 0; i < wantNames.length && !picked; i++) {
+                var want = wantNames[i].toLowerCase();
+                for (j = 0; j < items.length; j++) {
+                    var nm = String(items[j].name || '').toLowerCase();
+                    if (nm.indexOf(want) !== -1) { picked = items[j]; break; }
+                }
+            }
+            if (!picked) return [];
+            var books = ((picked.futures || [])[0] || {}).books || [];
+            var rows = [];
+            books.forEach(function(b) {
+                var tid = teamIdFromRef(b.team && b.team.$ref);
+                var name = (tid && teamMap[tid]) ? teamMap[tid] : (tid ? ('ID ' + tid) : '');
+                if (!name || !b.value) return;
+                rows.push({ name: name, odds: b.value });
+            });
+            return sortFuturesRows(rows).slice(0, 8);
+        }
+        async function loadFuturesBoard() {
+            var now = Date.now();
+            try {
+                var cached = localStorage.getItem('ahlersFutures');
+                if (cached) {
+                    var obj = JSON.parse(cached);
+                    if (obj && obj.at && (now - obj.at) < 86400000 && obj.sections && obj.sections.length) return obj;
+                }
+            } catch (e0) {}
+            var year = new Date().getFullYear();
+            var specs = [
+                { title: 'SUPER BOWL', sport: 'football', league: 'nfl', want: ['super bowl'] },
+                { title: 'CFB TITLE', sport: 'football', league: 'college-football', want: ['national championship', 'championship winner', 'to win the championship'] },
+                { title: 'NBA TITLE', sport: 'basketball', league: 'nba', want: ['nba champion', 'championship', 'nba finals'] },
+                { title: 'WORLD SERIES', sport: 'baseball', league: 'mlb', want: ['world series'] },
+                { title: 'STANLEY CUP', sport: 'hockey', league: 'nhl', want: ['stanley cup'] }
+            ];
+            var sections = [];
+            for (var s = 0; s < specs.length; s++) {
+                try {
+                    var map = await loadTeamMap(specs[s].sport, specs[s].league);
+                    var rows = await loadLeagueFutures(specs[s].sport, specs[s].league, year, specs[s].want, map);
+                    if (!rows.length && year > 2020) {
+                        rows = await loadLeagueFutures(specs[s].sport, specs[s].league, year - 1, specs[s].want, map);
+                    }
+                    if (rows.length) sections.push({ title: specs[s].title, rows: rows });
+                } catch (e1) {}
+            }
+            var data = { at: now, sections: sections };
+            try { localStorage.setItem('ahlersFutures', JSON.stringify(data)); } catch (e2) {}
+            return data;
+        }
+        async function showFutures(gen) {
+            try {
+                var data = await loadFuturesBoard();
+                if (!isCurrentSlide(gen)) return;
+                document.getElementById('futures-screen').style.display = 'flex';
+                if (!data.sections || !data.sections.length) {
+                    document.getElementById('futures-track').innerHTML = '<div class="neon-text-cycle" style="font-size:4vh; font-weight:900; text-align:center; padding-top:8vh;">NO FUTURES POSTED</div>';
+                    slideTimer = setTimeout(nextSlide, 8000);
+                    return;
+                }
+                document.getElementById('futures-track').innerHTML = data.sections.map(function(sec) {
+                    var rows = sec.rows.map(function(r, idx) {
+                        return '<div class="st-row"><span class="neon-text-cycle" style="width:4vh; text-align:right; font-weight:900;">' + (idx + 1) + '</span><div class="st-name" style="flex:1; font-size:3vh; padding-left:2vh;">' + r.name + '</div><div class="neon-text-cycle">' + r.odds + '</div></div>';
+                    }).join('');
+                    return '<div class="division-block glass-card"><div class="division-header neon-text-cycle">' + sec.title + '</div>' + rows + '</div>';
+                }).join('');
+                applyScroll('futures-viewport', 'futures-track', 18000);
+            } catch (e) {
+                if (!isCurrentSlide(gen)) return;
+                document.getElementById('futures-screen').style.display = 'flex';
+                document.getElementById('futures-track').innerHTML = '<div class="neon-text-cycle" style="font-size:4vh; font-weight:900; text-align:center; padding-top:8vh;">FUTURES FEED DOWN</div>';
+                slideTimer = setTimeout(nextSlide, 8000);
             }
         }
 
