@@ -275,6 +275,11 @@
             <div class="content-viewport" id="pga-viewport"><div class="list-track" id="pga-track"></div></div>
         </div>
 
+        <div id="discGolf-screen" class="slide-screen">
+            <div class="screen-header neon-text-cycle" id="dg-title">DISC GOLF</div>
+            <div class="content-viewport" id="dg-viewport"><div class="list-track" id="dg-track"></div></div>
+        </div>
+
         <div id="ufc-screen" class="slide-screen">
             <div class="screen-header neon-text-cycle" id="ufc-title">UFC FIGHT NIGHT</div>
             <div class="content-viewport" id="ufc-viewport"><div class="grid-track" id="ufc-grid-track"></div></div>
@@ -329,6 +334,7 @@
         <div id="nfl-screen" class="slide-screen"><div class="screen-header neon-text-cycle"><img src="https://a.espncdn.com/combiner/i?img=/i/teamlogos/leagues/500/nfl.png" class="league-logo" onerror="this.style.display='none'">NFL STANDINGS</div><div class="content-viewport" id="nfl-viewport"><div class="grid-track" style="gap: 2.5vw;" id="nfl-track"></div></div></div>
         <div id="nba-screen" class="slide-screen"><div class="screen-header neon-text-cycle"><img src="https://a.espncdn.com/combiner/i?img=/i/teamlogos/leagues/500/nba.png" class="league-logo" onerror="this.style.display='none'">NBA STANDINGS</div><div class="content-viewport" id="nba-viewport"><div class="grid-track" style="gap: 2.5vw;" id="nba-track"></div></div></div>
         <div id="mlb-screen" class="slide-screen"><div class="screen-header neon-text-cycle"><img src="https://a.espncdn.com/combiner/i?img=/i/teamlogos/leagues/500/mlb.png" class="league-logo" onerror="this.style.display='none'">MLB STANDINGS</div><div class="content-viewport" id="mlb-viewport"><div class="grid-track" style="gap: 2.5vw;" id="mlb-track"></div></div></div>
+        <div id="nhl-screen" class="slide-screen"><div class="screen-header neon-text-cycle"><img src="https://a.espncdn.com/combiner/i?img=/i/teamlogos/leagues/500/nhl.png" class="league-logo" onerror="this.style.display='none'">NHL STANDINGS</div><div class="content-viewport" id="nhl-viewport"><div class="grid-track" style="gap: 2.5vw;" id="nhl-track"></div></div></div>
         <div id="rankings-screen" class="slide-screen"><div class="screen-header neon-text-cycle">COLLEGE RANKINGS</div><div class="content-viewport" id="rankings-viewport"><div class="list-track" id="rankings-list-track"></div></div></div>
 
         <div id="sports-ticker" class="neon-border-cycle"><div id="ticker-track"></div></div>
@@ -365,6 +371,7 @@
                     <div class="toggle-row"><span>Live Trivia Game</span> <input type="checkbox" id="set-trivia" onchange="updateSettings()"></div>
                     <div class="toggle-row"><span>Top Stats Leaders</span> <input type="checkbox" id="set-leaders" onchange="updateSettings()"></div>
                     <div class="toggle-row"><span>PGA Golf Slide</span> <input type="checkbox" id="set-pga" onchange="updateSettings()"></div>
+                    <div class="toggle-row"><span>Disc Golf Slide</span> <input type="checkbox" id="set-discGolf" onchange="updateSettings()"></div>
                     <div class="toggle-row"><span>Command Center</span> <input type="checkbox" id="set-command" onchange="updateSettings()"></div>
                 </div>
                 <div class="settings-section">
@@ -429,7 +436,7 @@
         var currentThemeIndex = 0;
 
         var defaultSettings = { 
-            nfl:true, nba:true, nhl:true, mlb:true, rankings:true, odds:true, tvGuide:true, news:true, mySquad:true, ufc:true, command:true, leaders:true, pga:true, soccerSlide:true, trivia:true,
+            nfl:true, nba:true, nhl:true, mlb:true, rankings:true, odds:true, tvGuide:true, news:true, mySquad:true, ufc:true, command:true, leaders:true, pga:true, discGolf:true, soccerSlide:true, trivia:true,
             showWorldCup:true, showEPL:true, showUCL:true, showATP:true, showWTA:true, showNFL:true, showNBA:true, showNHL:true, showMLB:true, showCFB:true, showCBB:true, showCLB:true,
             cbb50:true, cfb75:true, clb50:true, apiBase:"https://site.api.espn.com/apis",
             mySquadTeams: "Carolina Hurricanes, Duke, ECU, East Carolina",
@@ -621,6 +628,29 @@
             return '';
         }
 
+        function formatStartClock(iso) {
+            var d = new Date(iso);
+            if (isNaN(d.getTime())) return '';
+            var now = new Date();
+            var sameDay = d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth() && d.getDate() === now.getDate();
+            var t = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            if (sameDay) return t;
+            return d.toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' }) + ' • ' + t;
+        }
+
+        function cleanHeadline(s) {
+            s = String(s == null ? '' : s);
+            s = s.replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, '$1');
+            s = s.replace(/&nbsp;/gi, ' ').replace(/&amp;/gi, '&').replace(/&quot;/gi, '"').replace(/&#39;|&apos;/gi, "'");
+            s = s.replace(/&#x([0-9a-f]+);/gi, function(_, h) { return String.fromCharCode(parseInt(h, 16)); });
+            s = s.replace(/&#(\d+);/g, function(_, n) { return String.fromCharCode(parseInt(n, 10)); });
+            s = s.replace(/&[a-z]+;/gi, ' ');
+            s = s.replace(/[#*$]{2,}/g, ' ');
+            s = s.replace(/[\u0000-\u001f]/g, ' ');
+            s = s.replace(/\s+/g, ' ').trim();
+            return s;
+        }
+
         function buildGameClock(status, rawStatus, sit, c, startTimeStr) {
             if (status.state === 'pre') return startTimeStr;
             if (status.state === 'post') return 'FINAL';
@@ -684,6 +714,7 @@
         }
 
         function applyScroll(viewportId, trackId, baseDelay = 12000) {
+            slideTimer = setTimeout(nextSlide, (baseDelay || 12000) + 20000);
             setTimeout(function() {
                 var vH = document.getElementById(viewportId).clientHeight;
                 var track = document.getElementById(trackId);
@@ -728,9 +759,20 @@
             document.getElementById('live-game-screen').style.display = 'flex';
         }
 
+        function showSlideEmpty(title) {
+            var live = document.getElementById('live-game-screen');
+            if (!live) return;
+            live.style.display = 'flex';
+            var track = document.getElementById('live-grid-track');
+            if (track) track.innerHTML = '<div class="neon-text-cycle" style="font-size:4vh; font-weight:900; text-align:center; grid-column: 1 / -1; padding-top: 8vh;">' + title + '</div>';
+            slideTimer = setTimeout(nextSlide, 6000);
+        }
+
         function nextSlide() {
             clearTimeout(slideTimer);
             clearTimeout(triviaRevealTimer);
+            if (nextSlide._guard > 40) { nextSlide._guard = 0; showSlideEmpty('WAITING ON DATA'); return; }
+            nextSlide._guard = (nextSlide._guard || 0) + 1;
             
             // Clean, CPU-Friendly Neon Theme Rotation per slide
             var neonThemes = ['theme-cyan', 'theme-pink', 'theme-green'];
@@ -743,7 +785,7 @@
             if (mc) mc.style.display = 'block';
 
             var screens = [
-                'live', 'props', 'mySquad', 'trivia', 'leaders', 'pga', 'ufc', 'command',
+                'live', 'props', 'mySquad', 'trivia', 'leaders', 'pga', 'discGolf', 'ufc', 'command',
                 'soccerSlide', 'tvGuide', 'news', 'odds', 'rankings', 'nfl', 'nba', 'nhl', 'mlb'
             ];
             
@@ -755,26 +797,34 @@
             }
             
             document.querySelectorAll('.slide-screen').forEach(function(el) { el.style.display = 'none'; });
-            
-            if (current === 'live') renderLivePage();
-            else if (current === 'props') showProps();
-            else if (current === 'mySquad') showMySquad();
-            else if (current === 'trivia') showTrivia();
-            else if (current === 'leaders') showLeaders();
-            else if (current === 'pga') showPGA();
-            else if (current === 'ufc') showUFC();
-            else if (current === 'command') showCommand();
-            else if (current === 'soccerSlide') showSoccer();
-            else if (current === 'tvGuide') showTVGuide();
-            else if (current === 'news') showNews();
-            else if (current === 'odds') showOdds();
-            else if (current === 'rankings') showRankings();
-            else if (current === 'nfl') showStandings('nfl', 'football');
-            else if (current === 'nba') showStandings('nba', 'basketball');
-            else if (current === 'nhl') showStandings('nhl', 'hockey');
-            else if (current === 'mlb') showStandings('mlb', 'baseball');
-            
+            try {
+                if (current === 'live') renderLivePage();
+                else if (current === 'props') showProps();
+                else if (current === 'mySquad') showMySquad();
+                else if (current === 'trivia') showTrivia();
+                else if (current === 'leaders') showLeaders();
+                else if (current === 'pga') showPGA();
+                else if (current === 'discGolf') showDiscGolf();
+                else if (current === 'ufc') showUFC();
+                else if (current === 'command') showCommand();
+                else if (current === 'soccerSlide') showSoccer();
+                else if (current === 'tvGuide') showTVGuide();
+                else if (current === 'news') showNews();
+                else if (current === 'odds') showOdds();
+                else if (current === 'rankings') showRankings();
+                else if (current === 'nfl') showStandings('nfl', 'football');
+                else if (current === 'nba') showStandings('nba', 'basketball');
+                else if (current === 'nhl') showStandings('nhl', 'hockey');
+                else if (current === 'mlb') showStandings('mlb', 'baseball');
+                else showSlideEmpty('NO SLIDE');
+            } catch (err) {
+                showSlideEmpty('SLIDE ERROR');
+            }
             rotationStep++;
+            setTimeout(function() {
+                nextSlide._guard = 0;
+                if (!slideTimer) slideTimer = setTimeout(nextSlide, 8000);
+            }, 400);
         }
 
         function getNetworkLogo(networkStr) {
@@ -854,7 +904,7 @@
                             var hName = (h.team && h.team.shortDisplayName) ? h.team.shortDisplayName : (h.athlete ? (h.athlete.shortName || h.athlete.displayName) : 'TBD');
                             var aName = (a.team && a.team.shortDisplayName) ? a.team.shortDisplayName : (a.athlete ? (a.athlete.shortName || a.athlete.displayName) : 'TBD');
                             var tv = pickBroadcast(comp);
-                            var startTimeStr = new Date(ev.date).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+                            var startTimeStr = formatStartClock(ev.date);
                             var sit = comp.situation || {};
                             var clockStr = buildGameClock(status, comp.status, sit, c, startTimeStr);
 
@@ -1068,7 +1118,12 @@
         }
 
         function showLeaders() {
-            if(globalLeadersData.length === 0) { rotationStep++; nextSlide(); return; }
+            if(globalLeadersData.length === 0) {
+                document.getElementById('leaders-screen').style.display = 'flex';
+                document.getElementById('leaders-grid-track').innerHTML = '<div class="neon-text-cycle" style="font-size:4vh; font-weight:900; text-align:center; padding-top:8vh;">NO LIVE LEADERS</div>';
+                slideTimer = setTimeout(nextSlide, 6000);
+                return;
+            }
             document.getElementById('leaders-screen').style.display = 'flex';
             var track = document.getElementById('leaders-grid-track');
             track.innerHTML = globalLeadersData.slice(0, 8).map(function(l) {
@@ -1082,7 +1137,13 @@
         async function showPGA() {
             try {
                 var res = await fetch(settings.apiBase + '/site/v2/sports/golf/pga/scoreboard'); var d = await res.json();
-                if (!d.events || d.events.length === 0) { rotationStep++; nextSlide(); return; }
+                if (!d.events || d.events.length === 0) {
+                    document.getElementById('pga-screen').style.display = 'flex';
+                    document.getElementById('pga-title').innerText = 'PGA TOUR';
+                    document.getElementById('pga-track').innerHTML = '<div class="neon-text-cycle" style="font-size:4vh; font-weight:900; text-align:center; padding-top:8vh;">NO EVENT THIS WEEK</div>';
+                    slideTimer = setTimeout(nextSlide, 6000);
+                    return;
+                }
                 document.getElementById('pga-title').innerHTML = d.events[0].name.replace('PGA TOUR', '').trim().toUpperCase();
                 var golfers = d.events[0].competitions[0].competitors.slice(0, 10);
                 document.getElementById('pga-screen').style.display = 'flex';
@@ -1100,13 +1161,136 @@
                     return '<div class="golf-row glass-card" style="flex-direction:row;"><div class="golf-pos neon-text-cycle">' + ((g.status && g.status.position) ? g.status.position : '-') + '</div><img src="' + hs + '" onerror="this.src=\'' + pgaFallback + '\'; this.onerror=null;" class="golf-headshot"><div class="golf-name">' + (g.athlete ? (g.athlete.shortName || g.athlete.displayName) : 'Golfer') + '<div class="golf-thru neon-text-cycle">' + ((g.status && g.status.displayThru) ? g.status.displayThru : '') + '</div></div><div class="golf-score card-val-lg">' + (g.score || 'E') + '</div></div>';
                 }).join('');
                 applyScroll('pga-viewport', 'pga-track', 12000);
-            } catch (e) { rotationStep++; nextSlide(); }
+            } catch (e) {
+                document.getElementById('pga-screen').style.display = 'flex';
+                document.getElementById('pga-track').innerHTML = '<div class="neon-text-cycle" style="font-size:4vh; font-weight:900; text-align:center; padding-top:8vh;">PGA FEED DOWN</div>';
+                slideTimer = setTimeout(nextSlide, 6000);
+            }
+        }
+
+        function pdgaProxy(url) {
+            return 'https://api.allorigins.win/raw?url=' + encodeURIComponent(url);
+        }
+        function pdgaSlugDate(slug) {
+            var m = String(slug).match(/(january|february|march|april|may|june|july|august|september|october|november|december)-(\d{1,2})-(\d{4})/i);
+            if (!m) return 0;
+            var months = {january:0,february:1,march:2,april:3,may:4,june:5,july:6,august:7,september:8,october:9,november:10,december:11};
+            return new Date(parseInt(m[3],10), months[m[1].toLowerCase()], parseInt(m[2],10)).getTime();
+        }
+        function latestPdgaPath(html, prefix) {
+            var re = new RegExp('href="(/' + prefix + '-world-rankings-[a-z]+-\\d{1,2}-\\d{4})"', 'gi');
+            var best = '', bestT = 0, match;
+            while ((match = re.exec(html))) {
+                var t = pdgaSlugDate(match[1]);
+                if (t >= bestT) { bestT = t; best = match[1]; }
+            }
+            return best;
+        }
+        function parsePdgaTable(html, limit) {
+            var rows = [];
+            var re = /class="rank">(\d+)<\/span>[\s\S]*?class="player"><a[^>]*>([^<]+)<\/a>[\s\S]*?<td>([0-9.]+)<\/td>/gi;
+            var match;
+            while ((match = re.exec(html)) && rows.length < (limit || 12)) {
+                rows.push({ pos: match[1], name: match[2].replace(/\s+/g, ' ').trim().toUpperCase(), pts: match[3] });
+            }
+            return rows;
+        }
+        function renderDiscGolf(mpo, fpo, label) {
+            function row(g, div) {
+                return '<div class="golf-row glass-card" style="flex-direction:row;"><div class="golf-pos neon-text-cycle">' + g.pos + '</div><div class="golf-name">' + g.name + '<div class="golf-thru neon-text-cycle">' + div + '</div></div><div class="golf-score card-val-lg" style="font-size:2.6vh;">' + g.pts + '</div></div>';
+            }
+            var titleEl = document.getElementById('dg-title');
+            if (titleEl) titleEl.innerText = label || 'PDGA WORLD RANKINGS';
+            document.getElementById('discGolf-screen').style.display = 'flex';
+            document.getElementById('dg-track').innerHTML =
+                '<div class="division-header neon-text-cycle" style="width:100%; margin:1vh 0;">MPO</div>' +
+                mpo.map(function(g) { return row(g, 'MPO'); }).join('') +
+                '<div class="division-header neon-text-cycle" style="width:100%; margin:2vh 0 1vh;">FPO</div>' +
+                fpo.map(function(g) { return row(g, 'FPO'); }).join('');
+            applyScroll('dg-viewport', 'dg-track', 14000);
+        }
+        async function loadPdgaRankings() {
+            var now = Date.now();
+            try {
+                var cached = localStorage.getItem('ahlersPdgaRanks');
+                if (cached) {
+                    var obj = JSON.parse(cached);
+                    if (obj && obj.at && (now - obj.at) < 86400000 && obj.mpo && obj.mpo.length && obj.fpo && obj.fpo.length) return obj;
+                }
+            } catch (e0) {}
+            var hub = await (await fetch(pdgaProxy('https://www.pdga.com/world-rankings'))).text();
+            var mpoPath = latestPdgaPath(hub, 'mpo');
+            var fpoPath = latestPdgaPath(hub, 'fpo');
+            if (!mpoPath || !fpoPath) throw new Error('no ranking urls');
+            var mpoHtml = await (await fetch(pdgaProxy('https://www.pdga.com' + mpoPath))).text();
+            var fpoHtml = await (await fetch(pdgaProxy('https://www.pdga.com' + fpoPath))).text();
+            var data = {
+                at: now,
+                label: 'PDGA WORLD RANKINGS • ' + mpoPath.replace('/mpo-world-rankings-', '').replace(/-/g, ' ').toUpperCase(),
+                mpo: parsePdgaTable(mpoHtml, 12),
+                fpo: parsePdgaTable(fpoHtml, 8)
+            };
+            if (!data.mpo.length || !data.fpo.length) throw new Error('parse failed');
+            try { localStorage.setItem('ahlersPdgaRanks', JSON.stringify(data)); } catch (e1) {}
+            return data;
+        }
+        async function showDiscGolf() {
+            try {
+                var data = await loadPdgaRankings();
+                renderDiscGolf(data.mpo, data.fpo, data.label);
+                return;
+                var mpo = [
+                    { pos: '1', name: 'GANNON BUHR', pts: '128.5' },
+                    { pos: '2', name: 'RICHARD WYSOCKI', pts: '79.3' },
+                    { pos: '3', name: 'CALVIN HEIMBURG', pts: '71.4' },
+                    { pos: '4', name: 'ISAAC ROBINSON', pts: '64.0' },
+                    { pos: '5', name: 'NIKLAS ANTTILA', pts: '59.1' },
+                    { pos: '6', name: 'ANTHONY BARELA', pts: '57.7' },
+                    { pos: '7', name: 'PAUL MCBETH', pts: '47.0' },
+                    { pos: '8', name: 'ADAM HAMMES', pts: '42.4' },
+                    { pos: '9', name: 'SULLIVAN TIPTON', pts: '41.6' },
+                    { pos: '10', name: 'COLE REDALEN', pts: '39.9' },
+                    { pos: '11', name: 'SILAS SCHULTZ', pts: '39.2' },
+                    { pos: '12', name: 'LUKE TAYLOR', pts: '38.6' }
+                ];
+                var fpo = [
+                    { pos: '1', name: 'EVELIINA SALONEN', pts: '109.5' },
+                    { pos: '2', name: 'SILVA SAARINEN', pts: '107.2' },
+                    { pos: '3', name: 'OHN SCOGGINS', pts: '75.5' },
+                    { pos: '4', name: 'HOLYN HANDLEY', pts: '71.1' },
+                    { pos: '5', name: 'MISSY GANNON', pts: '69.9' },
+                    { pos: '6', name: 'ELLA HANSEN', pts: '49.0' },
+                    { pos: '7', name: 'HENNA BLOMROOS', pts: '45.0' },
+                    { pos: '8', name: 'VALERIE MANDUJANO', pts: '38.2' }
+                ];
+                function row(g, div) {
+                    return '<div class="golf-row glass-card" style="flex-direction:row;"><div class="golf-pos neon-text-cycle">' + g.pos + '</div><div class="golf-name">' + g.name + '<div class="golf-thru neon-text-cycle">' + div + '</div></div><div class="golf-score card-val-lg" style="font-size:2.6vh;">' + g.pts + '</div></div>';
+                }
+                var titleEl = document.getElementById('dg-title');
+                if (titleEl) titleEl.innerText = 'PDGA WORLD RANKINGS • SEP 2';
+                document.getElementById('discGolf-screen').style.display = 'flex';
+                document.getElementById('dg-track').innerHTML =
+                    '<div class="division-header neon-text-cycle" style="width:100%; margin:1vh 0;">MPO</div>' +
+                    mpo.map(function(g) { return row(g, 'MPO'); }).join('') +
+                    '<div class="division-header neon-text-cycle" style="width:100%; margin:2vh 0 1vh;">FPO</div>' +
+                    fpo.map(function(g) { return row(g, 'FPO'); }).join('');
+                applyScroll('dg-viewport', 'dg-track', 12000);
+            } catch (e) {
+                document.getElementById('discGolf-screen').style.display = 'flex';
+                document.getElementById('dg-track').innerHTML = '<div class="neon-text-cycle" style="font-size:4vh; font-weight:900; text-align:center; padding-top:8vh;">NO DISC GOLF CARD</div>';
+                slideTimer = setTimeout(nextSlide, 6000);
+            }
         }
 
         async function showUFC() {
             try {
                 var res = await fetch(settings.apiBase + '/site/v2/sports/mma/ufc/scoreboard'); var d = await res.json();
-                if(!d.events || d.events.length === 0) { rotationStep++; nextSlide(); return; }
+                if(!d.events || d.events.length === 0) {
+                    document.getElementById('ufc-screen').style.display = 'flex';
+                    document.getElementById('ufc-grid-track').innerHTML = '<div class="neon-text-cycle" style="font-size:4vh; font-weight:900; text-align:center; padding-top:8vh;">NO UFC CARD</div>';
+                    slideTimer = setTimeout(nextSlide, 6000);
+                    return;
+                }
                 document.getElementById('ufc-title').innerHTML = 'UFC: ' + (d.events[0].name ? d.events[0].name.replace('UFC Fight Night:', '').trim() : "FIGHT NIGHT").toUpperCase();
                 document.getElementById('ufc-screen').style.display = 'flex';
                 
@@ -1139,7 +1323,11 @@
                     return '<div class="ufc-card glass-card">' + liveBadge + '<div class="ufc-matchup"><div class="fighter-col"><img src="' + f2Img + '" class="' + f2Class + '" onerror="this.src=\'https://a.espncdn.com/combiner/i?img=/i/headshots/mma/players/full/default.png\'; this.onerror=null;"><div class="fighter-name">' + f2Name + '</div>' + f2RecHtml + '</div><div class="ufc-center"><div class="ufc-vs neon-text-cycle">VS</div></div><div class="fighter-col"><img src="' + f1Img + '" class="' + f1Class + '" onerror="this.src=\'https://a.espncdn.com/combiner/i?img=/i/headshots/mma/players/full/default.png\'; this.onerror=null;"><div class="fighter-name">' + f1Name + '</div>' + f1RecHtml + '</div></div><div class="ufc-meta neon-text-cycle"><span>' + (f.status.state === 'post' ? 'FINAL' : f.weightClass) + '</span>' + (f.status.state === 'post' ? resultMeta : '') + '</div></div>';
                 }).join('');
                 applyScroll('ufc-viewport', 'ufc-grid-track', 15000);
-            } catch(e) { rotationStep++; nextSlide(); }
+            } catch(e) {
+                document.getElementById('ufc-screen').style.display = 'flex';
+                document.getElementById('ufc-grid-track').innerHTML = '<div class="neon-text-cycle" style="font-size:4vh; font-weight:900; text-align:center; padding-top:8vh;">UFC FEED DOWN</div>';
+                slideTimer = setTimeout(nextSlide, 6000);
+            }
         }
 
         async function showSoccer() {
@@ -1159,7 +1347,12 @@
                     });
                 } catch(e) {}
             }
-            if(games.length === 0) { rotationStep++; nextSlide(); return; }
+            if(games.length === 0) {
+                document.getElementById('soccer-screen').style.display = 'flex';
+                document.getElementById('soccer-grid-track').innerHTML = '<div class="neon-text-cycle" style="font-size:4vh; font-weight:900; text-align:center; padding-top:8vh;">NO SOCCER MATCHES</div>';
+                slideTimer = setTimeout(nextSlide, 6000);
+                return;
+            }
             document.getElementById('soccer-screen').style.display = 'flex';
             document.getElementById('soccer-grid-track').innerHTML = games.sort((a,b)=>b.weight-a.weight).map(function(g) {
                 return '<div class="glass-card"><div class="card-meta neon-text-cycle"><span>' + g.league + '</span></div><div class="card-row"><div class="card-team"><img src="' + g.aLogo + '" onerror="this.src=\'https://a.espncdn.com/combiner/i?img=/i/teamlogos/default-team-logo-500.png\'; this.onerror=null;">' + g.aName + '</div><div class="card-val-lg">' + g.aScore + '</div></div><div class="card-row"><div class="card-team"><img src="' + g.hLogo + '" onerror="this.src=\'https://a.espncdn.com/combiner/i?img=/i/teamlogos/default-team-logo-500.png\'; this.onerror=null;">' + g.hName + '</div><div class="card-val-lg">' + g.hScore + '</div></div><div class="card-footer neon-text-cycle" style="justify-content:center;">' + g.time + '</div></div>';
@@ -1168,7 +1361,12 @@
         }
 
         function showTVGuide() {
-            if(globalTVGuideData.length === 0) { rotationStep++; nextSlide(); return; }
+            if(globalTVGuideData.length === 0) {
+                document.getElementById('tvguide-screen').style.display = 'flex';
+                document.getElementById('tvguide-track').innerHTML = '<div class="neon-text-cycle" style="font-size:4vh; font-weight:900; text-align:center; padding-top:8vh;">NOTHING ON THE GUIDE</div>';
+                slideTimer = setTimeout(nextSlide, 6000);
+                return;
+            }
             document.getElementById('tvguide-screen').style.display = 'flex';
             document.getElementById('tvguide-track').innerHTML = [].concat(globalTVGuideData).sort((a,b)=>a.timestamp-b.timestamp).map(function(g) { 
                 return '<div class="tv-row"><div class="tv-channel neon-text-cycle">' + getNetworkLogo(g.network) + '</div><div class="tv-program"><div class="tv-prog-title">' + g.matchup + '</div><div class="tv-prog-time neon-text-cycle">' + g.time + '</div>' + (g.isLive ? '<div class="neon-text-cycle live-pulse" style="position:absolute; right:4vh; font-size:3vh;">● LIVE</div>' : '') + '</div></div>'; 
@@ -1181,21 +1379,35 @@
                 var sources = [{ url: 'https://api.rss2json.com/v1/api.json?rss_url=https%3A%2F%2Fsports.yahoo.com%2Frss%2F', name: 'YAHOO SPORTS' }, { url: 'https://api.rss2json.com/v1/api.json?rss_url=https%3A%2F%2Fwww.cbssports.com%2Frss%2Fheadlines%2F', name: 'CBS SPORTS' }];
                 var combinedNews = [];
                 for (var i=0; i<sources.length; i++) {
-                    try { var res = await fetch(sources[i].url); var data = await res.json(); if (data.status === 'ok') { data.items.forEach(function(item) { combinedNews.push({ title: item.title, img: item.thumbnail || (item.enclosure && item.enclosure.link) || '', source: sources[i].name, time: new Date(item.pubDate.replace(/-/g, '/')).getTime() }); }); } } catch(e) {}
+                    try { var res = await fetch(sources[i].url); var data = await res.json(); if (data.status === 'ok') { data.items.forEach(function(item) { var title = cleanHeadline(item.title); if (title.length < 8) return; combinedNews.push({ title: title, img: item.thumbnail || (item.enclosure && item.enclosure.link) || '', source: sources[i].name, time: new Date(String(item.pubDate || '').replace(/-/g, '/')).getTime() }); }); } } catch(e) {}
                 }
-                if (combinedNews.length === 0) { rotationStep++; nextSlide(); return; }
+                if (combinedNews.length === 0) {
+                    document.getElementById('news-screen').style.display = 'flex';
+                    document.getElementById('news-list-track').innerHTML = '<div class="neon-text-cycle" style="font-size:4vh; font-weight:900; text-align:center; padding-top:8vh;">NO HEADLINES</div>';
+                    slideTimer = setTimeout(nextSlide, 6000);
+                    return;
+                }
                 document.getElementById('news-screen').style.display = 'flex';
                 document.getElementById('news-list-track').innerHTML = combinedNews.sort((a,b)=>b.time-a.time).slice(0, 10).map(function(item) {
                     var imgHtml = item.img ? '<img class="news-thumb" src="' + item.img + '">' : '<div class="news-thumb neon-text-cycle" style="display:flex;align-items:center;justify-content:center;font-weight:900;font-size:3vh;">NEWS</div>';
                     return '<div class="news-row glass-card">' + imgHtml + '<div class="news-content"><div class="news-title">' + item.title + '</div><div class="news-source neon-text-cycle">' + item.source + '</div></div></div>';
                 }).join('');
                 applyScroll('news-viewport', 'news-list-track', 12000);
-            } catch(e) { rotationStep++; nextSlide(); }
+            } catch(e) {
+                document.getElementById('news-screen').style.display = 'flex';
+                document.getElementById('news-list-track').innerHTML = '<div class="neon-text-cycle" style="font-size:4vh; font-weight:900; text-align:center; padding-top:8vh;">NEWS FEED DOWN</div>';
+                slideTimer = setTimeout(nextSlide, 6000);
+            }
         }
 
         function showOdds() {
             var oddsGames = globalRawGames.filter(g => g.state === 'pre' && g.odds !== 'EVEN');
-            if (oddsGames.length === 0) { rotationStep++; nextSlide(); return; }
+            if (oddsGames.length === 0) {
+                document.getElementById('odds-screen').style.display = 'flex';
+                document.getElementById('odds-grid-track').innerHTML = '<div class="neon-text-cycle" style="font-size:4vh; font-weight:900; text-align:center; padding-top:8vh;">NO LINES BOARDED</div>';
+                slideTimer = setTimeout(nextSlide, 6000);
+                return;
+            }
             document.getElementById('odds-screen').style.display = 'flex';
             document.getElementById('odds-grid-track').innerHTML = oddsGames.map(function(g) { 
                 var lines = formatCardLines(g) || (g.odds + ' (O/U ' + (g.ou||'--') + ')');
@@ -1204,32 +1416,140 @@
             applyScroll('odds-viewport', 'odds-grid-track', 12000);
         }
 
+        function pickRecord(stats) {
+            if (!stats || !stats.length) return '';
+            var overall = stats.find(function(st) { return st.name === 'overall' || st.name === 'All Splits' || st.abbreviation === 'overall'; });
+            if (overall && overall.summary) return overall.summary;
+            var wins = stats.find(function(st) { return st.name === 'wins' || st.abbreviation === 'W'; });
+            var losses = stats.find(function(st) { return st.name === 'losses' || st.abbreviation === 'L'; });
+            if (wins && losses && (wins.displayValue != null) && (losses.displayValue != null)) return wins.displayValue + '-' + losses.displayValue;
+            return '';
+        }
+
+        function collectStandingsRecords(node, map) {
+            if (!node) return;
+            var entries = (node.standings && node.standings.entries) ? node.standings.entries : [];
+            entries.forEach(function(t) {
+                var rec = pickRecord(t.stats);
+                if (!rec || !t.team) return;
+                var names = [t.team.displayName, t.team.shortDisplayName, t.team.nickname, t.team.abbreviation, t.team.name, t.team.location];
+                names.forEach(function(n) { if (n) map[String(n).toLowerCase()] = rec; });
+            });
+            (node.children || []).forEach(function(ch) { collectStandingsRecords(ch, map); });
+        }
+
+        async function loadCfbRecordMap() {
+            var now = Date.now();
+            try {
+                var cached = localStorage.getItem('ahlersCfbRecords');
+                if (cached) {
+                    var obj = JSON.parse(cached);
+                    if (obj && obj.at && (now - obj.at) < 86400000 && obj.map) return obj.map;
+                }
+            } catch (e) {}
+            var map = {};
+            var res = await fetch('https://site.api.espn.com/apis/v2/sports/football/college-football/standings');
+            var d = await res.json();
+            collectStandingsRecords(d, map);
+            try { localStorage.setItem('ahlersCfbRecords', JSON.stringify({ at: now, map: map })); } catch (e2) {}
+            return map;
+        }
+
         async function showRankings() {
             document.getElementById('rankings-screen').style.display = 'flex';
             try {
+                var recMap = {};
+                try { recMap = await loadCfbRecordMap(); } catch (e1) {}
                 var res = await fetch('https://site.api.espn.com/apis/site/v2/sports/football/college-football/rankings'); var d = await res.json();
-                document.getElementById('rankings-list-track').innerHTML = d.rankings[0].ranks.slice(0, 15).map(function(r) { 
-                    return '<div class="rank-row glass-card" style="flex-direction:row;"><span class="rank-num neon-text-cycle">' + r.current + '</span><img class="rank-logo" style="width:8vh; margin:0 3vh;" src="' + r.team.logo + '" onerror="this.src=\'https://a.espncdn.com/combiner/i?img=/i/teamlogos/default-team-logo-500.png\'; this.onerror=null;"><span><span class="rank-name">' + r.team.nickname + '</span></span><span class="neon-text-cycle" style="margin-left:auto; font-size:4vh; font-weight:900;">' + (r.recordSummary || '0-0') + '</span></div>'; 
+                document.getElementById('rankings-list-track').innerHTML = d.rankings[0].ranks.slice(0, 25).map(function(r) {
+                    var rec = '';
+                    if (r.recordSummary && r.recordSummary !== '0-0') rec = r.recordSummary;
+                    var keys = [r.team.nickname, r.team.abbreviation, r.team.location, r.team.name, r.team.displayName];
+                    for (var i = 0; i < keys.length && !rec; i++) {
+                        if (keys[i] && recMap[String(keys[i]).toLowerCase()]) rec = recMap[String(keys[i]).toLowerCase()];
+                    }
+                    if (!rec) rec = '--';
+                    return '<div class="rank-row glass-card" style="flex-direction:row;"><span class="rank-num neon-text-cycle">' + r.current + '</span><img class="rank-logo" style="width:8vh; margin:0 3vh;" src="' + r.team.logo + '" onerror="this.src=\'https://a.espncdn.com/combiner/i?img=/i/teamlogos/default-team-logo-500.png\'; this.onerror=null;"><span><span class="rank-name">' + r.team.nickname + '</span></span><span class="neon-text-cycle" style="margin-left:auto; font-size:4vh; font-weight:900;">' + rec + '</span></div>';
                 }).join('');
                 applyScroll('rankings-viewport', 'rankings-list-track', 15000);
             } catch(e) { slideTimer = setTimeout(nextSlide, 5000); }
         }
 
+        function standingsSeed(t) {
+            var stats = t.stats || [];
+            var seed = stats.find(function(st) { return st.name === 'playoffSeed' || st.abbreviation === 'SEED'; });
+            if (seed && seed.value != null && !isNaN(Number(seed.value)) && Number(seed.value) > 0) return Number(seed.value);
+            var wins = stats.find(function(st) { return st.name === 'wins' || st.abbreviation === 'W'; });
+            if (wins && wins.value != null) return -Number(wins.value);
+            return 99;
+        }
+
+        function sortStandingsEntries(entries) {
+            return (entries || []).slice().sort(function(a, b) { return standingsSeed(a) - standingsSeed(b); });
+        }
+
+        function groupKind(name) {
+            var n = String(name || '').toLowerCase();
+            if (n.indexOf('wild card') !== -1 || n.indexOf('wildcard') !== -1) return 'wildcard';
+            if (n.indexOf('conference') !== -1) return 'conference';
+            if (n.indexOf('american league') !== -1 || n.indexOf('national league') !== -1) return 'league';
+            if (n.indexOf('division') !== -1) return 'division';
+            if (n.indexOf('atlantic') !== -1 || n.indexOf('metropolitan') !== -1 || n.indexOf('central') !== -1 || n.indexOf('pacific') !== -1) return 'division';
+            if (n.indexOf('east') !== -1 || n.indexOf('west') !== -1 || n.indexOf('north') !== -1 || n.indexOf('south') !== -1) return 'division';
+            return 'other';
+        }
+
+        function collectStandingsGroups(node, league, out) {
+            if (!node) return;
+            var name = node.name || node.shortName || '';
+            var kind = groupKind(name);
+            var entries = (node.standings && node.standings.entries) ? node.standings.entries : [];
+            var kids = node.children || [];
+            var keep = false;
+            if (league === 'nba') keep = (kind === 'conference' && entries.length);
+            else if (league === 'mlb') keep = ((kind === 'division' || kind === 'wildcard') && entries.length);
+            else if (league === 'nhl') keep = (kind === 'division' && entries.length);
+            else keep = (kind === 'division' && entries.length);
+            if (!keep && entries.length && kids.length === 0) keep = true;
+            if (keep) out.push({ name: name, entries: sortStandingsEntries(entries), kind: kind });
+            kids.forEach(function(ch) { collectStandingsGroups(ch, league, out); });
+        }
+
         async function showStandings(league, sport) {
-            document.getElementById(league + '-screen').style.display = 'flex';
+            var screen = document.getElementById(league + '-screen');
+            var track = document.getElementById(league + '-track');
+            if (!screen || !track) { slideTimer = setTimeout(nextSlide, 4000); return; }
+            screen.style.display = 'flex';
             try {
-                var res = await fetch('https://site.api.espn.com/apis/v2/sports/' + sport + '/' + league + '/standings'); var d = await res.json();
-                document.getElementById(league + '-track').innerHTML = (d.children || [d]).map(function(group) {
-                    var entries = group.standings ? group.standings.entries : (group.children ? group.children[0].standings.entries : []);
-                    var rows = entries.slice(0, 16).map(function(t) {
-                        var recText = '0-0'; var overallNode = t.stats.find(function(st) { return st.name === 'All Splits' || st.name === 'overall'; });
-                        if (overallNode && overallNode.summary) recText = overallNode.summary;
-                        return '<div class="st-row"><img class="st-logo" style="width:4.8vh; margin:0 1.5vh;" src="' + t.team.logos[0].href + '" onerror="this.src=\'https://a.espncdn.com/combiner/i?img=/i/teamlogos/default-team-logo-500.png\'; this.onerror=null;"><div class="st-name" style="flex:1; font-size:3vh;">' + t.team.displayName + '</div><div class="neon-text-cycle">' + recText + '</div></div>';
+                var res = await fetch('https://site.api.espn.com/apis/v2/sports/' + sport + '/' + league + '/standings');
+                var d = await res.json();
+                var groups = [];
+                collectStandingsGroups(d, league, groups);
+                if (league === 'mlb') {
+                    groups.sort(function(a, b) {
+                        if (a.kind === b.kind) return a.name.localeCompare(b.name);
+                        return a.kind === 'wildcard' ? 1 : -1;
+                    });
+                }
+                if (!groups.length) {
+                    track.innerHTML = '<div class="neon-text-cycle" style="font-size:4vh; font-weight:900; text-align:center; padding-top:8vh;">NO STANDINGS</div>';
+                    slideTimer = setTimeout(nextSlide, 6000);
+                    return;
+                }
+                track.innerHTML = groups.map(function(group) {
+                    var rows = group.entries.map(function(t, idx) {
+                        var recText = pickRecord(t.stats) || '0-0';
+                        var logo = (t.team && t.team.logos && t.team.logos[0] && t.team.logos[0].href) ? t.team.logos[0].href : 'https://a.espncdn.com/combiner/i?img=/i/teamlogos/default-team-logo-500.png';
+                        var nm = t.team ? t.team.displayName : 'Team';
+                        return '<div class="st-row"><span class="neon-text-cycle" style="width:4vh; text-align:right; font-weight:900;">' + (idx + 1) + '</span><img class="st-logo" style="width:4.8vh; margin:0 1.5vh;" src="' + logo + '" onerror="this.src=\'https://a.espncdn.com/combiner/i?img=/i/teamlogos/default-team-logo-500.png\'; this.onerror=null;"><div class="st-name" style="flex:1; font-size:3vh;">' + nm + '</div><div class="neon-text-cycle">' + recText + '</div></div>';
                     }).join('');
                     return '<div class="division-block glass-card"><div class="division-header neon-text-cycle">' + (group.name || "STANDINGS") + '</div>' + rows + '</div>';
                 }).join('');
                 applyScroll(league + '-viewport', league + '-track', 15000);
-            } catch(e) { slideTimer = setTimeout(nextSlide, 5000); }
+            } catch(e) {
+                track.innerHTML = '<div class="neon-text-cycle" style="font-size:4vh; font-weight:900; text-align:center; padding-top:8vh;">STANDINGS FEED DOWN</div>';
+                slideTimer = setTimeout(nextSlide, 6000);
+            }
         }
 
         window.addEventListener('load', async function() { 
