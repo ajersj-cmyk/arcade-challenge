@@ -1,0 +1,6 @@
+# Flynn test tooling
+tools/node_modules/
+node_modules/
+tools/out/
+# local preview copy of index.html: never commit (main is served by GitHub Pages)
+preview.html

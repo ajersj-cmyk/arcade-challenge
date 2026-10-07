@@ -1,0 +1,15 @@
+{
+  "name": "flynn-arcade-tools",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Test harness for the Ahlers Arcade scoreboard (index.html). Not served or used by the live site.",
+  "type": "module",
+  "scripts": {
+    "test:preview": "node test-preview.mjs --file preview.html",
+    "test:live": "node test-preview.mjs --file index.html",
+    "test:compare": "node test-preview.mjs --compare index.html preview.html"
+  },
+  "dependencies": {
+    "puppeteer-core": "^23.11.1"
+  }
+}
