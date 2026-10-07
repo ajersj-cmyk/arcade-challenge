@@ -1,5 +1,5 @@
 name: Refresh futures odds
-# Once a day: fetch NFL + college football futures/awards odds and commit futures.json beside index.html.
+# Once a day: fetch NFL + college football futures/awards + NHL Stanley Cup odds and commit futures.json beside index.html.
 # GitHub Pages serves it same-origin for the scoreboard's futures slides. If fewer than 5 markets come back,
 # scripts/fetch-futures.mjs keeps the last good file and nothing is committed.
 on:

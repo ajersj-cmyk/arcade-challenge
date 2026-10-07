@@ -231,6 +231,13 @@
         .fut-name { flex: 1; font-size: 2.5vh; line-height: 1.1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #fff; text-shadow: 0 2px 4px #000; }
         .fut-team { font-size: 1.7vh; opacity: 0.75; margin-left: 0.6vh; }
         .fut-odds { font-size: 2.7vh; margin-left: 1vh; flex-shrink: 0; }
+        .fut-card.fut-wide { grid-column: 1 / -1; padding: 2vh 3vh 1.5vh; }
+        .fut-wide .fut-rows { display: grid; grid-auto-flow: column; grid-template-columns: 1fr 1fr; column-gap: 4vw; }
+        .fut-wide .fut-row:last-child { border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .fut-wide .fut-name { font-size: 2.8vh; }
+        .fut-wide .fut-odds { font-size: 3vh; }
+        .fut-wide .fut-logo { width: 4.2vh; height: 4.2vh; }
+        .fut-wide .fut-row { padding: 0.55vh 0; }
         .fut-bar { position: absolute; left: 0; bottom: -1px; height: 0.35vh; background: var(--accent-color); opacity: 0.6; border-radius: 0.2vh; transition: background 0.5s ease; }
 
         /* D-PAD / REMOTE NAVIGATION (hidden until a remote key is pressed) */
@@ -364,6 +371,7 @@
 
         <div id="nflfut-screen" class="slide-screen"><div class="screen-header neon-text-cycle"><img src="https://a.espncdn.com/combiner/i?img=/i/teamlogos/leagues/500/nfl.png" class="league-logo" onerror="this.style.display='none'">NFL FUTURES</div><div class="fut-meta neon-text-cycle" id="nflfut-meta"></div><div class="content-viewport fut-viewport" id="nflfut-viewport"><div class="fut-grid" id="nflfut-track"></div></div></div>
         <div id="nflawards-screen" class="slide-screen"><div class="screen-header neon-text-cycle"><img src="https://a.espncdn.com/combiner/i?img=/i/teamlogos/leagues/500/nfl.png" class="league-logo" onerror="this.style.display='none'">NFL AWARDS ODDS</div><div class="fut-meta neon-text-cycle" id="nflawards-meta"></div><div class="content-viewport fut-viewport" id="nflawards-viewport"><div class="fut-grid" id="nflawards-track"></div></div></div>
+        <div id="nhlfut-screen" class="slide-screen"><div class="screen-header neon-text-cycle"><img src="https://a.espncdn.com/combiner/i?img=/i/teamlogos/leagues/500/nhl.png" class="league-logo" onerror="this.style.display='none'">NHL FUTURES</div><div class="fut-meta neon-text-cycle" id="nhlfut-meta"></div><div class="content-viewport fut-viewport" id="nhlfut-viewport"><div class="fut-grid" id="nhlfut-track"></div></div></div>
         <div id="cfbfut-screen" class="slide-screen"><div class="screen-header neon-text-cycle">COLLEGE FOOTBALL FUTURES</div><div class="fut-meta neon-text-cycle" id="cfbfut-meta"></div><div class="content-viewport fut-viewport" id="cfbfut-viewport"><div class="fut-grid" id="cfbfut-track"></div></div></div>
 
         <div id="odds-screen" class="slide-screen">
@@ -450,6 +458,7 @@
                     <div class="toggle-row"><span>NFL Futures Slide</span> <input type="checkbox" id="set-nflFutures" onchange="updateSettings()"></div>
                     <div class="toggle-row"><span>NFL Awards Slide</span> <input type="checkbox" id="set-nflAwards" onchange="updateSettings()"></div>
                     <div class="toggle-row"><span>CFB Futures Slide</span> <input type="checkbox" id="set-cfbFutures" onchange="updateSettings()"></div>
+                    <div class="toggle-row"><span>NHL Futures Slide</span> <input type="checkbox" id="set-nhlFutures" onchange="updateSettings()"></div>
                     <div class="toggle-row"><span>Rankings Slide</span> <input type="checkbox" id="set-rankings" onchange="updateSettings()"></div>
                 </div>
             </div>
@@ -498,7 +507,7 @@
         var currentThemeIndex = 0;
 
         var defaultSettings = { 
-            nfl:true, nba:true, nhl:true, mlb:true, rankings:true, odds:true, futures:true, nflFutures:true, nflAwards:true, cfbFutures:true, tvGuide:true, news:true, mySquad:true, ufc:true, command:true, leaders:true, pga:true, soccerSlide:true, trivia:true,
+            nfl:true, nba:true, nhl:true, mlb:true, rankings:true, odds:true, futures:true, nflFutures:true, nflAwards:true, cfbFutures:true, nhlFutures:true, tvGuide:true, news:true, mySquad:true, ufc:true, command:true, leaders:true, pga:true, soccerSlide:true, trivia:true,
             showWorldCup:true, showEPL:true, showUCL:true, showATP:true, showWTA:true, showNFL:true, showNBA:true, showNHL:true, showMLB:true, showCFB:true, showCBB:true, showCLB:true,
             cbb50:true, cfb75:true, clb50:true, apiBase:"https://site.api.espn.com/apis",
             mySquadTeams: "Carolina Hurricanes, Duke, ECU, East Carolina",
@@ -849,7 +858,7 @@
 
         var ARCADE_SCREENS = [
             'live', 'props', 'mySquad', 'trivia', 'leaders', 'pga', 'ufc', 'command',
-            'soccerSlide', 'tvGuide', 'news', 'odds', 'futures', 'nflFutures', 'nflAwards', 'cfbFutures',
+            'soccerSlide', 'tvGuide', 'news', 'odds', 'futures', 'nflFutures', 'nflAwards', 'cfbFutures', 'nhlFutures',
             'rankings', 'nfl', 'nba', 'nhl', 'mlb'
         ];
 
@@ -899,7 +908,7 @@
                 else if (current === 'news') showNews(gen);
                 else if (current === 'odds') showOdds();
                 else if (current === 'futures') showFutures(gen);
-                else if (current === 'nflFutures' || current === 'nflAwards' || current === 'cfbFutures') showFootballFutures(current, gen);
+                else if (current === 'nflFutures' || current === 'nflAwards' || current === 'cfbFutures' || current === 'nhlFutures') showFootballFutures(current, gen);
                 else if (current === 'rankings') showRankings(gen);
                 else if (current === 'nfl') showStandings('nfl', 'football', gen);
                 else if (current === 'nba') showStandings('nba', 'basketball', gen);
@@ -1571,7 +1580,9 @@
                 ['oroy','OFFENSIVE ROOKIE',6],['droy','DEFENSIVE ROOKIE',6],['cpoy','COMEBACK PLAYER',6],['coy','COACH OF THE YEAR',6]] },
             cfbFutures: { prefix: 'cfbfut', league: 'ncaaf', markets: [['cfb_title','NATIONAL TITLE',8],['make_cfp_final','MAKE CFP TITLE GAME',8],['heisman','HEISMAN TROPHY',8],
                 ['sec','SEC',5],['big_ten','BIG TEN',5],['big_12','BIG 12',5],['acc','ACC',5],['american','AMERICAN',4],['mwc','MOUNTAIN WEST',4],
-                ['sun_belt','SUN BELT',4],['mac','MAC',4],['cusa','CONFERENCE USA',4],['pac12','PAC-12',4]] }
+                ['sun_belt','SUN BELT',4],['mac','MAC',4],['cusa','CONFERENCE USA',4],['pac12','PAC-12',4]] },
+            // one wide Stanley Cup panel, top 16 in two columns
+            nhlFutures: { prefix: 'nhlfut', league: 'nhl', markets: [['stanley_cup','STANLEY CUP WINNER',16,'wide']] }
         };
         var FB_AN_WANT = {
             nfl: { id: 1, want: [['super_bowl', /superbowl - to win/i], ['afc_champ', /afc conference - to win/i], ['nfc_champ', /nfc conference - to win/i],
@@ -1582,7 +1593,8 @@
             ncaaf: { id: 2, want: [['cfb_title', /ncaaf championship - to win/i], ['heisman', /heisman/i], ['make_cfp_final', /to make cfp championship/i],
                 ['sec', /\bsec conference - to win/i], ['big_ten', /big ten conference - to win/i], ['big_12', /big 12 conference - to win/i], ['acc', /\bacc conference - to win/i],
                 ['american', /american conference - to win/i], ['mwc', /mountain west conference - to win/i], ['sun_belt', /sun belt conference - to win/i],
-                ['mac', /mid-american conference - to win/i], ['cusa', /conference usa conference - to win/i], ['pac12', /pac-12 conference - to win/i]] }
+                ['mac', /mid-american conference - to win/i], ['cusa', /conference usa conference - to win/i], ['pac12', /pac-12 conference - to win/i]] },
+            nhl: { id: 3, want: [['stanley_cup', /stanley cup - to win/i]] }
         };
         var FB_ESPN_WANT = {
             nfl: [['super_bowl', /^super bowl winner/i], ['afc_champ', /^afc champion/i], ['nfc_champ', /^nfc champion/i], ['afc_east', /^afc east division/i],
@@ -1592,7 +1604,8 @@
                 ['droy', /defensive rookie of the year/i], ['cpoy', /comeback player/i], ['coy', /coach of the year/i]],
             ncaaf: [['cfb_title', /^national championship winner/i], ['make_cfp_final', /to reach the championship game/i], ['heisman', /heisman/i],
                 ['sec', /southeastern conference/i], ['big_ten', /big ten conference/i], ['big_12', /big 12 conference/i], ['acc', /atlantic coast conference/i],
-                ['american', /american athletic/i], ['mwc', /mountain west/i], ['sun_belt', /sun belt/i], ['mac', /mid-american/i], ['cusa', /conference usa/i]]
+                ['american', /american athletic/i], ['mwc', /mountain west/i], ['sun_belt', /sun belt/i], ['mac', /mid-american/i], ['cusa', /conference usa/i]],
+            nhl: [['stanley_cup', /stanley cup winner/i]]
         };
         var footballFuturesMem = null;
 
@@ -1608,15 +1621,16 @@
         }
         function fbAmerican(n) { n = Number(n); return isNaN(n) ? '' : (n > 0 ? '+' + n : String(n)); }
         function fbImplied(n) { n = Number(n); if (isNaN(n)) return 0; return n > 0 ? 100 / (n + 100) : -n / (-n + 100); }
-        function fbCountMarkets(d) { return d ? Object.keys(d.nfl || {}).length + Object.keys(d.ncaaf || {}).length : 0; }
+        function fbCountMarkets(d) { return d ? Object.keys(d.nfl || {}).length + Object.keys(d.ncaaf || {}).length + Object.keys(d.nhl || {}).length : 0; }
         function fbSeason() { var d = new Date(); return d.getMonth() >= 2 ? d.getFullYear() : d.getFullYear() - 1; }
 
         async function fbLiveActionNetwork() {
-            var out = { nfl: {}, ncaaf: {}, generatedAt: new Date().toISOString(), source: 'LIVE FEED' };
-            var leagues = ['nfl', 'ncaaf'];
+            var out = { nfl: {}, ncaaf: {}, nhl: {}, generatedAt: new Date().toISOString(), source: 'LIVE FEED' };
+            var leagues = ['nfl', 'ncaaf', 'nhl'];
             for (var li = 0; li < leagues.length; li++) {
                 var lg = leagues[li], cfg = FB_AN_WANT[lg];
-                var avail = await fetchJsonTimeout('https://api.actionnetwork.com/web/v1/leagues/' + cfg.id + '/futures/available', 10000);
+                var avail;
+                try { avail = await fetchJsonTimeout('https://api.actionnetwork.com/web/v1/leagues/' + cfg.id + '/futures/available', 10000); } catch (eA) { continue; }
                 var futs = avail.futures || [];
                 await Promise.all(cfg.want.map(async function(w) {
                     var m = futs.filter(function(f) { return w[1].test(f.name || ''); })[0];
@@ -1630,7 +1644,7 @@
                         var pid = (byBook[15] && byBook[15].length) ? 15 : Number(Object.keys(byBook)[0]);
                         var bookName = { 15: 'Consensus', 68: 'DraftKings', 69: 'FanDuel', 75: 'BetMGM', 123: 'Caesars' }[pid] || 'Sportsbook';
                         var rows = (byBook[pid] || []).filter(function(o) { return o.money != null && (o.option_type_id == null || o.option_type_id === 430); })
-                            .sort(function(a, b) { return a.money - b.money; }).slice(0, 12).map(function(o) {
+                            .sort(function(a, b) { return a.money - b.money; }).slice(0, 16).map(function(o) {
                                 var p = o.player_id ? players[o.player_id] : null;
                                 var t = teams[o.team_id] || (p && teams[p.team_id]) || null;
                                 var short = (!t || p || !t.display_name) ? null : ((t.full_name && t.full_name.slice(-t.display_name.length - 1) === ' ' + t.display_name) ? t.full_name.slice(0, -t.display_name.length - 1) : t.display_name);
@@ -1645,22 +1659,31 @@
         }
 
         async function fbLiveEspn(target, onlyMissing) {
-            var out = target || { nfl: {}, ncaaf: {}, generatedAt: new Date().toISOString(), source: 'ESPN BACKUP' };
+            var out = target || { nfl: {}, ncaaf: {}, nhl: {}, generatedAt: new Date().toISOString(), source: 'ESPN BACKUP' };
+            if (!out.nhl) out.nhl = {};
             var season = fbSeason();
-            var leagues = [['nfl', 'nfl'], ['ncaaf', 'college-football']];
+            // [key, ESPN league, sport, season candidates]; ESPN files the 2026-27 NHL season under 2026
+            var leagues = [['nfl', 'nfl', 'football', [season]], ['ncaaf', 'college-football', 'football', [season]], ['nhl', 'nhl', 'hockey', futuresSeasonCandidates('hockey')]];
             for (var li = 0; li < leagues.length; li++) {
                 var lg = leagues[li][0];
                 var want = FB_ESPN_WANT[lg].filter(function(w) { return !onlyMissing || !out[lg][w[0]]; });
                 if (!want.length) continue;
-                var d;
-                try { d = await fetchJsonTimeout('https://sports.core.api.espn.com/v2/sports/football/leagues/' + leagues[li][1] + '/seasons/' + season + '/futures?limit=100', 10000); } catch (e) { continue; }
-                var items = d.items || [];
+                var docs = [];
+                for (var si = 0; si < leagues[li][3].length; si++) {
+                    try { docs.push(await fetchJsonTimeout('https://sports.core.api.espn.com/v2/sports/' + leagues[li][2] + '/leagues/' + leagues[li][1] + '/seasons/' + leagues[li][3][si] + '/futures?limit=100', 10000)); } catch (e) {}
+                }
+                if (!docs.length) continue;
                 for (var wi = 0; wi < want.length; wi++) {
                     var w = want[wi];
-                    var item = items.filter(function(it) { return w[1].test(it.displayName || '') || w[1].test(it.name || ''); })[0];
+                    var item = null;
+                    docs.forEach(function(d) {
+                        var it = (d.items || []).filter(function(x) { return w[1].test(x.displayName || '') || w[1].test(x.name || ''); })[0];
+                        var nb = function(x) { return (((x.futures || [])[0] || {}).books || []).length; };
+                        if (it && (!item || nb(it) > nb(item))) item = it;
+                    });
                     if (!item) continue;
                     var books = (((item.futures || [])[0] || {}).books || []).filter(function(b) { return b && b.value != null; })
-                        .sort(function(a, b) { return parseAmerican(a.value) - parseAmerican(b.value); }).slice(0, 8);
+                        .sort(function(a, b) { return parseAmerican(a.value) - parseAmerican(b.value); }).slice(0, lg === 'nhl' ? 16 : 8);
                     var rows = await Promise.all(books.map(async function(b) {
                         try {
                             if (b.athlete && b.athlete.$ref) {
@@ -1686,27 +1709,27 @@
                 var f = await fetchJsonTimeout('futures.json?t=' + Math.floor(now / 1800000), 10000);
                 if (f && f.generatedAt && fbCountMarkets(f) >= 5) {
                     var age = now - Date.parse(f.generatedAt);
-                    var fileData = { nfl: f.nfl || {}, ncaaf: f.ncaaf || {}, generatedAt: f.generatedAt, source: 'DAILY FEED' };
+                    var fileData = { nfl: f.nfl || {}, ncaaf: f.ncaaf || {}, nhl: f.nhl || {}, generatedAt: f.generatedAt, source: 'DAILY FEED' };
                     if (age < 2.2 * 86400000) data = fileData; else staleFile = fileData;
                 }
             } catch (e) {}
             if (!data) {
                 try {
-                    var c = JSON.parse(localStorage.getItem('ahlersFootballFutures1') || 'null');
+                    var c = JSON.parse(localStorage.getItem('ahlersFootballFutures2') || 'null');
                     if (c && c.at && (now - c.at) < 3 * 3600000 && fbCountMarkets(c.data) >= 5) data = c.data;
                 } catch (e) {}
             }
             if (!data) {
                 try { var an = await fbLiveActionNetwork(); if (fbCountMarkets(an) >= 5) data = await fbLiveEspn(an, true); } catch (e) {}
                 if (!data) { try { var es = await fbLiveEspn(null, false); if (fbCountMarkets(es) >= 3) data = es; } catch (e) {} }
-                if (data) { try { localStorage.setItem('ahlersFootballFutures1', JSON.stringify({ at: now, data: data })); } catch (e) {} }
+                if (data) { try { localStorage.setItem('ahlersFootballFutures2', JSON.stringify({ at: now, data: data })); } catch (e) {} }
             }
             if (!data && staleFile) { data = staleFile; data.source = 'LAST SAVED FEED'; }
             footballFuturesMem = { data: data, checkedAt: now, live: !!(data && data.source !== 'DAILY FEED') };
             return footballFuturesMem;
         }
 
-        function renderFutCard(title, mk, n, useShort) {
+        function renderFutCard(title, mk, n, useShort, wide) {
             var rows = (mk.rows || []).slice(0, n);
             var maxImp = 0;
             rows.forEach(function(r) { var v = r.implied != null ? Number(r.implied) : fbImplied(parseAmerican(r.odds)); r._imp = v; if (v > maxImp) maxImp = v; });
@@ -1721,7 +1744,8 @@
                     '<div class="fut-name">' + escHtml((useShort && !isPlayer && r.short) ? r.short : r.name) + (isPlayer && r.team ? '<span class="fut-team neon-text-cycle">' + escHtml(r.team) + '</span>' : '') + '</div>' +
                     '<span class="fut-odds neon-text-cycle">' + escHtml(r.odds) + '</span><div class="fut-bar" style="width:' + w + '%"></div></div>';
             }).join('');
-            return '<div class="division-block glass-card fut-card"><div class="division-header neon-text-cycle"><span>' + escHtml(title) + '</span><span class="fut-book">' + escHtml(String(mk.primaryBook || '').toUpperCase()) + '</span></div>' + body + '</div>';
+            var rowsStyle = wide ? ' style="grid-template-rows: repeat(' + Math.ceil(rows.length / 2) + ', auto);"' : '';
+            return '<div class="division-block glass-card fut-card' + (wide ? ' fut-wide' : '') + '"><div class="division-header neon-text-cycle"><span>' + escHtml(title) + '</span><span class="fut-book">' + escHtml(String(mk.primaryBook || '').toUpperCase()) + '</span></div><div class="fut-rows"' + rowsStyle + '>' + body + '</div></div>';
         }
 
         async function showFootballFutures(key, gen) {
@@ -1735,7 +1759,7 @@
                 screen.style.display = 'flex';
                 var lg = (res.data && res.data[cfg.league]) || {};
                 var cards = [];
-                cfg.markets.forEach(function(m) { var mk = lg[m[0]]; if (mk && mk.rows && mk.rows.length) cards.push(renderFutCard(m[1], mk, m[2], cfg.league === 'ncaaf')); });
+                cfg.markets.forEach(function(m) { var mk = lg[m[0]]; if (mk && mk.rows && mk.rows.length) cards.push(renderFutCard(m[1], mk, m[2], cfg.league === 'ncaaf', m[3] === 'wide')); });
                 if (!cards.length) {
                     meta.innerText = '';
                     track.innerHTML = '<div class="neon-text-cycle" style="font-size:4vh; font-weight:900; text-align:center; padding-top:8vh; grid-column: 1 / -1;">NO ODDS POSTED</div>';
@@ -1973,7 +1997,7 @@
                           idleTimer: null, settingsTimer: null, pauseTimer: null, hudTimer: null, historyArmed: false };
         var NAV_TITLES = { live: 'LIVE ACTION', props: 'LIVE LEADERS', mySquad: 'MY SQUAD', trivia: 'TRIVIA', leaders: 'TOP PERFORMERS', pga: 'PGA TOUR',
             ufc: 'UFC', command: 'COMMAND CENTER', soccerSlide: 'SOCCER', tvGuide: 'TV GUIDE', news: 'HEADLINES', odds: "TODAY'S LINES", futures: 'FUTURES',
-            nflFutures: 'NFL FUTURES', nflAwards: 'NFL AWARDS', cfbFutures: 'CFB FUTURES', rankings: 'CFB RANKINGS', nfl: 'NFL STANDINGS', nba: 'NBA STANDINGS',
+            nflFutures: 'NFL FUTURES', nflAwards: 'NFL AWARDS', cfbFutures: 'CFB FUTURES', nhlFutures: 'NHL FUTURES', rankings: 'CFB RANKINGS', nfl: 'NFL STANDINGS', nba: 'NBA STANDINGS',
             nhl: 'NHL STANDINGS', mlb: 'MLB STANDINGS' };
 
         function navKeyOf(e) {

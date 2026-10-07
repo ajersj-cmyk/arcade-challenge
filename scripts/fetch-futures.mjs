@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Builds futures.json (NFL + college football futures & awards odds) for the scoreboard's futures slides.
+// Builds futures.json (NFL + college football futures & awards odds, NHL Stanley Cup) for the scoreboard's futures slides.
 // Run daily by .github/workflows/futures.yml; GitHub Pages then serves futures.json same-origin next to index.html.
 //
 // Sources (free, no key):
@@ -8,11 +8,12 @@
 // Safety: if fewer than MIN_MARKETS markets come back, the existing futures.json is kept untouched.
 //
 // Usage: node scripts/fetch-futures.mjs [outFile=futures.json]     (Node 18+)
+//        FUTURES_SKIP_AN=1 node scripts/fetch-futures.mjs /tmp/x.json   (test the ESPN-only fallback)
 import { writeFile, readFile } from 'node:fs/promises';
 
 const OUT = process.argv[2] || 'futures.json';
 const MIN_MARKETS = 5;
-const TOP_N = 12;
+const TOP_N = 16;
 // Action Network's CDN rejects non-browser user agents
 const UA = 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36';
 const AN_BOOKS = { 15: 'Consensus', 68: 'DraftKings', 69: 'FanDuel', 75: 'BetMGM', 123: 'Caesars' };
@@ -55,9 +56,11 @@ const AN_WANT = {
     ['sun_belt', /sun belt conference - to win/i], ['mac', /mid-american conference - to win/i], ['cusa', /conference usa conference - to win/i],
     ['pac12', /pac-12 conference - to win/i],
   ]},
+  nhl: { id: 3, want: [ ['stanley_cup', /stanley cup - to win/i] ] },   // AN league 3 = NHL (verified 2026-10-07)
 };
 
 async function actionNetwork(leagueKey) {
+  if (process.env.FUTURES_SKIP_AN) throw new Error('skipped (FUTURES_SKIP_AN set, testing ESPN fallback)');
   const { id, want } = AN_WANT[leagueKey];
   const avail = await getJSON(`https://api.actionnetwork.com/web/v1/leagues/${id}/futures/available`);
   const out = {};
@@ -96,6 +99,7 @@ const ESPN_WANT = {
         ['nfc_east', /^nfc east division/i], ['nfc_north', /^nfc north division/i], ['nfc_south', /^nfc south division/i], ['nfc_west', /^nfc west division/i],
         ['mvp', /regular season mvp/i], ['opoy', /^offensive player of the year/i], ['dpoy', /^defensive player of the year/i],
         ['oroy', /offensive rookie of the year/i], ['droy', /defensive rookie of the year/i], ['cpoy', /comeback player/i], ['coy', /coach of the year/i]],
+  nhl: [['stanley_cup', /stanley cup winner/i]],
   'college-football': [['cfb_title', /^national championship winner/i], ['make_cfp_final', /to reach the championship game/i], ['heisman', /heisman/i],
         ['sec', /southeastern conference/i], ['big_ten', /big ten conference/i], ['big_12', /big 12 conference/i], ['acc', /atlantic coast conference/i],
         ['american', /american athletic/i], ['mwc', /mountain west/i], ['sun_belt', /sun belt/i], ['mac', /mid-american/i], ['cusa', /conference usa/i]],
@@ -106,12 +110,22 @@ async function ref(u) {
   if (!refCache.has(u)) refCache.set(u, getJSON(u).catch(() => null));
   return refCache.get(u);
 }
-async function espn(league, season, onlyKeys) {
-  const d = await getJSON(`https://sports.core.api.espn.com/v2/sports/football/leagues/${league}/seasons/${season}/futures?limit=100`);
+// ESPN files seasons differently per sport (2026-27 NHL Stanley Cup is under 2026, NBA 2026-27 under 2027),
+// so try each candidate season and use the fullest market.
+async function espn(sport, league, seasons, onlyKeys) {
+  const docs = [];
+  for (const season of seasons) {
+    try { docs.push(await getJSON(`https://sports.core.api.espn.com/v2/sports/${sport}/leagues/${league}/seasons/${season}/futures?limit=100`)); } catch (e) {}
+  }
+  if (!docs.length) throw new Error(`no ESPN futures for ${league} ${seasons.join('/')}`);
   const out = {};
   for (const [key, re] of ESPN_WANT[league]) {
     if (onlyKeys && !onlyKeys.has(key)) continue;
-    const item = (d.items || []).find(i => re.test(i.displayName || '') || re.test(i.name || ''));
+    let item = null;
+    for (const d of docs) {
+      const it = (d.items || []).find(i => re.test(i.displayName || '') || re.test(i.name || ''));
+      if (it && (!item || (it.futures?.[0]?.books || []).length > (item.futures?.[0]?.books || []).length)) item = it;
+    }
     if (!item) continue;
     const books = (item.futures?.[0]?.books || []).map(b => ({ ...b, n: toNum(b.value) }))
       .filter(b => b.n != null && !isNaN(b.n)).sort((a, b) => a.n - b.n).slice(0, TOP_N);
@@ -135,19 +149,22 @@ async function espn(league, season, onlyKeys) {
 async function main() {
   const now = new Date();
   const season = now.getMonth() >= 2 ? now.getFullYear() : now.getFullYear() - 1; // football season year (ESPN files Sep-Feb under the start year)
-  const result = { generatedAt: now.toISOString(), season, nfl: {}, ncaaf: {}, errors: [] };
+  const y = now.getFullYear();
+  const nhlSeasons = now.getMonth() >= 6 ? [y, y + 1] : [y - 1, y];   // ESPN: 2026-27 NHL season = 2026
+  const result = { generatedAt: now.toISOString(), season, nfl: {}, ncaaf: {}, nhl: {}, errors: [] };
   const got = {};
-  for (const lg of ['nfl', 'ncaaf']) {
+  const ESPN_MAP = { nfl: ['football', 'nfl', [season]], ncaaf: ['football', 'college-football', [season]], nhl: ['hockey', 'nhl', nhlSeasons] };
+  for (const lg of ['nfl', 'ncaaf', 'nhl']) {
     try { got[lg] = await actionNetwork(lg); } catch (e) { result.errors.push(`actionnetwork ${lg}: ${e.message}`); got[lg] = {}; }
-    const espnLeague = lg === 'nfl' ? 'nfl' : 'college-football';
+    const [sport, espnLeague, seasons] = ESPN_MAP[lg];
     const missing = new Set(ESPN_WANT[espnLeague].map(w => w[0]).filter(k => !got[lg][k]));
     let e = {};
     if (missing.size) {
-      try { e = await espn(espnLeague, season, missing); } catch (err) { result.errors.push(`espn ${lg}: ${err.message}`); }
+      try { e = await espn(sport, espnLeague, seasons, missing); } catch (err) { result.errors.push(`espn ${lg}: ${err.message}`); }
     }
     for (const k of new Set([...Object.keys(got[lg]), ...Object.keys(e)])) result[lg][k] = got[lg][k] || e[k];
   }
-  const nMarkets = Object.keys(result.nfl).length + Object.keys(result.ncaaf).length;
+  const nMarkets = Object.keys(result.nfl).length + Object.keys(result.ncaaf).length + Object.keys(result.nhl).length;
   if (nMarkets < MIN_MARKETS) {
     let haveOld = false;
     try { haveOld = !!JSON.parse(await readFile(OUT, 'utf8')).generatedAt; } catch (e) {}
@@ -155,6 +172,6 @@ async function main() {
     process.exit(haveOld ? 0 : 1);
   }
   await writeFile(OUT, JSON.stringify(result) + '\n');
-  console.log(`wrote ${OUT}: ${nMarkets} markets (nfl ${Object.keys(result.nfl).length}, ncaaf ${Object.keys(result.ncaaf).length}); errors: ${result.errors.length}`);
+  console.log(`wrote ${OUT}: ${nMarkets} markets (nfl ${Object.keys(result.nfl).length}, ncaaf ${Object.keys(result.ncaaf).length}, nhl ${Object.keys(result.nhl).length}); errors: ${result.errors.length}`);
 }
 main().catch(e => { console.error(e); process.exit(1); });

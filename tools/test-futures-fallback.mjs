@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Checks the football futures slides' data fallbacks in headless Chrome:
+// Checks the football + NHL futures slides' data fallbacks in headless Chrome:
 //   1) futures.json missing  -> Action Network live (+ ESPN fill for markets AN lacks)
 //   2) futures.json missing and Action Network blocked -> ESPN core API
 //   3) futures.json stale (> 2 days) and both live sources blocked -> last saved file
@@ -56,13 +56,14 @@ for (const sc of scenarios) {
   await page.evaluate(() => { clearTimeout(slideTimer); navForceSlide(ARCADE_SCREENS.indexOf('cfbFutures')); arcadeNav.paused = true; }); // hold the slide while we inspect it
   await page.waitForNetworkIdle({ idleTime: 1500, timeout: 45000 }).catch(() => {});
   await sleep(1500);
-  const r = await page.evaluate(() => ({ meta: document.getElementById('cfbfut-meta').innerText, cards: document.querySelectorAll('#cfbfut-track .fut-card').length, src: footballFuturesMem && footballFuturesMem.data && footballFuturesMem.data.source }));
+  const r = await page.evaluate(() => ({ meta: document.getElementById('cfbfut-meta').innerText, cards: document.querySelectorAll('#cfbfut-track .fut-card').length, src: footballFuturesMem && footballFuturesMem.data && footballFuturesMem.data.source,
+    nhlRows: (((footballFuturesMem && footballFuturesMem.data && footballFuturesMem.data.nhl) || {}).stanley_cup || { rows: [] }).rows.length }));
   const shot = path.join(OUT, sc.name.replace(/[^a-z0-9]+/gi, '_') + '.png');
   await page.screenshot({ path: shot });
-  const ok = r.cards >= 3 && r.src === sc.expectSource && (!sc.expectHost || hosts.has(sc.expectHost));
+  const ok = r.cards >= 3 && r.nhlRows >= 8 && r.src === sc.expectSource && (!sc.expectHost || hosts.has(sc.expectHost));
   const realErrors = errors.filter(t => !/ERR_BLOCKED_BY_CLIENT|Failed to load resource/.test(t));
   if (!ok || realErrors.length) fails++;
-  console.log(`${ok && !realErrors.length ? 'PASS' : 'FAIL'}  ${sc.name}: source=${r.src} cards=${r.cards} meta="${r.meta}" ${realErrors.length ? 'errors=' + realErrors.join(' | ') : ''}\n      ${path.relative(REPO, shot)}`);
+  console.log(`${ok && !realErrors.length ? 'PASS' : 'FAIL'}  ${sc.name}: source=${r.src} cards=${r.cards} stanleyCupRows=${r.nhlRows} meta="${r.meta}" ${realErrors.length ? 'errors=' + realErrors.join(' | ') : ''}\n      ${path.relative(REPO, shot)}`);
   await ctx.close();
 }
 await browser.close(); srv.close();
