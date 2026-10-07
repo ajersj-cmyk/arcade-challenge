@@ -1,0 +1,32 @@
+name: Refresh futures odds
+# Once a day: fetch NFL + college football futures/awards odds and commit futures.json beside index.html.
+# GitHub Pages serves it same-origin for the scoreboard's futures slides. If fewer than 5 markets come back,
+# scripts/fetch-futures.mjs keeps the last good file and nothing is committed.
+on:
+  schedule:
+    - cron: '17 10 * * *'   # 10:17 UTC daily (~6:17 AM Eastern). GitHub may delay scheduled runs.
+  workflow_dispatch: {}
+permissions:
+  contents: write
+concurrency:
+  group: futures
+  cancel-in-progress: true
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Build futures.json
+        run: node scripts/fetch-futures.mjs futures.json
+      - name: Commit if changed
+        run: |
+          git config user.name  "futures-bot"
+          git config user.email "futures-bot@users.noreply.github.com"
+          git add futures.json
+          if git diff --cached --quiet; then echo "No change"; exit 0; fi
+          git commit -m "chore: refresh futures odds [skip ci]"
+          git push

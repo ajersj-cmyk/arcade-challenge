@@ -56,6 +56,15 @@ What it does:
    (PGA, UFC, soccer, news, futures, rankings, standings) run too. It saves one screenshot per slide.
 6. Writes `*-report.md` / `*-report.json` and exits **0 = pass, 1 = fail, 2 = harness error**.
 
+7. **Remote-nav checks** run when the page has `window.arcadeNav`. The harness presses real keys (→ ← Enter, arrows in the
+   menu, Space, Escape, ↑ to the gear, Enter, arrows in settings), clicks the gear with the mouse, and types in a settings
+   field. It screenshots the HUD, the menu, menu focus, the jump-to-slide result, the paused badge, gear focus and settings focus.
+8. **Football futures checks** run when the page has the NFL/CFB futures slides. Each slide must render real markets, and
+   the FUTURES slide must include CFB TITLE + NBA TITLE.
+
+`node tools/test-futures-fallback.mjs [preview.html]` tests the futures data fallbacks with request interception:
+no `futures.json` → Action Network live; no file + Action Network blocked → ESPN; stale file + both blocked → last saved file.
+
 Output goes to `tools/out/<timestamp>-<name>/` (gitignored). Compare mode writes `before-*`, `after-*`,
 `compare-1920x1080.png`, `compare-1280x720.png` and `compare.html` (every slide side by side).
 
@@ -85,7 +94,8 @@ It's a single self-contained HTML page (inline CSS + JS, no build step) made for
 ### Slide rotation order (`nextSlide()`)
 
 `live → props → mySquad → trivia → leaders → pga → ufc → command → soccerSlide → tvGuide → news → odds → futures →
-rankings → nfl → nba → nhl → mlb` → (loop). `live` and `props` always show. The rest can be switched off in settings.
+nflFutures → nflAwards → cfbFutures → rankings → nfl → nba → nhl → mlb` → (loop). The order lives in the global
+`ARCADE_SCREENS` array. `live` and `props` always show. The rest can be switched off in settings.
 
 | Slide (DOM id) | Title | Data | Timing |
 |---|---|---|---|
@@ -101,7 +111,10 @@ rankings → nfl → nba → nhl → mlb` → (loop). `live` and `props` always 
 | `tvguide-screen` | LIVE ON TV | live games with a broadcast; network favicons via Google s2 | scroll rule / 6 s |
 | `news-screen` | TODAY'S HEADLINES | Yahoo + CBS RSS via rss2json, newest 10 | scroll rule / 6 s |
 | `odds-screen` | TODAY'S LINES | upcoming games with ESPN spread/O-U/ML | scroll rule / 6 s |
-| `futures-screen` | FUTURES | ESPN core futures: Super Bowl, CFB title, NBA title, World Series, Stanley Cup (top 8 each), cached 24 h | scroll rule (18 s) / 8 s |
+| `futures-screen` | FUTURES | ESPN core futures: Super Bowl, CFB title, NBA title, World Series, Stanley Cup (top 8 each), cached 24 h (`ahlersFutures4`) | scroll rule (18 s) / 8 s |
+| `nflfut-screen` | NFL FUTURES | Super Bowl (8), AFC/NFC champion (6), 8 divisions (4), from `futures.json` (§4a) | scroll rule / 6 s "NO ODDS POSTED" |
+| `nflawards-screen` | NFL AWARDS ODDS | MVP, OPOY, DPOY, OROY, DROY, Comeback, Coach of the Year (6 each), with headshots | scroll rule / 6 s |
+| `cfbfut-screen` | COLLEGE FOOTBALL FUTURES | National title, make CFP title game, Heisman (8); SEC/Big Ten/Big 12/ACC (5); AAC, MWC, Sun Belt, MAC, C-USA, Pac-12 (4) | scroll rule / 6 s |
 | `rankings-screen` | COLLEGE RANKINGS | ESPN CFB rankings top 25 + records (CFB standings, cached 24 h) | scroll rule / 5 s on error |
 | `nfl/nba/nhl/mlb-screen` | XXX STANDINGS | ESPN standings grouped by division (NBA by conference) | scroll rule / 6 s |
 
@@ -137,8 +150,11 @@ None of them need an API key, and **no keys or tokens are embedded**. The code a
 | ESPN standings | `https://site.api.espn.com/apis/v2/sports/{football/nfl, basketball/nba, hockey/nhl, baseball/mlb}/standings` | each time the slide shows | standings slides |
 | ESPN CFB standings | `https://site.api.espn.com/apis/v2/sports/football/college-football/standings` | rankings slide, cached 24 h (`ahlersCfbRecords`) | ranking records |
 | ESPN CFB rankings | `https://site.api.espn.com/apis/site/v2/sports/football/college-football/rankings` | each time the rankings slide shows | rankings |
-| ESPN teams | `https://site.api.espn.com/apis/site/v2/sports/{sport}/{league}/teams?limit=400` | futures build | **always fails CORS** (see §7) |
-| ESPN core futures | `https://sports.core.api.espn.com/v2/sports/{sport}/leagues/{league}/seasons/{year}/futures?limit=50` (falls back to year−1 when nothing matches) | futures slide, cached 24 h (`ahlersFutures3`) | futures |
+| ~~ESPN teams~~ | `https://site.api.espn.com/apis/site/v2/sports/{sport}/{league}/teams?limit=400`. **No longer called**: it always failed CORS (§7 #1) | n/a | n/a |
+| ESPN core futures | `https://sports.core.api.espn.com/v2/sports/{sport}/leagues/{league}/seasons/{year}/futures?limit=50`. Tries the likely season years per sport and keeps the fullest market. Matches on `displayName` + `name`. | futures slide, cached 24 h (`ahlersFutures4`) | futures |
+| ESPN core $ref | `https://sports.core.api.espn.com/v2/sports/.../teams/{id}` (and `/athletes/{id}` for the ESPN fallback) | resolves team names missing from the built-in maps (e.g. CFB) | futures slides |
+| futures.json (same origin) | `futures.json?t=<30-min bucket>`, written daily by `.github/workflows/futures.yml` | each football futures slide, re-checked every 30 min | NFL/CFB futures + awards (§4a) |
+| Action Network | `https://api.actionnetwork.com/web/v1/leagues/{1=NFL,2=NCAAF}/futures/available` and `.../futures/{type}?bookIds=15,68,69,75,123`. CORS echoes the page origin, no key. | **browser fallback only** (file missing or > ~2 days old), cached 3 h (`ahlersFootballFutures1`) | NFL/CFB futures |
 | Open-Meteo | `https://api.open-meteo.com/v1/forecast?latitude=35.6127&longitude=-77.3663&current=temperature_2m,weather_code&daily=temperature_2m_max,temperature_2m_min&temperature_unit=fahrenheit&timezone=America/New_York` | on load, then every **15 min** (only if Command Center is on) | Command Center weather |
 | Open Trivia DB | `https://opentdb.com/api.php?amount=1&category=21&type=multiple` | on load and after each trivia slide | trivia (rate limit 1 req / 5 s / IP) |
 | rss2json | `https://api.rss2json.com/v1/api.json?rss_url=` + Yahoo Sports RSS / CBS Sports headlines RSS | each time the news slide shows | headlines (free tier, rate-limited) |
@@ -148,7 +164,19 @@ None of them need an API key, and **no keys or tokens are embedded**. The code a
 | Tailwind Play CDN | `https://cdn.tailwindcss.com` | on load | **No Tailwind utility classes are used.** Only its Preflight CSS reset affects the look. It logs a production warning and watches the DOM at runtime. |
 | Google Fonts | Inter 300/400/700/900 + Share Tech Mono | on load | fonts |
 
-Local assets: `index.html` references **no** local files. `background.mp4` (1.3 MB) and `header.PNG` (710 KB) exist
+### 4a. Football futures data pipeline
+1. **Daily GitHub Action** (`.github/workflows/futures.yml`, 10:17 UTC ≈ 6:17 AM ET, also runnable by hand) runs
+   `node scripts/fetch-futures.mjs futures.json`. It pulls Action Network (consensus line + DK/FD/MGM/Caesars) and fills
+   missing markets from ESPN core (DraftKings; e.g. NFL Coach of the Year). It commits `futures.json` to `main` only if
+   the file changed. **If fewer than 5 markets come back, the last good file is kept.** Scheduled runs only start after
+   this workflow is on `main`.
+2. **In the browser** (`loadFootballFutures()`): `futures.json` if it's < ~2.2 days old → else localStorage cache of a
+   live pull (< 3 h) → else Action Network live (+ ESPN fill) → else ESPN core only → else the stale file ("LAST SAVED FEED").
+   Each slide's subtitle shows the source and update time.
+3. File shape: `{ generatedAt, season, nfl: { super_bowl, afc_champ, …, coy }, ncaaf: { cfb_title, heisman, … },
+   errors }`. Each market is `{ title, source, primaryBook, rows: [{ name, short, team, logo, teamLogo, player, odds, implied, books }] }`.
+
+Local assets: `index.html` references **no** local files apart from `futures.json`. `background.mp4` (1.3 MB) and `header.PNG` (710 KB) exist
 but aren't used: there's no `<video>` element, and the background is pure CSS.
 
 ---
@@ -176,9 +204,32 @@ but aren't used: there's no `<video>` element, and the background is pure CSS.
 - **No arrow-key / D-pad navigation, no Back/Escape handling, no slide skip from the keyboard, no focus trap.** Opening the
   modal doesn't move focus into it. Escape doesn't close it. Android TV Back falls through to the browser
   (history back or exit).
-- **Bug (verified in headless Chrome):** a mouse click or tap on the gear does nothing, because both the inline
+- **Bug (verified in headless Chrome, fixed in PR #2):** a mouse click or tap on the gear did nothing, because both the inline
   `onclick="toggleSettings()"` and an `addEventListener('click')` call `toggleSettings()`, so it opens and closes at once.
   Keyboard Enter on the focused gear works, because the keydown handler toggles and `preventDefault` stops the click.
+
+### D-pad / remote navigation (added in PR #2, `arcadeNav` in index.html)
+Nothing changes on screen until a remote key is pressed. Everything auto-hides after **10 s** of no input. Settings
+auto-close after **90 s**. Pause auto-resumes after **10 min**.
+
+| Key (TV remote / keyboard) | Kiosk view | Navigator menu | Settings modal |
+|---|---|---|---|
+| ◀ / ▶ (37/39; raw Android 21/22) | previous / next slide + HUD pill | move focus | move focus |
+| ▲ (38; raw 19) | focus the settings gear | move focus | move focus |
+| ▼ (40; raw 20) | open navigator menu | move focus | move focus |
+| OK / Enter (13; raw 23 DPAD_CENTER, 66) | open navigator menu (on the gear: open settings, as before) | activate item | toggle checkbox / press button |
+| Back / Esc / Backspace (27, 8, BrowserBack; raw 4) | hide HUD / un-focus gear | close menu | close settings |
+| Play-Pause / Space / P (179; raw 85) | pause / resume rotation (⏸ PAUSED badge) | pause / resume | native |
+| M | open navigator menu | close menu | n/a |
+| s, ContextMenu/Menu, Settings (existing hotkeys) | toggle settings (unchanged) | toggle settings | toggle settings |
+
+- Raw Android KeyEvent codes only match when the browser gives no `e.key`, so a real keyboard's B/U/CapsLock never trigger anything.
+- The menu lists every enabled slide (current one highlighted), plus PAUSE/RESUME, SETTINGS and CLOSE. Mouse clicks work too.
+- Text fields keep their arrow/backspace keys. Typing "s" in a settings field no longer closes the modal.
+- After the first remote key press, one history entry is pushed so the Android TV Back button closes overlays instead of leaving the page.
+- *App shell?* Stay in the browser for now. A **TWA** needs Chrome on the TV (rare on Android TV). A **thin WebView
+  wrapper** is only worth it if the TV browser swallows Back/Menu, sleeps the screen, or can't auto-launch on boot. The
+  JS already accepts raw Android key codes for that case.
 
 ---
 
@@ -203,6 +254,9 @@ but aren't used: there's no `<video>` element, and the background is pure CSS.
 - [ ] `#remote` mode shows the NEXT SLIDE controller and hides the TV view
 - [ ] localStorage migrations (old `mySquadTeams` values, removal of `oddsApiKey` / `ahlersPropsCache`)
 - [ ] No API keys or secrets added; every new API is free, no-key and CORS-enabled
+- [ ] NFL FUTURES / NFL AWARDS / CFB FUTURES slides populate (from futures.json, or the live fallbacks) and can be toggled in settings
+- [ ] Idle kiosk shows **no** nav UI; ◀/▶, OK menu, Back, Play/Pause and auto-hide all work (harness remote checks)
+- [ ] Mouse click on the gear opens settings; SAVE & CLOSE closes it
 
 ---
 
@@ -210,12 +264,12 @@ but aren't used: there's no `<video>` element, and the background is pure CSS.
 
 | # | Issue | Effect |
 |---|---|---|
-| 1 | **ESPN `/teams?limit=400` sends no `Access-Control-Allow-Origin`** (200 to curl, but browsers block it) | 5 console CORS errors per futures build (once / 24 h on the TV). `loadTeamMap()` falls back to the hard-coded NFL/NBA/MLB/NHL maps. **CFB has no fallback, so "CFB TITLE" never renders.** |
-| 2 | Futures market matching uses `name` and `new Date().getFullYear()` | NBA title also missing (on 2026-10-07 only SUPER BOWL, WORLD SERIES, STANLEY CUP rendered). ESPN files upcoming NBA/NHL seasons under next year. |
+| 1 | ✅ *Fixed in PR #2 (no longer called; names come from ESPN core $refs).* **ESPN `/teams?limit=400` sends no `Access-Control-Allow-Origin`** (200 to curl, but browsers block it) | 5 console CORS errors per futures build (once / 24 h on the TV). `loadTeamMap()` falls back to the hard-coded NFL/NBA/MLB/NHL maps. **CFB has no fallback, so "CFB TITLE" never renders.** |
+| 2 | ✅ *Fixed in PR #2.* Futures market matching used `name` and `new Date().getFullYear()` | NBA title also missing (on 2026-10-07 only SUPER BOWL, WORLD SERIES, STANLEY CUP rendered). ESPN files upcoming NBA/NHL seasons under next year. |
 | 3 | **Rotation skips a slide around trivia.** `showTrivia()` increments `rotationStep` itself, then `nextSlide()` increments again | After a normal trivia slide, **leaders** is skipped. When trivia isn't loaded yet, leaders shows but **PGA** is skipped. (The harness saw PGA skipped when OpenTDB returned 429.) |
 | 4 | **The 800 ms fallback timer in `nextSlide()` never fires.** It checks `if (!slideTimer)`, but `slideTimer` still holds a stale id | If an async slide's `fetch` hangs (no timeouts anywhere), rotation freezes on that slide. The initial `await updateSportsTicker()` has the same risk at startup. |
-| 5 | Gear click/tap double-toggles (§5) | The gear only works from the keyboard/remote |
-| 6 | No Back/Escape/arrow handling (§5) | Hard to drive with a D-pad |
+| 5 | ✅ *Fixed in PR #2.* Gear click/tap double-toggles (§5) | The gear only works from the keyboard/remote |
+| 6 | ✅ *Fixed in PR #2 (D-pad navigation).* No Back/Escape/arrow handling (§5) | Hard to drive with a D-pad |
 | 7 | `BroadcastChannel` phone remote is same-device only | The QR "remote" doesn't reach the TV |
 | 8 | Weather code mapping is coarse | fog (45/48) shows CLEAR; showers 80-82 and thunder 95+ show "SNOW/STORM" |
 | 9 | Settings toggles `cfb75` and `clb50` aren't read anywhere | no effect |
@@ -224,6 +278,7 @@ but aren't used: there's no `<video>` element, and the background is pure CSS.
 | 12 | Tailwind Play CDN loaded but unused (§4) | console warning + runtime CPU on the TV |
 | 13 | `settings = defaultSettings` aliases the defaults object when nothing is saved | harmless today |
 | 14 | No favicon, so the browser's automatic `/favicon.ico` request 404s | cosmetic |
+| 15 | ✅ *Fixed in PR #2.* Typing `s`, `r` or `]` in a settings text field toggled the modal closed | couldn't type team names containing those letters |
 
 ### Baseline test results (current `index.html`, 2026-10-07 ~6:55 PM ET)
 - **PASS** with known issues: 0 new console errors, 0 page errors, 1 warning (Tailwind CDN production warning).
@@ -241,7 +296,7 @@ but aren't used: there's no `<video>` element, and the background is pure CSS.
 
 Small, incremental steps. Each one keeps every §6 item working and goes through preview → test → PR.
 
-1. **D-pad remote navigation (Android TV).** Visible focus ring. ←/→ = previous/next slide. OK/Enter (or Menu) opens an
+1. ✅ **(PR #2) D-pad remote navigation (Android TV).** Visible focus ring. ←/→ = previous/next slide. OK/Enter (or Menu) opens an
    on-screen menu to jump to a section and pause/resume rotation. Back/Escape closes the menu or modal. The menu auto-hides
    after inactivity, so the idle kiosk looks the same as now. Also fixes issues 5 and 6.
    *App shell?* Start in the browser, because it works in any wrapper. A **TWA** needs Chrome installed on the TV, which
@@ -249,7 +304,7 @@ Small, incremental steps. Each one keeps every §6 item working and goes through
    steals Back/Menu keys, sleeps the screen, or can't auto-start on boot. The wrapper would give guaranteed key delivery,
    keep-screen-on, boot launch and true fullscreen. (There's an old `android-tv/` folder + workflow in the repo. It's
    deliberately untouched and wasn't analysed.)
-2. **NFL + college football futures/awards odds slides.** Super Bowl, conferences, divisions, MVP/OPOY/DPOY/OROY/DROY/
+2. ✅ **(PR #2) NFL + college football futures/awards odds slides.** Super Bowl, conferences, divisions, MVP/OPOY/DPOY/OROY/DROY/
    Comeback/Coach of the Year; NCAAF title, Heisman, CFP, conferences. Data source comes from the separate research
    thread. This step also fixes issues 1 and 2 for the existing futures slide.
 3. **Resilience.** `fetch` timeouts (AbortController ~8 s), a working rotation watchdog (issue 4), `res.ok` checks,

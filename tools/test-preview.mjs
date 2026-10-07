@@ -69,6 +69,12 @@ const API_RULES = [
     label: m => `ESPN standings ${m[1]}/${m[2]}`, validate: j => (j && (j.children || j.standings)) ? null : 'no children/standings' },
   { id: 'espn-futures', kind: 'api', re: /^https:\/\/sports\.core\.api\.espn\.com\/v2\/sports\/([^/]+)\/leagues\/([^/]+)\/seasons\/(\d+)\/futures/,
     label: m => `ESPN core futures ${m[2]} ${m[3]}`, validate: j => Array.isArray(j && j.items) ? null : 'no items[]' },
+  { id: 'espn-core-ref', kind: 'api', re: /^https:\/\/sports\.core\.api\.espn\.com\/v2\/sports\/[^/]+\/leagues\/[^/]+\/(seasons\/\d+\/)?(teams|athletes)\/\d+/,
+    label: () => 'ESPN core team/athlete $ref', validate: j => (j && (j.displayName || j.shortDisplayName)) ? null : 'no displayName' },
+  { id: 'futures-json', kind: 'api', re: /^http:\/\/127\.0\.0\.1:\d+\/futures\.json/,
+    label: () => 'futures.json (daily file)', validate: j => (j && j.generatedAt && j.nfl && j.ncaaf) ? null : 'missing generatedAt/nfl/ncaaf' },
+  { id: 'actionnetwork', kind: 'api', re: /^https:\/\/api\.actionnetwork\.com\/web\/v1\/leagues\/(\d+)\/futures\/([^?]+)/,
+    label: m => `Action Network futures league ${m[1]} ${m[2] === 'available' ? 'index' : 'market'}`, validate: j => (j && (j.futures || j.books)) ? null : 'no futures/books' },
   { id: 'open-meteo', kind: 'api', re: /^https:\/\/api\.open-meteo\.com\/v1\/forecast/,
     label: () => 'Open-Meteo weather (Greenville NC)', validate: j => (j && j.current && j.current.temperature_2m != null) ? null : 'no current.temperature_2m' },
   { id: 'opentdb', kind: 'api', re: /^https:\/\/opentdb\.com\/api\.php/,
@@ -267,18 +273,110 @@ async function runOne(opts, file, outDir, label) {
         await sleep(400);
         await page.waitForNetworkIdle({ idleTime: 1000, timeout: opts.slideTimeout }).catch(() => {});
         await sleep(opts.dwell);
-        const vis = await page.evaluate(() => [...document.querySelectorAll('.slide-screen')].filter(e => getComputedStyle(e).display !== 'none').map(e => ({ id: e.id, text: (e.innerText || '').replace(/\s+/g, ' ').slice(0, 400) })));
+        const vis = await page.evaluate(() => [...document.querySelectorAll('.slide-screen')].filter(e => getComputedStyle(e).display !== 'none').map(e => ({ id: e.id, text: (e.innerText || '').replace(/\s+/g, ' ').slice(0, 400), cards: e.querySelectorAll('.fut-card').length, rows: e.querySelectorAll('.fut-row').length })));
         const id = vis.map(v => v.id).join('+') || '(none)';
         const n = String(i + 1).padStart(2, '0');
         const p = path.join(slidesDir, `${n}-${id}.png`);
         await page.screenshot({ path: p });
-        result.slides.push({ n: i + 1, id, text: vis.map(v => v.text).join(' | '), screenshot: p });
+        result.slides.push({ n: i + 1, id, text: vis.map(v => v.text).join(' | '), cards: vis.reduce((a, v) => a + v.cards, 0), rows: vis.reduce((a, v) => a + v.rows, 0), screenshot: p });
         seen.add(id);
         if (allSlides.every(x => seen.has(x))) break;
       }
       result.slidesNotSeen = allSlides.filter(x => !seen.has(x));
-      result.futuresSections = await page.evaluate(() => { try { return (JSON.parse(localStorage.getItem('ahlersFutures3') || '{}').sections || []).map(x => x.title + ' (' + x.rows.length + ')'); } catch (e) { return []; } });
+      result.futuresSections = await page.evaluate(() => { try { return (JSON.parse(localStorage.getItem('ahlersFutures4') || localStorage.getItem('ahlersFutures3') || '{}').sections || []).map(x => x.title + ' (' + x.rows.length + ')'); } catch (e) { return []; } });
+      // football futures/awards slides (only when the page has them)
+      for (const [sid, min] of [['nflfut-screen', 8], ['nflawards-screen', 5], ['cfbfut-screen', 8]]) {
+        if (!allSlides.includes(sid)) continue;
+        const best = result.slides.filter(x => x.id === sid).sort((a, b) => b.cards - a.cards)[0];
+        check(`${sid} populated with real odds (>= ${min} markets)`, best && best.cards >= min, best ? `${best.cards} markets, ${best.rows} rows` : 'never shown');
+      }
+      if (await page.evaluate(() => !!localStorage.getItem('ahlersFutures4'))) {
+        check('FUTURES slide has CFB TITLE + NBA TITLE sections', ['CFB TITLE', 'NBA TITLE'].every(t => result.futuresSections.some(x => x.startsWith(t))), result.futuresSections.join(', '));
+      }
       check('slide rotation reached 10+ distinct slides', seen.size >= 10, [...seen].join(','));
+    }
+
+    // ---- D-pad / remote navigation (only when the page implements window.arcadeNav)
+    if (await page.evaluate(() => typeof arcadeNav !== 'undefined')) {
+      await page.evaluate(() => { clearTimeout(slideTimer); clearTimeout(triviaRevealTimer); slideTimer = null; });
+      const visible = () => page.evaluate(() => [...document.querySelectorAll('.slide-screen')].filter(e => getComputedStyle(e).display !== 'none').map(e => e.id).join('+'));
+      const ui = () => page.evaluate(() => ({ menu: getComputedStyle(document.getElementById('nav-menu')).display, hud: getComputedStyle(document.getElementById('nav-hud')).opacity,
+        paused: getComputedStyle(document.getElementById('nav-paused')).display, navActive: document.body.classList.contains('nav-active'),
+        modal: getComputedStyle(document.getElementById('settings-modal')).display, focus: (document.activeElement && (document.activeElement.id || document.activeElement.getAttribute('data-slide') || document.activeElement.tagName)) || '' }));
+      const shot = async name => { const p = path.join(outDir, `${label}-${name}.png`); await page.screenshot({ path: p }); result.screenshots.push(p); return p; };
+      await page.evaluate(() => { arcadeNav.idleMs = 2500; navIdle(); }); // earlier hotkey checks count as remote input; fast-forward their idle timeout
+      let u = await ui();
+      check('remote: idle kiosk shows no nav UI', u.menu === 'none' && Number(u.hud) === 0 && u.paused === 'none' && !u.navActive, JSON.stringify(u));
+      const s0 = await visible();
+      await page.keyboard.press('ArrowRight'); await sleep(900);
+      const s1 = await visible();
+      await shot('remote-hud');
+      check('remote: RIGHT advances to next slide + HUD', s1 !== s0 && Number((await ui()).hud) > 0, `${s0} -> ${s1}`);
+      await page.keyboard.press('ArrowLeft'); await sleep(900);
+      const s2 = await visible();
+      check('remote: LEFT goes back to previous slide', s2 === s0, `${s1} -> ${s2}`);
+      await page.keyboard.press('Enter'); await sleep(500);
+      u = await ui();
+      await shot('remote-menu');
+      check('remote: OK opens navigator menu with focus', u.menu === 'flex' && !!u.focus, JSON.stringify(u));
+      const f0 = u.focus;
+      await page.keyboard.press('ArrowRight'); await page.keyboard.press('ArrowDown'); await sleep(300);
+      const f1 = (await ui()).focus;
+      await shot('remote-menu-focus');
+      check('remote: arrows move focus in menu', f1 && f1 !== f0, `${f0} -> ${f1}`);
+      // walk to NFL FUTURES with real key presses, then OK
+      let target = 'nflFutures', guard = 0;
+      while ((await ui()).focus !== target && guard++ < 30) {
+        const pos = await page.evaluate(t => { const a = document.activeElement.getBoundingClientRect(), b = document.querySelector(`#nav-menu [data-slide="${t}"]`).getBoundingClientRect(); return { dy: b.top - a.top, dx: b.left - a.left }; }, target);
+        await page.keyboard.press(Math.abs(pos.dy) > 5 ? (pos.dy > 0 ? 'ArrowDown' : 'ArrowUp') : (pos.dx > 0 ? 'ArrowRight' : 'ArrowLeft'));
+        await sleep(80);
+      }
+      await page.keyboard.press('Enter'); await sleep(500);
+      await page.waitForNetworkIdle({ idleTime: 800, timeout: 10000 }).catch(() => {});
+      await sleep(1200);
+      check('remote: OK on menu item jumps to that slide', (await visible()) === 'nflfut-screen' && (await ui()).menu === 'none', await visible());
+      await shot('remote-jump-nfl-futures');
+      // pause / resume
+      await page.keyboard.press(' '); await sleep(300);
+      const sp = await visible();
+      await page.evaluate(() => nextSlide()); await sleep(600); // simulate the slide timer firing
+      u = await ui();
+      await shot('remote-paused');
+      check('remote: PLAY/PAUSE pauses rotation (timer ignored, badge shown)', (await visible()) === sp && u.paused === 'block', JSON.stringify(u));
+      await page.keyboard.press(' '); await sleep(900);
+      check('remote: resume continues rotation', (await visible()) !== sp && (await ui()).paused === 'none', await visible());
+      // back closes menu
+      await page.keyboard.press('Enter'); await sleep(300);
+      await page.keyboard.press('Escape'); await sleep(300);
+      check('remote: BACK closes menu', (await ui()).menu === 'none', '');
+      // settings through the remote
+      await page.keyboard.press('ArrowUp'); await sleep(300);
+      await shot('remote-gear-focus');
+      check('remote: UP focuses settings gear', (await ui()).focus === 'settings-gear', (await ui()).focus);
+      await page.keyboard.press('Enter'); await sleep(400);
+      u = await ui();
+      const fs0 = u.focus;
+      await page.keyboard.press('ArrowDown'); await page.keyboard.press('ArrowDown'); await sleep(300);
+      const fs1 = (await ui()).focus;
+      await shot('remote-settings-focus');
+      check('remote: OK on gear opens settings with focus inside, arrows move', u.modal === 'flex' && !!fs0 && fs0 !== 'BODY' && fs1 !== fs0, `${fs0} -> ${fs1}`);
+      await page.keyboard.press('Escape'); await sleep(300);
+      check('remote: BACK closes settings', (await ui()).modal === 'none', '');
+      // auto-hide after inactivity
+      await page.keyboard.press('Enter'); await sleep(300);
+      await sleep(3200);
+      u = await ui();
+      check('remote: menu/focus auto-hide after inactivity', u.menu === 'none' && !u.navActive && Number(u.hud) === 0, JSON.stringify(u));
+      // mouse + keyboard still work
+      await page.click('#settings-gear'); await sleep(300);
+      const mc = (await ui()).modal;
+      await page.focus('#set-marqueeMessage'); await page.keyboard.press('End'); await page.keyboard.type('s'); await sleep(200);
+      const stillOpen = (await ui()).modal;
+      await page.keyboard.press('Backspace'); await sleep(100);
+      await page.evaluate(() => { const el = document.getElementById('set-marqueeMessage'); el.dispatchEvent(new Event('change')); el.blur(); });
+      check('mouse click on gear opens settings; typing "s" in a field keeps it open', mc === 'flex' && stillOpen === 'flex', `${mc}/${stillOpen}`);
+      await page.click('#settings-modal .settings-card > div:last-child button'); await sleep(300);
+      check('SAVE & CLOSE button closes settings', (await ui()).modal === 'none', '');
     }
 
     // ---- remote mode (#remote) shows the phone controller

@@ -215,6 +215,42 @@
         #remote-controller { position: fixed; inset: 0; z-index: 9999; background: #000; display: none; flex-direction: column; padding: 4vh; }
         body.remote-active #remote-controller { display: flex; }
         .r-btn { width: 100%; padding: 20px; margin-bottom: 10px; background: #1a1a1a; border: 1px solid #333; color: white; font-weight: bold; border-radius: 8px; font-size: 3vh; }
+
+        /* FOOTBALL FUTURES & AWARDS SLIDES */
+        .fut-meta { width: 95%; text-align: center; font-size: 2vh; font-weight: 900; letter-spacing: 0.15vw; margin: -1vh 0 1.2vh; text-transform: uppercase; opacity: 0.85; z-index: 20; }
+        .fut-viewport { height: 62vh; }
+        .fut-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.6vw; padding-bottom: 5vh; will-change: transform; align-items: start; }
+        .fut-card { padding: 1.8vh 2vh 1.2vh; margin: 0; }
+        .fut-card .division-header { font-size: 2.9vh; display: flex; justify-content: space-between; align-items: baseline; gap: 1vh; margin-bottom: 0.8vh; }
+        .fut-book { font-size: 1.7vh; opacity: 0.8; letter-spacing: 0.1vw; white-space: nowrap; }
+        .fut-row { display: flex; align-items: center; padding: 0.8vh 0; border-bottom: 1px solid rgba(255,255,255,0.1); font-weight: 900; position: relative; }
+        .fut-row:last-child { border-bottom: none; }
+        .fut-rank { width: 3.2vh; text-align: right; font-size: 2.4vh; flex-shrink: 0; }
+        .fut-logo { width: 4.4vh; height: 4.4vh; object-fit: contain; margin: 0 1.1vh; flex-shrink: 0; filter: drop-shadow(1px 1px 0px #fff) drop-shadow(-1px -1px 0px #fff) drop-shadow(1px -1px 0px #fff) drop-shadow(-1px 1px 0px #fff) drop-shadow(0px 4px 10px rgba(0,0,0,0.8)); }
+        .fut-logo.player { border-radius: 50%; object-fit: cover; object-position: top; background: rgba(0,0,0,0.5); filter: none; border: 1px solid rgba(255,255,255,0.5); }
+        .fut-name { flex: 1; font-size: 2.5vh; line-height: 1.1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #fff; text-shadow: 0 2px 4px #000; }
+        .fut-team { font-size: 1.7vh; opacity: 0.75; margin-left: 0.6vh; }
+        .fut-odds { font-size: 2.7vh; margin-left: 1vh; flex-shrink: 0; }
+        .fut-bar { position: absolute; left: 0; bottom: -1px; height: 0.35vh; background: var(--accent-color); opacity: 0.6; border-radius: 0.2vh; transition: background 0.5s ease; }
+
+        /* D-PAD / REMOTE NAVIGATION (hidden until a remote key is pressed) */
+        #nav-menu { position: fixed; inset: 0; background: rgba(0,0,0,0.88); z-index: 29000; display: none; justify-content: center; align-items: center; }
+        #nav-menu.open { display: flex; }
+        .nav-card { background: #0c121c; border: 2px solid var(--accent-color); border-radius: 2vh; padding: 3.5vh 4vh; width: 86vw; box-shadow: 0 0 6vh var(--accent-shadow); }
+        .nav-title { font-size: 4.6vh; font-weight: 900; text-align: center; letter-spacing: 0.4vh; margin-bottom: 2.5vh; }
+        .nav-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.4vh 1.4vw; }
+        .nav-item { background: rgba(12, 20, 32, 0.95); color: #fff; border: 1px solid rgba(255,255,255,0.18); border-radius: 1.2vh; padding: 1.6vh 1vh; font-family: 'Inter', sans-serif; font-size: 2.5vh; font-weight: 900; text-transform: uppercase; letter-spacing: 0.1vw; cursor: pointer; transition: transform 0.15s ease, box-shadow 0.15s ease; }
+        .nav-item.current { border-color: var(--accent-color); color: var(--accent-color); }
+        .nav-item:focus { outline: 0.5vh solid var(--accent-color); outline-offset: 0.3vh; box-shadow: 0 0 3vh var(--accent-color); transform: scale(1.04); }
+        .nav-actions { display: flex; justify-content: center; gap: 2vw; margin-top: 3vh; }
+        .nav-action { min-width: 22vw; border-color: rgba(255,0,127,0.6); }
+        .nav-hint { text-align: center; margin-top: 2.5vh; font-size: 2vh; font-weight: 700; letter-spacing: 0.2vw; color: rgba(255,255,255,0.65); }
+        #nav-hud { position: fixed; left: 50%; bottom: calc(var(--ticker-height) + 2.5vh); transform: translateX(-50%); z-index: 26000; background: rgba(5,10,18,0.92); border: 2px solid var(--accent-color); border-radius: 5vh; padding: 1.4vh 4vh; font-size: 3vh; font-weight: 900; letter-spacing: 0.2vw; color: #fff; white-space: nowrap; opacity: 0; pointer-events: none; transition: opacity 0.3s ease; }
+        #nav-hud.show { opacity: 1; }
+        #nav-paused { position: fixed; top: 9vh; left: 3vw; z-index: 25000; display: none; background: rgba(5,10,18,0.9); border: 2px solid #ff007f; color: #ff007f; border-radius: 1vh; padding: 0.6vh 1.6vh; font-size: 2.2vh; font-weight: 900; letter-spacing: 0.2vw; }
+        body.nav-paused #nav-paused { display: block; }
+        body.nav-active #settings-modal button:focus, body.nav-active #settings-modal input:focus { outline: 0.5vh solid var(--accent-color); outline-offset: 0.3vh; box-shadow: 0 0 2.5vh var(--accent-color); }
+        body.nav-active #settings-modal .toggle-row:focus-within { background: rgba(255,255,255,0.1); border-radius: 0.6vh; }
     </style>
 </head>
 <body class="theme-cyan">
@@ -326,6 +362,10 @@
             <div class="content-viewport" id="futures-viewport"><div class="list-track" id="futures-track"></div></div>
         </div>
 
+        <div id="nflfut-screen" class="slide-screen"><div class="screen-header neon-text-cycle"><img src="https://a.espncdn.com/combiner/i?img=/i/teamlogos/leagues/500/nfl.png" class="league-logo" onerror="this.style.display='none'">NFL FUTURES</div><div class="fut-meta neon-text-cycle" id="nflfut-meta"></div><div class="content-viewport fut-viewport" id="nflfut-viewport"><div class="fut-grid" id="nflfut-track"></div></div></div>
+        <div id="nflawards-screen" class="slide-screen"><div class="screen-header neon-text-cycle"><img src="https://a.espncdn.com/combiner/i?img=/i/teamlogos/leagues/500/nfl.png" class="league-logo" onerror="this.style.display='none'">NFL AWARDS ODDS</div><div class="fut-meta neon-text-cycle" id="nflawards-meta"></div><div class="content-viewport fut-viewport" id="nflawards-viewport"><div class="fut-grid" id="nflawards-track"></div></div></div>
+        <div id="cfbfut-screen" class="slide-screen"><div class="screen-header neon-text-cycle">COLLEGE FOOTBALL FUTURES</div><div class="fut-meta neon-text-cycle" id="cfbfut-meta"></div><div class="content-viewport fut-viewport" id="cfbfut-viewport"><div class="fut-grid" id="cfbfut-track"></div></div></div>
+
         <div id="odds-screen" class="slide-screen">
             <div class="screen-header neon-text-cycle">TODAY'S LINES</div>
             <div class="content-viewport" id="odds-viewport"><div class="grid-track" id="odds-grid-track"></div></div>
@@ -407,6 +447,9 @@
                     <div class="toggle-row"><span>Headlines Slide</span> <input type="checkbox" id="set-news" onchange="updateSettings()"></div>
                     <div class="toggle-row"><span>Odds Slide</span> <input type="checkbox" id="set-odds" onchange="updateSettings()"></div>
                     <div class="toggle-row"><span>Futures Slide</span> <input type="checkbox" id="set-futures" onchange="updateSettings()"></div>
+                    <div class="toggle-row"><span>NFL Futures Slide</span> <input type="checkbox" id="set-nflFutures" onchange="updateSettings()"></div>
+                    <div class="toggle-row"><span>NFL Awards Slide</span> <input type="checkbox" id="set-nflAwards" onchange="updateSettings()"></div>
+                    <div class="toggle-row"><span>CFB Futures Slide</span> <input type="checkbox" id="set-cfbFutures" onchange="updateSettings()"></div>
                     <div class="toggle-row"><span>Rankings Slide</span> <input type="checkbox" id="set-rankings" onchange="updateSettings()"></div>
                 </div>
             </div>
@@ -427,6 +470,21 @@
         <button class="r-btn" onclick="bc.postMessage({action:'forceNext'})">NEXT SLIDE</button>
     </div>
 
+    <div id="nav-menu" aria-hidden="true">
+        <div class="nav-card">
+            <div class="nav-title neon-text-cycle">ARCADE NAVIGATOR</div>
+            <div class="nav-grid" id="nav-grid"></div>
+            <div class="nav-actions">
+                <button type="button" class="nav-item nav-action" id="nav-pause" onclick="navTogglePause()">&#9208; PAUSE ROTATION</button>
+                <button type="button" class="nav-item nav-action" id="nav-settings" onclick="navCloseMenu(); toggleSettings();">&#9881; SETTINGS</button>
+                <button type="button" class="nav-item nav-action" id="nav-close" onclick="navCloseMenu()">&#10005; CLOSE</button>
+            </div>
+            <div class="nav-hint">&#9664; &#9650; &#9660; &#9654; MOVE &nbsp;&bull;&nbsp; OK SELECT &nbsp;&bull;&nbsp; BACK CLOSE &nbsp;&bull;&nbsp; PLAY/PAUSE KEY PAUSES</div>
+        </div>
+    </div>
+    <div id="nav-hud"></div>
+    <div id="nav-paused">&#9208; PAUSED</div>
+
     <script>
         var bc = null;
         try { if (window.BroadcastChannel) bc = new BroadcastChannel('cinema_channel'); } catch(e) {}
@@ -440,7 +498,7 @@
         var currentThemeIndex = 0;
 
         var defaultSettings = { 
-            nfl:true, nba:true, nhl:true, mlb:true, rankings:true, odds:true, futures:true, tvGuide:true, news:true, mySquad:true, ufc:true, command:true, leaders:true, pga:true, soccerSlide:true, trivia:true,
+            nfl:true, nba:true, nhl:true, mlb:true, rankings:true, odds:true, futures:true, nflFutures:true, nflAwards:true, cfbFutures:true, tvGuide:true, news:true, mySquad:true, ufc:true, command:true, leaders:true, pga:true, soccerSlide:true, trivia:true,
             showWorldCup:true, showEPL:true, showUCL:true, showATP:true, showWTA:true, showNFL:true, showNBA:true, showNHL:true, showMLB:true, showCFB:true, showCBB:true, showCLB:true,
             cbb50:true, cfb75:true, clb50:true, apiBase:"https://site.api.espn.com/apis",
             mySquadTeams: "Carolina Hurricanes, Duke, ECU, East Carolina",
@@ -460,6 +518,7 @@
                 try { localStorage.setItem('ahlersArcadeSettings', JSON.stringify(settings)); } catch(e2) {}
             }
             try { localStorage.removeItem('ahlersPropsCache'); } catch(e3) {}
+            try { localStorage.removeItem('ahlersFutures3'); } catch(e4) {}
         } catch(e) {}
 
         function nudgeSpeed(dir) {
@@ -508,16 +567,20 @@
             if (open) {
                 modal.classList.remove('open');
                 modal.style.display = 'none';
+                try { navOnSettingsToggled(false); } catch (e) {}
             } else {
                 modal.classList.add('open');
                 modal.style.display = 'flex';
                 try { loadSettingsUI(); } catch (e) {}
+                try { navOnSettingsToggled(true); } catch (e) {}
             }
         }
         function isSettingsHotkey(e) {
             var k = e.key || '';
             var code = e.keyCode || e.which;
             var id = (document.activeElement && document.activeElement.id) || '';
+            var ae0 = document.activeElement;
+            if (ae0 && ae0.tagName === 'INPUT' && ae0.type === 'text') return false; // typing in a settings field ("s", "r", "]" are letters there)
             var onBtn = (id === 'settings-gear');
             if (onBtn && (k === 'Enter' || code === 13 || code === 23 || code === 66)) return true;
             if (k === 's' || k === 'S' || k === 'ContextMenu' || code === 82 || code === 139 || code === 176 || code === 221) return true;
@@ -534,11 +597,8 @@
                 e.preventDefault();
             }
         });
-        ['settings-gear'].forEach(function(id) {
-            var el = document.getElementById(id);
-            if (!el) return;
-            el.addEventListener('click', function(ev) { ev.preventDefault(); toggleSettings(); });
-        });
+        // (The gear's inline onclick already calls toggleSettings(); a second click listener here used to
+        //  re-close the modal instantly, so mouse/tap on the gear did nothing.)
         function checkMode() { if (window.location.hash === '#remote') document.body.classList.add('remote-active'); }
 
         if (bc) {
@@ -787,7 +847,14 @@
         var slideGen = 0;
         function isCurrentSlide(gen) { return gen === slideGen; }
 
+        var ARCADE_SCREENS = [
+            'live', 'props', 'mySquad', 'trivia', 'leaders', 'pga', 'ufc', 'command',
+            'soccerSlide', 'tvGuide', 'news', 'odds', 'futures', 'nflFutures', 'nflAwards', 'cfbFutures',
+            'rankings', 'nfl', 'nba', 'nhl', 'mlb'
+        ];
+
         function nextSlide() {
+            if (arcadeNav.paused && !arcadeNav.forcing) { arcadeNav.pending = true; return; }
             clearTimeout(slideTimer);
             clearTimeout(triviaRevealTimer);
             slideGen++;
@@ -805,10 +872,7 @@
             var mc = document.getElementById('master-clock');
             if (mc) mc.style.display = 'block';
 
-            var screens = [
-                'live', 'props', 'mySquad', 'trivia', 'leaders', 'pga', 'ufc', 'command',
-                'soccerSlide', 'tvGuide', 'news', 'odds', 'futures', 'rankings', 'nfl', 'nba', 'nhl', 'mlb'
-            ];
+            var screens = ARCADE_SCREENS;
             
             if (rotationStep >= screens.length) rotationStep = 0;
             var current = screens[rotationStep];
@@ -817,6 +881,7 @@
                 rotationStep++; nextSlide(); return;
             }
             
+            arcadeNav.current = current;
             document.querySelectorAll('.slide-screen').forEach(function(el) { el.style.display = 'none'; });
             try {
                 if (current === 'live') renderLivePage();
@@ -834,6 +899,7 @@
                 else if (current === 'news') showNews(gen);
                 else if (current === 'odds') showOdds();
                 else if (current === 'futures') showFutures(gen);
+                else if (current === 'nflFutures' || current === 'nflAwards' || current === 'cfbFutures') showFootballFutures(current, gen);
                 else if (current === 'rankings') showRankings(gen);
                 else if (current === 'nfl') showStandings('nfl', 'football', gen);
                 else if (current === 'nba') showStandings('nba', 'basketball', gen);
@@ -1377,18 +1443,34 @@
             });
         }
         async function loadTeamMap(sport, league) {
-            var map = builtinTeamMap(league);
-            try {
-                var url = 'https://site.api.espn.com/apis/site/v2/sports/' + sport + '/' + league + '/teams?limit=400';
-                if (league === 'college-football') url += '&groups=80';
-                var res = await fetch(url);
-                var d = await res.json();
-                collectTeams(d, map, league);
-            } catch (e) {}
-            return map;
+            // ESPN's site /teams endpoint sends no CORS header, so browsers always blocked it. Use the built-in
+            // maps; teams not in them (e.g. all of college football) are resolved from the futures $ref links.
+            return builtinTeamMap(league);
+        }
+        var espnRefCache = {};
+        async function resolveEspnTeamRef(ref, league) {
+            var url = String(ref || '').replace(/^http:/, 'https:');
+            if (!url) return null;
+            if (!espnRefCache[url]) {
+                espnRefCache[url] = fetch(url).then(function(r) { return r.ok ? r.json() : null; }).catch(function() { return null; });
+            }
+            var t = await espnRefCache[url];
+            if (!t || !(t.displayName || t.shortDisplayName)) return null;
+            var id = String(t.id || teamIdFromRef(url));
+            return { name: t.displayName || t.shortDisplayName, short: t.location || '', abbr: t.abbreviation || '', logo: (t.logos && t.logos[0] && t.logos[0].href) ? t.logos[0].href : espnTeamLogo(league, t.abbreviation, id) };
+        }
+        // ESPN files seasons differently per sport (e.g. the 2026-27 NBA season is "2027", NHL "2026"):
+        // try the likely years and keep whichever has the fullest market.
+        function futuresSeasonCandidates(sport) {
+            var d = new Date(), y = d.getFullYear(), m = d.getMonth();
+            if (sport === 'football') return m >= 2 ? [y, y + 1] : [y - 1, y];
+            if (sport === 'basketball' || sport === 'hockey') return m >= 6 ? [y + 1, y] : [y, y + 1, y - 1];
+            if (sport === 'baseball') return m >= 10 ? [y + 1, y] : [y, y - 1];
+            return [y, y - 1];
         }
         async function loadLeagueFutures(sport, league, year, wantNames, teamMap) {
             var res = await fetch('https://sports.core.api.espn.com/v2/sports/' + sport + '/leagues/' + league + '/seasons/' + year + '/futures?limit=50');
+            if (!res.ok) return [];
             var d = await res.json();
             var items = d.items || [];
             var picked = null;
@@ -1396,31 +1478,36 @@
             for (i = 0; i < wantNames.length && !picked; i++) {
                 var want = wantNames[i].toLowerCase();
                 for (j = 0; j < items.length; j++) {
-                    var nm = String(items[j].name || '').toLowerCase();
+                    var nm = (String(items[j].displayName || '') + ' | ' + String(items[j].name || '')).toLowerCase();
+                    if (nm.indexOf('fcs') !== -1) continue;
                     if (nm.indexOf(want) !== -1) { picked = items[j]; break; }
                 }
             }
             if (!picked) return [];
             var books = ((picked.futures || [])[0] || {}).books || [];
+            var cand = sortFuturesRows(books.filter(function(b) { return b && b.value && b.team && b.team.$ref; }).map(function(b) { return { b: b, odds: b.value }; })).slice(0, 8);
             var rows = [];
-            books.forEach(function(b) {
-                var tid = teamIdFromRef(b.team && b.team.$ref);
+            for (var k = 0; k < cand.length; k++) {
+                var b = cand[k].b;
+                var tid = teamIdFromRef(b.team.$ref);
                 var info = tid ? teamMap[tid] : null;
-                if (!info || !info.name || !b.value) return;
+                if (!info || !info.name) info = await resolveEspnTeamRef(b.team.$ref, league);
+                if (!info || !info.name) continue;
                 rows.push({ name: info.name, logo: info.logo || espnTeamLogo(league, info.abbr, tid), odds: b.value });
-            });
-            return sortFuturesRows(rows).slice(0, 8);
+            }
+            rows = sortFuturesRows(rows).slice(0, 8);
+            rows.marketSize = books.length;
+            return rows;
         }
         async function loadFuturesBoard() {
             var now = Date.now();
             try {
-                var cached = localStorage.getItem('ahlersFutures3');
+                var cached = localStorage.getItem('ahlersFutures4');
                 if (cached) {
                     var obj = JSON.parse(cached);
                     if (obj && obj.at && (now - obj.at) < 86400000 && obj.sections && obj.sections.length) return obj;
                 }
             } catch (e0) {}
-            var year = new Date().getFullYear();
             var specs = [
                 { title: 'SUPER BOWL', sport: 'football', league: 'nfl', want: ['super bowl'] },
                 { title: 'CFB TITLE', sport: 'football', league: 'college-football', want: ['national championship', 'championship winner', 'to win the championship'] },
@@ -1432,15 +1519,19 @@
             for (var s = 0; s < specs.length; s++) {
                 try {
                     var map = await loadTeamMap(specs[s].sport, specs[s].league);
-                    var rows = await loadLeagueFutures(specs[s].sport, specs[s].league, year, specs[s].want, map);
-                    if (!rows.length && year > 2020) {
-                        rows = await loadLeagueFutures(specs[s].sport, specs[s].league, year - 1, specs[s].want, map);
+                    var years = futuresSeasonCandidates(specs[s].sport);
+                    var rows = [];
+                    for (var yi = 0; yi < years.length; yi++) {
+                        var got = [];
+                        try { got = await loadLeagueFutures(specs[s].sport, specs[s].league, years[yi], specs[s].want, map); } catch (eY) {}
+                        if (got.length && (!rows.length || (got.marketSize || 0) > (rows.marketSize || 0))) rows = got;
+                        if (rows.length && (rows.marketSize || 0) >= 10) break;
                     }
-                    if (rows.length) sections.push({ title: specs[s].title, rows: rows });
+                    if (rows.length) sections.push({ title: specs[s].title, rows: rows.slice() });
                 } catch (e1) {}
             }
             var data = { at: now, sections: sections };
-            try { localStorage.setItem('ahlersFutures3', JSON.stringify(data)); } catch (e2) {}
+            try { localStorage.setItem('ahlersFutures4', JSON.stringify(data)); } catch (e2) {}
             return data;
         }
         async function showFutures(gen) {
@@ -1466,6 +1557,201 @@
                 document.getElementById('futures-screen').style.display = 'flex';
                 document.getElementById('futures-track').innerHTML = '<div class="neon-text-cycle" style="font-size:4vh; font-weight:900; text-align:center; padding-top:8vh;">FUTURES FEED DOWN</div>';
                 slideTimer = setTimeout(nextSlide, 8000);
+            }
+        }
+
+        // ===== NFL / COLLEGE FOOTBALL FUTURES & AWARDS SLIDES =====
+        // Data: futures.json (same origin, refreshed daily by .github/workflows/futures.yml). If it's missing or
+        // older than ~2 days: Action Network live from the browser, then ESPN core API. All free, no key.
+        var FOOTBALL_SLIDES = {
+            nflFutures: { prefix: 'nflfut', league: 'nfl', markets: [['super_bowl','SUPER BOWL',8],['afc_champ','AFC CHAMPION',6],['nfc_champ','NFC CHAMPION',6],
+                ['afc_east','AFC EAST',4],['afc_north','AFC NORTH',4],['afc_south','AFC SOUTH',4],['afc_west','AFC WEST',4],
+                ['nfc_east','NFC EAST',4],['nfc_north','NFC NORTH',4],['nfc_south','NFC SOUTH',4],['nfc_west','NFC WEST',4]] },
+            nflAwards: { prefix: 'nflawards', league: 'nfl', markets: [['mvp','MVP',6],['opoy','OFFENSIVE PLAYER',6],['dpoy','DEFENSIVE PLAYER',6],
+                ['oroy','OFFENSIVE ROOKIE',6],['droy','DEFENSIVE ROOKIE',6],['cpoy','COMEBACK PLAYER',6],['coy','COACH OF THE YEAR',6]] },
+            cfbFutures: { prefix: 'cfbfut', league: 'ncaaf', markets: [['cfb_title','NATIONAL TITLE',8],['make_cfp_final','MAKE CFP TITLE GAME',8],['heisman','HEISMAN TROPHY',8],
+                ['sec','SEC',5],['big_ten','BIG TEN',5],['big_12','BIG 12',5],['acc','ACC',5],['american','AMERICAN',4],['mwc','MOUNTAIN WEST',4],
+                ['sun_belt','SUN BELT',4],['mac','MAC',4],['cusa','CONFERENCE USA',4],['pac12','PAC-12',4]] }
+        };
+        var FB_AN_WANT = {
+            nfl: { id: 1, want: [['super_bowl', /superbowl - to win/i], ['afc_champ', /afc conference - to win/i], ['nfc_champ', /nfc conference - to win/i],
+                ['afc_east', /afc east - to win/i], ['afc_north', /afc north - to win/i], ['afc_south', /afc south - to win/i], ['afc_west', /afc west - to win/i],
+                ['nfc_east', /nfc east - to win/i], ['nfc_north', /nfc north - to win/i], ['nfc_south', /nfc south - to win/i], ['nfc_west', /nfc west - to win/i],
+                ['mvp', /nfl mvp$/i], ['opoy', /offensive player of the year/i], ['dpoy', /defensive player of the year/i], ['oroy', /offensive rookie of the year/i],
+                ['droy', /defensive rookie of the year/i], ['cpoy', /comeback player/i], ['coy', /coach of the year/i]] },
+            ncaaf: { id: 2, want: [['cfb_title', /ncaaf championship - to win/i], ['heisman', /heisman/i], ['make_cfp_final', /to make cfp championship/i],
+                ['sec', /\bsec conference - to win/i], ['big_ten', /big ten conference - to win/i], ['big_12', /big 12 conference - to win/i], ['acc', /\bacc conference - to win/i],
+                ['american', /american conference - to win/i], ['mwc', /mountain west conference - to win/i], ['sun_belt', /sun belt conference - to win/i],
+                ['mac', /mid-american conference - to win/i], ['cusa', /conference usa conference - to win/i], ['pac12', /pac-12 conference - to win/i]] }
+        };
+        var FB_ESPN_WANT = {
+            nfl: [['super_bowl', /^super bowl winner/i], ['afc_champ', /^afc champion/i], ['nfc_champ', /^nfc champion/i], ['afc_east', /^afc east division/i],
+                ['afc_north', /^afc north division/i], ['afc_south', /^afc south division/i], ['afc_west', /^afc west division/i], ['nfc_east', /^nfc east division/i],
+                ['nfc_north', /^nfc north division/i], ['nfc_south', /^nfc south division/i], ['nfc_west', /^nfc west division/i], ['mvp', /regular season mvp/i],
+                ['opoy', /^offensive player of the year/i], ['dpoy', /^defensive player of the year/i], ['oroy', /offensive rookie of the year/i],
+                ['droy', /defensive rookie of the year/i], ['cpoy', /comeback player/i], ['coy', /coach of the year/i]],
+            ncaaf: [['cfb_title', /^national championship winner/i], ['make_cfp_final', /to reach the championship game/i], ['heisman', /heisman/i],
+                ['sec', /southeastern conference/i], ['big_ten', /big ten conference/i], ['big_12', /big 12 conference/i], ['acc', /atlantic coast conference/i],
+                ['american', /american athletic/i], ['mwc', /mountain west/i], ['sun_belt', /sun belt/i], ['mac', /mid-american/i], ['cusa', /conference usa/i]]
+        };
+        var footballFuturesMem = null;
+
+        function escHtml(v) { return String(v == null ? '' : v).replace(/[&<>"']/g, function(c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+        async function fetchJsonTimeout(url, ms) {
+            var ctl = (typeof AbortController !== 'undefined') ? new AbortController() : null;
+            var t = ctl ? setTimeout(function() { ctl.abort(); }, ms || 10000) : null;
+            try {
+                var r = await fetch(url, ctl ? { signal: ctl.signal, cache: 'no-store' } : { cache: 'no-store' });
+                if (!r.ok) throw new Error('HTTP ' + r.status);
+                return await r.json();
+            } finally { if (t) clearTimeout(t); }
+        }
+        function fbAmerican(n) { n = Number(n); return isNaN(n) ? '' : (n > 0 ? '+' + n : String(n)); }
+        function fbImplied(n) { n = Number(n); if (isNaN(n)) return 0; return n > 0 ? 100 / (n + 100) : -n / (-n + 100); }
+        function fbCountMarkets(d) { return d ? Object.keys(d.nfl || {}).length + Object.keys(d.ncaaf || {}).length : 0; }
+        function fbSeason() { var d = new Date(); return d.getMonth() >= 2 ? d.getFullYear() : d.getFullYear() - 1; }
+
+        async function fbLiveActionNetwork() {
+            var out = { nfl: {}, ncaaf: {}, generatedAt: new Date().toISOString(), source: 'LIVE FEED' };
+            var leagues = ['nfl', 'ncaaf'];
+            for (var li = 0; li < leagues.length; li++) {
+                var lg = leagues[li], cfg = FB_AN_WANT[lg];
+                var avail = await fetchJsonTimeout('https://api.actionnetwork.com/web/v1/leagues/' + cfg.id + '/futures/available', 10000);
+                var futs = avail.futures || [];
+                await Promise.all(cfg.want.map(async function(w) {
+                    var m = futs.filter(function(f) { return w[1].test(f.name || ''); })[0];
+                    if (!m) return;
+                    try {
+                        var d = await fetchJsonTimeout('https://api.actionnetwork.com/web/v1/leagues/' + cfg.id + '/futures/' + encodeURIComponent(m.type) + '?bookIds=15,68,69,75,123', 10000);
+                        var teams = {}, players = {}, byBook = {};
+                        (d.teams || []).forEach(function(t) { teams[t.id] = t; });
+                        (d.players || []).forEach(function(p) { players[p.id] = p; });
+                        (d.books || []).forEach(function(b) { byBook[b.book_id] = b.odds || []; });
+                        var pid = (byBook[15] && byBook[15].length) ? 15 : Number(Object.keys(byBook)[0]);
+                        var bookName = { 15: 'Consensus', 68: 'DraftKings', 69: 'FanDuel', 75: 'BetMGM', 123: 'Caesars' }[pid] || 'Sportsbook';
+                        var rows = (byBook[pid] || []).filter(function(o) { return o.money != null && (o.option_type_id == null || o.option_type_id === 430); })
+                            .sort(function(a, b) { return a.money - b.money; }).slice(0, 12).map(function(o) {
+                                var p = o.player_id ? players[o.player_id] : null;
+                                var t = teams[o.team_id] || (p && teams[p.team_id]) || null;
+                                var short = (!t || p || !t.display_name) ? null : ((t.full_name && t.full_name.slice(-t.display_name.length - 1) === ' ' + t.display_name) ? t.full_name.slice(0, -t.display_name.length - 1) : t.display_name);
+                                return { name: p ? p.full_name : (t ? t.full_name : null), short: short, team: t ? t.abbr : null, logo: (p && p.image) || (t && t.logo) || null,
+                                         teamLogo: t ? t.logo : null, player: !!p, odds: fbAmerican(o.money), implied: fbImplied(o.money) };
+                            }).filter(function(r) { return r.name; });
+                        if (rows.length) out[lg][w[0]] = { title: d.name || m.name, source: 'actionnetwork', primaryBook: bookName, rows: rows };
+                    } catch (e) {}
+                }));
+            }
+            return out;
+        }
+
+        async function fbLiveEspn(target, onlyMissing) {
+            var out = target || { nfl: {}, ncaaf: {}, generatedAt: new Date().toISOString(), source: 'ESPN BACKUP' };
+            var season = fbSeason();
+            var leagues = [['nfl', 'nfl'], ['ncaaf', 'college-football']];
+            for (var li = 0; li < leagues.length; li++) {
+                var lg = leagues[li][0];
+                var want = FB_ESPN_WANT[lg].filter(function(w) { return !onlyMissing || !out[lg][w[0]]; });
+                if (!want.length) continue;
+                var d;
+                try { d = await fetchJsonTimeout('https://sports.core.api.espn.com/v2/sports/football/leagues/' + leagues[li][1] + '/seasons/' + season + '/futures?limit=100', 10000); } catch (e) { continue; }
+                var items = d.items || [];
+                for (var wi = 0; wi < want.length; wi++) {
+                    var w = want[wi];
+                    var item = items.filter(function(it) { return w[1].test(it.displayName || '') || w[1].test(it.name || ''); })[0];
+                    if (!item) continue;
+                    var books = (((item.futures || [])[0] || {}).books || []).filter(function(b) { return b && b.value != null; })
+                        .sort(function(a, b) { return parseAmerican(a.value) - parseAmerican(b.value); }).slice(0, 8);
+                    var rows = await Promise.all(books.map(async function(b) {
+                        try {
+                            if (b.athlete && b.athlete.$ref) {
+                                var a = await fetchJsonTimeout(String(b.athlete.$ref).replace(/^http:/, 'https:'), 8000);
+                                return { name: a.displayName, team: null, logo: a.headshot ? a.headshot.href : null, teamLogo: null, player: true, odds: fbAmerican(parseAmerican(b.value)), implied: fbImplied(parseAmerican(b.value)) };
+                            }
+                            var t = await resolveEspnTeamRef(b.team && b.team.$ref, leagues[li][1]);
+                            return t ? { name: t.name, short: t.short || null, team: t.abbr, logo: t.logo, teamLogo: t.logo, player: false, odds: fbAmerican(parseAmerican(b.value)), implied: fbImplied(parseAmerican(b.value)) } : null;
+                        } catch (e) { return null; }
+                    }));
+                    rows = rows.filter(function(r) { return r && r.name; });
+                    if (rows.length) out[lg][w[0]] = { title: item.displayName || item.name, source: 'espn', primaryBook: 'ESPN BET', rows: rows };
+                }
+            }
+            return out;
+        }
+
+        async function loadFootballFutures() {
+            var now = Date.now();
+            if (footballFuturesMem && (now - footballFuturesMem.checkedAt) < (footballFuturesMem.live ? 3 * 3600000 : 30 * 60000)) return footballFuturesMem;
+            var data = null, staleFile = null;
+            try {
+                var f = await fetchJsonTimeout('futures.json?t=' + Math.floor(now / 1800000), 10000);
+                if (f && f.generatedAt && fbCountMarkets(f) >= 5) {
+                    var age = now - Date.parse(f.generatedAt);
+                    var fileData = { nfl: f.nfl || {}, ncaaf: f.ncaaf || {}, generatedAt: f.generatedAt, source: 'DAILY FEED' };
+                    if (age < 2.2 * 86400000) data = fileData; else staleFile = fileData;
+                }
+            } catch (e) {}
+            if (!data) {
+                try {
+                    var c = JSON.parse(localStorage.getItem('ahlersFootballFutures1') || 'null');
+                    if (c && c.at && (now - c.at) < 3 * 3600000 && fbCountMarkets(c.data) >= 5) data = c.data;
+                } catch (e) {}
+            }
+            if (!data) {
+                try { var an = await fbLiveActionNetwork(); if (fbCountMarkets(an) >= 5) data = await fbLiveEspn(an, true); } catch (e) {}
+                if (!data) { try { var es = await fbLiveEspn(null, false); if (fbCountMarkets(es) >= 3) data = es; } catch (e) {} }
+                if (data) { try { localStorage.setItem('ahlersFootballFutures1', JSON.stringify({ at: now, data: data })); } catch (e) {} }
+            }
+            if (!data && staleFile) { data = staleFile; data.source = 'LAST SAVED FEED'; }
+            footballFuturesMem = { data: data, checkedAt: now, live: !!(data && data.source !== 'DAILY FEED') };
+            return footballFuturesMem;
+        }
+
+        function renderFutCard(title, mk, n, useShort) {
+            var rows = (mk.rows || []).slice(0, n);
+            var maxImp = 0;
+            rows.forEach(function(r) { var v = r.implied != null ? Number(r.implied) : fbImplied(parseAmerican(r.odds)); r._imp = v; if (v > maxImp) maxImp = v; });
+            var deflt = 'https://a.espncdn.com/combiner/i?img=/i/teamlogos/default-team-logo-500.png';
+            var body = rows.map(function(r, i) {
+                var isPlayer = !!(r.player || (r.logo && r.teamLogo && r.logo !== r.teamLogo));
+                var logo = r.logo || r.teamLogo || deflt;
+                var fb = r.teamLogo || deflt;
+                var w = maxImp > 0 ? Math.max(4, Math.round(r._imp / maxImp * 100)) : 0;
+                return '<div class="fut-row"><span class="fut-rank neon-text-cycle">' + (i + 1) + '</span>' +
+                    '<img class="fut-logo' + (isPlayer ? ' player' : '') + '" src="' + escHtml(logo) + '" onerror="this.src=\'' + escHtml(fb) + '\'; this.onerror=null;">' +
+                    '<div class="fut-name">' + escHtml((useShort && !isPlayer && r.short) ? r.short : r.name) + (isPlayer && r.team ? '<span class="fut-team neon-text-cycle">' + escHtml(r.team) + '</span>' : '') + '</div>' +
+                    '<span class="fut-odds neon-text-cycle">' + escHtml(r.odds) + '</span><div class="fut-bar" style="width:' + w + '%"></div></div>';
+            }).join('');
+            return '<div class="division-block glass-card fut-card"><div class="division-header neon-text-cycle"><span>' + escHtml(title) + '</span><span class="fut-book">' + escHtml(String(mk.primaryBook || '').toUpperCase()) + '</span></div>' + body + '</div>';
+        }
+
+        async function showFootballFutures(key, gen) {
+            var cfg = FOOTBALL_SLIDES[key];
+            var screen = document.getElementById(cfg.prefix + '-screen');
+            var track = document.getElementById(cfg.prefix + '-track');
+            var meta = document.getElementById(cfg.prefix + '-meta');
+            try {
+                var res = await loadFootballFutures();
+                if (!isCurrentSlide(gen)) return;
+                screen.style.display = 'flex';
+                var lg = (res.data && res.data[cfg.league]) || {};
+                var cards = [];
+                cfg.markets.forEach(function(m) { var mk = lg[m[0]]; if (mk && mk.rows && mk.rows.length) cards.push(renderFutCard(m[1], mk, m[2], cfg.league === 'ncaaf')); });
+                if (!cards.length) {
+                    meta.innerText = '';
+                    track.innerHTML = '<div class="neon-text-cycle" style="font-size:4vh; font-weight:900; text-align:center; padding-top:8vh; grid-column: 1 / -1;">NO ODDS POSTED</div>';
+                    slideTimer = setTimeout(nextSlide, 6000);
+                    return;
+                }
+                var when = res.data.generatedAt ? new Date(res.data.generatedAt) : null;
+                var whenStr = (when && !isNaN(when.getTime())) ? when.toLocaleDateString([], { month: 'short', day: 'numeric' }) + ' ' + when.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) : '';
+                meta.innerText = 'SPORTSBOOK FUTURES  •  ' + (res.data.source || '') + (whenStr ? '  •  UPDATED ' + whenStr : '');
+                track.innerHTML = cards.join('');
+                applyScroll(cfg.prefix + '-viewport', cfg.prefix + '-track', 15000);
+            } catch (e) {
+                if (!isCurrentSlide(gen)) return;
+                screen.style.display = 'flex';
+                track.innerHTML = '<div class="neon-text-cycle" style="font-size:4vh; font-weight:900; text-align:center; padding-top:8vh; grid-column: 1 / -1;">ODDS FEED DOWN</div>';
+                slideTimer = setTimeout(nextSlide, 6000);
             }
         }
 
@@ -1677,6 +1963,212 @@
                 slideTimer = setTimeout(nextSlide, 6000);
             }
         }
+
+        // ===== D-PAD / REMOTE NAVIGATION (Android TV remote, keyboard, mouse) =====
+        // Idle kiosk view is unchanged: nothing shows until a remote key is pressed, and everything auto-hides.
+        //   LEFT/RIGHT = previous/next slide   OK/ENTER, DOWN or M = navigator menu   UP = focus the settings gear
+        //   BACK/ESC = close menu/settings     PLAY-PAUSE, SPACE or P = pause/resume rotation
+        var arcadeNav = { paused: false, pending: false, forcing: false, menuOpen: false, current: null,
+                          idleMs: 10000, settingsIdleMs: 90000, pauseMaxMs: 600000,
+                          idleTimer: null, settingsTimer: null, pauseTimer: null, hudTimer: null, historyArmed: false };
+        var NAV_TITLES = { live: 'LIVE ACTION', props: 'LIVE LEADERS', mySquad: 'MY SQUAD', trivia: 'TRIVIA', leaders: 'TOP PERFORMERS', pga: 'PGA TOUR',
+            ufc: 'UFC', command: 'COMMAND CENTER', soccerSlide: 'SOCCER', tvGuide: 'TV GUIDE', news: 'HEADLINES', odds: "TODAY'S LINES", futures: 'FUTURES',
+            nflFutures: 'NFL FUTURES', nflAwards: 'NFL AWARDS', cfbFutures: 'CFB FUTURES', rankings: 'CFB RANKINGS', nfl: 'NFL STANDINGS', nba: 'NBA STANDINGS',
+            nhl: 'NHL STANDINGS', mlb: 'MLB STANDINGS' };
+
+        function navKeyOf(e) {
+            var k = e.key || '', c = e.keyCode || e.which || 0;
+            // Raw Android KeyEvent codes only arrive (e.g. from some WebView shells) with no usable e.key;
+            // never match them on a real keyboard, where 66 = "B", 85 = "U", 20 = CapsLock, etc.
+            var raw = (!k || k === 'Unidentified');
+            if (k === 'ArrowLeft' || k === 'Left' || c === 37 || (raw && c === 21)) return 'left';
+            if (k === 'ArrowRight' || k === 'Right' || c === 39 || (raw && c === 22)) return 'right';
+            if (k === 'ArrowUp' || k === 'Up' || c === 38 || (raw && c === 19)) return 'up';
+            if (k === 'ArrowDown' || k === 'Down' || c === 40 || (raw && c === 20)) return 'down';
+            if (k === 'Enter' || k === 'Select' || k === 'Accept' || c === 13 || (raw && (c === 23 || c === 66))) return 'ok';
+            if (k === 'Escape' || k === 'Esc' || k === 'Backspace' || k === 'BrowserBack' || k === 'GoBack' || c === 27 || c === 8 || c === 166 || c === 10009 || (raw && c === 4)) return 'back';
+            if (k === 'MediaPlayPause' || k === 'MediaPlay' || k === 'MediaPause' || k === ' ' || k === 'p' || k === 'P' || c === 179 || (raw && c === 85)) return 'play';
+            if (k === 'm' || k === 'M') return 'menu';
+            return null;
+        }
+        function navIsSettingsOpen() { var m = document.getElementById('settings-modal'); return !!(m && (m.classList.contains('open') || m.style.display === 'flex')); }
+        function navEnabled(k) { return k === 'live' || k === 'props' || !!settings[k]; }
+        function navVisible(el) { if (!el || el.disabled) return false; var r = el.getBoundingClientRect(); return r.width > 0 && r.height > 0 && getComputedStyle(el).visibility !== 'hidden'; }
+        function navItemsIn(sel) { return Array.prototype.slice.call(document.querySelectorAll(sel)).filter(navVisible); }
+        function navSettingsItems() { return navItemsIn('#settings-modal button, #settings-modal input:not([type=range]):not([tabindex="-1"])'); }
+
+        function navMove(items, dir) {
+            if (!items.length) return;
+            var cur = document.activeElement;
+            if (items.indexOf(cur) === -1) { items[0].focus(); return; }
+            var r = cur.getBoundingClientRect(), cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+            var best = null, bestScore = Infinity;
+            items.forEach(function(el) {
+                if (el === cur) return;
+                var b = el.getBoundingClientRect(), x = b.left + b.width / 2, y = b.top + b.height / 2, dx = x - cx, dy = y - cy, main, cross;
+                if (dir === 'left')  { if (dx > -2) return; main = -dx; cross = Math.abs(dy); }
+                if (dir === 'right') { if (dx < 2) return; main = dx; cross = Math.abs(dy); }
+                if (dir === 'up')    { if (dy > -2) return; main = -dy; cross = Math.abs(dx); }
+                if (dir === 'down')  { if (dy < 2) return; main = dy; cross = Math.abs(dx); }
+                var score = main + cross * 2.5;
+                if (score < bestScore) { bestScore = score; best = el; }
+            });
+            if (best) { best.focus(); try { best.scrollIntoView({ block: 'nearest' }); } catch (e) {} }
+        }
+
+        function navTouch() {
+            document.body.classList.add('nav-active');
+            clearTimeout(arcadeNav.idleTimer);
+            arcadeNav.idleTimer = setTimeout(navIdle, arcadeNav.idleMs);
+            clearTimeout(arcadeNav.settingsTimer);
+            if (navIsSettingsOpen()) arcadeNav.settingsTimer = setTimeout(function() { if (navIsSettingsOpen()) toggleSettings(); }, arcadeNav.settingsIdleMs);
+            if (arcadeNav.paused) { clearTimeout(arcadeNav.pauseTimer); arcadeNav.pauseTimer = setTimeout(function() { if (arcadeNav.paused) navTogglePause(); }, arcadeNav.pauseMaxMs); }
+            navArmHistory();
+        }
+        function navIdle() {
+            if (navIsSettingsOpen()) { arcadeNav.idleTimer = setTimeout(navIdle, arcadeNav.idleMs); return; }
+            navCloseMenu(true);
+            var hud = document.getElementById('nav-hud'); if (hud) hud.classList.remove('show');
+            var ae = document.activeElement;
+            if (ae && ae !== document.body && ae.blur) ae.blur();
+            document.body.classList.remove('nav-active');
+        }
+        // Android TV's hardware Back usually navigates browser history; once the remote is in use, keep one
+        // history entry so Back closes our overlays instead of leaving the scoreboard.
+        function navArmHistory() {
+            if (arcadeNav.historyArmed || !window.history || !history.pushState) return;
+            arcadeNav.historyArmed = true;
+            try { history.pushState({ arcadeNav: 1 }, ''); } catch (e) { return; }
+            window.addEventListener('popstate', function() {
+                navBack();
+                try { history.pushState({ arcadeNav: 1 }, ''); } catch (e) {}
+            });
+        }
+        function navBack() {
+            if (navIsSettingsOpen()) { toggleSettings(); return true; }
+            if (arcadeNav.menuOpen) { navCloseMenu(); return true; }
+            var hud = document.getElementById('nav-hud'); if (hud) hud.classList.remove('show');
+            var ae = document.activeElement; if (ae && ae.id === 'settings-gear') ae.blur();
+            return false;
+        }
+
+        function navShowHud(text) {
+            var hud = document.getElementById('nav-hud');
+            if (!hud) return;
+            var list = ARCADE_SCREENS.filter(navEnabled);
+            var idx = list.indexOf(arcadeNav.current);
+            hud.innerHTML = text || ('&#9664;&nbsp;&nbsp;' + escHtml(NAV_TITLES[arcadeNav.current] || '') + '&nbsp;&nbsp;&#9654;<span style="opacity:0.6; margin-left:2vw;">' + (idx + 1) + ' / ' + list.length + (arcadeNav.paused ? ' &nbsp;&#9208;' : '') + '</span>');
+            hud.classList.add('show');
+            clearTimeout(arcadeNav.hudTimer);
+            arcadeNav.hudTimer = setTimeout(function() { hud.classList.remove('show'); }, 2600);
+        }
+        function navForceSlide(step) {
+            rotationStep = step;
+            arcadeNav.forcing = true;
+            arcadeNav.pending = false;
+            try { clearTimeout(slideTimer); clearTimeout(triviaRevealTimer); nextSlide(); } finally { arcadeNav.forcing = false; }
+        }
+        function navStep(dir) {
+            var list = ARCADE_SCREENS, n = list.length;
+            var i = list.indexOf(arcadeNav.current); if (i < 0) i = 0;
+            for (var tries = 0; tries < n; tries++) {
+                i = (i + dir + n) % n;
+                if (navEnabled(list[i]) && !(list[i] === 'trivia' && !currentTrivia)) break;
+            }
+            navForceSlide(i);
+            navShowHud();
+        }
+        function navGoTo(key) {
+            var i = ARCADE_SCREENS.indexOf(key);
+            if (i < 0) return;
+            navCloseMenu(true);
+            navForceSlide(i);
+            navShowHud();
+        }
+        function navTogglePause() {
+            arcadeNav.paused = !arcadeNav.paused;
+            document.body.classList.toggle('nav-paused', arcadeNav.paused);
+            var btn = document.getElementById('nav-pause');
+            if (btn) btn.innerHTML = arcadeNav.paused ? '&#9654; RESUME ROTATION' : '&#9208; PAUSE ROTATION';
+            clearTimeout(arcadeNav.pauseTimer);
+            if (arcadeNav.paused) {
+                arcadeNav.pauseTimer = setTimeout(function() { if (arcadeNav.paused) navTogglePause(); }, arcadeNav.pauseMaxMs); // never stay frozen all day
+                navShowHud('&#9208;&nbsp; ROTATION PAUSED');
+            } else {
+                navShowHud('&#9654;&nbsp; ROTATION RESUMED');
+                if (arcadeNav.pending) { arcadeNav.pending = false; nextSlide(); }
+            }
+        }
+        function navOpenMenu() {
+            var grid = document.getElementById('nav-grid'), menu = document.getElementById('nav-menu');
+            if (!grid || !menu) return;
+            grid.innerHTML = ARCADE_SCREENS.filter(navEnabled).map(function(k) {
+                return '<button type="button" class="nav-item' + (k === arcadeNav.current ? ' current' : '') + '" data-slide="' + k + '" onclick="navGoTo(\'' + k + '\')">' + escHtml(NAV_TITLES[k] || k) + '</button>';
+            }).join('');
+            menu.classList.add('open');
+            menu.setAttribute('aria-hidden', 'false');
+            arcadeNav.menuOpen = true;
+            var cur = grid.querySelector('.nav-item.current') || grid.querySelector('.nav-item');
+            if (cur) cur.focus();
+        }
+        function navCloseMenu(silent) {
+            var menu = document.getElementById('nav-menu');
+            if (menu) { menu.classList.remove('open'); menu.setAttribute('aria-hidden', 'true'); }
+            var wasOpen = arcadeNav.menuOpen;
+            arcadeNav.menuOpen = false;
+            var ae = document.activeElement;
+            if (wasOpen && ae && ae.classList && ae.classList.contains('nav-item')) ae.blur();
+        }
+        function navOnSettingsToggled(open) {
+            if (open) {
+                if (arcadeNav.menuOpen) navCloseMenu(true);
+                if (document.body.classList.contains('nav-active')) {
+                    var items = navSettingsItems();
+                    if (items.length) setTimeout(function() { items[0].focus(); }, 0);
+                    navTouch();
+                }
+            } else {
+                clearTimeout(arcadeNav.settingsTimer);
+                var ae = document.activeElement;
+                if (ae && ae.closest && ae.closest('#settings-modal')) ae.blur();
+            }
+        }
+
+        document.addEventListener('keydown', function(e) {
+            if (document.body.classList.contains('remote-active')) return;
+            var ae = document.activeElement;
+            var typing = !!(ae && ae.tagName === 'INPUT' && (ae.type === 'text' || ae.type === 'search' || ae.type === 'number'));
+            if (e.defaultPrevented) { navTouch(); return; } // the existing settings hotkeys already handled it
+            var nk = navKeyOf(e);
+            if (!nk) return;
+            if (typing && nk !== 'up' && nk !== 'down' && !(nk === 'back' && e.key !== 'Backspace' && e.keyCode !== 8)) return; // let text fields edit normally
+            navTouch();
+            if (navIsSettingsOpen()) {
+                if (nk === 'back') { e.preventDefault(); toggleSettings(); return; }
+                if (nk === 'up' || nk === 'down' || nk === 'left' || nk === 'right') { e.preventDefault(); navMove(navSettingsItems(), nk); return; }
+                if (nk === 'ok' && ae && ae.type === 'checkbox') { e.preventDefault(); ae.click(); return; }
+                if (nk === 'ok' && (!ae || ae === document.body)) { e.preventDefault(); var its = navSettingsItems(); if (its.length) its[0].focus(); }
+                return; // Enter on buttons / Space on checkboxes: native behaviour
+            }
+            if (arcadeNav.menuOpen) {
+                if (e.repeat && nk === 'ok') { e.preventDefault(); return; }
+                if (nk === 'back' || nk === 'menu') { e.preventDefault(); navCloseMenu(); return; }
+                if (nk === 'play') { e.preventDefault(); navTogglePause(); return; }
+                if (nk === 'up' || nk === 'down' || nk === 'left' || nk === 'right') { e.preventDefault(); navMove(navItemsIn('#nav-menu .nav-item'), nk); return; }
+                if (nk === 'ok') { e.preventDefault(); if (ae && ae.classList && ae.classList.contains('nav-item')) ae.click(); return; }
+                return;
+            }
+            // kiosk view
+            if (ae && ae.id === 'settings-gear') {
+                if (nk === 'ok' || (nk === 'play' && e.key === ' ')) return; // native / existing behaviour opens settings
+                if (nk === 'down' || nk === 'back') { e.preventDefault(); ae.blur(); return; }
+            }
+            if (nk === 'left' || nk === 'right') { e.preventDefault(); navStep(nk === 'left' ? -1 : 1); return; }
+            if (nk === 'up') { e.preventDefault(); var g = document.getElementById('settings-gear'); if (g) g.focus(); return; }
+            if (nk === 'ok' || nk === 'down' || nk === 'menu') { e.preventDefault(); navOpenMenu(); return; }
+            if (nk === 'play') { e.preventDefault(); navTogglePause(); return; }
+            if (nk === 'back') { e.preventDefault(); navBack(); return; }
+        });
 
         window.addEventListener('load', async function() { 
             checkMode(); loadSettingsUI(); updateClock(); setInterval(updateClock, 1000);
