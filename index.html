@@ -258,6 +258,112 @@
         body.nav-paused #nav-paused { display: block; }
         body.nav-active #settings-modal button:focus, body.nav-active #settings-modal input:focus { outline: 0.5vh solid var(--accent-color); outline-offset: 0.3vh; box-shadow: 0 0 2.5vh var(--accent-color); }
         body.nav-active #settings-modal .toggle-row:focus-within { background: rgba(255,255,255,0.1); border-radius: 0.6vh; }
+
+        /* GAMECAST overlay (full screen, above slides/ticker/clock; below the navigator menu and settings) */
+        #gamecast { position: fixed; inset: 0; z-index: 27000; display: none; flex-direction: column; padding: 1.8vh 2.6vw 2vh; color: #fff; cursor: default;
+                    background: radial-gradient(ellipse at 50% -10%, rgba(40, 60, 100, 0.55) 0%, rgba(5, 8, 15, 0.98) 55%), #05080f; }
+        #gamecast.open { display: flex; }
+        body.mouse-active, body.mouse-active * { cursor: default; }
+        body.mouse-active [data-gc], body.mouse-active #gamecast button { cursor: pointer; }
+        .gc-top > * { white-space: nowrap; flex: none; }
+        .gc-top { display: flex; align-items: center; gap: 1.6vw; border-bottom: 2px solid var(--accent-color); padding-bottom: 1vh; font-weight: 900; letter-spacing: 0.15vw; }
+        .gc-brand { font-size: 3.6vh; letter-spacing: 0.4vh; }
+        .gc-chip { font-size: 2.2vh; padding: 0.4vh 1.2vh; border: 1px solid currentColor; border-radius: 0.8vh; }
+        .gc-net { font-size: 2.3vh; color: #facc15; max-width: 24vw; overflow: hidden; text-overflow: ellipsis; }
+        .gc-top .gc-spacer { flex: 1 1 auto; }
+        #gc-updated { font-size: 2vh; color: rgba(255,255,255,0.75); display: flex; align-items: center; gap: 0.6vw; }
+        #gc-updated.bad { color: #ff007f; }
+        .gc-dot { width: 1.2vh; height: 1.2vh; border-radius: 50%; background: #39ff14; display: inline-block; box-shadow: 0 0 1vh #39ff14; }
+        .gc-dot.on { animation: pulsePink 1s ease-in-out infinite; }
+        .gc-recon { animation: pulsePink 1.2s ease-in-out infinite; }
+        .gc-hint { font-size: 1.8vh; color: rgba(255,255,255,0.55); }
+        #gamecast.gc-bad .gc-hint { display: none; }
+        .gc-close { background: rgba(12,20,32,0.95); color: #fff; border: 2px solid #ff007f; border-radius: 1vh; padding: 0.8vh 1.8vh; font-family: 'Inter', sans-serif; font-size: 2.2vh; font-weight: 900; letter-spacing: 0.1vw; }
+        .gc-close:focus, .gc-close:hover { outline: 0.4vh solid var(--accent-color); box-shadow: 0 0 2.5vh var(--accent-color); }
+        .gc-board { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 2vw; margin: 1.6vh 0 1.2vh; min-height: 18vh; }
+        .gc-team { display: flex; align-items: center; gap: 1.6vw; min-width: 0; }
+        #gc-home { flex-direction: row-reverse; text-align: right; }
+        .gc-logo { width: 12vh; height: 12vh; object-fit: contain; filter: drop-shadow(0 0.6vh 1.2vh rgba(0,0,0,0.8)); flex: none; }
+        .gc-tinfo { min-width: 0; flex: 1; }
+        .gc-tname { font-size: 3.8vh; font-weight: 900; line-height: 1.1; text-transform: uppercase; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .gc-rank { font-size: 2.4vh; color: #facc15; margin-right: 0.6vw; vertical-align: middle; }
+        .gc-rec { font-size: 2.3vh; color: rgba(255,255,255,0.65); font-weight: 700; letter-spacing: 0.1vw; margin-top: 0.4vh; }
+        .gc-score { font-family: 'Share Tech Mono', monospace; font-size: 12vh; font-weight: 900; line-height: 1; position: relative; flex: none; min-width: 8vh; text-align: center; }
+        .gc-poss { position: absolute; top: -0.5vh; right: -1.6vh; font-size: 3vh; color: #facc15; text-shadow: 0 0 1.5vh #facc15; }
+        .gc-mid { display: flex; flex-direction: column; align-items: center; gap: 0.9vh; min-width: 24vw; max-width: 32vw; text-align: center; }
+        .gc-pill { font-size: 2.4vh; font-weight: 900; letter-spacing: 0.3vh; padding: 0.4vh 1.8vh; border-radius: 3vh; border: 2px solid rgba(255,255,255,0.5); color: #ddd; }
+        .gc-pill.live { border-color: #ff007f; color: #ff007f; animation: pulsePink 1.5s ease-in-out infinite; }
+        .gc-pill.pre { border-color: #facc15; color: #facc15; }
+        .gc-clock { font-size: 3.6vh; font-weight: 900; text-transform: uppercase; }
+        .gc-sit { font-size: 2.4vh; font-weight: 800; color: rgba(255,255,255,0.88); }
+        .gc-sit .trend-container { margin-top: 0; padding: 1vh 1.5vh; gap: 2vw; }
+        .gc-sub { font-size: 2vh; color: rgba(255,255,255,0.75); margin-top: 0.6vh; }
+        .gc-hl { color: var(--accent-color); }
+        .gc-red { color: #ff2d55; }
+        .gc-strip { display: grid; grid-template-columns: 1.25fr 1fr; gap: 1.6vw; margin-bottom: 1.4vh; }
+        .gc-strip > div:empty { display: none; }
+        .gc-strip.one { grid-template-columns: 1fr; }
+        #gamecast img, #nav-games img { display: inline-block; vertical-align: middle; }
+        .gc-box { background: rgba(10, 16, 26, 0.85); border: 1px solid rgba(255,255,255,0.12); border-radius: 1.4vh; padding: 1.2vh 1.6vh; min-width: 0; }
+        .gc-ls { width: 100%; border-collapse: collapse; font-size: 2.4vh; font-weight: 800; text-align: center; }
+        .gc-ls th { color: rgba(255,255,255,0.55); font-size: 1.9vh; padding: 0.3vh 0.4vw; }
+        .gc-ls td { padding: 0.5vh 0.4vw; border-top: 1px solid rgba(255,255,255,0.08); }
+        .gc-ls .gc-tot { color: var(--accent-color); font-weight: 900; }
+        .gc-ls-team { text-align: left; white-space: nowrap; }
+        .gc-ls-logo { width: 3vh; height: 3vh; object-fit: contain; vertical-align: middle; margin-right: 0.6vw; }
+        .gc-panel-title, .gc-sub-title { font-size: 2vh; font-weight: 900; letter-spacing: 0.2vw; color: var(--accent-color); margin-bottom: 0.6vh; }
+        .gc-sub-title { margin: 1vh 0 0.6vh; border-bottom: 1px dashed rgba(255,255,255,0.2); padding-bottom: 0.4vh; }
+        .gc-wp-row { display: flex; justify-content: space-between; font-size: 2.3vh; font-weight: 900; }
+        .gc-wp-bar { display: flex; height: 1.6vh; border-radius: 1vh; overflow: hidden; margin: 0.5vh 0; background: #222; }
+        .gc-wp-bar > div { height: 100%; transition: width 0.8s ease; }
+        .gc-spark { width: 100%; height: 5.5vh; display: block; }
+        .gc-spark-legend { display: flex; justify-content: space-between; font-size: 1.5vh; color: rgba(255,255,255,0.5); }
+        .gc-odds { font-size: 2.2vh; font-weight: 800; margin-top: 0.6vh; color: rgba(255,255,255,0.85); }
+        .gc-odds b { color: #39ff14; }
+        .gc-dim { color: rgba(255,255,255,0.45); font-weight: 700; }
+        .gc-panels { flex: 1; min-height: 0; display: grid; grid-template-columns: 1fr 1fr 1.25fr; gap: 1.6vw; }
+        .gc-panel { display: flex; flex-direction: column; min-height: 0; }
+        .gc-panel-head { font-size: 2.4vh; font-weight: 900; letter-spacing: 0.25vw; border-bottom: 2px solid; padding-bottom: 0.6vh; margin-bottom: 0.8vh; }
+        .gc-panel-body { flex: 1; min-height: 0; overflow: hidden; }
+        .gc-empty { color: rgba(255,255,255,0.55); font-size: 2.4vh; font-weight: 900; text-align: center; padding-top: 6vh; letter-spacing: 0.15vw; }
+        .gc-play { display: flex; gap: 1vw; align-items: flex-start; padding: 0.9vh 0.6vw; border-bottom: 1px solid rgba(255,255,255,0.08); }
+        .gc-play.score { background: linear-gradient(90deg, rgba(57,255,20,0.14), transparent); border-left: 0.4vh solid #39ff14; }
+        .gc-play-logo { width: 3.4vh; height: 3.4vh; object-fit: contain; flex: none; display: inline-block; }
+        .gc-play-when { font-size: 1.7vh; font-weight: 900; color: var(--accent-color); letter-spacing: 0.1vw; text-transform: uppercase; }
+        .gc-play-text { font-size: 2.1vh; font-weight: 700; line-height: 1.25; color: rgba(255,255,255,0.92); display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+        .gc-st-head { display: flex; justify-content: space-between; font-size: 2.2vh; font-weight: 900; margin-bottom: 0.4vh; }
+        .gc-st-logo { width: 2.8vh; height: 2.8vh; object-fit: contain; vertical-align: middle; margin: 0 0.5vw; }
+        .gc-st { padding: 0.55vh 0; border-bottom: 1px solid rgba(255,255,255,0.06); }
+        .gc-st-line { display: flex; justify-content: space-between; align-items: baseline; font-weight: 900; }
+        .gc-st-v { font-size: 2.3vh; min-width: 7vw; }
+        .gc-st-line .gc-st-v:last-child { text-align: right; }
+        .gc-st-l { font-size: 1.8vh; color: rgba(255,255,255,0.7); text-transform: uppercase; text-align: center; letter-spacing: 0.08vw; }
+        .gc-st-bar { display: flex; height: 0.6vh; border-radius: 0.4vh; overflow: hidden; margin-top: 0.3vh; background: #222; gap: 0.2vw; }
+        .gc-ldrs { display: grid; grid-template-columns: 1fr 1fr; gap: 0.8vh 1vw; }
+        .gc-ldr { display: flex; gap: 0.8vw; align-items: center; background: rgba(255,255,255,0.04); border-radius: 1vh; padding: 0.6vh 0.6vw; min-width: 0; }
+        .gc-ldr-img { width: 5.4vh; height: 5.4vh; border-radius: 50%; object-fit: cover; background: rgba(255,255,255,0.08); flex: none; }
+        .gc-ldr-txt { min-width: 0; }
+        .gc-ldr-cat { font-size: 1.5vh; font-weight: 900; letter-spacing: 0.08vw; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .gc-ldr-name { font-size: 2vh; font-weight: 900; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .gc-ldr-val { font-size: 1.8vh; font-weight: 700; color: rgba(255,255,255,0.8); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .gc-bx { margin-bottom: 1vh; }
+        .gc-bx-title { font-size: 1.9vh; font-weight: 900; letter-spacing: 0.1vw; margin-bottom: 0.3vh; }
+        .gc-bx-t { width: 100%; border-collapse: collapse; font-size: 1.9vh; font-weight: 800; }
+        .gc-bx-t th { color: rgba(255,255,255,0.5); font-size: 1.6vh; text-align: right; padding: 0.2vh 0.4vw; }
+        .gc-bx-t td { text-align: right; padding: 0.35vh 0.4vw; border-top: 1px solid rgba(255,255,255,0.06); }
+        .gc-bx-t .gc-bx-name { text-align: left; white-space: nowrap; max-width: 12vw; overflow: hidden; text-overflow: ellipsis; }
+        /* clickable games (Live Action cards, ticker, navigator GAMES row) */
+        .gc-card { transition: transform 0.15s ease, box-shadow 0.15s ease; }
+        body.mouse-active .gc-card:hover { transform: scale(1.02); box-shadow: 0 0 3vh var(--accent-color); }
+        .nav-section { font-size: 2.2vh; font-weight: 900; letter-spacing: 0.25vw; color: rgba(255,255,255,0.7); margin: 0 0 1vh; }
+        #nav-games { display: flex; gap: 1vw; overflow-x: auto; overflow-y: hidden; padding: 0.8vh 0.6vw 1.2vh; margin-bottom: 1.8vh; scrollbar-width: none; }
+        #nav-games::-webkit-scrollbar { display: none; }
+        .gc-item { flex: none; display: inline-flex; align-items: center; gap: 0.5vw; white-space: nowrap; font-size: 2.1vh; padding: 1.1vh 1.2vw; text-transform: none; }
+        .gc-item b { color: var(--accent-color); }
+        .gc-chip-lg { font-size: 1.5vh; color: #facc15; letter-spacing: 0.1vw; margin-right: 0.3vw; }
+        .gc-chip-logo { width: 2.8vh; height: 2.8vh; object-fit: contain; }
+        .gc-chip-st { font-size: 1.6vh; color: rgba(255,255,255,0.7); margin-left: 0.4vw; }
+        .gc-chip-live { color: #ff007f; }
     </style>
 </head>
 <body class="theme-cyan">
@@ -479,9 +585,36 @@
         <button class="r-btn" onclick="bc.postMessage({action:'forceNext'})">NEXT SLIDE</button>
     </div>
 
+    <div id="gamecast" aria-hidden="true">
+        <div class="gc-top">
+            <span class="gc-brand neon-text-cycle">&#9673; GAMECAST</span>
+            <span class="gc-chip neon-text-cycle" id="gc-league"></span>
+            <span class="gc-net" id="gc-net"></span>
+            <span class="gc-spacer"></span>
+            <span id="gc-updated"></span>
+            <span class="gc-hint">&#9664; &#9654; SWITCH GAME &nbsp;&bull;&nbsp; BACK CLOSE</span>
+            <button type="button" class="gc-close" id="gc-close" onclick="gcClose()">&#10005; CLOSE</button>
+        </div>
+        <div class="gc-board">
+            <div class="gc-team" id="gc-away"></div>
+            <div class="gc-mid" id="gc-mid"></div>
+            <div class="gc-team" id="gc-home"></div>
+        </div>
+        <div class="gc-strip" id="gc-strip">
+            <div class="gc-box" id="gc-line"></div>
+            <div class="gc-box" id="gc-wp"></div>
+        </div>
+        <div class="gc-panels">
+            <div class="gc-panel gc-box"><div class="gc-panel-head neon-text-cycle" id="gc-plays-head">LAST PLAYS</div><div class="gc-panel-body" id="gc-plays-body"></div></div>
+            <div class="gc-panel gc-box"><div class="gc-panel-head neon-text-cycle" id="gc-stats-head">TEAM STATS</div><div class="gc-panel-body" id="gc-stats-body"></div></div>
+            <div class="gc-panel gc-box"><div class="gc-panel-head neon-text-cycle" id="gc-players-head">PLAYER STATS</div><div class="gc-panel-body" id="gc-players-body"></div></div>
+        </div>
+    </div>
     <div id="nav-menu" aria-hidden="true">
         <div class="nav-card">
             <div class="nav-title neon-text-cycle">ARCADE NAVIGATOR</div>
+            <div class="nav-section" id="nav-games-title" style="display:none">&#9673; GAMES &bull; LIVE &amp; UPCOMING &mdash; OK OPENS GAMECAST</div>
+            <div id="nav-games"></div>
             <div class="nav-grid" id="nav-grid"></div>
             <div class="nav-actions">
                 <button type="button" class="nav-item nav-action" id="nav-pause" onclick="navTogglePause()">&#9208; PAUSE ROTATION</button>
@@ -863,7 +996,7 @@
         ];
 
         function nextSlide() {
-            if (arcadeNav.paused && !arcadeNav.forcing) { arcadeNav.pending = true; return; }
+            if ((arcadeNav.paused || (gc && gc.open)) && !arcadeNav.forcing) { arcadeNav.pending = true; return; } // paused or a Gamecast is open
             clearTimeout(slideTimer);
             clearTimeout(triviaRevealTimer);
             slideGen++;
@@ -947,7 +1080,7 @@
         }
 
         async function updateSportsTicker() { 
-            var newLivePage = [], allLive = [], allSched = [], newLeaders = [];
+            var newLivePage = [], allLive = [], allSched = [], newLeaders = [], gcList = [];
             var newTVGuide = []; newMarqueeGames = [];
             
             var configs = [
@@ -1048,14 +1181,21 @@
                                 time: new Date(ev.date).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})
                             };
 
+                            if (c.s !== 'tennis') { // Gamecast registry (ESPN summary API supports team sports)
+                                gameObj.gcKey = c.id + ':' + ev.id;
+                                gcList.push({ key: gameObj.gcKey, sport: c.s, league: c.l, cid: c.id, id: String(ev.id), label: displayLeague, away: aName, home: hName,
+                                    awayAbbr: (a.team && a.team.abbreviation) || aName, homeAbbr: (h.team && h.team.abbreviation) || hName, aLogo: aLogo, hLogo: hLogo, aFallback: aFallback, hFallback: hFallback,
+                                    aScore: a.score || '', hScore: h.score || '', state: status.state, status: status.shortDetail, time: gameObj.time, date: gameTime, tv: tv, weight: mWeight,
+                                    sitDown: trendData.downDist || '', sitSpot: trendData.spot || '' });
+                            }
                             globalRawGames.push(gameObj);
                             newMarqueeGames.push(gameObj);
                             
                             if (status.state === 'in') {
                                 newLivePage.push(gameObj);
-                                allLive.push('<span class="score-item"><span class="live-pulse">●</span><div class="team-box"><img class="team-logo" src="' + aLogo + '" onerror="this.src=\'' + aFallback + '\'; this.onerror=null;"><span class="team-score">' + a.score + '</span></div><span class="vs-label">@</span><div class="team-box"><img class="team-logo" src="' + hLogo + '" onerror="this.src=\'' + hFallback + '\'; this.onerror=null;"><span class="team-score">' + h.score + '</span></div><span class="game-status neon-text-cycle">' + status.shortDetail + '</span></span>');
+                                allLive.push('<span class="score-item"' + gcAttr(gameObj.gcKey) + '><span class="live-pulse">●</span><div class="team-box"><img class="team-logo" src="' + aLogo + '" onerror="this.src=\'' + aFallback + '\'; this.onerror=null;"><span class="team-score">' + a.score + '</span></div><span class="vs-label">@</span><div class="team-box"><img class="team-logo" src="' + hLogo + '" onerror="this.src=\'' + hFallback + '\'; this.onerror=null;"><span class="team-score">' + h.score + '</span></div><span class="game-status neon-text-cycle">' + status.shortDetail + '</span></span>');
                             } else if (status.state === 'pre') {
-                                allSched.push('<span class="score-item"><div class="team-box"><img class="team-logo" src="' + aLogo + '" onerror="this.src=\'' + aFallback + '\'; this.onerror=null;"></div><span class="vs-label">@</span><div class="team-box"><img class="team-logo" src="' + hLogo + '" onerror="this.src=\'' + hFallback + '\'; this.onerror=null;"></div><span class="game-status neon-text-cycle">' + new Date(ev.date).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}) + '</span></span>');
+                                allSched.push('<span class="score-item"' + gcAttr(gameObj.gcKey) + '><div class="team-box"><img class="team-logo" src="' + aLogo + '" onerror="this.src=\'' + aFallback + '\'; this.onerror=null;"></div><span class="vs-label">@</span><div class="team-box"><img class="team-logo" src="' + hLogo + '" onerror="this.src=\'' + hFallback + '\'; this.onerror=null;"></div><span class="game-status neon-text-cycle">' + new Date(ev.date).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}) + '</span></span>');
                             }
                             
                             if (tv !== 'TV' && status.state === 'in') {
@@ -1106,6 +1246,7 @@
             }
             
             globalLiveGamesData = newLivePage;
+            gcRegisterGames(gcList);
             globalTVGuideData = newTVGuide;
             globalLeadersData = newLeaders.slice();
 
@@ -1162,7 +1303,7 @@
             else {
                 track.innerHTML = globalLiveGamesData.map(function(g) { 
                     var lines = formatCardLines(g);
-                    return '<div class="glass-card"><div class="card-meta neon-text-cycle"><span>● LIVE</span><span>' + g.league + '</span><span>' + g.status + '</span></div><div class="card-row"><div class="card-team"><img src="' + g.aLogo + '" onerror="this.src=\'' + g.aFallback + '\'; this.onerror=null;">' + g.away + '</div><div class="card-val-lg">' + g.aScore + '</div></div><div class="card-row"><div class="card-team"><img src="' + g.hLogo + '" onerror="this.src=\'' + g.hFallback + '\'; this.onerror=null;">' + g.home + '</div><div class="card-val-lg">' + g.hScore + '</div></div>' + buildTrendHtml(g.trend) + '<div class="card-footer neon-text-cycle" style="margin-top: 1.5vh;"><span>' + g.clock + '</span>' + (lines ? '<span>' + lines + '</span>' : '') + '<span>' + g.tv + '</span></div></div>';
+                    return '<div class="glass-card gc-card"' + gcAttr(g.gcKey) + '><div class="card-meta neon-text-cycle"><span>● LIVE</span><span>' + g.league + '</span><span>' + g.status + '</span></div><div class="card-row"><div class="card-team"><img src="' + g.aLogo + '" onerror="this.src=\'' + g.aFallback + '\'; this.onerror=null;">' + g.away + '</div><div class="card-val-lg">' + g.aScore + '</div></div><div class="card-row"><div class="card-team"><img src="' + g.hLogo + '" onerror="this.src=\'' + g.hFallback + '\'; this.onerror=null;">' + g.home + '</div><div class="card-val-lg">' + g.hScore + '</div></div>' + buildTrendHtml(g.trend) + '<div class="card-footer neon-text-cycle" style="margin-top: 1.5vh;"><span>' + g.clock + '</span>' + (lines ? '<span>' + lines + '</span>' : '') + '<span>' + g.tv + '</span></div></div>';
                 }).join('');
                 applyScroll('live-viewport', 'live-grid-track', 15000);
             }
@@ -1189,7 +1330,7 @@
             globalRawGames.forEach(function(g) { 
                 for(var i=0; i<teams.length; i++) {
                     if(g.searchString.indexOf(teams[i]) > -1) { 
-                        gamesHtml += '<div class="glass-card squad-game-card"><div class="card-meta neon-text-cycle"><span>' + g.league + '</span><span>' + g.tv + '</span></div><div class="card-row"><div class="card-team"><img src="' + g.aLogo + '" onerror="this.src=\'' + g.aFallback + '\'; this.onerror=null;">' + g.away + '</div><div class="card-val-lg">' + g.aScore + '</div></div><div class="card-row"><div class="card-team"><img src="' + g.hLogo + '" onerror="this.src=\'' + g.hFallback + '\'; this.onerror=null;">' + g.home + '</div><div class="card-val-lg">' + g.hScore + '</div></div>' + buildTrendHtml(g.trend) + '<div class="card-footer neon-text-cycle" style="margin-top:1.5vh; justify-content:center;">' + (g.state === 'in' ? 'LIVE NOW' : (g.state === 'post' ? 'FINAL' : g.status)) + '</div></div>';
+                        gamesHtml += '<div class="glass-card squad-game-card gc-card"' + gcAttr(g.gcKey) + '><div class="card-meta neon-text-cycle"><span>' + g.league + '</span><span>' + g.tv + '</span></div><div class="card-row"><div class="card-team"><img src="' + g.aLogo + '" onerror="this.src=\'' + g.aFallback + '\'; this.onerror=null;">' + g.away + '</div><div class="card-val-lg">' + g.aScore + '</div></div><div class="card-row"><div class="card-team"><img src="' + g.hLogo + '" onerror="this.src=\'' + g.hFallback + '\'; this.onerror=null;">' + g.home + '</div><div class="card-val-lg">' + g.hScore + '</div></div>' + buildTrendHtml(g.trend) + '<div class="card-footer neon-text-cycle" style="margin-top:1.5vh; justify-content:center;">' + (g.state === 'in' ? 'LIVE NOW' : (g.state === 'post' ? 'FINAL' : g.status)) + '</div></div>';
                         break; 
                     }
                 }
@@ -1988,10 +2129,504 @@
             }
         }
 
+        // ===== GAMECAST: full-screen live game detail (opened from Live Action cards, the ticker or the navigator's GAMES row) =====
+        // One ESPN summary request every ~10 s while open: the previous request is aborted first, so requests never overlap,
+        // and every timer/request stops on close. Only the newest response is kept, and it is dropped once rendered, so it
+        // stays light in memory (planned Android TV WebView shell).
+        var GC_POLL_MS = 10000, GC_TIMEOUT_MS = 8000, GC_POST_IDLE_MS = 600000, GC_PRE_IDLE_MS = 1800000;
+        var gc = { open: false, key: null, meta: null, state: null, timer: null, ctrl: null, reqId: 0, fails: 0, polls: 0,
+                   lastOk: 0, lastTry: 0, endedAt: 0, lastInput: 0, pollMs: GC_POLL_MS, scrollTimer: null, scrollHold: 0, html: {}, teams: {}, renderErr: null };
+        var gcRegistry = {}, gcOrder = [];
+
+        function gcRegisterGames(list) { // list of meta objects from updateSportsTicker
+            var reg = {}, live = [], pre = [], post = [];
+            list.forEach(function(m) { reg[m.key] = m; (m.state === 'in' ? live : (m.state === 'pre' ? pre : post)).push(m); });
+            live.sort(function(a, b) { return b.weight - a.weight; });
+            pre.sort(function(a, b) { return a.date - b.date; });
+            post.sort(function(a, b) { return b.date - a.date; });
+            gcRegistry = reg;
+            gcOrder = live.concat(pre, post).map(function(m) { return m.key; });
+            if (gc.open && gc.meta && reg[gc.key]) gc.meta = Object.assign({}, gc.meta, { sitDown: reg[gc.key].sitDown, sitSpot: reg[gc.key].sitSpot, tv: reg[gc.key].tv });
+        }
+        function gcAttr(key) { return key ? ' data-gc="' + escHtml(key) + '"' : ''; }
+        function gcSet(id, html) { // only touch the DOM when the markup actually changed (no image flicker, no scroll reset)
+            if (gc.html[id] === html) return;
+            gc.html[id] = html;
+            var el = document.getElementById(id); if (el) el.innerHTML = html;
+        }
+        function gcFmtTime(t) { return new Date(t).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', second: '2-digit' }); }
+        function gcLum(hex) { var m = /^#?([0-9a-f]{6})$/i.exec(hex || ''); if (!m) return 0; var n = parseInt(m[1], 16); return (0.299 * (n >> 16) + 0.587 * ((n >> 8) & 255) + 0.114 * (n & 255)) / 255; }
+        function gcColor(team, fallback) {
+            var c = team && team.color ? '#' + team.color : '', alt = team && team.alternateColor ? '#' + team.alternateColor : '';
+            if (gcLum(c) > 0.28) return c;
+            if (gcLum(alt) > 0.28) return alt;
+            return fallback;
+        }
+        function gcImg(src, fb, cls) {
+            fb = fb || 'https://a.espncdn.com/combiner/i?img=/i/teamlogos/default-team-logo-500.png';
+            return '<img class="' + cls + '" src="' + escHtml(src || fb) + '" onerror="this.onerror=null; this.src=\'' + fb + '\'" alt="">';
+        }
+
+        function gcOpen(key) { var m = gcRegistry[key]; return m ? gcOpenEvent(m) : false; }
+        function gcOpenEvent(meta) {
+            if (!meta || !meta.sport || !meta.league || !meta.id) return false;
+            gcStop();
+            if (arcadeNav.menuOpen) navCloseMenu(true);
+            if (navIsSettingsOpen()) toggleSettings();
+            gc.open = true; gc.meta = meta; gc.key = meta.key || (meta.cid + ':' + meta.id); gc.state = meta.state || null;
+            gc.fails = 0; gc.polls = 0; gc.lastOk = 0; gc.endedAt = 0; gc.lastInput = Date.now(); gc.html = {}; gc.teams = {}; gc.renderErr = null;
+            var el = document.getElementById('gamecast');
+            el.classList.add('open'); el.setAttribute('aria-hidden', 'false');
+            document.body.classList.add('gc-open');
+            ['gc-plays-body', 'gc-stats-body', 'gc-players-body'].forEach(function(id) { var b = document.getElementById(id); if (b) b.scrollTop = 0; });
+            gcRenderShell(meta);
+            gcPoll();
+            gc.scrollTimer = setInterval(gcAutoScroll, 60);
+            return true;
+        }
+        function gcStop() {
+            gc.reqId++;
+            clearTimeout(gc.timer); gc.timer = null;
+            if (gc.ctrl) { try { gc.ctrl.abort(); } catch (e) {} gc.ctrl = null; }
+            clearInterval(gc.scrollTimer); gc.scrollTimer = null;
+        }
+        function gcClose() {
+            if (!gc.open) return;
+            gcStop();
+            gc.open = false; gc.key = null; gc.meta = null; gc.teams = {};
+            var el = document.getElementById('gamecast');
+            el.classList.remove('open'); el.setAttribute('aria-hidden', 'true');
+            document.body.classList.remove('gc-open');
+            Object.keys(gc.html).forEach(function(id) { var n = document.getElementById(id); if (n) n.innerHTML = ''; }); // free the DOM
+            gc.html = {};
+            var ae = document.activeElement; if (ae && ae.closest && ae.closest('#gamecast')) ae.blur();
+            if (!arcadeNav.paused && arcadeNav.pending) { arcadeNav.pending = false; nextSlide(); } // rotation resumes where it left off
+        }
+        function gcStep(dir) {
+            if (gcOrder.length < 2) return;
+            var i = gcOrder.indexOf(gc.key);
+            gcOpen(gcOrder[(i + dir + gcOrder.length) % gcOrder.length]);
+        }
+        function gcPoll() {
+            if (!gc.open) return;
+            clearTimeout(gc.timer); gc.timer = null;
+            if (gc.ctrl) { try { gc.ctrl.abort(); } catch (e) {} gc.ctrl = null; } // never two requests in flight
+            var meta = gc.meta, my = ++gc.reqId, started = Date.now();
+            var ctrl = window.AbortController ? new AbortController() : null;
+            gc.ctrl = ctrl; gc.lastTry = started; gc.polls++;
+            var killer = setTimeout(function() { if (ctrl) { try { ctrl.abort(); } catch (e) {} } }, GC_TIMEOUT_MS);
+            gcStatus(true);
+            fetch(settings.apiBase + '/site/v2/sports/' + meta.sport + '/' + meta.league + '/summary?event=' + encodeURIComponent(meta.id), ctrl ? { signal: ctrl.signal } : undefined)
+                .then(function(r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+                .then(function(d) {
+                    if (my !== gc.reqId || !gc.open) return;
+                    gc.fails = 0; gc.lastOk = Date.now();
+                    try { gcRender(meta, d); gc.renderErr = null; } catch (e) { gc.renderErr = String((e && e.message) || e); }
+                })
+                .catch(function() { if (my === gc.reqId && gc.open) gc.fails++; })
+                .then(function() {
+                    clearTimeout(killer);
+                    if (my !== gc.reqId || !gc.open) return;
+                    gc.ctrl = null;
+                    gcStatus(false);
+                    gcCheckAutoClose();
+                    if (!gc.open) return;
+                    var wait = Math.max(1000, gc.pollMs - (Date.now() - started)); // steady ~10 s cadence, measured start to start
+                    if (gc.fails >= 3) wait = Math.min(30000, gc.pollMs * (gc.fails - 1)); // back off gently while reconnecting
+                    gc.timer = setTimeout(gcPoll, wait);
+                });
+        }
+        function gcCheckAutoClose() {
+            var now = Date.now();
+            if (gc.state === 'post') {
+                if (!gc.endedAt) gc.endedAt = now;
+                if (now - Math.max(gc.endedAt, gc.lastInput) > GC_POST_IDLE_MS) gcClose(); // game over + 10 min idle -> back to rotation
+            } else if (gc.state === 'pre' && now - gc.lastInput > GC_PRE_IDLE_MS) gcClose();
+        }
+        function gcStatus(fetching) {
+            var el = document.getElementById('gc-updated'); if (!el) return;
+            var html;
+            if (gc.fails > 0) html = '<span class="gc-recon">&#9888; RECONNECTING' + (gc.fails > 1 ? ' (' + gc.fails + ')' : '') + '&hellip;</span>' + (gc.lastOk ? ' LAST UPDATE ' + gcFmtTime(gc.lastOk) : '');
+            else if (!gc.lastOk) html = '<span class="gc-dot"></span> LOADING&hellip;';
+            else html = '<span class="gc-dot' + (fetching ? ' on' : '') + '"></span> UPDATED ' + gcFmtTime(gc.lastOk);
+            el.classList.toggle('bad', gc.fails > 0);
+            var root = document.getElementById('gamecast'); if (root) root.classList.toggle('gc-bad', gc.fails > 0);
+            el.innerHTML = html;
+        }
+        function gcAutoScroll() {
+            if (!gc.open || Date.now() < gc.scrollHold) return;
+            ['gc-stats-body', 'gc-players-body'].forEach(function(id) {
+                var el = document.getElementById(id); if (!el) return;
+                var max = el.scrollHeight - el.clientHeight;
+                if (max <= 4) { el.scrollTop = 0; return; }
+                var now = Date.now();
+                if (el._gcWait && now < el._gcWait) return;
+                if (el.scrollTop >= max - 1) { el._gcWait = now + 3500; el._gcTop = true; return; }
+                if (el._gcTop) { el._gcTop = false; el.scrollTop = 0; el._gcWait = now + 3000; return; }
+                el.scrollTop = el.scrollTop + 1;
+            });
+        }
+        function gcScrollPanels(dir) {
+            gc.scrollHold = Date.now() + 8000;
+            ['gc-stats-body', 'gc-players-body'].forEach(function(id) { var el = document.getElementById(id); if (el) el.scrollTop += dir * Math.round(window.innerHeight * 0.12); });
+        }
+
+        // ---- data helpers
+        function gcPick(cs, side) { for (var i = 0; i < cs.length; i++) if (cs[i].homeAway === side) return cs[i]; return cs[side === 'home' ? 0 : 1] || {}; }
+        function gcTeam(c, meta, side) {
+            var t = c.team || {};
+            var dark = (t.logos || []).filter(function(l) { var r = (l.rel || []).join(' '); return / dark$|^full dark$/.test(r) && r.indexOf('scoreboard') < 0; })[0]; // variant made for dark backgrounds
+            var logo = (dark && dark.href) || (t.logos && t.logos[0] && t.logos[0].href) || t.logo || (side === 'h' ? meta.hLogo : meta.aLogo);
+            var rec = '';
+            if (c.record && c.record.length) rec = c.record[0].summary || c.record[0].displayValue || '';
+            else if (c.records && c.records.length) rec = c.records[0].summary || '';
+            var full = t.displayName || '', nick = t.shortDisplayName || t.name || '';
+            var nm = (full.length > 12 && nick) ? nick : (full || nick || (side === 'h' ? meta.home : meta.away));
+            return { id: String(t.id || c.id || side), abbr: t.abbreviation || (side === 'h' ? meta.home : meta.away), name: nm, loc: (nm !== full && t.location && full.indexOf(t.location) === 0) ? t.location : '',
+                     short: t.shortDisplayName || t.abbreviation || '', logo: logo, rec: rec, score: (c.score != null ? String(c.score) : ''), poss: !!c.possession,
+                     color: gcColor(t, side === 'h' ? '#ff007f' : '#00f0ff'), ls: (c.linescores || []).map(function(l) { return l.displayValue != null ? l.displayValue : (l.value != null ? l.value : ''); }),
+                     hits: c.hits, errors: c.errors, rank: (c.curatedRank && c.curatedRank.current && c.curatedRank.current <= 25) ? c.curatedRank.current : (c.rank || null) };
+        }
+        function gcFamily(meta) { var s = meta.sport; return (s === 'football' || s === 'basketball' || s === 'hockey' || s === 'baseball' || s === 'soccer') ? s : 'other'; }
+
+        function gcRenderShell(meta) {
+            gcSet('gc-league', escHtml(meta.label || '') );
+            gcSet('gc-net', meta.tv && meta.tv !== 'TBD' && meta.tv !== 'TV' ? '&#128250; ' + escHtml(meta.tv) : '');
+            var A = { name: meta.away, logo: meta.aLogo, score: meta.aScore, rec: '', color: '#00f0ff' }, H = { name: meta.home, logo: meta.hLogo, score: meta.hScore, rec: '', color: '#ff007f' };
+            gcSet('gc-away', gcTeamHtml(A, 'away', meta)); gcSet('gc-home', gcTeamHtml(H, 'home', meta));
+            gcSet('gc-mid', '<div class="gc-pill ' + (meta.state === 'in' ? 'live' : '') + '">' + (meta.state === 'in' ? '&#9679; LIVE' : (meta.state === 'post' ? 'FINAL' : 'UPCOMING')) + '</div><div class="gc-clock">' + escHtml(meta.status || '') + '</div>');
+            var wait = '<div class="gc-empty">LOADING GAMECAST&hellip;</div>';
+            gcSet('gc-line', ''); gcSet('gc-wp', ''); var strip = document.getElementById('gc-strip'); if (strip) strip.style.display = 'none'; gcSet('gc-plays-body', wait); gcSet('gc-stats-body', wait); gcSet('gc-players-body', wait);
+            gcStatus(true);
+        }
+        function gcTeamHtml(T, side, meta) {
+            var lg = gcImg(T.logo, side === 'home' ? meta.hFallback : meta.aFallback, 'gc-logo');
+            var info = '<div class="gc-tinfo"><div class="gc-tname">' + (T.rank ? '<span class="gc-rank">' + T.rank + '</span>' : '') + escHtml(T.name || '') + '</div><div class="gc-rec">' + (T.loc ? escHtml(T.loc.toUpperCase()) + ' &bull; ' : '') + escHtml(T.rec || '') + (T.rec ? ' &bull; ' : '') + (side === 'home' ? 'HOME' : 'AWAY') + '</div></div>';
+            var sc = '<div class="gc-score" style="color:' + T.color + '; text-shadow: 0 0 3vh ' + T.color + '">' + escHtml(T.score === '' || T.score == null ? '-' : T.score) + (T.poss ? '<span class="gc-poss" title="possession">&#9679;</span>' : '') + '</div>';
+            return lg + info + sc;
+        }
+
+        function gcRender(meta, d) {
+            var fam = gcFamily(meta);
+            var comp = (d.header && d.header.competitions && d.header.competitions[0]) || {};
+            var stt = comp.status || {}, st = stt.type || {};
+            gc.state = st.state || gc.state || meta.state;
+            var cs = comp.competitors || [];
+            var A = gcTeam(gcPick(cs, 'away'), meta, 'a'), H = gcTeam(gcPick(cs, 'home'), meta, 'h');
+            var sit = d.situation || {};
+            if (fam === 'football') sit = gcFootballSit(d, sit);
+            if (fam === 'football' && sit.possession && gc.state === 'in') { A.poss = String(sit.possession) === A.id; H.poss = String(sit.possession) === H.id; }
+            gc.teams = {}; gc.teams[A.id] = A; gc.teams[H.id] = H;
+            var bcs = (comp.broadcasts || []).concat(d.broadcasts || []).map(function(b) { return (b.media && (b.media.shortName || b.media.name)) || b.station || ''; }).filter(Boolean);
+            var net = bcs.filter(function(v, i) { return bcs.indexOf(v) === i; }).slice(0, 3).join(' / ') || (meta.tv !== 'TBD' && meta.tv !== 'TV' ? meta.tv : '');
+            gcSet('gc-league', escHtml(meta.label || ''));
+            gcSet('gc-net', net ? '&#128250; ' + escHtml(net) : '');
+            gcSet('gc-away', gcTeamHtml(A, 'away', meta));
+            gcSet('gc-home', gcTeamHtml(H, 'home', meta));
+            gcSet('gc-mid', gcMidHtml(meta, d, st, stt, fam, A, H, sit));
+            var wpHtml = gcWinProbHtml(d, A, H, st), lsHtml = gcLinescoreHtml(fam, A, H, st);
+            gcSet('gc-line', lsHtml);
+            gcSet('gc-wp', wpHtml);
+            var strip = document.getElementById('gc-strip'); if (strip) { strip.classList.toggle('one', !wpHtml || !lsHtml); strip.style.display = (wpHtml || lsHtml) ? '' : 'none'; }
+            gcSet('gc-plays-head', gc.state === 'pre' ? 'GAME INFO' : 'LAST PLAYS');
+            gcSet('gc-plays-body', gcPlaysHtml(meta, d, fam));
+            gcSet('gc-stats-head', gc.state === 'pre' ? 'SEASON TEAM STATS' : 'TEAM STATS');
+            gcSet('gc-stats-body', gcStatsHtml(d, fam, A, H));
+            gcSet('gc-players-head', gc.state === 'pre' ? 'SEASON LEADERS' : 'PLAYER STATS');
+            gcSet('gc-players-body', gcPlayersHtml(d, fam, A, H));
+        }
+
+        function gcMidHtml(meta, d, st, stt, fam, A, H, sit) {
+            var pill = st.state === 'in' ? (st.name === 'STATUS_HALFTIME' ? '<div class="gc-pill">HALFTIME</div>' : '<div class="gc-pill live">&#9679; LIVE</div>')
+                     : (st.state === 'post' ? '<div class="gc-pill">' + escHtml((st.shortDetail || 'FINAL').toUpperCase()) + '</div>' : '<div class="gc-pill pre">UPCOMING</div>');
+            var clock = '';
+            if (st.state === 'pre') {
+                var dt = new Date((d.header && d.header.competitions && d.header.competitions[0] && d.header.competitions[0].date) || meta.date);
+                clock = dt.toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' }) + ' &bull; ' + dt.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+            } else if (st.state === 'in') clock = st.name === 'STATUS_HALFTIME' ? '' : escHtml(st.detail || st.shortDetail || '');
+            else { var pd = new Date((d.header && d.header.competitions && d.header.competitions[0] && d.header.competitions[0].date) || meta.date); clock = isNaN(pd) ? escHtml(st.detail || 'Final') : pd.toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' }).toUpperCase(); }
+            var s = '';
+            if (st.state === 'in') {
+                if (fam === 'football' && st.name !== 'STATUS_HALFTIME') {
+                    var dd = sit.downDistanceText || sit.shortDownDistanceText || meta.sitDown || '';
+                    var spot = sit.possessionText || (!sit.downDistanceText && typeof meta.sitSpot === 'string' && /[A-Z]/i.test(meta.sitSpot) ? meta.sitSpot : ''); // scoreboard yardLine can be a bare number
+                    var who = A.poss ? A.abbr : (H.poss ? H.abbr : '');
+                    var yl = /at ([A-Z&]+) (\d+)\b/.exec(dd + ' ' + spot); // red zone = inside the opponent's 20
+                    var rz = !!(yl && who && yl[1] !== who && Number(yl[2]) <= 20);
+                    s = (who ? '<span class="gc-hl">' + escHtml(who) + ' BALL</span> ' : '') + escHtml(dd) + (spot && dd.indexOf(spot) < 0 ? ' &bull; ' + escHtml(spot) : '') + (rz ? ' <span class="gc-red">RED ZONE</span>' : '');
+                } else if (fam === 'baseball') {
+                    s = buildTrendHtml({ type: 'mlb', b1: !!sit.onFirst, b2: !!sit.onSecond, b3: !!sit.onThird, outs: sit.outs || 0, balls: sit.balls || 0, strikes: sit.strikes || 0 });
+                    var ab = null, pl = d.plays || [];
+                    for (var i = pl.length - 1; i >= 0 && i > pl.length - 40; i--) { if (pl[i].type && pl[i].type.type === 'start-batterpitcher' && pl[i].text) { ab = pl[i].text; break; } }
+                    if (ab) s += '<div class="gc-sub">' + escHtml(ab) + '</div>';
+                } else if (fam === 'hockey') {
+                    var sog = gcStatPair(d, 'shotsTotal');
+                    if (sog) s = 'SHOTS ON GOAL <span class="gc-hl">' + escHtml(sog[0]) + ' &ndash; ' + escHtml(sog[1]) + '</span>';
+                } else if (fam === 'basketball') {
+                    var fg = gcStatPair(d, 'fieldGoalPct');
+                    if (fg) s = 'FG% <span class="gc-hl">' + escHtml(fg[0]) + ' &ndash; ' + escHtml(fg[1]) + '</span>';
+                } else if (fam === 'soccer') {
+                    var pos = gcStatPair(d, 'possessionPct');
+                    if (pos) s = 'POSSESSION <span class="gc-hl">' + escHtml(pos[0]) + '% &ndash; ' + escHtml(pos[1]) + '%</span>';
+                }
+            } else {
+                var gi = d.gameInfo || {}, v = gi.venue || {};
+                var place = v.fullName ? v.fullName + (v.address && v.address.city ? ', ' + v.address.city : '') : '';
+                s = escHtml(place) + (st.state === 'post' && gi.attendance ? ' &bull; ATT ' + Number(gi.attendance).toLocaleString() : '');
+            }
+            return pill + '<div class="gc-clock">' + clock + '</div>' + (s ? '<div class="gc-sit">' + s + '</div>' : '');
+        }
+        function gcFootballSit(d, sit) { // the summary has no situation block for football; rebuild it from the current drive
+            if (sit && (sit.downDistanceText || sit.shortDownDistanceText)) return sit;
+            var cur = d.drives && d.drives.current, plays = (cur && cur.plays) || [];
+            var out = { possession: cur && cur.team && cur.team.id };
+            for (var i = plays.length - 1; i >= 0; i--) {
+                var e = plays[i].end || {}, s = plays[i].start || {};
+                if (e.downDistanceText) { out.downDistanceText = e.downDistanceText; out.isRedZone = e.yardsToEndzone != null && e.yardsToEndzone <= 20; break; }
+                if (e.down > 0 && e.distance != null) { out.shortDownDistanceText = ['', '1st', '2nd', '3rd', '4th'][e.down] + ' & ' + e.distance; out.possessionText = e.possessionText || ''; out.isRedZone = e.yardsToEndzone != null && e.yardsToEndzone <= 20; break; }
+                if (s.downDistanceText) { out.downDistanceText = s.downDistanceText; out.isRedZone = s.yardsToEndzone != null && s.yardsToEndzone <= 20; break; }
+            }
+            return out;
+        }
+        function gcStatPair(d, name) {
+            var ts = (d.boxscore && d.boxscore.teams) || [], out = [null, null];
+            ts.forEach(function(t) {
+                var idx = t.homeAway === 'home' ? 1 : (t.homeAway === 'away' ? 0 : ts.indexOf(t));
+                (t.statistics || []).forEach(function(s) { if (s.name === name) out[idx] = s.displayValue; });
+            });
+            return (out[0] != null && out[1] != null) ? out : null;
+        }
+
+        function gcPeriodLabels(fam, n) {
+            var L = [];
+            for (var i = 0; i < n; i++) {
+                if (fam === 'soccer') L.push(['1H', '2H', 'ET1', 'ET2', 'PK'][i] || String(i + 1));
+                else if (fam === 'hockey') L.push(i < 3 ? String(i + 1) : (i === 3 ? 'OT' : (i === 4 ? 'SO' : 'OT' + (i - 2))));
+                else if (fam === 'baseball') L.push(String(i + 1));
+                else L.push(i < 4 ? String(i + 1) : (i === 4 ? 'OT' : (i - 3) + 'OT'));
+            }
+            return L;
+        }
+        function gcLinescoreHtml(fam, A, H, st) {
+            var n = Math.max(A.ls.length, H.ls.length);
+            if (fam === 'baseball') n = Math.max(n, 9);
+            if (!n || st.state === 'pre') return '';
+            var labels = gcPeriodLabels(fam, n);
+            var head = '<tr><th></th>' + labels.map(function(l) { return '<th>' + l + '</th>'; }).join('') + '<th class="gc-tot">' + (fam === 'baseball' ? 'R' : 'T') + '</th>' + (fam === 'baseball' ? '<th class="gc-tot">H</th><th class="gc-tot">E</th>' : '') + '</tr>';
+            function row(T) {
+                var cells = '';
+                for (var i = 0; i < n; i++) cells += '<td>' + escHtml(T.ls[i] != null ? String(T.ls[i]) : '') + '</td>';
+                return '<tr><td class="gc-ls-team">' + gcImg(T.logo, '', 'gc-ls-logo') + escHtml(T.abbr) + '</td>' + cells + '<td class="gc-tot">' + escHtml(T.score) + '</td>' +
+                       (fam === 'baseball' ? '<td class="gc-tot">' + (T.hits != null ? T.hits : '') + '</td><td class="gc-tot">' + (T.errors != null ? T.errors : '') + '</td>' : '') + '</tr>';
+            }
+            return '<table class="gc-ls">' + head + row(A) + row(H) + '</table>';
+        }
+        function gcWinProbHtml(d, A, H, st) {
+            var wp = d.winprobability, h = null, title = 'WIN PROBABILITY', spark = '';
+            if (wp && wp.length) {
+                var last = wp[wp.length - 1]; h = Number(last.homeWinPercentage);
+                var pts = [], step = Math.max(1, Math.ceil(wp.length / 120));
+                for (var i = 0; i < wp.length; i += step) pts.push(Number(wp[i].homeWinPercentage));
+                if (pts[pts.length - 1] !== h) pts.push(h);
+                var W = 100, Hh = 30;
+                var poly = pts.map(function(p, j) { return (pts.length > 1 ? (j / (pts.length - 1)) * W : 0).toFixed(1) + ',' + ((1 - p) * Hh).toFixed(1); }).join(' ');
+                spark = '<svg class="gc-spark" viewBox="0 0 100 30" preserveAspectRatio="none"><line x1="0" y1="15" x2="100" y2="15" stroke="rgba(255,255,255,0.25)" stroke-dasharray="2,2" stroke-width="0.4"/><polyline points="' + poly + '" fill="none" stroke="' + H.color + '" stroke-width="1.2" vector-effect="non-scaling-stroke"/></svg>' +
+                        '<div class="gc-spark-legend"><span>&#9650; ' + escHtml(H.abbr) + '</span><span>' + escHtml(A.abbr) + ' &#9660;</span></div>';
+            } else if (d.predictor && d.predictor.homeTeam && d.predictor.homeTeam.gameProjection != null) {
+                h = Number(d.predictor.homeTeam.gameProjection) / 100; title = 'MATCHUP PREDICTOR';
+            }
+            var odds = '';
+            var pc = (d.pickcenter && d.pickcenter[0]) || null;
+            if (pc && st.state === 'pre') {
+                var ml = (pc.awayTeamOdds && pc.awayTeamOdds.moneyLine != null && pc.homeTeamOdds && pc.homeTeamOdds.moneyLine != null) ? ' &bull; ML ' + formatMoneyline(pc.awayTeamOdds.moneyLine) + ' / ' + formatMoneyline(pc.homeTeamOdds.moneyLine) : '';
+                odds = '<div class="gc-odds">' + (pc.details ? 'LINE <b>' + escHtml(pc.details) + '</b>' : '') + (pc.overUnder != null ? ' &bull; O/U <b>' + escHtml(String(pc.overUnder)) + '</b>' : '') + ml + (pc.provider && pc.provider.name ? ' <span class="gc-dim">(' + escHtml(pc.provider.name) + ')</span>' : '') + '</div>';
+            }
+            if (h == null || isNaN(h)) return odds ? '<div class="gc-panel-title">GAME LINE</div>' + odds : '';
+            var hp = Math.max(0, Math.min(100, h * 100)), tie = wp && wp.length ? Number(wp[wp.length - 1].tiePercentage || 0) * 100 : 0, ap = Math.max(0, 100 - hp - tie);
+            return '<div class="gc-panel-title">' + title + '</div>' +
+                   '<div class="gc-wp-row"><span style="color:' + A.color + '">' + escHtml(A.abbr) + ' ' + ap.toFixed(1) + '%</span><span style="color:' + H.color + '">' + hp.toFixed(1) + '% ' + escHtml(H.abbr) + '</span></div>' +
+                   '<div class="gc-wp-bar"><div style="width:' + ap + '%; background:' + A.color + '"></div>' + (tie > 0 ? '<div style="width:' + tie + '%; background:#666"></div>' : '') + '<div style="width:' + hp + '%; background:' + H.color + '"></div></div>' + spark + odds;
+        }
+
+        function gcPlaysHtml(meta, d, fam) {
+            var out = [];
+            if (gc.state === 'pre') {
+                var gi = d.gameInfo || {}, v = gi.venue || {}, rows = [];
+                if (v.fullName) rows.push(['VENUE', v.fullName + (v.address && v.address.city ? ', ' + v.address.city + (v.address.state ? ', ' + v.address.state : '') : '')]);
+                if (gi.weather && (gi.weather.temperature != null || gi.weather.displayValue)) rows.push(['WEATHER', (gi.weather.temperature != null ? gi.weather.temperature + '&deg; ' : '') + (gi.weather.displayValue || '')]);
+                var hc = d.header && d.header.competitions && d.header.competitions[0];
+                (hc && hc.competitors || []).forEach(function(c) { (c.probables || []).slice(0, 1).forEach(function(p) { if (p.athlete) rows.push([((c.team && c.team.abbreviation) || '') + ' PROBABLE', (p.athlete.displayName || '') + (p.statistics && p.statistics.length ? '' : '')]); }); });
+                var ss = d.seasonseries && d.seasonseries[0];
+                if (ss && ss.summary) rows.push(['SEASON SERIES', ss.summary]);
+                if (meta.tv && meta.tv !== 'TBD') rows.push(['TV', meta.tv]);
+                return rows.length ? rows.map(function(r) { return '<div class="gc-play"><div class="gc-play-when">' + escHtml(r[0]) + '</div><div class="gc-play-text">' + r[1] + '</div></div>'; }).join('') : '<div class="gc-empty">PLAY-BY-PLAY STARTS AT GAME TIME</div>';
+            }
+            if (fam === 'football') {
+                var dr = d.drives || {}, drives = (dr.previous || []).slice();
+                if (dr.current && (!drives.length || drives[drives.length - 1].id !== dr.current.id)) drives.push(dr.current);
+                for (var i = drives.length - 1; i >= 0 && out.length < 6; i--) {
+                    var dv = drives[i], tid = dv.team && String(dv.team.id), plays = dv.plays || [];
+                    for (var j = plays.length - 1; j >= 0 && out.length < 6; j--) {
+                        var p = plays[j]; if (!p.text) continue;
+                        out.push({ text: p.text, when: (p.period && p.period.number ? 'Q' + p.period.number : '') + (p.clock && p.clock.displayValue ? ' ' + p.clock.displayValue : ''), team: tid, score: !!p.scoringPlay });
+                    }
+                }
+                if (!out.length) (d.scoringPlays || []).slice(-6).reverse().forEach(function(p) { out.push({ text: p.text, when: (p.period ? 'Q' + p.period.number : '') + (p.clock ? ' ' + p.clock.displayValue : ''), team: p.team && String(p.team.id), score: true }); });
+            } else if (fam === 'soccer') {
+                var cm = d.commentary || [];
+                for (var k = cm.length - 1; k >= 0 && out.length < 6; k--) if (cm[k].text) out.push({ text: cm[k].text, when: cm[k].time && cm[k].time.displayValue, team: cm[k].play && cm[k].play.team && String(cm[k].play.team.id), score: !!(cm[k].play && cm[k].play.scoringPlay) });
+                if (!out.length) (d.keyEvents || []).filter(function(e) { return !/delay/i.test((e.type && e.type.text) || ''); }).slice(-6).reverse().forEach(function(e) { out.push({ text: e.text || (e.type && e.type.text), when: e.clock && e.clock.displayValue, team: e.team && String(e.team.id), score: !!e.scoringPlay }); });
+            } else {
+                var all = d.plays || [], skip = /substitution|timeout|stoppage|period start|face ?off|jumpball|end batter|start batter|delay/i;
+                for (var m = all.length - 1; m >= 0 && out.length < 6; m--) {
+                    var q = all[m], ty = (q.type && (q.type.text || '')) || '';
+                    if (!q.text) continue;
+                    if (fam === 'baseball') { if ((!(q.type && q.type.type === 'play-result') && !q.scoringPlay) || / hit for | ran for | in (left|right|center) field\.?$| (catching|pitching)\.?$| at (first base|second base|third base|shortstop)\.?$/i.test(q.text)) continue; }
+                    else if (skip.test(ty) || /enters the game/i.test(q.text)) continue;
+                    var when = fam === 'baseball' ? ((q.period && q.period.type ? q.period.type.slice(0, 3) + ' ' : '') + ((q.period && q.period.displayValue) || '').replace(/ Inning$/, ''))
+                                                  : (((q.period && q.period.displayValue) || '').replace(/ (Quarter|Period|Half)$/, '') + (q.clock && q.clock.displayValue ? ' ' + q.clock.displayValue : ''));
+                    out.push({ text: q.text, when: when, team: q.team && String(q.team.id), score: !!q.scoringPlay });
+                }
+            }
+            if (!out.length) return '<div class="gc-empty">NO PLAYS YET</div>';
+            return out.map(function(p) {
+                var T = p.team && gc.teams[p.team];
+                return '<div class="gc-play' + (p.score ? ' score' : '') + '">' + (T ? gcImg(T.logo, '', 'gc-play-logo') : '<span class="gc-play-logo"></span>') +
+                       '<div><div class="gc-play-when">' + escHtml(p.when || '') + (p.score ? ' &bull; SCORE' : '') + '</div><div class="gc-play-text">' + escHtml(p.text) + '</div></div></div>';
+            }).join('');
+        }
+
+        function gcNum(v, name) {
+            if (v == null) return NaN;
+            var s = String(v).trim(), m;
+            if ((m = /^(\d+):(\d{2})$/.exec(s))) return Number(m[1]) * 60 + Number(m[2]);
+            if ((m = /^(\d+)\s*[-\/]\s*(\d+)$/.exec(s))) { var a = Number(m[1]), b = Number(m[2]); return /eff|completion|comp|pct|percent/i.test(name || '') ? (b ? a / b : 0) : a; }
+            return parseFloat(s.replace(/[%,]/g, ''));
+        }
+        function gcTeamStatRows(d, fam, A, H) {
+            var ts = (d.boxscore && d.boxscore.teams) || [];
+            var byId = {}; ts.forEach(function(t) { byId[String(t.team && t.team.id)] = t; });
+            var ta = byId[A.id] || ts[0], th = byId[H.id] || ts[1];
+            if (!ta || !th) return [];
+            if (fam === 'baseball') {
+                var pick = [['batting', 'R', 'Runs'], ['batting', 'H', 'Hits'], ['fielding', 'E', 'Errors'], ['batting', 'HR', 'Home Runs'], ['batting', 'RBI', 'RBI'], ['batting', 'BB', 'Walks'], ['batting', 'SO', 'Strikeouts (batting)'],
+                            ['batting', 'LOB', 'Left on Base'], ['batting', 'SB', 'Stolen Bases'], ['batting', '2B', 'Doubles'], ['batting', '3B', 'Triples'], ['batting', 'AVG', 'Batting Avg'], ['batting', 'OBP', 'On-Base %'], ['batting', 'SLG', 'Slugging'],
+                            ['pitching', 'K', 'Strikeouts (pitching)'], ['pitching', 'BB', 'Walks Allowed'], ['pitching', 'P', 'Pitches Thrown'], ['pitching', 'ERA', 'ERA'], ['fielding', 'DP', 'Double Plays']];
+                function g(t, grp, ab) { var G = (t.statistics || []).filter(function(x) { return x.name === grp; })[0]; var s = G && (G.stats || []).filter(function(x) { return x.abbreviation === ab; })[0]; return s ? s.displayValue : null; }
+                return pick.map(function(p) { return { label: p[2], name: p[1], a: g(ta, p[0], p[1]), h: g(th, p[0], p[1]) }; }).filter(function(r) { return r.a != null && r.h != null; });
+            }
+            var hs = {}; (th.statistics || []).forEach(function(s) { hs[s.name || s.label] = s; });
+            return (ta.statistics || []).filter(function(s) { return s.displayValue != null && hs[s.name || s.label]; }).map(function(s) {
+                return { label: s.label || s.name, name: s.name || '', a: s.displayValue, h: hs[s.name || s.label].displayValue };
+            });
+        }
+        function gcStatsHtml(d, fam, A, H) {
+            var rows = gcTeamStatRows(d, fam, A, H);
+            if (!rows.length) return '<div class="gc-empty">TEAM STATS NOT AVAILABLE YET</div>';
+            var head = '<div class="gc-st-head"><span style="color:' + A.color + '">' + gcImg(A.logo, '', 'gc-st-logo') + escHtml(A.abbr) + '</span><span style="color:' + H.color + '">' + escHtml(H.abbr) + gcImg(H.logo, '', 'gc-st-logo') + '</span></div>';
+            return head + rows.map(function(r) {
+                var a = gcNum(r.a, r.name + ' ' + r.label), h = gcNum(r.h, r.name + ' ' + r.label), bar = '';
+                if (!isNaN(a) && !isNaN(h) && a >= 0 && h >= 0 && (a + h) > 0) {
+                    var pa = (a / (a + h)) * 100;
+                    bar = '<div class="gc-st-bar"><div style="width:' + pa.toFixed(1) + '%; background:' + A.color + '"></div><div style="width:' + (100 - pa).toFixed(1) + '%; background:' + H.color + '"></div></div>';
+                }
+                return '<div class="gc-st"><div class="gc-st-line"><span class="gc-st-v">' + escHtml(String(r.a)) + '</span><span class="gc-st-l">' + escHtml(String(r.label)) + '</span><span class="gc-st-v">' + escHtml(String(r.h)) + '</span></div>' + bar + '</div>';
+            }).join('');
+        }
+
+        function gcLeadersHtml(d, A, H) {
+            var html = '';
+            (d.leaders || []).forEach(function(tl) {
+                var T = tl.team && gc.teams[String(tl.team.id)];
+                (tl.leaders || []).slice(0, 3).forEach(function(cat) {
+                    var L = cat.leaders && cat.leaders[0];
+                    if (!L || !L.athlete || !L.displayValue) return;
+                    var hs = (L.athlete.headshot && L.athlete.headshot.href) || (T && T.logo) || '';
+                    html += '<div class="gc-ldr">' + gcImg(hs, T ? T.logo : '', 'gc-ldr-img') + '<div class="gc-ldr-txt"><div class="gc-ldr-cat" style="color:' + (T ? T.color : '#fff') + '">' + (T ? escHtml(T.abbr) + ' &bull; ' : '') + escHtml((cat.displayName || cat.name || '').toUpperCase()) +
+                            '</div><div class="gc-ldr-name">' + escHtml(L.athlete.shortName || L.athlete.displayName || '') + '</div><div class="gc-ldr-val">' + escHtml(L.displayValue) + '</div></div></div>';
+                });
+            });
+            return html ? '<div class="gc-sub-title">TOP PERFORMERS</div><div class="gc-ldrs">' + html + '</div>' : '';
+        }
+        function gcBoxTable(T, title, grp, cols, sortFn, limit, filterFn) {
+            if (!grp || !grp.athletes || !grp.athletes.length) return '';
+            var labels = grp.labels || [];
+            var idx = cols.map(function(c) { return labels.indexOf(c); });
+            var aths = grp.athletes.filter(function(a) { return a.stats && a.stats.length && !a.didNotPlay && (!filterFn || filterFn(a, labels)); });
+            if (sortFn) aths.sort(function(x, y) { return sortFn(y, labels) - sortFn(x, labels); });
+            aths = aths.slice(0, limit || 6);
+            if (!aths.length) return '';
+            return '<div class="gc-bx"><div class="gc-bx-title" style="color:' + T.color + '">' + gcImg(T.logo, '', 'gc-st-logo') + escHtml(T.abbr + ' ' + title) + '</div><table class="gc-bx-t"><tr><th></th>' + cols.map(function(c) { return '<th>' + escHtml(c) + '</th>'; }).join('') + '</tr>' +
+                aths.map(function(a) { var at = a.athlete || {}; return '<tr><td class="gc-bx-name">' + escHtml(at.shortName || at.displayName || '') + (at.position && at.position.abbreviation ? ' <span class="gc-dim">' + escHtml(at.position.abbreviation) + '</span>' : '') + '</td>' + idx.map(function(i) { return '<td>' + escHtml(i >= 0 && a.stats[i] != null ? String(a.stats[i]) : '-') + '</td>'; }).join('') + '</tr>'; }).join('') + '</table></div>';
+        }
+        function gcStatOf(a, labels, lab) { var i = labels.indexOf(lab); return i >= 0 ? (parseFloat(a.stats[i]) || 0) : 0; }
+        function gcPlayersHtml(d, fam, A, H) {
+            var html = gcLeadersHtml(d, A, H), box = '';
+            var groups = (d.boxscore && d.boxscore.players) || [];
+            var order = [A, H];
+            order.forEach(function(T) {
+                var tp = groups.filter(function(g) { return g.team && String(g.team.id) === T.id; })[0];
+                if (!tp) return;
+                var G = {}; (tp.statistics || []).forEach(function(s, i) { G[s.name || s.type || ('g' + i)] = s; });
+                var first = (tp.statistics || [])[0];
+                if (fam === 'basketball') box += gcBoxTable(T, 'BOX SCORE', first, ['PTS', 'REB', 'AST', 'FG', '3PT', 'MIN'], function(a, l) { return gcStatOf(a, l, 'PTS') * 100 + gcStatOf(a, l, 'REB'); }, 8);
+                else if (fam === 'hockey') {
+                    var sk = { labels: (G.forwards || G.skaters || {}).labels, athletes: [].concat((G.forwards || {}).athletes || [], (G.defenses || {}).athletes || [], (G.skaters || {}).athletes || []) };
+                    box += gcBoxTable(T, 'SKATERS', sk, ['G', 'A', 'SOG', '+/-', 'HT', 'TOI'], function(a, l) { return (gcStatOf(a, l, 'G') + gcStatOf(a, l, 'A')) * 100 + gcStatOf(a, l, 'SOG') * 10 + gcStatOf(a, l, 'HT'); }, 6);
+                    box += gcBoxTable(T, 'GOALIE', G.goalies, ['SA', 'SV', 'GA', 'SV%', 'TOI'], null, 2);
+                } else if (fam === 'baseball') {
+                    box += gcBoxTable(T, 'BATTING', G.batting, ['H-AB', 'R', 'RBI', 'HR', 'BB', 'K'], function(a, l) { return gcStatOf(a, l, 'H') * 100 + gcStatOf(a, l, 'RBI') * 10 + gcStatOf(a, l, 'R'); }, 6);
+                    box += gcBoxTable(T, 'PITCHING', G.pitching, ['IP', 'H', 'ER', 'BB', 'K', 'PC'], null, 4);
+                } else if (fam === 'football') {
+                    box += gcBoxTable(T, 'PASSING', G.passing, ['C/ATT', 'YDS', 'TD', 'INT'], function(a, l) { return gcStatOf(a, l, 'YDS'); }, 2);
+                    box += gcBoxTable(T, 'RUSHING', G.rushing, ['CAR', 'YDS', 'TD', 'LONG'], function(a, l) { return gcStatOf(a, l, 'YDS'); }, 3);
+                    box += gcBoxTable(T, 'RECEIVING', G.receiving, ['REC', 'YDS', 'TD', 'LONG'], function(a, l) { return gcStatOf(a, l, 'YDS'); }, 4);
+                    box += gcBoxTable(T, 'DEFENSE', G.defensive, ['TOT', 'SACKS', 'TFL'], function(a, l) { return gcStatOf(a, l, 'TOT') + gcStatOf(a, l, 'SACKS') * 5; }, 3);
+                }
+            });
+            if (fam === 'soccer') {
+                (d.rosters || []).forEach(function(r) {
+                    var T = (r.homeAway === 'home') ? H : A;
+                    var labs = ['G', 'A', 'SHOT', 'SOG', 'YC', 'RC'];
+                    var aths = (r.roster || []).filter(function(p) { return p.stats && p.stats.length; }).map(function(p) {
+                        var m = {}; p.stats.forEach(function(s) { m[s.abbreviation] = s.displayValue; });
+                        return { athlete: p.athlete, stats: labs.map(function(l) { return m[l] != null ? m[l] : '0'; }) };
+                    });
+                    box += gcBoxTable(T, 'PLAYERS', { labels: labs, athletes: aths }, labs, function(a) { return Number(a.stats[0]) * 1000 + Number(a.stats[1]) * 100 + Number(a.stats[3]) * 10 + Number(a.stats[2]); }, 6,
+                                      function(a) { return a.stats.some(function(v) { return Number(v) > 0; }); });
+                });
+            }
+            if (box) html += '<div class="gc-sub-title">BOX SCORE</div>' + box;
+            return html || '<div class="gc-empty">PLAYER STATS NOT AVAILABLE YET</div>';
+        }
+
+        function gcChipHtml(m, i) {
+            var st = m.state === 'in' ? '<span class="gc-chip-live">&#9679; ' + escHtml(m.status || 'LIVE') + '</span>' : (m.state === 'post' ? 'FINAL' : escHtml(m.time || ''));
+            var sc = (m.state === 'pre') ? '' : ' ';
+            return '<button type="button" class="nav-item gc-item" id="gc-chip-' + i + '"' + gcAttr(m.key) + '><span class="gc-chip-lg">' + escHtml(m.label) + '</span>' +
+                   gcImg(m.aLogo, m.aFallback, 'gc-chip-logo') + escHtml(m.awayAbbr || m.away) + (m.state !== 'pre' ? ' <b>' + escHtml(m.aScore) + '</b>' : '') + ' <span class="gc-dim">@</span> ' +
+                   gcImg(m.hLogo, m.hFallback, 'gc-chip-logo') + escHtml(m.homeAbbr || m.home) + (m.state !== 'pre' ? ' <b>' + escHtml(m.hScore) + '</b>' : '') + sc + '<span class="gc-chip-st">' + st + '</span></button>';
+        }
+        // mouse/tap anywhere on a [data-gc] element (Live Action card, ticker game, navigator chip) opens its Gamecast
+        document.addEventListener('click', function(e) {
+            if (document.body.classList.contains('remote-active')) return;
+            var el = e.target && e.target.closest ? e.target.closest('[data-gc]') : null;
+            if (!el || el.closest('#gamecast')) return;
+            e.preventDefault();
+            gcOpen(el.getAttribute('data-gc'));
+        });
+        document.addEventListener('mousemove', function() {
+            if (gc.open) gc.lastInput = Date.now();
+            document.body.classList.add('mouse-active');
+            clearTimeout(gc.mouseTimer);
+            gc.mouseTimer = setTimeout(function() { document.body.classList.remove('mouse-active'); }, 3000);
+        }, { passive: true });
+
         // ===== D-PAD / REMOTE NAVIGATION (Android TV remote, keyboard, mouse) =====
         // Idle kiosk view is unchanged: nothing shows until a remote key is pressed, and everything auto-hides.
         //   LEFT/RIGHT = previous/next slide   OK/ENTER, DOWN or M = navigator menu   UP = focus the settings gear
         //   BACK/ESC = close menu/settings     PLAY-PAUSE, SPACE or P = pause/resume rotation
+        //   Navigator GAMES row / Live Action card / ticker game + OK or click = Gamecast (BACK closes, LEFT/RIGHT switch game)
         var arcadeNav = { paused: false, pending: false, forcing: false, menuOpen: false, current: null,
                           idleMs: 10000, settingsIdleMs: 90000, pauseMaxMs: 600000,
                           idleTimer: null, settingsTimer: null, pauseTimer: null, hudTimer: null, historyArmed: false };
@@ -2070,6 +2705,7 @@
         }
         function navBack() {
             if (navIsSettingsOpen()) { toggleSettings(); return true; }
+            if (gc && gc.open) { gcClose(); return true; }
             if (arcadeNav.menuOpen) { navCloseMenu(); return true; }
             var hud = document.getElementById('nav-hud'); if (hud) hud.classList.remove('show');
             var ae = document.activeElement; if (ae && ae.id === 'settings-gear') ae.blur();
@@ -2129,10 +2765,19 @@
             grid.innerHTML = ARCADE_SCREENS.filter(navEnabled).map(function(k) {
                 return '<button type="button" class="nav-item' + (k === arcadeNav.current ? ' current' : '') + '" data-slide="' + k + '" onclick="navGoTo(\'' + k + '\')">' + escHtml(NAV_TITLES[k] || k) + '</button>';
             }).join('');
+            var games = document.getElementById('nav-games'), gTitle = document.getElementById('nav-games-title'), gKeys = [];
+            if (games) {
+                var lp = gcOrder.filter(function(k) { return gcRegistry[k].state !== 'post'; }), fin = gcOrder.filter(function(k) { return gcRegistry[k].state === 'post'; });
+                gKeys = lp.concat(fin).slice(0, 16);
+                games.innerHTML = gKeys.map(function(k, i) { return gcChipHtml(gcRegistry[k], i); }).join('');
+                games.scrollLeft = 0;
+                if (gTitle) gTitle.style.display = gKeys.length ? '' : 'none';
+            }
             menu.classList.add('open');
             menu.setAttribute('aria-hidden', 'false');
             arcadeNav.menuOpen = true;
-            var cur = grid.querySelector('.nav-item.current') || grid.querySelector('.nav-item');
+            // on Live Action, OK lands on the first game so a second OK opens its Gamecast
+            var cur = (arcadeNav.current === 'live' && games && games.querySelector('.gc-item')) || grid.querySelector('.nav-item.current') || grid.querySelector('.nav-item');
             if (cur) cur.focus();
         }
         function navCloseMenu(silent) {
@@ -2173,6 +2818,14 @@
                 if (nk === 'ok' && ae && ae.type === 'checkbox') { e.preventDefault(); ae.click(); return; }
                 if (nk === 'ok' && (!ae || ae === document.body)) { e.preventDefault(); var its = navSettingsItems(); if (its.length) its[0].focus(); }
                 return; // Enter on buttons / Space on checkboxes: native behaviour
+            }
+            if (gc.open) { // Gamecast: BACK closes, LEFT/RIGHT switch game, UP/DOWN scroll stats, OK focuses then presses CLOSE
+                gc.lastInput = Date.now();
+                if (nk === 'back') { e.preventDefault(); gcClose(); return; }
+                if (nk === 'left' || nk === 'right') { e.preventDefault(); gcStep(nk === 'left' ? -1 : 1); return; }
+                if (nk === 'up' || nk === 'down') { e.preventDefault(); gcScrollPanels(nk === 'up' ? -1 : 1); return; }
+                if (nk === 'ok') { e.preventDefault(); if (e.repeat) return; var cb = document.getElementById('gc-close'); if (ae === cb) gcClose(); else if (cb) cb.focus(); return; }
+                e.preventDefault(); return;
             }
             if (arcadeNav.menuOpen) {
                 if (e.repeat && nk === 'ok') { e.preventDefault(); return; }

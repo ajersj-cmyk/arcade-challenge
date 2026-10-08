@@ -65,6 +65,8 @@ const API_RULES = [
     label: m => `ESPN teams ${m[1]}/${m[2]}`, validate: j => (j && j.sports) ? null : 'no sports[] in body' },
   { id: 'espn-rankings', kind: 'api', re: /^https:\/\/site\.api\.espn\.com\/apis\/site\/v2\/sports\/football\/college-football\/rankings/,
     label: () => 'ESPN CFB rankings', validate: j => (j && j.rankings && j.rankings[0] && j.rankings[0].ranks) ? null : 'no rankings[0].ranks' },
+  { id: 'espn-summary', kind: 'api', re: /^https:\/\/site\.api\.espn\.com\/apis\/site\/v2\/sports\/([^/]+)\/([^/?]+)\/summary\?event=/,
+    label: m => `ESPN summary (Gamecast) ${m[1]}/${m[2]}`, validate: j => (j && j.header && j.header.competitions) ? null : 'no header.competitions' },
   { id: 'espn-standings', kind: 'api', re: /^https:\/\/site\.api\.espn\.com\/apis\/v2\/sports\/([^/]+)\/([^/?]+)\/standings/,
     label: m => `ESPN standings ${m[1]}/${m[2]}`, validate: j => (j && (j.children || j.standings)) ? null : 'no children/standings' },
   { id: 'espn-futures', kind: 'api', re: /^https:\/\/sports\.core\.api\.espn\.com\/v2\/sports\/([^/]+)\/leagues\/([^/]+)\/seasons\/(\d+)\/futures/,
@@ -163,13 +165,16 @@ async function runOne(opts, file, outDir, label) {
       result.console.push({ type: type === 'warn' ? 'warning' : type, text: msg.text(), url: loc.url || '' });
     });
     page.on('pageerror', err => result.pageErrors.push(String(err && err.stack || err)));
-    page.on('request', req => { if (req.resourceType() === 'image') reqImgUrls.add(req.url()); });
+    const summaryReqs = []; // Gamecast poll log: [ms timestamp, url]
+    page.on('request', req => { if (req.resourceType() === 'image') reqImgUrls.add(req.url()); if (/\/apis\/site\/v2\/sports\/[^/]+\/[^/]+\/summary\?event=/.test(req.url())) summaryReqs.push([Date.now(), req.url()]); });
     page.on('requestfailed', req => {
       const f = req.failure();
       const c = classify(req.url());
       const entry = { url: req.url(), type: req.resourceType(), error: f ? f.errorText : 'failed', label: c ? c.label : null, kind: c ? c.rule.kind : 'other' };
       // Requests aborted because the page navigated/closed are not real failures
       if (entry.error === 'net::ERR_ABORTED' && entry.type === 'media') return;
+      // Gamecast aborts its in-flight summary request on close / before the next poll by design
+      if (entry.error === 'net::ERR_ABORTED' && /\/summary\?event=/.test(entry.url)) return;
       result.failedRequests.push(entry);
       if (c && c.rule.kind !== 'asset') result.api.push({ id: c.rule.id, label: c.label, kind: c.rule.kind, url: req.url(), status: 0, ok: false, error: entry.error });
       if (c && c.rule.kind === 'asset') result.assets.failed.push({ url: req.url(), status: 0, error: entry.error });
@@ -194,7 +199,12 @@ async function runOne(opts, file, outDir, label) {
       if (status === 429) { entry.rateLimited = true; try { entry.error = 'HTTP 429 rate-limited: ' + (await res.text()).slice(0, 120); } catch (e) {} }
       if (entry.ok && c.rule.validate && ['fetch', 'xhr'].includes(res.request().resourceType())) {
         try { const j = JSON.parse(await res.text()); const v = c.rule.validate(j); if (v) { entry.ok = false; entry.error = v; } }
-        catch (e) { entry.ok = false; entry.error = 'body not JSON: ' + String(e.message).slice(0, 80); }
+        catch (e) {
+          // Chrome drops a response body once the page is done with it (e.g. a Gamecast closed right after the reply
+          // arrived); the request itself succeeded, so only flag real parse failures.
+          if (/No data found for resource|No resource with given identifier/.test(String(e.message))) entry.note = 'body released before inspection';
+          else { entry.ok = false; entry.error = 'body not JSON: ' + String(e.message).slice(0, 80); }
+        }
       }
       result.api.push(entry);
     });
@@ -384,6 +394,82 @@ async function runOne(opts, file, outDir, label) {
       check('mouse click on gear opens settings; typing "s" in a field keeps it open', mc === 'flex' && stillOpen === 'flex', `${mc}/${stillOpen}`);
       await page.click('#settings-modal .settings-card > div:last-child button'); await sleep(300);
       check('SAVE & CLOSE button closes settings', (await ui()).modal === 'none', '');
+
+      // ---- Gamecast (live game overlay): open by mouse click, poll ~10 s, close cleanly; then open/switch/close by D-pad
+      if (await page.evaluate(() => typeof gcOpen === 'function')) {
+        const gcState = () => page.evaluate(() => ({ open: gc.open, key: gc.key, shown: getComputedStyle(document.getElementById('gamecast')).display, lastOk: gc.lastOk, fails: gc.fails, polls: gc.polls,
+          timer: !!gc.timer, ctrl: !!gc.ctrl, scroll: !!gc.scrollTimer, renderErr: gc.renderErr, menu: getComputedStyle(document.getElementById('nav-menu')).display,
+          away: (document.querySelector('#gc-away .gc-tname') || {}).textContent || '', home: (document.querySelector('#gc-home .gc-tname') || {}).textContent || '',
+          plays: document.querySelectorAll('#gc-plays-body .gc-play').length, stats: document.querySelectorAll('#gc-stats-body .gc-st').length,
+          players: document.querySelectorAll('#gc-players-body .gc-ldr, #gc-players-body .gc-bx tr').length, games: gcOrder.length, updated: document.getElementById('gc-updated').innerText }));
+        const populated = g => g.open && g.lastOk > 0 && !g.renderErr && g.away && g.home && (g.plays + g.stats + g.players) > 0 && /UPDATED \d/.test(g.updated);
+        await page.evaluate(() => { navIdle(); clearTimeout(slideTimer); navForceSlide(ARCADE_SCREENS.indexOf('live')); clearTimeout(slideTimer); slideTimer = null; });
+        await sleep(1200);
+        let target = await page.evaluate(() => { const vis = el => { const r = el.getBoundingClientRect(); return r.width > 0 && r.left >= 0 && r.right <= innerWidth && r.top >= 0 && r.bottom <= innerHeight; };
+          const card = [...document.querySelectorAll('#live-grid-track .gc-card[data-gc]')].find(vis); if (card) return { sel: 'card', key: card.getAttribute('data-gc') };
+          const tk = [...document.querySelectorAll('#ticker-track [data-gc]')].find(vis); return tk ? { sel: 'ticker', key: tk.getAttribute('data-gc') } : null; });
+        if (!target) { check('gamecast: a clickable game exists (Live Action card or ticker)', false, 'no [data-gc] element on screen'); }
+        else {
+          const slideBefore = await visible();
+          const box = await page.evaluate(k => { const el = [...document.querySelectorAll('[data-gc="' + k + '"]')].find(e => { const r = e.getBoundingClientRect(); return r.width > 0 && r.left >= 0 && r.right <= innerWidth; }); const r = el.getBoundingClientRect(); return { x: r.left + Math.min(r.width / 2, 200), y: r.top + r.height / 2 }; }, target.key);
+          const n0 = summaryReqs.length;
+          await page.mouse.click(box.x, box.y);
+          await page.waitForFunction(() => gc.lastOk > 0 || gc.fails > 0, { timeout: 15000 }).catch(() => {});
+          await sleep(1500);
+          let g = await gcState();
+          check(`gamecast: mouse click on ${target.sel} game opens the overlay`, g.open && g.shown === 'flex', `${target.key} -> ${JSON.stringify({ open: g.open, key: g.key, shown: g.shown })}`);
+          check('gamecast: populates from ESPN summary (scoreboard, plays/stats/players)', populated(g), `${g.away} @ ${g.home}: plays ${g.plays}, team stats ${g.stats}, player rows ${g.players}, header "${g.updated}"${g.renderErr ? ', renderErr ' + g.renderErr : ''}`);
+          await page.evaluate(() => nextSlide()); await sleep(500); // the slide timer firing while the Gamecast is open
+          const pendingOk = await page.evaluate(() => arcadeNav.pending === true);
+          check('gamecast: rotation paused while open', (await visible()) === slideBefore && pendingOk, `${slideBefore} / pending=${pendingOk}`);
+          await shot('gamecast-click');
+          // poll cadence: wait for 3 more requests and measure start-to-start gaps
+          const t0 = Date.now();
+          while (summaryReqs.length < n0 + 4 && Date.now() - t0 < 36000) await sleep(250);
+          const ts = summaryReqs.slice(n0).map(r => r[0]);
+          const gaps = ts.slice(1).map((t, i) => t - ts[i]);
+          const okGaps = gaps.length >= 3 && gaps.every(x => x >= 8500 && x <= 12000);
+          check('gamecast: polls every ~10 s (start-to-start gaps)', okGaps, gaps.map(x => (x / 1000).toFixed(1) + 's').join(', ') || 'no repeat polls');
+          result.gamecastPollGaps = gaps;
+          g = await gcState();
+          check('gamecast: one request at a time, still healthy after polling', !g.renderErr && g.fails === 0 && g.polls >= 4, JSON.stringify({ polls: g.polls, fails: g.fails }));
+          await page.click('#gc-close'); await sleep(900);
+          g = await gcState();
+          const slideAfter = await visible();
+          check('gamecast: CLOSE click hides overlay, stops timers/fetch', !g.open && g.shown === 'none' && !g.timer && !g.ctrl && !g.scroll, JSON.stringify({ open: g.open, shown: g.shown, timer: g.timer, ctrl: g.ctrl, scroll: g.scroll }));
+          check('gamecast: rotation resumes after close', slideAfter !== slideBefore && !(await page.evaluate(() => arcadeNav.pending)), `${slideBefore} -> ${slideAfter}`);
+          const nClose = summaryReqs.length;
+          await sleep(11500);
+          check('gamecast: no polling after close', summaryReqs.length === nClose, `${summaryReqs.length - nClose} request(s) in 11.5 s after close`);
+          // D-pad: OK opens the navigator, walk to the GAMES row, OK opens, RIGHT switches game, BACK closes
+          await page.evaluate(() => { navIdle(); clearTimeout(slideTimer); navForceSlide(ARCADE_SCREENS.indexOf('live')); clearTimeout(slideTimer); slideTimer = null; });
+          await sleep(800);
+          await page.keyboard.press('Enter'); await sleep(400);
+          let guard = 0;
+          while (!(await page.evaluate(() => !!(document.activeElement && document.activeElement.classList.contains('gc-item')))) && guard++ < 10) { await page.keyboard.press('ArrowUp'); await sleep(120); }
+          const chip = await page.evaluate(() => document.activeElement && document.activeElement.getAttribute('data-gc'));
+          await shot('gamecast-menu-games');
+          check('gamecast: navigator shows a GAMES row reachable by D-pad', !!chip, chip || 'no game chip focused');
+          if (chip) {
+            await page.keyboard.press('Enter');
+            await page.waitForFunction(() => gc.lastOk > 0 || gc.fails > 0, { timeout: 15000 }).catch(() => {});
+            await sleep(1500);
+            g = await gcState();
+            check('gamecast: D-pad OK on a game opens and populates it', populated(g) && g.key === chip && g.menu === 'none', `${chip}: ${g.away} @ ${g.home}, plays ${g.plays}, stats ${g.stats}, players ${g.players}`);
+            if (g.games > 1) {
+              await page.keyboard.press('ArrowRight');
+              await page.waitForFunction(k => gc.key !== k && gc.lastOk > 0, { timeout: 15000 }, chip).catch(() => {});
+              await sleep(1200);
+              const g2 = await gcState();
+              check('gamecast: D-pad RIGHT switches to the next game', g2.open && g2.key !== chip && populated(g2), `${chip} -> ${g2.key} (${g2.away} @ ${g2.home})`);
+              await shot('gamecast-dpad');
+            }
+            await page.keyboard.press('Escape'); await sleep(700);
+            g = await gcState();
+            check('gamecast: BACK closes overlay and stops polling', !g.open && g.shown === 'none' && !g.timer && !g.ctrl && g.menu === 'none', JSON.stringify({ open: g.open, timer: g.timer, ctrl: g.ctrl, menu: g.menu }));
+          }
+        }
+      }
     }
 
     // ---- remote mode (#remote) shows the phone controller
