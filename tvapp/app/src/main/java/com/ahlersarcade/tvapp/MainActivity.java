@@ -40,6 +40,7 @@ import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.FrameLayout;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -49,11 +50,12 @@ import android.window.OnBackInvokedDispatcher;
 import java.util.Calendar;
 
 /**
- * Thin, memory-light Android TV shell around the live Ahlers Arcade scoreboard.
+ * Thin, memory-light Android TV shell ("Arcade Scoreboard") around the live Ahlers Arcade scoreboard.
  *
  * One WebView, no extra libraries. D-pad / OK reach the page natively; BACK, MENU and the media keys
  * are routed to the site's arcadeNav (BACK closes Gamecast / menu / settings first and only offers to
  * exit when nothing is open). Network failures show an arcade-style offline screen with auto-retry.
+ * A fresh WebView shows the neon logo ("LOADING SCOREBOARD") until the page first paints.
  */
 public final class MainActivity extends Activity {
     private static final String TAG = "ArcadeTV";
@@ -68,12 +70,14 @@ public final class MainActivity extends Activity {
     private static final long EXIT_DIALOG_TIMEOUT_MS = 15000;
     private static final long NIGHTLY_CHECK_MS = 10 * 60 * 1000L;
     private static final int NIGHTLY_HOUR = 4;
+    private static final long LOADING_MAX_MS = 25000; // never leave the logo up longer than this
 
     private final Handler ui = new Handler(Looper.getMainLooper());
 
     private FrameLayout root;
     private WebView web;
     private LinearLayout offline;
+    private LinearLayout loading;
     private TextView offlineDetail;
     private TextView offlineCountdown;
     private View customView;
@@ -256,6 +260,7 @@ public final class MainActivity extends Activity {
         web.setWebChromeClient(new ArcadeChrome());
         root.addView(web, 0, new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
         web.requestFocus();
+        showLoading(); // a new WebView is blank until the page paints: show the logo instead of black
     }
 
     private void destroyWebView() {
@@ -302,9 +307,15 @@ public final class MainActivity extends Activity {
         }
 
         @Override
+        public void onPageCommitVisible(WebView view, String url) {
+            if (view == web && !mainFrameFailed && !"about:blank".equals(url)) hideLoading();
+        }
+
+        @Override
         public void onPageFinished(WebView view, String url) {
             if (mainFrameFailed || "about:blank".equals(url)) return;
             retryIndex = 0;
+            hideLoading();
             hideOffline();
             if (customView == null && view.getVisibility() == View.VISIBLE) view.requestFocus();
         }
@@ -462,7 +473,7 @@ public final class MainActivity extends Activity {
         if (exitDialog != null && exitDialog.isShowing()) return;
         final String[] items = {
                 "Keep watching",
-                "Exit Ahlers Arcade",
+                "Exit Arcade Scoreboard",
                 "Reload scoreboard",
                 "Launch on boot: " + (Prefs.launchOnBoot(this) ? "ON" : "OFF"),
         };
@@ -495,7 +506,7 @@ public final class MainActivity extends Activity {
         if (on && Build.VERSION.SDK_INT >= 29 && !Settings.canDrawOverlays(this)) {
             // Android 10+ needs "Display over other apps" for a boot-time launch. Many TV builds hide that
             // screen; FLYNN.md has the one-line adb alternative.
-            msg += "\nAllow 'Display over other apps' for Ahlers Arcade so it can start at boot";
+            msg += "\nAllow 'Display over other apps' for Arcade Scoreboard so it can start at boot";
             if (fromDialog) {
                 try {
                     startActivity(new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:" + getPackageName())));
@@ -510,14 +521,30 @@ public final class MainActivity extends Activity {
     // ------------------------------------------------------------------ offline screen
 
     private void buildOfflineScreen() {
+        int splash = getResources().getColor(R.color.arcade_splash, getTheme());
+
+        // Loading screen (below the offline screen): logo + "LOADING SCOREBOARD...". Never focusable, so keys
+        // still reach the WebView underneath.
+        loading = new LinearLayout(this);
+        loading.setOrientation(LinearLayout.VERTICAL);
+        loading.setGravity(Gravity.CENTER);
+        loading.setBackgroundColor(splash);
+        loading.setFocusable(false);
+        loading.setVisibility(View.GONE);
+        loading.addView(logo(380));
+        TextView lt = label(getString(R.string.loading), 20, Color.rgb(255, 176, 0), true);
+        lt.setAlpha(0.85f);
+        loading.addView(lt);
+        root.addView(loading, new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+
         offline = new LinearLayout(this);
         offline.setOrientation(LinearLayout.VERTICAL);
         offline.setGravity(Gravity.CENTER);
-        offline.setBackgroundColor(Color.rgb(6, 4, 22));
+        offline.setBackgroundColor(splash);
         offline.setFocusable(true);
         offline.setVisibility(View.GONE);
 
-        offline.addView(label("AHLERS ARCADE", 26, Color.rgb(0, 240, 255), true));
+        offline.addView(logo(260));
         TextView title = label("SIGNAL LOST", 64, Color.rgb(255, 0, 127), true);
         title.setShadowLayer(24, 0, 0, Color.rgb(255, 0, 127));
         offline.addView(title);
@@ -528,6 +555,32 @@ public final class MainActivity extends Activity {
         offline.addView(label("OK = retry now   \u00B7   BACK = exit", 20, Color.rgb(150, 150, 170), false));
         root.addView(offline, new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
     }
+
+    /** The neon "Arcade Scoreboard" wordmark (drawable-xhdpi/logo_wordmark.webp, 300x125 dp native). */
+    private ImageView logo(int widthDp) {
+        ImageView iv = new ImageView(this);
+        iv.setImageResource(R.drawable.logo_wordmark);
+        iv.setAdjustViewBounds(true);
+        iv.setScaleType(ImageView.ScaleType.FIT_CENTER);
+        iv.setContentDescription(getString(R.string.app_name));
+        int w = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, widthDp, getResources().getDisplayMetrics());
+        iv.setLayoutParams(new LinearLayout.LayoutParams(w, ViewGroup.LayoutParams.WRAP_CONTENT));
+        return iv;
+    }
+
+    private void showLoading() {
+        if (loading == null) return;
+        loading.setVisibility(View.VISIBLE);
+        ui.removeCallbacks(hideLoadingRunnable);
+        ui.postDelayed(hideLoadingRunnable, LOADING_MAX_MS);
+    }
+
+    private void hideLoading() {
+        ui.removeCallbacks(hideLoadingRunnable);
+        if (loading != null && loading.getVisibility() != View.GONE) loading.setVisibility(View.GONE);
+    }
+
+    private final Runnable hideLoadingRunnable = this::hideLoading;
 
     private TextView label(String text, int sp, int color, boolean bold) {
         TextView t = new TextView(this);
@@ -548,6 +601,7 @@ public final class MainActivity extends Activity {
 
     private void showOffline(String why) {
         Log.w(TAG, "main frame failed: " + why);
+        hideLoading();
         offlineDetail.setText(isOnline() ? "Can't reach the scoreboard (" + why + ")" : "No network connection");
         offline.setVisibility(View.VISIBLE);
         offline.requestFocus();

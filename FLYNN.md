@@ -399,9 +399,11 @@ load. **You never need to reinstall for site changes.** Reinstall only when the 
 
 ### Install / update on the TV (sideload)
 
-Latest APK (v0.1.0, about 130 KB):
-<https://github.com/ajersj-cmyk/arcade-challenge/releases/download/tvapp-v0.1.0/ahlers-arcade-tv-0.1.0.apk>
-(release page: <https://github.com/ajersj-cmyk/arcade-challenge/releases/tag/tvapp-v0.1.0>)
+Latest APK (v0.2.0 "Arcade Scoreboard", about 140 KB):
+<https://github.com/ajersj-cmyk/arcade-challenge/releases/download/tvapp-v0.2.0/ahlers-arcade-tv-0.2.0.apk>
+(release page: <https://github.com/ajersj-cmyk/arcade-challenge/releases/tag/tvapp-v0.2.0>; previous:
+[v0.1.0](https://github.com/ajersj-cmyk/arcade-challenge/releases/tag/tvapp-v0.1.0)). Same package and signing key, so
+v0.2.0 installs straight over v0.1.0.
 
 **Option A: the Downloader app (no computer needed)**
 1. On the TV, install **Downloader** (by AFTVnews) from the Play Store / Amazon Appstore.
@@ -411,13 +413,14 @@ Latest APK (v0.1.0, about 130 KB):
 3. Open Downloader, type the APK link above into the URL box, press **Go**, then **Install** → **Done**.
    (Tip: make a short link to that URL first, e.g. with any URL shortener or an AFTVnews short code, so there's less
    to type with the remote.)
-4. Open **Ahlers Arcade** from the apps row. It shows the arcade-style banner. Long-press it to move it to favourites.
+4. Open **Arcade Scoreboard** from the apps row (neon ARCADE / LED SCOREBOARD banner; it was called *Ahlers Arcade* in
+   v0.1.0). Long-press it to move it to favourites.
 
 **Option B: ADB from a computer on the same Wi-Fi**
 1. TV: *Settings → Device Preferences → About → Build*, press OK 7 times to enable Developer options. Then turn on
    *Developer options → USB debugging / Network debugging*. Note the TV's IP (*Settings → Network*).
 2. Computer: `adb connect <tv-ip>:5555`, accept the prompt on the TV, then
-   `adb install -r ahlers-arcade-tv-0.1.0.apk`.
+   `adb install -r ahlers-arcade-tv-0.2.0.apk`.
 
 **Updating:** install the newer APK the same way. Every build is signed with the same key, so it installs over the
 old one and keeps the site's settings (localStorage). If the TV says "App not installed", an older build signed
@@ -443,12 +446,39 @@ with a different key is on it: uninstall it first. The legacy `android-tv` APK i
   `adb shell appops set com.ahlersarcade.tvapp SYSTEM_ALERT_WINDOW allow`.
   Android 7-9 boxes and most Fire TVs need nothing extra.
 
+### What's new in v0.2.0 (Arcade Scoreboard look)
+
+- App label is now **Arcade Scoreboard** (package `com.ahlersarcade.tvapp` and the signing key are unchanged, so it
+  updates in place and keeps the site settings). versionName 0.2.0, versionCode 2. The WebView UA token stays
+  `AhlersArcadeTV/<version>` so any site-side detection keeps working.
+- New neon art, all generated from SVG by `tvapp/art/build.mjs` (sources in `tvapp/art/svg/`; design code in
+  `tvapp/art/design.mjs`). It replaces the old `tvapp/tools/make_art.py`:
+  - Leanback banner `drawable-xhdpi/tv_banner.png` (320×180): pink neon-tube **ARCADE** (Russo One outline with a
+    white-hot core), amber 5×7 LED dot-matrix **SCOREBOARD** panel, cyan tube frame with marquee bulbs, synthwave floor.
+  - Launcher icons `mipmap-{mdpi…xxxhdpi}/ic_launcher.png` (48–192 px): the banner in miniature (neon "A", bulbs, cyan frame).
+  - Adaptive icon for API 26+ (`mipmap-anydpi-v26/ic_launcher.xml` + `ic_launcher_round.xml`): foreground
+    `mipmap-xxxhdpi/ic_launcher_foreground.png` (cyan ring + "A" inside the 66 dp safe zone, so circle, squircle and
+    square masks all look right; also used as the monochrome layer), background `ic_launcher_background.webp`.
+    `android:roundIcon` points at it too.
+  - Wordmark `drawable-xhdpi/logo_wordmark.webp` (600×250 px = 300×125 dp, opaque on the splash colour `#06041A`).
+- Start-up: the starting window (`drawable/splash_window.xml`, Android 7–11) shows the wordmark instead of black;
+  Android 12+ shows the system splash with the adaptive icon on `#06041A` (`values-v31/themes.xml`).
+- A freshly created WebView (cold start, return from background after the low-RAM teardown, renderer-crash rebuild)
+  shows a **LOADING SCOREBOARD…** screen with the logo until the page first paints (`onPageCommitVisible`, or
+  `onPageFinished`, or the offline screen, or a 25 s safety timeout). It is never focusable, so remote keys still reach
+  the page. Plain reloads (nightly 4 AM, *Reload scoreboard*) don't show it: the old page stays on screen until the new one paints.
+- The SIGNAL LOST screen uses the logo as its header (was the text "AHLERS ARCADE"); exit dialog says *Exit Arcade Scoreboard*.
+- Images are palette-compressed (pngquant) / WebP, so the APK only grew ~10 KB (≈ 140 KB).
+- Re-generating the art: `node tvapp/art/build.mjs` from the repo root (needs headless Chrome, `puppeteer-core`
+  (`PUPPETEER_FROM=<a package.json whose node_modules has it>`, defaults to the site's `tools/`), Pillow, the Russo One
+  font, and optionally `pngquant`).
+
 ### What v0.1.0 does (technical)
 
 - Plain Java, framework APIs only (no AndroidX, no Kotlin, no libraries). Release APK ≈ 130 KB after R8.
   `minSdk 24` (Android 7), `targetSdk/compileSdk 37`. AGP 9.4.1, Gradle 9.8.1 wrapper, JDK 17.
-- Leanback launcher entry + 320×180 banner, plus a normal launcher entry so it also works on Fire TV and phones. Art
-  is generated by `tvapp/tools/make_art.py` (Press Start 2P + Orbitron, synthwave grid).
+- Leanback launcher entry + 320×180 banner, plus a normal launcher entry so it also works on Fire TV and phones. (v0.1.0
+  art came from `tvapp/tools/make_art.py`; since v0.2.0 it's `tvapp/art/build.mjs`, see above.)
 - One `Activity`, one `WebView` (built in code, no layouts). Landscape, immersive fullscreen, `FLAG_KEEP_SCREEN_ON`,
   hardware acceleration. `singleTask`, and handles every config change itself, so HDMI/resolution changes don't reload the page.
 - WebView: JavaScript, DOM storage (settings persist), media autoplay without a gesture, `LOAD_DEFAULT` HTTP caching,
@@ -472,7 +502,7 @@ with a different key is on it: uninstall it first. The legacy `android-tv` APK i
 
 ### Build
 
-- **CI:** `.github/workflows/tvapp.yml` runs on pushes to `main` / `flynn/tv-app` that touch `tvapp/**`, and on
+- **CI:** `.github/workflows/tvapp.yml` runs on pushes to `main` / `flynn/tv-app` / `flynn/tvapp-*` that touch `tvapp/**`, and on
   *Run workflow*. It runs `assembleRelease` + `lintRelease`, checks the APK with `aapt2` (leanback entry) and `apksigner`,
   and uploads the **`ahlers-arcade-tv-apk`** artifact (kept 90 days).
 - **Signing:** a self-signed release key (`CN=Ahlers Arcade TV`, RSA 3072, valid 50 years, SHA-256
@@ -484,7 +514,9 @@ with a different key is on it: uninstall it first. The legacy `android-tv` APK i
   `cd tvapp && ./gradlew assembleRelease` (export `TVAPP_KEYSTORE`, `TVAPP_KEYSTORE_PASSWORD`, … to sign with the
   release key). Output: `tvapp/app/build/outputs/apk/release/ahlers-arcade-tv-<version>-release.apk`.
 - **Releasing a new version:** bump `appVersionName` / `appVersionCode` in `tvapp/app/build.gradle.kts`, merge, let the
-  workflow build it, then attach the artifact APK to a new pre-release tagged `tvapp-v<version>`.
+  workflow build it, then attach the artifact APK to a new pre-release tagged `tvapp-v<version>`. (v0.2.0 was built on
+  Flynn's box with the same release key, verified with `aapt2`/`apksigner`, and attached as
+  `ahlers-arcade-tv-0.2.0.apk`; the tag points at the `flynn/tvapp-logo` commit it was built from.)
 
 ### The legacy `android-tv/` app (read-only notes; don't edit it)
 

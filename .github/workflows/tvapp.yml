@@ -3,7 +3,7 @@ name: Build TV app (tvapp)
 # Builds the thin Android TV WebView shell in tvapp/ (the legacy android-tv/ app has its own workflow).
 on:
   push:
-    branches: [main, "flynn/tv-app"]
+    branches: [main, "flynn/tv-app", "flynn/tvapp-*"]
     paths:
       - "tvapp/**"
       - ".github/workflows/tvapp.yml"

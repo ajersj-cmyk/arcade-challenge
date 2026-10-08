@@ -10,8 +10,8 @@ plugins {
 val ksPath: String? = System.getenv("TVAPP_KEYSTORE")
 val ksReady = !ksPath.isNullOrBlank() && file(ksPath).exists()
 
-val appVersionName = "0.1.0"
-val appVersionCode = 1
+val appVersionName = "0.2.0"
+val appVersionCode = 2
 
 android {
     namespace = "com.ahlersarcade.tvapp"
