@@ -309,11 +309,10 @@ next slide shows right away.
   from `participants` (NHL/MLB plays) or the scoring-play text (football). The headshot comes from the feed, the boxscore
   athlete, or `a.espncdn.com/i/headshots/<league>/players/full/<id>.png`. With no player found, only the team logo shows.
 - **Effects level:** **Lite** is the default (Settings → *Full Effects* off), and the TV app (`window.ArcadeTV`) and
-  `prefers-reduced-motion` always use it. It keeps Full's colours: a deep team-colour gradient, large faint watermark logo, multiple slanted static 'GOAL!! ★ PLAYER' outline text layers,
-  small static shard accents, a big white glowing title, logo scale-in, the scorer card, and ONE scrolling strip with a
-  static glow. Motion is cheap: 3 quick white flashes on one full-screen layer (opacity only) in the first second, then
-  steady, plus one slow sheen pass (transform only). There's no confetti, shake, beams, rings or continuous strobe, and no
-  animated filters, blur or background. **Full** is the original 3-strip strobe/confetti/shake version. Headless Chrome
+  `prefers-reduced-motion` always use it. It keeps Full's colours: the Full layout frozen as a static frame: top + bottom glowing 'GOAL!! ★ PLAYER' strips (transform scroll), huge outlined
+  name behind the center, logo + headshot card + score bar, ring + star outline, red wash, small static shard/dot accents.
+  Motion is cheap: strip scroll, one logo scale-in, and 2–3 white flashes at the start. No strobe, falling confetti, shake,
+  beams, sweep, continuous beat, or animated filters. **Full** is the original 3-strip strobe/confetti/shake version. Headless Chrome
   (software compositing, frames from 0.5–3.5 s): Lite goal/TD 60/60 fps at 1x and 60/59 fps at 6x CPU throttle; Full about
   11–16 fps.
 - **Field goals** are held back 5 s on top of the delay, so a FG never shows before a TD would be known.

@@ -95,8 +95,21 @@ let shown = await waitShow(); s = await st();
 check('Hurricanes goal between polls -> GOAL!! overlay with scrolling marquee', shown && s.last && s.last.text === 'GOAL!!' && /GOAL!!/.test(s.mq) && s.shown === 'block', JSON.stringify(s.last) + ' | ' + s.mq);
 const pc = await page.evaluate(() => ({ player: cel.last.player, more: document.getElementById('cel-pmore').textContent, name: document.getElementById('cel-pname').textContent, head: document.getElementById('cel-head').getAttribute('src'), has: document.getElementById('celebrate').classList.contains('has-player') }));
 check('goal shows the scorer: name in the marquee + headshot card with assists', pc.has && pc.player === 'Sebastian Aho' && /SEBASTIAN AHO/.test(s.mq) && /ASSISTS: S\. JARVIS, A\. SVECHNIKOV/.test(pc.more) && /headshots\/nhl\/players\/full\/3904173\.png$/.test(pc.head || ''), JSON.stringify(pc));
-const lite = await page.evaluate(() => ({ lite: document.getElementById('celebrate').classList.contains('lite'), conf: getComputedStyle(document.querySelector('#celebrate .cel-conf')).display, strobe: getComputedStyle(document.querySelector('#celebrate .cel-wash.w2')).animationName, rows: [...document.querySelectorAll('#celebrate .cel-mq')].filter(e => getComputedStyle(e).display !== 'none').length, shake: getComputedStyle(document.querySelector('#celebrate .cel-shake')).animationName, def: defaultSettings.celFull, wm: getComputedStyle(document.getElementById('cel-wm')).display, bg: document.querySelectorAll('#cel-bg span').length, bgTxt: (document.querySelector('#cel-bg .b1')||{}).textContent||'', shards: getComputedStyle(document.querySelector('#celebrate .cel-shards')).display }));
-check('effects default to LITE: dense Lite: watermark + 4 static bg text layers + shards, no confetti/shake, one strip, 3-flash intro', lite.lite && lite.conf === 'none' && lite.strobe === 'cel-lite-flash' && lite.rows === 1 && lite.shake === 'none' && lite.def === false && lite.wm === 'block' && lite.shards === 'block' && lite.bg === 4 && /GOAL!!/.test(lite.bgTxt), JSON.stringify(lite));
+const lite = await page.evaluate(() => {
+  const cs = el => getComputedStyle(el);
+  const rows = [...document.querySelectorAll('#celebrate .cel-mq')].filter(e => cs(e).display !== 'none');
+  const conf = document.querySelector('#celebrate .cel-conf');
+  const i0 = conf && conf.querySelector('i');
+  return { lite: document.getElementById('celebrate').classList.contains('lite'),
+    conf: cs(conf).display, confAnim: i0 ? cs(i0).animationName : '',
+    strobe: cs(document.querySelector('#celebrate .cel-wash.w2')).animationName,
+    rows: rows.length, m1: rows.some(e => e.classList.contains('m1')), m3: rows.some(e => e.classList.contains('m3')),
+    shake: cs(document.querySelector('#celebrate .cel-shake')).animationName,
+    title: cs(document.getElementById('cel-title')).display,
+    beam: cs(document.querySelector('#celebrate .cel-beam')).display,
+    def: defaultSettings.celFull };
+});
+check('effects default to LITE: Full layout frozen (top+bottom strips, no shake/beams/falling confetti, 3-flash intro)', lite.lite && lite.rows === 3 && lite.m1 && lite.m3 && lite.shake === 'none' && lite.beam === 'none' && lite.conf === 'block' && lite.confAnim === 'none' && lite.strobe === 'cel-lite-flash' && lite.title === 'none' && lite.def === false, JSON.stringify(lite));
 await celShot('celebrate-goal-hurricanes-lite');
 await dismiss(); s = await st();
 const ae1 = await page.evaluate(() => document.activeElement && document.activeElement.id);

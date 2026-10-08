@@ -415,39 +415,42 @@
         @keyframes cel-beat { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.08); } }
         @keyframes cel-rise { 0% { transform: translateY(4vh); opacity: 0; } 100% { transform: none; opacity: 1; } }
         @media (prefers-reduced-motion: reduce) { #celebrate .cel-wash.w2, #celebrate .cel-shake { animation: none !important; } }
-        /* LITE effects (default; always in the TV app / reduced motion). Dense static look: deep team-colour
-           gradient, large faint watermark logo, multiple slanted static 'GOAL!! ★ PLAYER' text layers, small static
-           shard accents, bright white title + logo + scorer card + score bar + ONE scrolling bottom strip. 3 quick
-           white flashes (opacity only) then hold. No confetti/shake/beams/continuous strobe; no animated filters/blur. */
-        #celebrate .cel-wm, #celebrate .cel-bg, #celebrate .cel-shards { display: none; }
-        #celebrate.lite .cel-beam, #celebrate.lite .cel-ring.r2, #celebrate.lite .cel-conf, #celebrate.lite .cel-mq.m1, #celebrate.lite .cel-mq.m3, #celebrate.lite .cel-sweep { display: none; }
+        /* LITE = Full layout frozen (default; TV app / reduced-motion always). Same top+bottom glowing GOAL strips,
+           huge outlined name behind center, logo + headshot card + score, ring + star outline, red wash + static shards.
+           Only strip scroll (transform), one logo scale-in, and 2–3 white flashes at start. No strobe/confetti fall/shake/
+           beams/sweep/beat, no animated filters. Extra Lite-only layers (title/wm/bg/shards) stay hidden. */
+        #celebrate .cel-wm, #celebrate .cel-bg, #celebrate .cel-shards, #celebrate .cel-title { display: none !important; }
+        #celebrate.lite .cel-beam, #celebrate.lite .cel-sweep { display: none; }
         #celebrate.lite .cel-shake { animation: none; }
-        #celebrate.lite .cel-wash { background: radial-gradient(ellipse at 50% 42%, var(--cel1) 0%, var(--cel1) 42%, #000 120%); }
-        #celebrate.lite .cel-vig { background: radial-gradient(ellipse at 50% 45%, rgba(0,0,0,0) 0%, rgba(0,0,0,0.25) 55%, rgba(0,0,0,0.7) 100%); }
         #celebrate.lite .cel-wash.w2 { background: #fff; opacity: 0; will-change: opacity; animation: cel-lite-flash 0.95s linear 0.05s 1 both; }
-        #celebrate.lite .cel-wm { display: block; position: absolute; left: 50%; top: 46%; width: 95vh; height: 95vh; margin: -47.5vh 0 0 -47.5vh; object-fit: contain; opacity: 0.14; pointer-events: none; }
-        #celebrate.lite .cel-bg { display: block; position: absolute; inset: 0; overflow: hidden; pointer-events: none; font-family: 'Inter', sans-serif; font-weight: 900; font-style: italic; letter-spacing: 0.3vw; white-space: nowrap; color: #fff; }
-        #celebrate.lite .cel-bg span { position: absolute; left: -8vw; display: block; line-height: 1; }
-        #celebrate.lite .cel-bg .b1 { top: 2vh;  font-size: 14vh; opacity: 0.22; transform: rotate(-7deg); color: transparent; -webkit-text-stroke: 0.35vh rgba(255,255,255,0.55); }
-        #celebrate.lite .cel-bg .b2 { top: 22vh; font-size: 11vh; opacity: 0.18; transform: rotate(5deg);  color: transparent; -webkit-text-stroke: 0.3vh rgba(255,255,255,0.45); }
-        #celebrate.lite .cel-bg .b3 { top: 58vh; font-size: 13vh; opacity: 0.16; transform: rotate(-4deg); color: transparent; -webkit-text-stroke: 0.32vh rgba(255,255,255,0.5); }
-        #celebrate.lite .cel-bg .b4 { top: 78vh; font-size: 10vh; opacity: 0.14; transform: rotate(6deg);  color: transparent; -webkit-text-stroke: 0.28vh rgba(255,255,255,0.4); }
-        #celebrate.lite .cel-shards { display: block; position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
-        #celebrate.lite .cel-shards i { position: absolute; width: 1.1vh; height: 2.2vh; background: #fff; opacity: 0.55; transform: rotate(25deg); }
-        #celebrate.lite .cel-shards i.d { width: 1vh; height: 1vh; border-radius: 50%; opacity: 0.45; transform: none; background: var(--cel2); }
-        #celebrate.lite .cel-shards i.t { width: 0; height: 0; background: transparent; border-left: 0.7vh solid transparent; border-right: 0.7vh solid transparent; border-bottom: 1.6vh solid #fff; opacity: 0.5; transform: rotate(-18deg); }
-        #celebrate.lite .cel-ring { display: block; animation: none; opacity: 0.22; border-width: 0.5vh; width: 70vh; height: 70vh; margin: -35vh 0 0 -35vh; }
-        #celebrate .cel-title { display: none; }
-        #celebrate.lite .cel-title { display: block; margin-bottom: 1.2vh; font-family: 'Inter', sans-serif; font-weight: 900; font-style: italic; font-size: 12vh; line-height: 1; letter-spacing: 0.4vw; color: #fff; white-space: nowrap;
-                                     text-shadow: 0 0 3vh var(--cel2), 0.8vh 0.8vh 0 rgba(0,0,0,0.35); will-change: transform; animation: cel-in 0.55s cubic-bezier(.2,1.5,.4,1) both; }
-        #celebrate.lite .cel-mq.m2, #celebrate.lite.mini .cel-mq.m2 { top: auto; bottom: 3.5vh; font-size: 16vh; color: #fff; -webkit-text-stroke: 0; opacity: 1; text-shadow: 0 0 2.5vh var(--cel2), 0.7vh 0.7vh 0 rgba(0,0,0,0.45); animation: cel-mq-r 5s linear infinite; }
-        #celebrate.lite .cel-center { padding-bottom: 20vh; }
-        #celebrate.lite .cel-logo, #celebrate.lite.big .cel-logo, #celebrate.lite.has-player .cel-logo { width: 38vh; height: 38vh; filter: none; animation: cel-in 0.6s cubic-bezier(.2,1.4,.4,1) both; }
-        #celebrate.lite.mini .cel-logo { width: 32vh; height: 32vh; margin-top: 0; }
-        #celebrate.lite .cel-head { width: 27vh; height: 27vh; box-shadow: 0 0 2.5vh var(--cel2); }
-        #celebrate.lite.mini .cel-wm, #celebrate.lite.mini .cel-bg, #celebrate.lite.mini .cel-shards, #celebrate.lite.mini .cel-ring { display: none; }
-        @keyframes cel-in { 0% { transform: scale(0.6); opacity: 0; } 100% { transform: none; opacity: 1; } }
-        @keyframes cel-lite-flash { 0% { opacity: 0.9; } 15% { opacity: 0; } 32% { opacity: 0.75; } 48% { opacity: 0; } 66% { opacity: 0.55; } 82%, 100% { opacity: 0; } }
+        #celebrate.lite .cel-mq.m1, #celebrate.lite .cel-mq.m3 { color: #fff; text-shadow: 0 0 3vh rgba(255,255,255,0.85), 0.8vh 0.8vh 0 rgba(0,0,0,0.35); }
+        #celebrate.lite .cel-mq.m2 { opacity: 0.38; -webkit-text-stroke: 0.45vh rgba(255,255,255,0.75); } /* huge outlined name behind center */
+        #celebrate.lite .cel-ring { animation: none; opacity: 0.5; transform: scale(1.15); border-color: rgba(255,255,255,0.8); border-width: 0.55vh; width: 72vh; height: 72vh; margin: -36vh 0 0 -36vh; }
+        #celebrate.lite .cel-ring.r2 { animation: none; opacity: 0.45; left: 14%; top: 38%; width: 28vh; height: 28vh; margin: 0; border: none; border-radius: 0; background: transparent;
+                                       display: flex; align-items: center; justify-content: center; font-size: 28vh; line-height: 1; color: transparent;
+                                       -webkit-text-stroke: 0.4vh rgba(255,255,255,0.55); transform: none; }
+        #celebrate.lite .cel-ring.r2::before { content: '\2605'; }
+        #celebrate.lite .cel-conf { display: block; }
+        #celebrate.lite .cel-conf i { animation: none !important; will-change: auto; top: auto; opacity: 0.7; }
+        #celebrate.lite .cel-conf i:nth-child(1)  { left: 6%;  top: 18%; }
+        #celebrate.lite .cel-conf i:nth-child(2)  { left: 18%; top: 55%; }
+        #celebrate.lite .cel-conf i:nth-child(3)  { left: 28%; top: 12%; background: #fff; }
+        #celebrate.lite .cel-conf i:nth-child(4)  { left: 40%; top: 70%; }
+        #celebrate.lite .cel-conf i:nth-child(5)  { left: 52%; top: 22%; }
+        #celebrate.lite .cel-conf i:nth-child(6)  { left: 64%; top: 62%; background: #fff; }
+        #celebrate.lite .cel-conf i:nth-child(7)  { left: 74%; top: 16%; }
+        #celebrate.lite .cel-conf i:nth-child(8)  { left: 86%; top: 48%; }
+        #celebrate.lite .cel-conf i:nth-child(9)  { left: 10%; top: 78%; background: #fff; }
+        #celebrate.lite .cel-conf i:nth-child(10) { left: 92%; top: 28%; }
+        #celebrate.lite .cel-conf i:nth-child(n+11) { display: none; } /* keep a handful of static shards */
+        #celebrate.lite .cel-logo, #celebrate.lite.big .cel-logo, #celebrate.lite.has-player .cel-logo {
+            filter: none; animation: cel-punch 0.7s cubic-bezier(.2,1.5,.4,1) both; /* one scale-in, no continuous beat */
+        }
+        #celebrate.lite.has-player .cel-logo { width: 42vh; height: 42vh; }
+        #celebrate.lite .cel-head { box-shadow: 0 0 2vh rgba(255,255,255,0.55); }
+        #celebrate.lite .cel-sub { animation: cel-rise 0.45s ease-out 0.35s both; }
+        #celebrate.lite.mini .cel-conf, #celebrate.lite.mini .cel-ring, #celebrate.lite.mini .cel-ring.r2 { display: none; }
+        @keyframes cel-lite-flash { 0% { opacity: 0.9; } 15% { opacity: 0; } 32% { opacity: 0.7; } 48% { opacity: 0; } 66% { opacity: 0.5; } 82%, 100% { opacity: 0; } }
         #cel-alert.lite .al-bar { box-shadow: none; animation: al-in 0.45s ease-out both; }
         #cel-alert.lite .al-shine { display: none; }
         #cel-alert.lite .al-logo { animation: none; }
@@ -2633,7 +2636,7 @@
             for (var i = 0, n = Math.max(2, Math.ceil(24 / (word.length + 3))); i < n; i++) rep += word + ' \u2605 '; // just over a screen wide: huge strips re-raster every frame on TV GPUs
             ['cel-mq1', 'cel-mq2', 'cel-mq3'].forEach(function(id) { document.getElementById(id).textContent = rep + rep; }); // doubled: seamless -50% loop
             var bg = document.getElementById('cel-bg');
-            if (bg) { var line = (rep + rep).slice(0, 96); Array.prototype.forEach.call(bg.children, function(n) { n.textContent = line; }); }
+            if (bg) { var bgLine = (rep + rep).slice(0, 96); Array.prototype.forEach.call(bg.children, function(n) { n.textContent = bgLine; }); }
             document.getElementById('cel-title').textContent = kind.text;
             document.getElementById('cel-sub').textContent = (T.full || '').toUpperCase() + (line ? '   ' + line : '');
             el.classList.remove('show', 'big', 'mini', 'has-player', 'lite'); void el.offsetWidth; // restart the CSS animations
