@@ -77,7 +77,10 @@ rotation watchdog helpers, stale scoreboard cache + offline pill, and soft-reloa
 
 `node tools/test-trackers.mjs [preview.html]` checks Gamecast football field + MLB strike-zone trackers against mocked
 feeds and optional real ESPN dumps (`/tmp/nfl2.json`, `/tmp/mlb2.json`): SVG field (ball, line-to-gain, drive path),
-pitch dots/list/bases/count, graceful degrade, and 0 console errors. Screenshots land in `tools/out/*-trackers/`.
+pitch dots/list/bases/count, graceful degrade, and 0 console errors. With real dumps (`/tmp/nfl2.json`, `/tmp/cfb2.json`,
+`/tmp/mlb2.json`, `/tmp/nhl.json`) it also checks the views at 1280x720: FIELD default + 2.25:1 field size, remote ▲ → tabs → ▶ BOX
+SCORE → ▼ scroll, Play/Pause and mouse tab switching, the view surviving a poll, box-score tables per sport, and an in-place poll
+update (same DOM nodes, new value, scroll kept). Screenshots land in `tools/out/*-trackers/`.
 
 `node tools/test-celebrate.mjs [preview.html]` tests score celebrations against mocked ESPN summaries (an NHL game
 NYR @ CAR and a CFB game TEM @ ECU): the per-team ★ toggles (mouse + D-pad) and their localStorage, no fire on first look,
@@ -269,9 +272,23 @@ next slide shows right away.
 |---|---|
 | Back / Esc / Backspace, or click ✕ CLOSE | close, back to rotation |
 | ◀ / ▶ | previous / next game (live first, then upcoming, then recent finals) |
-| ▲ / ▼ | scroll the team-stats and player-stats panels (auto-scroll resumes after 8 s) |
-| OK | focus ✕ CLOSE (a second OK closes) |
+| ▲ / ▼ | scroll the visible stats / box-score panels (auto-scroll resumes after 8 s) |
+| ▲ when the panels are at the top (or ▼ from the ★ row) | focus the **view tabs**; then ◀ / ▶ (or OK) switch view, ▼ goes back to scrolling, ▲ goes to the ★ row |
+| Play/Pause (Space / P) | switch view directly (FIELD ⇄ BOX SCORE etc.) |
+| OK | focus the first ★ CELEBRATE toggle (◀/▶ walk the ★ / delay / SYNC / CLOSE row) |
 
+- **Views (tabs under the ★ row, live/final games only):** football **FIELD | BOX SCORE**; baseball **AT BAT + BOX SCORE |
+  PLAYS & STATS**; hockey/basketball **GAME | BOX SCORE**. Pre-game and soccer have no tabs (classic layout). The tab sets a
+  class on `#gamecast` (`gcv-field`, `gcv-box`, `gcv-mlb`, `gcv-plays`, none = classic) and a CSS grid rearranges the same blocks,
+  so every block keeps updating on each poll while hidden. The chosen tab survives polls and ◀/▶ game switches; it resets on close.
+  - FIELD: real-proportion field (SVG viewBox 120 × 53.3 yd, `meet`, never stretched) + linescore, win prob, last plays.
+  - BOX SCORE: linescore + team-stat bars | **LIVE BOX SCORE** (`gcBoxScoreHtml`): away | home side by side. NFL/CFB passing,
+    rushing, receiving (TEAM totals), defense, INTs, fumbles, kicking, punting, returns; MLB batting AB R H RBI BB K AVG (subs
+    indented) + pitching IP H R ER BB K PC; NHL skaters G A SOG(+/-) HT BS TOI + goalies SA SV GA SV% TOI (ESPN's NHL `S` label is
+    shots on goal; its `SOG` column is always 0); NBA MIN PTS REB AST FG 3PT STL BLK.
+  - MLB AT BAT + BOX SCORE: big strike zone + pitcher/batter + bases/outs + pitch list (newest first) next to linescore + box score.
+  - The box score and team stats are patched in place (`gcMorph`: only changed text/attributes are touched, logos kept), and
+    `gcSet` keeps every panel's scroll position, so the 10 s poll never flickers or jumps.
 - **Content:** a scoreboard with logos, records, score, period/clock and status. It also shows the in-game situation:
   - football: possession, down and distance, red zone
   - MLB: count, bases, outs, batter vs pitcher

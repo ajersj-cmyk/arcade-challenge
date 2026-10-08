@@ -329,15 +329,76 @@
         #gc-track:empty { display: none !important; }
         .gc-trk-head { display: flex; justify-content: space-between; align-items: baseline; font-size: 2vh; font-weight: 900; letter-spacing: 0.15vw; color: var(--accent-color); margin-bottom: 0.8vh; }
         .gc-trk-head b { color: #fff; font-size: 2.4vh; letter-spacing: 0.05vw; }
-        .gc-field { width: 100%; height: 20.5vh; display: block; border-radius: 0.8vh; background: #0a2e18; }
-        .gc-sz-wrap { display: grid; grid-template-columns: 26vh 1fr 22vh; gap: 1.6vw; align-items: stretch; }
-        .gc-sz-col { display: flex; flex-direction: column; align-items: center; gap: 0.6vh; }
-        .gc-sz { width: 24vh; height: 26vh; display: block; background: #070c14; border-radius: 0.8vh; border: 1px solid rgba(0,240,255,0.25); }
-        .gc-sz-matchup { display: flex; align-items: center; justify-content: center; gap: 1.2vw; width: 100%; margin-bottom: 0.4vh; }
+        .gc-field { width: 100%; aspect-ratio: 120 / 53.3; display: block; }
+        .gc-fld-leg { display: flex; justify-content: center; gap: 2.4vw; font-size: 1.6vh; font-weight: 900; letter-spacing: 0.1vw; color: rgba(255,255,255,0.6); margin-top: 0.8vh; }
+        .gc-fld-leg i { display: inline-block; width: 2.6vh; height: 0.5vh; margin-right: 0.5vw; vertical-align: middle; border-radius: 0.3vh; }
+        .gc-sz-wrap { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); gap: 1.2vh 1.4vw; align-items: start; }
+        .gc-sz-col { min-width: 0; }
+        .gc-sz { width: 100%; aspect-ratio: 1 / 1; height: auto; display: block; background: #070c14; border-radius: 0.8vh; border: 1px solid rgba(0,240,255,0.25); }
+        .gc-sz-info { display: flex; flex-direction: column; gap: 1.4vh; min-width: 0; }
+        .gc-sz-matchup { display: flex; flex-direction: column; align-items: flex-start; gap: 1vh; width: 100%; }
+        .gc-sz-sit { display: flex; align-items: center; gap: 1.6vw; }
+        .gc-sz-wrap .gc-sz-list { grid-column: 1 / -1; column-count: 2; column-gap: 1.6vw; max-height: none; font-size: 1.85vh; }
+        .gc-sz-wrap .gc-sz-list div { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; break-inside: avoid; }
+        /* Gamecast views: tabs (FIELD | BOX SCORE ...) switch a class on #gamecast; every block keeps updating while hidden */
+        .gc-tabs { display: none; align-items: center; gap: 1vw; margin: 0 0 1.2vh; }
+        #gamecast.gc-tabbed .gc-tabs { display: flex; }
+        .gc-tab { background: rgba(12,20,32,0.9); color: rgba(255,255,255,0.72); border: 2px solid rgba(255,255,255,0.3); border-radius: 3vh; padding: 0.55vh 2.6vh; font-family: 'Inter', sans-serif; font-size: 2vh; font-weight: 900; letter-spacing: 0.2vw; white-space: nowrap; }
+        .gc-tab.on { background: var(--accent-color); border-color: var(--accent-color); color: #05080f; box-shadow: 0 0 1.6vh var(--accent-color); }
+        body.nav-active #gamecast .gc-tab:focus { outline: 0.4vh solid #fff; outline-offset: 0.3vh; }
+        body.mouse-active #gamecast .gc-tab { cursor: pointer; }
+        .gc-tab-hint { margin-left: auto; font-size: 1.7vh; font-weight: 900; letter-spacing: 0.1vw; color: rgba(255,255,255,0.55); white-space: nowrap; }
+        .gc-body { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+        #gc-bxs { display: none; }
+        #gamecast.gcv-field .gc-body, #gamecast.gcv-box .gc-body, #gamecast.gcv-mlb .gc-body { display: grid; gap: 1.4vh 1.6vw; }
+        #gamecast.gcv-field .gc-strip, #gamecast.gcv-box .gc-strip, #gamecast.gcv-mlb .gc-strip,
+        #gamecast.gcv-field .gc-panels, #gamecast.gcv-box .gc-panels, #gamecast.gcv-mlb .gc-panels { display: contents; }
+        #gamecast.gcv-field #gc-track, #gamecast.gcv-box #gc-track, #gamecast.gcv-mlb #gc-track { margin: 0; min-height: 0; }
+        #gamecast.gcv-field .gc-panel, #gamecast.gcv-box .gc-panel, #gamecast.gcv-mlb .gc-panel { display: none; }
+        #gamecast.gcv-field .gc-body { grid-template-columns: minmax(0, 1.9fr) minmax(0, 1fr); grid-template-rows: auto auto minmax(0, 1fr); grid-template-areas: "track line" "track wp" "track plays"; }
+        #gamecast.gcv-field #gc-track { grid-area: track; display: flex; flex-direction: column; }
+        #gamecast.gcv-field .gc-field { flex: 1 1 0; min-height: 0; height: auto; aspect-ratio: auto; }
+        #gamecast.gcv-field #gc-line { grid-area: line; } #gamecast.gcv-field #gc-wp { grid-area: wp; }
+        #gamecast.gcv-field #gc-p-plays { grid-area: plays; display: flex; }
+        #gamecast.gcv-box .gc-body { grid-template-columns: minmax(0, 1fr) minmax(0, 2.1fr); grid-template-rows: auto minmax(0, 1fr); grid-template-areas: "line bxs" "stats bxs"; }
+        #gamecast.gcv-box #gc-line { grid-area: line; } #gamecast.gcv-box #gc-wp, #gamecast.gcv-box #gc-track { display: none; }
+        #gamecast.gcv-box #gc-p-stats { grid-area: stats; display: flex; }
+        #gamecast.gcv-box #gc-bxs { grid-area: bxs; display: flex; }
+        #gamecast.gcv-mlb .gc-body { grid-template-columns: minmax(0, 1fr) minmax(0, 1.08fr); grid-template-rows: auto minmax(0, 1fr); grid-template-areas: "track line" "track bxs"; }
+        #gamecast.gcv-mlb #gc-track { grid-area: track; } #gamecast.gcv-mlb #gc-line { grid-area: line; } #gamecast.gcv-mlb #gc-wp { display: none; }
+        #gamecast.gcv-mlb #gc-bxs { grid-area: bxs; display: flex; }
+        #gamecast.gcv-plays #gc-track { display: none; }
+        #gamecast.gc-tabbed .gc-board { min-height: 0; margin: 0.6vh 0 1vh; row-gap: 1.1vh; }
+        #gamecast.gc-tabbed .gc-logo { width: 10vh; height: 10vh; }
+        #gamecast.gc-tabbed .gc-score { font-size: 10.5vh; }
+        #gamecast.gcv-mlb .gc-sz-wrap { grid-template-columns: auto minmax(0, 1fr); }
+        #gamecast.gcv-mlb .gc-sz { width: auto; height: 40vh; aspect-ratio: 1 / 1; }
+        #gamecast.gcv-mlb .gc-sz-info .gc-sz-pl span { font-size: 2vh; max-width: 13vw; }
+        #gamecast.gcv-mlb .gc-sz-list { max-height: 11.6vh; overflow: hidden; }
+        #gamecast.gcv-mlb .gc-body { grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.2fr); }
+        #gamecast.gcv-mlb .gc-bxs-t { font-size: 1.7vh; }
+        #gamecast.gcv-mlb .gc-bxs-t td, #gamecast.gcv-mlb .gc-bxs-t th { padding-left: 0.25vw; padding-right: 0.25vw; }
+        #gamecast.gcv-mlb .gc-bxs-t td.nm { max-width: 8.5vw; }
+        .gc-bxs-cols { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 1.4vw; }
+        .gc-bxs-team { position: sticky; top: 0; z-index: 1; background: rgb(10, 16, 26); display: flex; align-items: center; gap: 0.6vw; font-size: 2.1vh; font-weight: 900; letter-spacing: 0.1vw; border-bottom: 2px solid currentColor; padding-bottom: 0.4vh; margin-bottom: 0.6vh; text-transform: uppercase; white-space: nowrap; overflow: hidden; }
+        .gc-bxs-team img { width: 3vh; height: 3vh; object-fit: contain; flex: none; }
+        .gc-bxs-t { width: 100%; border-collapse: collapse; font-size: 1.8vh; font-weight: 800; margin-bottom: 1.1vh; }
+        .gc-bxs-t th { font-size: 1.45vh; font-weight: 900; color: rgba(255,255,255,0.55); text-align: right; padding: 0.3vh 0.35vw; letter-spacing: 0.05vw; white-space: nowrap; }
+        .gc-bxs-t th.nm { text-align: left; color: var(--accent-color); font-size: 1.6vh; }
+        .gc-bxs-t td { text-align: right; padding: 0.3vh 0.35vw; border-top: 1px solid rgba(255,255,255,0.07); white-space: nowrap; font-variant-numeric: tabular-nums; }
+        .gc-bxs-t td.nm { text-align: left; max-width: 10vw; overflow: hidden; text-overflow: ellipsis; }
+        .gc-bxs-t td.nm i { font-style: normal; font-size: 1.4vh; color: rgba(255,255,255,0.45); margin-left: 0.3vw; }
+        .gc-bxs-t tr.sub td.nm { padding-left: 1vw; color: rgba(255,255,255,0.75); }
+        .gc-bxs-t tr.tot td { color: var(--accent-color); border-top: 1px solid rgba(255,255,255,0.3); font-weight: 900; }
         .gc-sz-pl { display: flex; align-items: center; gap: 0.6vw; min-width: 0; }
         .gc-sz-pl img { width: 4.2vh; height: 4.2vh; border-radius: 50%; object-fit: cover; border: 2px solid rgba(255,255,255,0.35); background: #111; flex: none; }
         .gc-sz-pl span { font-size: 1.9vh; font-weight: 800; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 14vw; }
         .gc-sz-pl .role { display: block; font-size: 1.4vh; color: var(--accent-color); letter-spacing: 0.12vw; font-weight: 900; }
+        .gc-sz-info .gc-sz-pl img { width: 5.6vh; height: 5.6vh; }
+        .gc-sz-info .gc-sz-pl span { font-size: 2.3vh; max-width: 22vw; }
+        .gc-sz-info .gc-sz-pl .role { font-size: 1.5vh; }
+        .gc-sz-info .gc-bases { width: 15vh; height: 12vh; }
+        .gc-sz-info .gc-outs i { width: 2vh; height: 2vh; }
         .gc-sz-vs { font-size: 1.8vh; font-weight: 900; color: rgba(255,255,255,0.45); }
         .gc-sz-list { font-size: 2vh; font-weight: 800; line-height: 1.5; max-height: 26vh; overflow: hidden; padding-top: 0.4vh; }
         .gc-sz-list div { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding: 0.25vh 0; }
@@ -794,15 +855,19 @@
             <div class="gc-celmid"><button type="button" class="gc-cel-d" id="gc-cel-dminus" onclick="nudgeCelDelay(-1)">&minus;</button><span id="gc-cel-dval">DELAY 0s</span><button type="button" class="gc-cel-d" id="gc-cel-dplus" onclick="nudgeCelDelay(1)">+</button><span class="gc-sync"><span id="gc-dclock">DATA --</span><button type="button" class="gc-cel-d gc-sync-btn" id="gc-cel-sync" onclick="celSyncPress()">SYNC NOW</button></span></div>
             <div class="gc-celcell right"><button type="button" class="gc-cel" id="gc-cel-home" onclick="celToggle('home')" disabled>&#9733; CELEBRATE <span class="gc-cel-ab"></span><b>OFF</b></button></div>
         </div>
+        <div class="gc-tabs" id="gc-tabs"><button type="button" class="gc-tab" id="gc-tab-0" onclick="gcSetView(0)"></button><button type="button" class="gc-tab" id="gc-tab-1" onclick="gcSetView(1)"></button><span class="gc-tab-hint" id="gc-tab-hint"></span></div>
+        <div class="gc-body" id="gc-body">
         <div class="gc-strip" id="gc-strip">
             <div class="gc-box" id="gc-line"></div>
             <div class="gc-box" id="gc-wp"></div>
         </div>
         <div class="gc-box" id="gc-track"></div>
+        <div class="gc-panel gc-box" id="gc-bxs"><div class="gc-panel-head neon-text-cycle">LIVE BOX SCORE</div><div class="gc-panel-body" id="gc-bxs-body"></div></div>
         <div class="gc-panels">
-            <div class="gc-panel gc-box"><div class="gc-panel-head neon-text-cycle" id="gc-plays-head">LAST PLAYS</div><div class="gc-panel-body" id="gc-plays-body"></div></div>
-            <div class="gc-panel gc-box"><div class="gc-panel-head neon-text-cycle" id="gc-stats-head">TEAM STATS</div><div class="gc-panel-body" id="gc-stats-body"></div></div>
-            <div class="gc-panel gc-box"><div class="gc-panel-head neon-text-cycle" id="gc-players-head">PLAYER STATS</div><div class="gc-panel-body" id="gc-players-body"></div></div>
+            <div class="gc-panel gc-box" id="gc-p-plays"><div class="gc-panel-head neon-text-cycle" id="gc-plays-head">LAST PLAYS</div><div class="gc-panel-body" id="gc-plays-body"></div></div>
+            <div class="gc-panel gc-box" id="gc-p-stats"><div class="gc-panel-head neon-text-cycle" id="gc-stats-head">TEAM STATS</div><div class="gc-panel-body" id="gc-stats-body"></div></div>
+            <div class="gc-panel gc-box" id="gc-p-players"><div class="gc-panel-head neon-text-cycle" id="gc-players-head">PLAYER STATS</div><div class="gc-panel-body" id="gc-players-body"></div></div>
+        </div>
         </div>
     </div>
     <div id="nav-menu" aria-hidden="true">
@@ -2816,10 +2881,29 @@
             if (gc.open && gc.meta && reg[gc.key]) gc.meta = Object.assign({}, gc.meta, { sitDown: reg[gc.key].sitDown, sitSpot: reg[gc.key].sitSpot, tv: reg[gc.key].tv });
         }
         function gcAttr(key) { return key ? ' data-gc="' + escHtml(key) + '"' : ''; }
+        var GC_MORPH = { 'gc-bxs-body': 1, 'gc-stats-body': 1 };
         function gcSet(id, html) { // only touch the DOM when the markup actually changed (no image flicker, no scroll reset)
             if (gc.html[id] === html) return;
-            gc.html[id] = html;
-            var el = document.getElementById(id); if (el) el.innerHTML = html;
+            var had = gc.html[id] != null; gc.html[id] = html;
+            var el = document.getElementById(id); if (!el) return;
+            var top = el.scrollTop;
+            if (had && GC_MORPH[id] && el.firstChild) { var t = document.createElement('template'); t.innerHTML = html; gcMorph(el, t.content); }
+            else el.innerHTML = html;
+            if (top) el.scrollTop = top;
+        }
+        function gcMorph(a, b) { // patch live node a to match b: only changed text/attributes are touched (box score updates in place, no flicker)
+            var ac = a.childNodes, bc = b.childNodes, i, j;
+            if (ac.length !== bc.length) { while (a.firstChild) a.removeChild(a.firstChild); for (i = 0; i < bc.length; i++) a.appendChild(bc[i].cloneNode(true)); return; }
+            for (i = 0; i < bc.length; i++) {
+                var x = ac[i], y = bc[i];
+                if (x.nodeType !== y.nodeType || x.nodeName !== y.nodeName) { a.replaceChild(y.cloneNode(true), x); continue; }
+                if (x.nodeType === 3) { if (x.nodeValue !== y.nodeValue) x.nodeValue = y.nodeValue; continue; }
+                if (x.nodeType !== 1 || x.nodeName === 'IMG') continue; // team logos are fixed per game; keep them (and any onerror fallback)
+                var at = y.attributes;
+                for (j = 0; j < at.length; j++) if (x.getAttribute(at[j].name) !== at[j].value) x.setAttribute(at[j].name, at[j].value);
+                for (j = x.attributes.length - 1; j >= 0; j--) if (!y.hasAttribute(x.attributes[j].name)) x.removeAttribute(x.attributes[j].name);
+                gcMorph(x, y);
+            }
         }
         function gcFmtTime(t) { return new Date(t).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', second: '2-digit' }); }
         function gcLum(hex) { var m = /^#?([0-9a-f]{6})$/i.exec(hex || ''); if (!m) return 0; var n = parseInt(m[1], 16); return (0.299 * (n >> 16) + 0.587 * ((n >> 8) & 255) + 0.114 * (n & 255)) / 255; }
@@ -2845,7 +2929,7 @@
             var el = document.getElementById('gamecast');
             el.classList.add('open'); el.setAttribute('aria-hidden', 'false');
             document.body.classList.add('gc-open');
-            ['gc-plays-body', 'gc-stats-body', 'gc-players-body'].forEach(function(id) { var b = document.getElementById(id); if (b) b.scrollTop = 0; });
+            ['gc-plays-body', 'gc-stats-body', 'gc-players-body', 'gc-bxs-body'].forEach(function(id) { var b = document.getElementById(id); if (b) b.scrollTop = 0; });
             gcRenderShell(meta);
             gcPoll();
             gc.scrollTimer = setInterval(gcAutoScroll, 60);
@@ -2866,7 +2950,7 @@
             el.classList.remove('open'); el.setAttribute('aria-hidden', 'true');
             document.body.classList.remove('gc-open');
             Object.keys(gc.html).forEach(function(id) { var n = document.getElementById(id); if (n) n.innerHTML = ''; }); // free the DOM
-            gc.html = {};
+            gc.html = {}; gcApplyViews([]); gc.view = 0;
             var ae = document.activeElement; if (ae && ae.closest && ae.closest('#gamecast')) ae.blur();
             if (!arcadeNav.paused && arcadeNav.pending) { arcadeNav.pending = false; nextSlide(); } // rotation resumes where it left off
         }
@@ -2924,8 +3008,8 @@
         function gcAutoScroll() {
             try { celClockTick(); } catch (e) {}
             if (!gc.open || Date.now() < gc.scrollHold) return;
-            ['gc-stats-body', 'gc-players-body'].forEach(function(id) {
-                var el = document.getElementById(id); if (!el) return;
+            GC_SCROLLERS.forEach(function(id) {
+                var el = document.getElementById(id); if (!el || !el.offsetParent) return; // hidden view: leave its scroll alone
                 var max = el.scrollHeight - el.clientHeight;
                 if (max <= 4) { el.scrollTop = 0; return; }
                 var now = Date.now();
@@ -2935,10 +3019,47 @@
                 el.scrollTop = el.scrollTop + 1;
             });
         }
+        var GC_SCROLLERS = ['gc-stats-body', 'gc-players-body', 'gc-bxs-body'];
         function gcScrollPanels(dir) {
             gc.scrollHold = Date.now() + 8000;
-            ['gc-stats-body', 'gc-players-body'].forEach(function(id) { var el = document.getElementById(id); if (el) el.scrollTop += dir * Math.round(window.innerHeight * 0.12); });
+            GC_SCROLLERS.forEach(function(id) { var el = document.getElementById(id); if (el && el.offsetParent) el.scrollTop += dir * Math.round(window.innerHeight * 0.12); });
         }
+        function gcPanelsAtTop() { return GC_SCROLLERS.concat('gc-plays-body').every(function(id) { var el = document.getElementById(id); return !el || !el.offsetParent || el.scrollTop <= 2; }); }
+        // Views: [label, class on #gamecast]. Tabs only when there is something to switch between.
+        function gcViews(fam, state, trk, bxs) {
+            if (state === 'pre' || !bxs) return [];
+            if (fam === 'football') return [[trk ? 'FIELD' : 'GAME', trk ? 'gcv-field' : ''], ['BOX SCORE', 'gcv-box']];
+            if (fam === 'baseball') return [[trk ? 'AT BAT + BOX SCORE' : 'BOX SCORE', trk ? 'gcv-mlb' : 'gcv-box'], ['PLAYS & STATS', 'gcv-plays']];
+            if (fam === 'hockey' || fam === 'basketball') return [['GAME', ''], ['BOX SCORE', 'gcv-box']];
+            return [];
+        }
+        function gcApplyViews(views) {
+            gc.views = views;
+            if (!(gc.view >= 0 && gc.view < views.length)) gc.view = 0;
+            var cls = views.length ? views[gc.view][1] : '', root = document.getElementById('gamecast');
+            var sig = views.map(function(v) { return v[0]; }).join('|') + '#' + gc.view;
+            if (root && gc.vcls !== cls) { ['gcv-field', 'gcv-box', 'gcv-mlb', 'gcv-plays'].forEach(function(c) { root.classList.toggle(c, c === cls); }); gc.vcls = cls; }
+            if (root) root.classList.toggle('gc-tabbed', views.length > 1);
+            gcTabHint();
+            if (gc.vsig === sig) return;
+            gc.vsig = sig;
+            for (var i = 0; i < 2; i++) {
+                var b = document.getElementById('gc-tab-' + i); if (!b) continue;
+                b.textContent = views[i] ? views[i][0] : ''; b.style.display = views[i] ? '' : 'none'; b.classList.toggle('on', i === gc.view);
+            }
+            gcTabHint();
+        }
+        function gcTabHint() {
+            var h = document.getElementById('gc-tab-hint'), ae = document.activeElement; if (!h) return;
+            var t = (ae && /^gc-tab-/.test(ae.id || '')) ? '&#9664; &#9654; SWITCH VIEW &nbsp;&bull;&nbsp; &#9660; BACK TO STATS' : '&#9650; AT TOP = TABS &nbsp;&bull;&nbsp; &#9650;&#9660; SCROLL &nbsp;&bull;&nbsp; PLAY/PAUSE = SWITCH';
+            if (h.innerHTML !== t) h.innerHTML = t;
+        }
+        function gcSetView(i) {
+            if (!gc.views || !gc.views[i]) return;
+            gc.view = i; gc.lastInput = Date.now(); gc.vsig = null;
+            gcApplyViews(gc.views);
+        }
+        function gcTabEls() { return [0, 1].map(function(i) { return document.getElementById('gc-tab-' + i); }).filter(function(b) { return b && b.offsetParent && b.style.display !== 'none'; }); }
 
         // ---- data helpers
         function gcPick(cs, side) { for (var i = 0; i < cs.length; i++) if (cs[i].homeAway === side) return cs[i]; return cs[side === 'home' ? 0 : 1] || {}; }
@@ -2967,12 +3088,13 @@
             celSync(meta, { id: meta.aId, abbr: meta.awayAbbr, full: meta.aFull || meta.away }, { id: meta.hId, abbr: meta.homeAbbr, full: meta.hFull || meta.home });
             gcSet('gc-mid', '<div class="gc-pill ' + (meta.state === 'in' ? 'live' : '') + '">' + (meta.state === 'in' ? '&#9679; LIVE' : (meta.state === 'post' ? 'FINAL' : 'UPCOMING')) + '</div><div class="gc-clock">' + escHtml(meta.status || '') + '</div>');
             var wait = '<div class="gc-empty">LOADING GAMECAST&hellip;</div>';
+            gcApplyViews([]); gcSet('gc-bxs-body', wait);
             gcSet('gc-line', ''); gcSet('gc-wp', ''); gcSet('gc-track', ''); var strip = document.getElementById('gc-strip'); if (strip) strip.style.display = 'none'; gcSet('gc-plays-body', wait); gcSet('gc-stats-body', wait); gcSet('gc-players-body', wait);
             gcStatus(true);
         }
         function gcTeamHtml(T, side, meta) {
             var lg = gcImg(T.logo, side === 'home' ? meta.hFallback : meta.aFallback, 'gc-logo');
-            var info = '<div class="gc-tinfo"><div class="gc-tname">' + (T.rank ? '<span class="gc-rank">' + T.rank + '</span>' : '') + escHtml(T.name || '') + '</div><div class="gc-rec">' + (T.loc ? escHtml(T.loc.toUpperCase()) + ' &bull; ' : '') + escHtml(T.rec || '') + (T.rec ? ' &bull; ' : '') + (side === 'home' ? 'HOME' : 'AWAY') + '</div></div>';
+            var info = '<div class="gc-tinfo"><div class="gc-tname">' + (T.rank ? '<span class="gc-rank">' + T.rank + '</span>' : '') + escHtml(T.name || '') + '</div><div class="gc-rec">' + (T.loc ? escHtml(T.loc.toUpperCase()) + ' &bull; ' : '') + (T.rec ? '<span style="white-space:nowrap">' + escHtml(T.rec) + '</span> &bull; ' : '') + (side === 'home' ? 'HOME' : 'AWAY') + '</div></div>';
             var sc = '<div class="gc-score" style="color:' + T.color + '; text-shadow: 0 0 3vh ' + T.color + '">' + escHtml(T.score === '' || T.score == null ? '-' : T.score) + (T.poss ? '<span class="gc-poss" title="possession">&#9679;</span>' : '') + '</div>';
             return lg + info + sc;
         }
@@ -3009,7 +3131,11 @@
             gcSet('gc-line', lsHtml);
             gcSet('gc-wp', wpHtml);
             var strip = document.getElementById('gc-strip'); if (strip) { strip.classList.toggle('one', !wpHtml || !lsHtml); strip.style.display = (wpHtml || lsHtml) ? '' : 'none'; }
-            try { gcSet('gc-track', gcTrackHtml(fam, A, H, sit, d, st)); } catch (e) { gcSet('gc-track', ''); }
+            var trk = ''; try { trk = gcTrackHtml(fam, A, H, sit, d, st); } catch (e) { trk = ''; }
+            gcSet('gc-track', trk);
+            var bxs = ''; try { bxs = gc.state === 'pre' ? '' : gcBoxScoreHtml(d, fam, A, H); } catch (e) { bxs = ''; }
+            gcSet('gc-bxs-body', bxs || '<div class="gc-empty">BOX SCORE NOT AVAILABLE YET</div>');
+            gcApplyViews(gcViews(fam, gc.state, trk, bxs));
             gcSet('gc-plays-head', gc.state === 'pre' ? 'GAME INFO' : 'LAST PLAYS');
             gcSet('gc-plays-body', gcPlaysHtml(meta, d, fam));
             gcSet('gc-stats-head', gc.state === 'pre' ? 'SEASON TEAM STATS' : 'TEAM STATS');
@@ -3113,48 +3239,51 @@
             }
             var ca = A.color || '#00f0ff', ch = H.color || '#ff007f';
             var driveCol = awayHas ? ca : (homeHas ? ch : '#fff');
-            // Layout in viewBox 0 0 120 56: sidelines y=6..50, end zones x=0-10 and 110-120, field 10-110 = 100 yards
+            // Real proportions: viewBox 120 x 53.3 yards (end zones x 0-10 / 110-120), scaled with "meet" so it is never stretched
+            var W = 53.3, MY = 26.65;
             function vx(y) { return 10 + y; } // yard 0..100 -> svg x
-            var marks = '', hashes = '';
-            for (var y = 10; y <= 90; y += 10) {
-                var x = vx(y), num = (y <= 50 ? y : 100 - y);
-                marks += '<line x1="' + x + '" y1="6" x2="' + x + '" y2="50" stroke="rgba(255,255,255,0.22)" stroke-width="0.35"/>';
-                marks += '<text x="' + x + '" y="14.2" fill="rgba(255,255,255,0.85)" font-size="3.4" text-anchor="middle" font-family="Share Tech Mono,monospace" font-weight="700">' + num + '</text>';
-                marks += '<text x="' + x + '" y="45.8" fill="rgba(255,255,255,0.85)" font-size="3.4" text-anchor="middle" font-family="Share Tech Mono,monospace" font-weight="700">' + num + '</text>';
+            var marks = '', hashes = '', stripes = '';
+            for (var sy = 0; sy < 100; sy += 10) stripes += '<rect x="' + vx(sy) + '" y="0" width="10" height="' + W + '" fill="' + ((sy / 10) % 2 ? '#0f4423' : '#0d3d1f') + '"/>';
+            for (var y = 5; y <= 95; y += 5) {
+                var x = vx(y), ten = y % 10 === 0;
+                marks += '<line x1="' + x + '" y1="0" x2="' + x + '" y2="' + W + '" stroke="rgba(255,255,255,' + (y === 50 ? 0.6 : (ten ? 0.38 : 0.2)) + ')" stroke-width="' + (y === 50 ? 0.45 : 0.3) + '"/>';
+                if (!ten) continue;
+                var num = (y <= 50 ? y : 100 - y);
+                marks += '<text x="' + x + '" y="10.6" fill="rgba(255,255,255,0.88)" font-size="4.4" text-anchor="middle" font-family="Share Tech Mono,monospace" font-weight="700">' + num + '</text>';
+                marks += '<text x="' + x + '" y="46.2" fill="rgba(255,255,255,0.88)" font-size="4.4" text-anchor="middle" font-family="Share Tech Mono,monospace" font-weight="700">' + num + '</text>';
             }
-            marks += '<line x1="' + vx(50) + '" y1="6" x2="' + vx(50) + '" y2="50" stroke="rgba(255,255,255,0.45)" stroke-width="0.55"/>';
-            for (var h = 0; h <= 100; h += 1) {
+            for (var h = 1; h < 100; h += 1) {
+                if (h % 5 === 0) continue;
                 var hx = vx(h);
-                hashes += '<line x1="' + hx + '" y1="18" x2="' + hx + '" y2="20.2" stroke="rgba(255,255,255,0.28)" stroke-width="0.22"/>';
-                hashes += '<line x1="' + hx + '" y1="35.8" x2="' + hx + '" y2="38" stroke="rgba(255,255,255,0.28)" stroke-width="0.22"/>';
+                hashes += '<line x1="' + hx + '" y1="0" x2="' + hx + '" y2="1.1" stroke="rgba(255,255,255,0.3)" stroke-width="0.2"/><line x1="' + hx + '" y1="' + (W - 1.1) + '" x2="' + hx + '" y2="' + W + '" stroke="rgba(255,255,255,0.3)" stroke-width="0.2"/>';
+                hashes += '<line x1="' + hx + '" y1="22.4" x2="' + hx + '" y2="23.5" stroke="rgba(255,255,255,0.3)" stroke-width="0.2"/><line x1="' + hx + '" y1="29.8" x2="' + hx + '" y2="30.9" stroke="rgba(255,255,255,0.3)" stroke-width="0.2"/>';
             }
             // Red zone: only the defending side when ball is inside the 20
             var rz = '';
             if (yte != null && yte <= 20) {
-                if (awayHas) rz = '<rect x="' + vx(80) + '" y="6" width="20" height="44" fill="rgba(255,45,85,0.22)"/>'; // attacking home EZ
-                else if (homeHas) rz = '<rect x="' + vx(0) + '" y="6" width="20" height="44" fill="rgba(255,45,85,0.22)"/>';
+                if (awayHas) rz = '<rect x="' + vx(80) + '" y="0" width="20" height="' + W + '" fill="rgba(255,45,85,0.24)"/>'; // attacking home EZ
+                else if (homeHas) rz = '<rect x="' + vx(0) + '" y="0" width="20" height="' + W + '" fill="rgba(255,45,85,0.24)"/>';
             }
             var drive = '';
             if (drivePts.length >= 2) {
                 var pts = drivePts.map(function(yy) { return vx(Math.max(0, Math.min(100, yy))); });
-                var path = pts.map(function(x, i) { return (i ? 'L' : 'M') + x.toFixed(1) + ',28'; }).join(' ');
-                drive = '<path d="' + path + '" fill="none" stroke="' + driveCol + '" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" opacity="0.9"/>';
-                // arrow head at end
+                var path = pts.map(function(x, i) { return (i ? 'L' : 'M') + x.toFixed(1) + ',' + MY; }).join(' ');
+                drive = '<path d="' + path + '" fill="none" stroke="' + driveCol + '" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" opacity="0.9"/>';
                 var x1 = pts[pts.length - 2], x2 = pts[pts.length - 1], dir = x2 >= x1 ? 1 : -1;
-                drive += '<polygon points="' + (x2 + dir * 2.8).toFixed(1) + ',28 ' + x2.toFixed(1) + ',24.6 ' + x2.toFixed(1) + ',31.4" fill="' + driveCol + '"/>';
+                drive += '<polygon points="' + (x2 + dir * 2.6).toFixed(1) + ',' + MY + ' ' + x2.toFixed(1) + ',' + (MY - 2.4) + ' ' + x2.toFixed(1) + ',' + (MY + 2.4) + '" fill="' + driveCol + '"/>';
                 pts.forEach(function(x, i) {
                     if (i === pts.length - 1) return;
-                    drive += '<circle cx="' + x.toFixed(1) + '" cy="28" r="1.15" fill="#fff" stroke="' + driveCol + '" stroke-width="0.4"/>';
+                    drive += '<circle cx="' + x.toFixed(1) + '" cy="' + MY + '" r="0.95" fill="#fff" stroke="' + driveCol + '" stroke-width="0.35"/>';
                 });
             }
             var ballG = '', losG = '', firstG = '';
-            if (los != null) losG = '<line x1="' + vx(los).toFixed(1) + '" y1="6" x2="' + vx(los).toFixed(1) + '" y2="50" stroke="#3b9eff" stroke-width="0.85"/>';
-            if (first != null) firstG = '<line x1="' + vx(first).toFixed(1) + '" y1="6" x2="' + vx(first).toFixed(1) + '" y2="50" stroke="#ffe600" stroke-width="1.05" stroke-dasharray="2.2 1.4"/>';
+            if (los != null) losG = '<line x1="' + vx(los).toFixed(1) + '" y1="0" x2="' + vx(los).toFixed(1) + '" y2="' + W + '" stroke="#3b9eff" stroke-width="0.7"/>';
+            if (first != null) firstG = '<line x1="' + vx(first).toFixed(1) + '" y1="0" x2="' + vx(first).toFixed(1) + '" y2="' + W + '" stroke="#ffe600" stroke-width="0.8" stroke-dasharray="1.8 1.1"/>';
             if (ball != null) {
-                var bx = vx(ball);
-                ballG = '<circle cx="' + bx.toFixed(1) + '" cy="28" r="4.2" fill="#f5d76e" opacity="0.22"/>' +
-                    '<circle cx="' + bx.toFixed(1) + '" cy="28" r="2.6" fill="#f5d76e" stroke="#111" stroke-width="0.45"/>' +
-                    '<ellipse cx="' + bx.toFixed(1) + '" cy="28" rx="1.7" ry="1.05" fill="none" stroke="#5a3a00" stroke-width="0.35"/>';
+                var bx = vx(ball).toFixed(1);
+                ballG = '<circle cx="' + bx + '" cy="' + MY + '" r="3.3" fill="#f5d76e" opacity="0.2"/>' +
+                    '<ellipse cx="' + bx + '" cy="' + MY + '" rx="2.1" ry="1.35" fill="#8b5a2b" stroke="#f5d76e" stroke-width="0.4"/>' +
+                    '<line x1="' + (+bx - 0.9) + '" y1="' + MY + '" x2="' + (+bx + 0.9) + '" y2="' + MY + '" stroke="#fff" stroke-width="0.25"/>';
             }
             var who = awayHas ? A.abbr : (homeHas ? H.abbr : '');
             var isFinal = st && (st.state === 'post' || st.completed);
@@ -3177,21 +3306,21 @@
             var headLab = labelBits.map(function(x) {
                 return x === 'RED ZONE' ? '<span class="gc-red">RED ZONE</span>' : escHtml(x);
             }).join(' · ');
-            var head = '<div class="gc-trk-head"><span>FIELD</span><b>' + headLab + '</b></div>';
-            var ezL = '<rect x="0" y="6" width="10" height="44" fill="' + ca + '" opacity="0.9"/>' +
-                '<image href="' + escHtml(A.logo || '') + '" x="1.3" y="16" width="7.4" height="14" preserveAspectRatio="xMidYMid meet"/>' +
-                '<text x="5" y="40" fill="#fff" font-size="3.2" text-anchor="middle" font-family="Inter,sans-serif" font-weight="900" opacity="0.95">' + escHtml(A.abbr || '') + '</text>';
-            var ezR = '<rect x="110" y="6" width="10" height="44" fill="' + ch + '" opacity="0.9"/>' +
-                '<image href="' + escHtml(H.logo || '') + '" x="111.3" y="16" width="7.4" height="14" preserveAspectRatio="xMidYMid meet"/>' +
-                '<text x="115" y="40" fill="#fff" font-size="3.2" text-anchor="middle" font-family="Inter,sans-serif" font-weight="900" opacity="0.95">' + escHtml(H.abbr || '') + '</text>';
-            var svg = '<svg class="gc-field" viewBox="0 0 120 56" preserveAspectRatio="none" aria-hidden="true">' +
-                '<rect x="0" y="6" width="120" height="44" fill="#0a2e18"/>' +
-                ezL + ezR +
-                '<rect x="10" y="6" width="100" height="44" fill="#0d3d1f"/>' +
-                rz + marks + hashes + drive + losG + firstG + ballG +
-                '<rect x="0" y="6" width="120" height="44" fill="none" stroke="rgba(255,255,255,0.35)" stroke-width="0.5"/>' +
+            var dsc = (cur && cur.description) ? String(cur.description).toUpperCase() : '';
+            var head = '<div class="gc-trk-head"><span>' + (dsc ? 'DRIVE &bull; ' + escHtml(dsc) : 'FIELD') + '</span><b>' + headLab + '</b></div>';
+            function ez(x0, T, col, rot) {
+                var cx = x0 + 5;
+                return '<rect x="' + x0 + '" y="0" width="10" height="' + W + '" fill="' + col + '" opacity="0.92"/>' +
+                    '<image href="' + escHtml(T.logo || '') + '" x="' + (x0 + 1) + '" y="' + (MY - 4) + '" width="8" height="8" preserveAspectRatio="xMidYMid meet"/>' +
+                    [12.5, 40.8].map(function(ty) { return '<text transform="translate(' + cx + ',' + ty + ') rotate(' + rot + ')" fill="#fff" font-size="4.6" text-anchor="middle" dominant-baseline="central" font-family="Inter,sans-serif" font-weight="900" letter-spacing="0.4" opacity="0.95">' + escHtml(T.abbr || '') + '</text>'; }).join('');
+            }
+            var svg = '<svg class="gc-field" viewBox="0 0 120 ' + W + '" preserveAspectRatio="xMidYMid meet" aria-hidden="true">' +
+                ez(0, A, ca, -90) + ez(110, H, ch, 90) + stripes + rz + marks + hashes + drive + losG + firstG + ballG +
+                '<rect x="0.15" y="0.15" width="119.7" height="' + (W - 0.3) + '" fill="none" stroke="rgba(255,255,255,0.55)" stroke-width="0.3"/>' +
+                '<line x1="10" y1="0" x2="10" y2="' + W + '" stroke="#fff" stroke-width="0.5"/><line x1="110" y1="0" x2="110" y2="' + W + '" stroke="#fff" stroke-width="0.5"/>' +
                 '</svg>';
-            return head + svg;
+            var leg = '<div class="gc-fld-leg"><span><i style="background:#3b9eff"></i>LINE OF SCRIMMAGE</span><span><i style="background:#ffe600"></i>LINE TO GAIN</span><span><i style="background:' + driveCol + '"></i>DRIVE</span>' + (rz ? '<span><i style="background:rgba(255,45,85,0.7)"></i>RED ZONE</span>' : '') + '</div>';
+            return head + svg + leg;
         }
         // MLB strike zone + current at-bat pitches. ESPN pitchCoordinate ~0–250; zone ~x 85–165, y 145–205.
         function gcAthleteMap(d) {
@@ -3244,9 +3373,9 @@
                 var c = p.pitchCoordinate || {}; if (c.x == null || c.y == null) return null;
                 var x = 28 + ((+c.x - 85) / 80) * 44;
                 var y = 12 + ((+c.y - 145) / 60) * 40;
-                return { x: Math.max(4, Math.min(96, x)), y: Math.max(4, Math.min(78, y)) };
+                return { x: Math.max(18.5, Math.min(81.5, x)), y: Math.max(7.5, Math.min(70.5, y)) };
             }
-            var dots = '', list = '';
+            var dots = '', list = '', rows = [];
             pitches.forEach(function(p, idx) {
                 var k = kind(p), col = k === 'b' ? '#39ff14' : (k === 'i' ? '#3b9eff' : '#ff4d4d');
                 var pt = xy(p), n = idx + 1;
@@ -3259,15 +3388,16 @@
                 // Prefer short result words
                 if (/^pitch\s*\d/i.test(res)) res = (p.type && p.type.text) || '';
                 var mph = p.pitchVelocity != null ? Math.round(p.pitchVelocity) + ' mph' : '';
-                list += '<div class="' + k + '">' + n + '. ' + escHtml(ty) + (mph ? ' · ' + mph : '') + (res ? ' · ' + escHtml(res) : '') + '</div>';
+                rows.push('<div class="' + k + '">' + n + '. ' + escHtml(ty) + (mph ? ' · ' + mph : '') + (res ? ' · ' + escHtml(res) : '') + '</div>');
             });
+            list = rows.reverse().join(''); // newest first
             var grid = '';
             for (var g = 1; g <= 2; g++) {
                 grid += '<line x1="' + (28 + g * (44 / 3)).toFixed(1) + '" y1="12" x2="' + (28 + g * (44 / 3)).toFixed(1) + '" y2="52" stroke="rgba(255,255,255,0.18)" stroke-width="0.45"/>';
                 grid += '<line x1="28" y1="' + (12 + g * (40 / 3)).toFixed(1) + '" x2="72" y2="' + (12 + g * (40 / 3)).toFixed(1) + '" stroke="rgba(255,255,255,0.18)" stroke-width="0.45"/>';
             }
             var plate = '<polygon points="40,56 60,56 66,62 50,70 34,62" fill="none" stroke="rgba(255,255,255,0.7)" stroke-width="1.1"/>';
-            var sz = '<svg class="gc-sz" viewBox="0 0 100 78" aria-hidden="true">' +
+            var sz = '<svg class="gc-sz" viewBox="15 4 70 70" aria-hidden="true">' +
                 '<rect x="0" y="0" width="100" height="78" fill="#070c14"/>' +
                 '<rect x="28" y="12" width="44" height="40" fill="rgba(0,240,255,0.04)" stroke="rgba(255,255,255,0.9)" stroke-width="1.5"/>' +
                 grid + plate + dots + '</svg>';
@@ -3307,10 +3437,10 @@
                     var img = who.head ? '<img src="' + escHtml(who.head) + '" alt="" onerror="this.style.display=\'none\'">' : '';
                     return '<div class="gc-sz-pl">' + img + '<div><span class="role">' + role + '</span><span>' + escHtml(who.name || '') + '</span></div></div>';
                 }
-                matchup = '<div class="gc-sz-matchup">' + pl('PITCHING', pitcher) + '<div class="gc-sz-vs">VS</div>' + pl('BATTING', batter) + '</div>';
+                matchup = '<div class="gc-sz-matchup">' + pl('PITCHING', pitcher) + pl('AT BAT', batter) + '</div>';
             }
             var head = '<div class="gc-trk-head"><span>AT BAT</span><b>COUNT ' + balls + '–' + strikes + ' · ' + outs + ' OUT' + (outs === 1 ? '' : 'S') + '</b></div>';
-            return head + matchup + '<div class="gc-sz-wrap"><div class="gc-sz-col">' + sz + '</div><div class="gc-sz-list">' + (list || '<div class="gc-dim">NO PITCHES YET</div>') + '</div><div class="gc-sz-side">' + bases + outsHtml + '</div></div>';
+            return head + '<div class="gc-sz-wrap"><div class="gc-sz-col">' + sz + '</div><div class="gc-sz-info">' + matchup + '<div class="gc-sz-sit">' + bases + outsHtml + '</div></div><div class="gc-sz-list">' + (list || '<div class="gc-dim">NO PITCHES YET</div>') + '</div></div>';
         }
 
         function gcFootballSit(d, sit) { // the summary has no situation block for football; rebuild it from the current (or last) drive
@@ -3523,7 +3653,7 @@
                 if (fam === 'basketball') box += gcBoxTable(T, 'BOX SCORE', first, ['PTS', 'REB', 'AST', 'FG', '3PT', 'MIN'], function(a, l) { return gcStatOf(a, l, 'PTS') * 100 + gcStatOf(a, l, 'REB'); }, 8);
                 else if (fam === 'hockey') {
                     var sk = { labels: (G.forwards || G.skaters || {}).labels, athletes: [].concat((G.forwards || {}).athletes || [], (G.defenses || {}).athletes || [], (G.skaters || {}).athletes || []) };
-                    box += gcBoxTable(T, 'SKATERS', sk, ['G', 'A', 'SOG', '+/-', 'HT', 'TOI'], function(a, l) { return (gcStatOf(a, l, 'G') + gcStatOf(a, l, 'A')) * 100 + gcStatOf(a, l, 'SOG') * 10 + gcStatOf(a, l, 'HT'); }, 6);
+                    box += gcBoxTable(T, 'SKATERS', sk, ['G', 'A', 'S', '+/-', 'HT', 'TOI'], function(a, l) { return (gcStatOf(a, l, 'G') + gcStatOf(a, l, 'A')) * 100 + gcStatOf(a, l, 'S') * 10 + gcStatOf(a, l, 'HT'); }, 6);
                     box += gcBoxTable(T, 'GOALIE', G.goalies, ['SA', 'SV', 'GA', 'SV%', 'TOI'], null, 2);
                 } else if (fam === 'baseball') {
                     box += gcBoxTable(T, 'BATTING', G.batting, ['H-AB', 'R', 'RBI', 'HR', 'BB', 'K'], function(a, l) { return gcStatOf(a, l, 'H') * 100 + gcStatOf(a, l, 'RBI') * 10 + gcStatOf(a, l, 'R'); }, 6);
@@ -3549,6 +3679,64 @@
             }
             if (box) html += '<div class="gc-sub-title">BOX SCORE</div>' + box;
             return html || '<div class="gc-empty">PLAYER STATS NOT AVAILABLE YET</div>';
+        }
+
+        // LIVE BOX SCORE: full per-team tables side by side (away | home), rebuilt every poll and patched in place by gcSet/gcMorph
+        function gcBxT(title, grp, cols, o) {
+            o = o || {};
+            if (!grp || !grp.athletes || !grp.athletes.length) return '';
+            var labels = grp.labels || [];
+            cols = cols.filter(function(c) { return labels.indexOf(c.split('=')[0]) >= 0; });
+            if (!cols.length) return '';
+            var idx = cols.map(function(c) { return labels.indexOf(c.split('=')[0]); });
+            cols = cols.map(function(c) { return c.split('=').pop(); });
+            var aths = grp.athletes.filter(function(a) { return a.stats && a.stats.length && !a.didNotPlay; });
+            if (o.sort) aths.sort(function(x, y) { return o.sort(y, labels) - o.sort(x, labels); });
+            if (o.limit) aths = aths.slice(0, o.limit);
+            if (!aths.length) return '';
+            var h = '<table class="gc-bxs-t"><tr><th class="nm">' + escHtml(title) + '</th>' + cols.map(function(c) { return '<th>' + escHtml(c) + '</th>'; }).join('') + '</tr>';
+            aths.forEach(function(a) {
+                var at = a.athlete || {}, pos = o.pos && at.position && at.position.abbreviation;
+                h += '<tr' + (o.subs && a.starter === false ? ' class="sub"' : '') + '><td class="nm">' + escHtml(at.shortName || at.displayName || '') + (pos ? '<i>' + escHtml(pos) + '</i>' : '') + '</td>' +
+                     idx.map(function(i) { return '<td>' + escHtml(a.stats[i] != null && a.stats[i] !== '' ? String(a.stats[i]) : '-') + '</td>'; }).join('') + '</tr>';
+            });
+            var tot = grp.totals || [];
+            if (o.totals && tot.length) h += '<tr class="tot"><td class="nm">TEAM</td>' + idx.map(function(i) { return '<td>' + escHtml(tot[i] != null ? String(tot[i]) : '') + '</td>'; }).join('') + '</tr>';
+            return h + '</table>';
+        }
+        function gcBoxScoreHtml(d, fam, A, H) {
+            var groups = (d.boxscore && d.boxscore.players) || [], any = false;
+            var cols = [A, H].map(function(T) {
+                var tp = groups.filter(function(g) { return g.team && String(g.team.id) === T.id; })[0];
+                if (!tp) return '';
+                var G = {}; (tp.statistics || []).forEach(function(x, i) { G[x.name || x.type || ('g' + i)] = x; });
+                var by = function(lab) { return function(a, l) { return gcStatOf(a, l, lab); }; }, h = '';
+                if (fam === 'football') {
+                    h += gcBxT('PASSING', G.passing, ['C/ATT', 'YDS', 'AVG', 'TD', 'INT', 'RTG'], { totals: G.passing && G.passing.athletes && G.passing.athletes.length > 1 });
+                    h += gcBxT('RUSHING', G.rushing, ['CAR', 'YDS', 'AVG', 'TD', 'LONG'], { sort: by('YDS'), totals: true });
+                    h += gcBxT('RECEIVING', G.receiving, ['REC', 'YDS', 'AVG', 'TD', 'LONG', 'TGTS'], { sort: by('YDS'), totals: true });
+                    h += gcBxT('DEFENSE', G.defensive, ['TOT', 'SOLO', 'SACKS', 'TFL', 'PD'], { sort: function(a, l) { return gcStatOf(a, l, 'TOT') + gcStatOf(a, l, 'SACKS') * 5; }, limit: 8 });
+                    h += gcBxT('INTERCEPTIONS', G.interceptions, ['INT', 'YDS', 'TD']);
+                    h += gcBxT('FUMBLES', G.fumbles, ['FUM', 'LOST', 'REC']);
+                    h += gcBxT('KICKING', G.kicking, ['FG', 'PCT', 'LONG', 'XP', 'PTS']);
+                    h += gcBxT('PUNTING', G.punting, ['NO', 'YDS', 'AVG', 'In 20', 'LONG']);
+                    h += gcBxT('KICK RETURNS', G.kickReturns, ['NO', 'YDS', 'AVG', 'LONG', 'TD']);
+                    h += gcBxT('PUNT RETURNS', G.puntReturns, ['NO', 'YDS', 'AVG', 'LONG', 'TD']);
+                } else if (fam === 'baseball') {
+                    h += gcBxT('BATTING', G.batting, ['AB', 'R', 'H', 'RBI', 'BB', 'K', 'AVG'], { pos: true, subs: true, totals: true });
+                    h += gcBxT('PITCHING', G.pitching, ['IP', 'H', 'R', 'ER', 'BB', 'K', 'PC'], { totals: true });
+                } else if (fam === 'hockey') {
+                    var sk = { labels: (G.forwards || G.skaters || G.defenses || {}).labels, athletes: [].concat((G.forwards || {}).athletes || [], (G.defenses || {}).athletes || [], (G.skaters || {}).athletes || []) };
+                    h += gcBxT('SKATERS', sk, ['G', 'A', 'S=SOG', '+/-', 'HT', 'BS', 'TOI'], { pos: true, sort: function(a, l) { return (gcStatOf(a, l, 'G') + gcStatOf(a, l, 'A')) * 1000 + gcStatOf(a, l, 'G') * 100 + gcStatOf(a, l, 'S'); } });
+                    h += gcBxT('GOALIES', G.goalies, ['SA', 'SV', 'GA', 'SV%', 'TOI']);
+                } else if (fam === 'basketball') {
+                    var first = (tp.statistics || [])[0];
+                    h += gcBxT('PLAYERS', first, ['MIN', 'PTS', 'REB', 'AST', 'FG', '3PT', 'STL', 'BLK'], { pos: true, subs: true, totals: true });
+                }
+                if (h) any = true;
+                return '<div class="gc-bxs-col"><div class="gc-bxs-team" style="color:' + T.color + '">' + gcImg(T.logo, '', '') + escHtml(T.abbr) + ' <span class="gc-dim">' + escHtml(T.name || '') + '</span></div>' + (h || '<div class="gc-dim">NO STATS YET</div>') + '</div>';
+            });
+            return any ? '<div class="gc-bxs-cols">' + cols.join('') + '</div>' : '';
         }
 
         function gcChipHtml(m, i) {
@@ -3775,7 +3963,15 @@
             if (gc.open) { // Gamecast: BACK closes, LEFT/RIGHT switch game, UP/DOWN scroll stats, OK focuses then presses CLOSE
                 gc.lastInput = Date.now();
                 var ctl = ['gc-cel-away', 'gc-cel-dminus', 'gc-cel-dplus', 'gc-cel-sync', 'gc-cel-home', 'gc-close'].map(function(id) { return document.getElementById(id); }).filter(navVisible), onCtl = ctl.indexOf(ae) >= 0;
+                var tabs = gcTabEls(), onTab = tabs.indexOf(ae) >= 0;
                 if (nk === 'back') { e.preventDefault(); gcClose(); return; }
+                if (tabs.length && (nk === 'play' || (onTab && (nk === 'left' || nk === 'right' || nk === 'ok')))) { // switch FIELD / BOX SCORE (focus follows)
+                    e.preventDefault(); if (e.repeat && nk !== 'left' && nk !== 'right') return;
+                    var vi = (gc.view + (nk === 'left' ? -1 : 1) + tabs.length) % tabs.length; gcSetView(vi);
+                    if (onTab) { tabs[vi].focus(); gcTabHint(); } return;
+                }
+                if (onTab) { e.preventDefault(); if (nk === 'up' && ctl.length) ctl[0].focus(); else if (nk === 'down') ae.blur(); gcTabHint(); return; }
+                if (tabs.length && ((nk === 'down' && onCtl) || (nk === 'up' && !onCtl && gcPanelsAtTop()))) { e.preventDefault(); tabs[Math.min(gc.view, tabs.length - 1)].focus(); gcTabHint(); return; }
                 if ((nk === 'left' || nk === 'right') && onCtl) { e.preventDefault(); ctl[(ctl.indexOf(ae) + (nk === 'left' ? -1 : 1) + ctl.length) % ctl.length].focus(); return; }
                 if (nk === 'left' || nk === 'right') { e.preventDefault(); gcStep(nk === 'left' ? -1 : 1); return; }
                 if (nk === 'up' || nk === 'down') { e.preventDefault(); if (onCtl) ae.blur(); gcScrollPanels(nk === 'up' ? -1 : 1); return; }
