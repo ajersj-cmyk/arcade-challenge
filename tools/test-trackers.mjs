@@ -73,11 +73,12 @@ const field = await page.evaluate(() => ({
   field: !!document.querySelector('#gc-track .gc-field'),
   ball: !!document.querySelector('#gc-track circle[fill="#f5d76e"]'),
   head: (document.querySelector('#gc-track .gc-trk-head b') || {}).textContent || '',
-  first: !!document.querySelector('#gc-track line[stroke="#ffe600"]')
+  first: !!document.querySelector('#gc-track line[stroke="#ffe600"]'),
+  los: !!document.querySelector('#gc-track line[stroke="#3b9eff"]')
 }));
 check('football field SVG renders', field.field);
-check('football ball + possession head', field.ball && /BALL/.test(field.head), field.head);
-check('football line-to-gain present', field.first, JSON.stringify(field));
+check('football ball + possession head', field.ball && /BALL|FINAL DRIVE/.test(field.head), field.head);
+check('football LOS + line-to-gain', field.los && field.first, JSON.stringify(field));
 await page.screenshot({ path: path.join(OUT, 'mock-field.png') });
 
 // Degrade: no drives
@@ -91,33 +92,39 @@ await openWith(mockMlb, mlbMeta);
 const sz = await page.evaluate(() => ({
   sz: !!document.querySelector('#gc-track .gc-sz'),
   dots: document.querySelectorAll('#gc-track .gc-sz circle').length,
-  list: document.querySelectorAll('#gc-track .gc-sz-list div').length,
+  list: [...document.querySelectorAll('#gc-track .gc-sz-list div')].map(x => x.textContent),
   bases: !!document.querySelector('#gc-track .gc-bases'),
+  outs: document.querySelectorAll('.gc-outs i').length,
   head: (document.querySelector('#gc-track .gc-trk-head b') || {}).textContent || ''
 }));
 check('MLB strike zone SVG renders', sz.sz);
 check('MLB pitch dots plotted', sz.dots >= 3, JSON.stringify(sz));
-check('MLB pitch list + bases + count', sz.list >= 3 && sz.bases && /COUNT/.test(sz.head), JSON.stringify(sz));
+check('MLB pitch list clean + bases + outs dots + count', sz.list.length >= 3 && !sz.list.some(x => /Play Result|End Batter/i.test(x)) && sz.bases && sz.outs === 3 && /COUNT/.test(sz.head), JSON.stringify(sz));
 await page.screenshot({ path: path.join(OUT, 'mock-strikezone.png') });
 
 // Real ESPN dumps if present
-for (const [label, file, sport] of [['nfl-real', '/tmp/nfl2.json', 'football'], ['mlb-real', '/tmp/mlb2.json', 'baseball']]) {
+for (const [label, file, sport, league] of [['nfl-real', '/tmp/nfl2.json', 'football', 'nfl'], ['cfb-real', '/tmp/cfb2.json', 'football', 'college-football'], ['mlb-real', '/tmp/mlb2.json', 'baseball', 'mlb']]) {
   if (!fs.existsSync(file)) { console.log('SKIP  real ' + label + ' (no dump)'); continue; }
   const d = JSON.parse(fs.readFileSync(file, 'utf8'));
   const cs = d.header.competitions[0].competitors;
   const aw = cs.find(c => c.homeAway === 'away'), hm = cs.find(c => c.homeAway === 'home');
-  const meta = { key: 'real:' + label, sport, league: sport === 'football' ? 'nfl' : 'mlb', cid: sport === 'football' ? 'nfl' : 'mlb', id: String(d.header.id || d.header.competitions[0].id || 'x'), label: sport === 'football' ? 'NFL' : 'MLB', away: aw.team.displayName, home: hm.team.displayName, awayAbbr: aw.team.abbreviation, homeAbbr: hm.team.abbreviation, aId: String(aw.team.id), hId: String(hm.team.id), state: 'in', aLogo: aw.team.logo, hLogo: hm.team.logo };
-  if (sport === 'football' && d.drives && !d.drives.current && Array.isArray(d.drives.previous) && d.drives.previous.length) {
-    d.drives.current = d.drives.previous[d.drives.previous.length - 1];
+  const meta = { key: 'real:' + label, sport, league, cid: league, id: String(d.header.id || d.header.competitions[0].id || 'x'), label: league === 'nfl' ? 'NFL' : (league === 'mlb' ? 'MLB' : 'CFB'), away: aw.team.displayName, home: hm.team.displayName, awayAbbr: aw.team.abbreviation, homeAbbr: hm.team.abbreviation, aId: String(aw.team.id), hId: String(hm.team.id), state: 'in', aLogo: aw.team.logo, hLogo: hm.team.logo };
+  if (sport === 'football' && d.drives && Array.isArray(d.drives.previous) && d.drives.previous.length) {
+    let best = null, score = -1;
+    for (const dr of d.drives.previous) {
+      const n = (dr.plays || []).filter(p => ((p.end || {}).yardsToEndzone != null) && ((p.end || {}).down || 0) > 0).length;
+      if (n > score) { score = n; best = dr; }
+    }
+    if (best) d.drives.current = best;
   }
-  try { d.header.competitions[0].status = { type: { state: 'in', detail: 'LIVE', shortDetail: 'LIVE' }, period: 4, displayClock: '1:00' }; } catch (e) {}
+  // Keep real feed status (FINAL/LIVE) — do not force LIVE
   await openWith(d, meta);
   const ok = await page.evaluate((sport) => {
     if (sport === 'football') return { ok: !!document.querySelector('#gc-track .gc-field'), head: (document.querySelector('#gc-track .gc-trk-head b') || {}).textContent };
     return { ok: !!document.querySelector('#gc-track .gc-sz'), dots: document.querySelectorAll('#gc-track .gc-sz circle').length, head: (document.querySelector('#gc-track .gc-trk-head b') || {}).textContent };
   }, sport);
   check('real ' + label + ' tracker renders', ok.ok, JSON.stringify(ok));
-  await page.screenshot({ path: path.join(OUT, 'gamecast-' + (sport === 'football' ? 'field-nfl' : 'strikezone-mlb') + '.png') });
+  await page.screenshot({ path: path.join(OUT, 'gamecast-' + (sport === 'football' ? ('field-' + (league === 'nfl' ? 'nfl' : 'cfb')) : 'strikezone-mlb') + '.png') });
 }
 
 check('0 console/page errors', errors.length === 0, errors.slice(0, 3).join(' | '));

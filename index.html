@@ -329,13 +329,24 @@
         #gc-track:empty { display: none !important; }
         .gc-trk-head { display: flex; justify-content: space-between; align-items: baseline; font-size: 2vh; font-weight: 900; letter-spacing: 0.15vw; color: var(--accent-color); margin-bottom: 0.8vh; }
         .gc-trk-head b { color: #fff; font-size: 2.4vh; letter-spacing: 0.05vw; }
-        .gc-field { width: 100%; height: 14vh; display: block; border-radius: 0.8vh; background: #0b3d1e; }
-        .gc-sz-wrap { display: grid; grid-template-columns: 22vh 1fr 28vh; gap: 1.6vw; align-items: center; }
-        .gc-sz { width: 22vh; height: 22vh; display: block; background: #0a101a; border-radius: 0.8vh; }
-        .gc-sz-list { font-size: 2vh; font-weight: 800; line-height: 1.45; max-height: 22vh; overflow: hidden; }
-        .gc-sz-list div { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .gc-sz-list .b { color: #39ff14; } .gc-sz-list .s { color: #ff4d4d; } .gc-sz-list .i { color: #facc15; }
-        .gc-bases { width: 100%; height: 12vh; display: block; }
+        .gc-field { width: 100%; height: 20.5vh; display: block; border-radius: 0.8vh; background: #0a2e18; }
+        .gc-sz-wrap { display: grid; grid-template-columns: 26vh 1fr 22vh; gap: 1.6vw; align-items: stretch; }
+        .gc-sz-col { display: flex; flex-direction: column; align-items: center; gap: 0.6vh; }
+        .gc-sz { width: 24vh; height: 26vh; display: block; background: #070c14; border-radius: 0.8vh; border: 1px solid rgba(0,240,255,0.25); }
+        .gc-sz-matchup { display: flex; align-items: center; justify-content: center; gap: 1.2vw; width: 100%; margin-bottom: 0.4vh; }
+        .gc-sz-pl { display: flex; align-items: center; gap: 0.6vw; min-width: 0; }
+        .gc-sz-pl img { width: 4.2vh; height: 4.2vh; border-radius: 50%; object-fit: cover; border: 2px solid rgba(255,255,255,0.35); background: #111; flex: none; }
+        .gc-sz-pl span { font-size: 1.9vh; font-weight: 800; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 14vw; }
+        .gc-sz-pl .role { display: block; font-size: 1.4vh; color: var(--accent-color); letter-spacing: 0.12vw; font-weight: 900; }
+        .gc-sz-vs { font-size: 1.8vh; font-weight: 900; color: rgba(255,255,255,0.45); }
+        .gc-sz-list { font-size: 2vh; font-weight: 800; line-height: 1.5; max-height: 26vh; overflow: hidden; padding-top: 0.4vh; }
+        .gc-sz-list div { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding: 0.25vh 0; }
+        .gc-sz-list .b { color: #39ff14; } .gc-sz-list .s { color: #ff4d4d; } .gc-sz-list .i { color: #3b9eff; }
+        .gc-sz-side { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1vh; }
+        .gc-bases { width: 18vh; height: 14vh; display: block; }
+        .gc-outs { display: flex; gap: 0.7vh; justify-content: center; }
+        .gc-outs i { width: 1.6vh; height: 1.6vh; border-radius: 50%; border: 2px solid rgba(255,255,255,0.55); display: inline-block; background: transparent; }
+        .gc-outs i.on { background: #ff2d55; border-color: #ff2d55; box-shadow: 0 0 0.8vh #ff2d55; }
         .gc-odds { font-size: 2.2vh; font-weight: 800; margin-top: 0.6vh; color: rgba(255,255,255,0.85); }
         .gc-odds b { color: #39ff14; }
         .gc-dim { color: rgba(255,255,255,0.45); font-weight: 700; }
@@ -3058,7 +3069,7 @@
             if (!cur && Array.isArray(dr.previous) && dr.previous.length) cur = dr.previous[dr.previous.length - 1];
             if (sit && sit.drive) cur = sit.drive;
             var plays = (cur && cur.plays) || [];
-            var yte = null, down = '', dist = null, possId = sit && sit.possession ? String(sit.possession) : (cur && cur.team && String(cur.team.id)) || '';
+            var yte = null, down = '', dist = null, spotTxt = '', possId = sit && sit.possession ? String(sit.possession) : (cur && cur.team && String(cur.team.id)) || '';
             var best = null;
             for (var i = plays.length - 1; i >= 0; i--) {
                 var e = plays[i].end || {}, s0 = plays[i].start || {};
@@ -3072,67 +3083,134 @@
                 dist = best.distance;
                 down = best.shortDownDistanceText || best.downDistanceText || '';
                 if (!down && best.down > 0 && best.distance != null) down = ['', '1st', '2nd', '3rd', '4th'][best.down] + ' & ' + best.distance;
+                spotTxt = best.possessionText || '';
             }
             if (yte == null && sit) {
                 if (sit.yardsToEndzone != null) yte = +sit.yardsToEndzone;
                 down = sit.shortDownDistanceText || sit.downDistanceText || down;
                 if (sit.down > 0 && sit.distance != null) down = down || (['', '1st', '2nd', '3rd', '4th'][sit.down] + ' & ' + sit.distance);
                 if (sit.distance != null) dist = sit.distance;
+                spotTxt = sit.possessionText || spotTxt;
             }
-            if (yte == null && st && st.state === 'pre') return ''; // nothing to plot yet
+            if (yte == null && st && st.state === 'pre') return '';
             var awayHas = possId && possId === String(A.id);
             var homeHas = possId && possId === String(H.id);
-            // Away attacks right (toward home EZ); home attacks left (toward away EZ).
-            var ball = yte == null ? null : (awayHas ? (100 - yte) : (homeHas ? yte : (100 - yte)));
+            // Field x: 0=away EZ left, 100=home EZ right. Away attacks right; home attacks left.
+            function fieldX(yteV, teamIsAway) { return teamIsAway ? (100 - yteV) : yteV; }
+            var ball = yte == null ? null : fieldX(yte, awayHas || (!homeHas));
             var first = (ball != null && dist != null) ? Math.max(0, Math.min(100, ball + (awayHas ? dist : (homeHas ? -dist : dist)))) : null;
+            var los = ball;
             var drivePts = [];
             if (cur) {
-                var stY = cur.start && cur.start.yardLine != null ? +cur.start.yardLine : null;
-                // ESPN yardLine is often yards from the left (0=away EZ) in drive start; prefer yardsToEndzone from first play
+                var aDir = cur.team && String(cur.team.id) === String(A.id);
                 var firstPlay = plays[0], fp = (firstPlay && (firstPlay.start || firstPlay.end)) || {};
-                if (fp.yardsToEndzone != null) {
-                    var aDir = cur.team && String(cur.team.id) === String(A.id);
-                    drivePts.push(aDir ? (100 - fp.yardsToEndzone) : fp.yardsToEndzone);
-                } else if (stY != null) drivePts.push(stY);
+                if (fp.yardsToEndzone != null) drivePts.push(fieldX(+fp.yardsToEndzone, aDir));
                 plays.forEach(function(p) {
                     var pe = p.end || {};
                     if (pe.yardsToEndzone == null) return;
-                    var aD = cur.team && String(cur.team.id) === String(A.id);
-                    drivePts.push(aD ? (100 - pe.yardsToEndzone) : pe.yardsToEndzone);
+                    drivePts.push(fieldX(+pe.yardsToEndzone, aDir));
                 });
             }
             var ca = A.color || '#00f0ff', ch = H.color || '#ff007f';
-            var marks = '';
-            for (var y = 10; y <= 90; y += 10) marks += '<line x1="' + y + '" y1="8" x2="' + y + '" y2="92" stroke="rgba(255,255,255,0.2)" stroke-width="0.4"/>' +
-                '<text x="' + y + '" y="7" fill="rgba(255,255,255,0.45)" font-size="4.5" text-anchor="middle" font-family="Share Tech Mono,monospace">' + (y <= 50 ? y : 100 - y) + '</text>';
-            var rz = '<rect x="0" y="8" width="20" height="84" fill="rgba(255,45,85,0.18)"/>' +
-                     '<rect x="80" y="8" width="20" height="84" fill="rgba(255,45,85,0.18)"/>';
+            var driveCol = awayHas ? ca : (homeHas ? ch : '#fff');
+            // Layout in viewBox 0 0 120 56: sidelines y=6..50, end zones x=0-10 and 110-120, field 10-110 = 100 yards
+            function vx(y) { return 10 + y; } // yard 0..100 -> svg x
+            var marks = '', hashes = '';
+            for (var y = 10; y <= 90; y += 10) {
+                var x = vx(y), num = (y <= 50 ? y : 100 - y);
+                marks += '<line x1="' + x + '" y1="6" x2="' + x + '" y2="50" stroke="rgba(255,255,255,0.22)" stroke-width="0.35"/>';
+                marks += '<text x="' + x + '" y="14.2" fill="rgba(255,255,255,0.85)" font-size="3.4" text-anchor="middle" font-family="Share Tech Mono,monospace" font-weight="700">' + num + '</text>';
+                marks += '<text x="' + x + '" y="45.8" fill="rgba(255,255,255,0.85)" font-size="3.4" text-anchor="middle" font-family="Share Tech Mono,monospace" font-weight="700">' + num + '</text>';
+            }
+            marks += '<line x1="' + vx(50) + '" y1="6" x2="' + vx(50) + '" y2="50" stroke="rgba(255,255,255,0.45)" stroke-width="0.55"/>';
+            for (var h = 0; h <= 100; h += 1) {
+                var hx = vx(h);
+                hashes += '<line x1="' + hx + '" y1="18" x2="' + hx + '" y2="20.2" stroke="rgba(255,255,255,0.28)" stroke-width="0.22"/>';
+                hashes += '<line x1="' + hx + '" y1="35.8" x2="' + hx + '" y2="38" stroke="rgba(255,255,255,0.28)" stroke-width="0.22"/>';
+            }
+            // Red zone: only the defending side when ball is inside the 20
+            var rz = '';
+            if (yte != null && yte <= 20) {
+                if (awayHas) rz = '<rect x="' + vx(80) + '" y="6" width="20" height="44" fill="rgba(255,45,85,0.22)"/>'; // attacking home EZ
+                else if (homeHas) rz = '<rect x="' + vx(0) + '" y="6" width="20" height="44" fill="rgba(255,45,85,0.22)"/>';
+            }
             var drive = '';
             if (drivePts.length >= 2) {
-                var path = drivePts.map(function(x, i) { return (i ? 'L' : 'M') + x.toFixed(1) + ',50'; }).join(' ');
-                drive = '<path d="' + path + '" fill="none" stroke="rgba(255,255,255,0.55)" stroke-width="1.2" stroke-dasharray="2 1.5"/>';
-                drivePts.forEach(function(x, i) { drive += '<circle cx="' + x.toFixed(1) + '" cy="50" r="' + (i === drivePts.length - 1 ? 1.6 : 1.1) + '" fill="#fff" opacity="0.85"/>'; });
+                var pts = drivePts.map(function(yy) { return vx(Math.max(0, Math.min(100, yy))); });
+                var path = pts.map(function(x, i) { return (i ? 'L' : 'M') + x.toFixed(1) + ',28'; }).join(' ');
+                drive = '<path d="' + path + '" fill="none" stroke="' + driveCol + '" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" opacity="0.9"/>';
+                // arrow head at end
+                var x1 = pts[pts.length - 2], x2 = pts[pts.length - 1], dir = x2 >= x1 ? 1 : -1;
+                drive += '<polygon points="' + (x2 + dir * 2.8).toFixed(1) + ',28 ' + x2.toFixed(1) + ',24.6 ' + x2.toFixed(1) + ',31.4" fill="' + driveCol + '"/>';
+                pts.forEach(function(x, i) {
+                    if (i === pts.length - 1) return;
+                    drive += '<circle cx="' + x.toFixed(1) + '" cy="28" r="1.15" fill="#fff" stroke="' + driveCol + '" stroke-width="0.4"/>';
+                });
             }
-            var ballG = '', firstG = '', arrow = '';
+            var ballG = '', losG = '', firstG = '';
+            if (los != null) losG = '<line x1="' + vx(los).toFixed(1) + '" y1="6" x2="' + vx(los).toFixed(1) + '" y2="50" stroke="#3b9eff" stroke-width="0.85"/>';
+            if (first != null) firstG = '<line x1="' + vx(first).toFixed(1) + '" y1="6" x2="' + vx(first).toFixed(1) + '" y2="50" stroke="#ffe600" stroke-width="1.05" stroke-dasharray="2.2 1.4"/>';
             if (ball != null) {
-                ballG = '<circle cx="' + ball.toFixed(1) + '" cy="50" r="2.4" fill="#f5d76e" stroke="#111" stroke-width="0.5"/>';
-                var dir = awayHas ? 1 : -1;
-                arrow = '<polygon points="' + (ball + dir * 4).toFixed(1) + ',50 ' + (ball + dir * 1.2).toFixed(1) + ',46.5 ' + (ball + dir * 1.2).toFixed(1) + ',53.5" fill="#f5d76e"/>';
+                var bx = vx(ball);
+                ballG = '<circle cx="' + bx.toFixed(1) + '" cy="28" r="4.2" fill="#f5d76e" opacity="0.22"/>' +
+                    '<circle cx="' + bx.toFixed(1) + '" cy="28" r="2.6" fill="#f5d76e" stroke="#111" stroke-width="0.45"/>' +
+                    '<ellipse cx="' + bx.toFixed(1) + '" cy="28" rx="1.7" ry="1.05" fill="none" stroke="#5a3a00" stroke-width="0.35"/>';
             }
-            if (first != null) firstG = '<line x1="' + first.toFixed(1) + '" y1="12" x2="' + first.toFixed(1) + '" y2="88" stroke="#ffe600" stroke-width="0.9" stroke-dasharray="2 1.5"/>';
-            var dd = down || (sit && (sit.downDistanceText || sit.shortDownDistanceText)) || '';
             var who = awayHas ? A.abbr : (homeHas ? H.abbr : '');
-            var head = '<div class="gc-trk-head"><span>FIELD</span><b>' + (who ? escHtml(who) + ' BALL' : 'BALL') + (dd ? ' · ' + escHtml(dd) : '') + (sit && sit.isRedZone ? ' · <span class="gc-red">RED ZONE</span>' : '') + '</b></div>';
-            var svg = '<svg class="gc-field" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">' +
-                '<rect x="0" y="8" width="10" height="84" fill="' + ca + '" opacity="0.85"/>' +
-                '<rect x="90" y="8" width="10" height="84" fill="' + ch + '" opacity="0.85"/>' +
-                '<rect x="10" y="8" width="80" height="84" fill="#0b3d1e"/>' + rz + marks +
-                '<image href="' + escHtml(A.logo || '') + '" x="1.2" y="38" width="7.5" height="24" preserveAspectRatio="xMidYMid meet" opacity="0.95"/>' +
-                '<image href="' + escHtml(H.logo || '') + '" x="91.2" y="38" width="7.5" height="24" preserveAspectRatio="xMidYMid meet" opacity="0.95"/>' +
-                drive + firstG + ballG + arrow + '</svg>';
+            var isFinal = st && (st.state === 'post' || st.completed);
+            var labelBits = [];
+            if (isFinal) labelBits.push('FINAL DRIVE');
+            if (who) labelBits.push(who + ' BALL');
+            if (down) labelBits.push(down);
+            if (spotTxt && (!down || spotTxt.indexOf(String(down.split('&')[0] || '')) < 0)) {
+                // prefer "at WSH 35" style
+                var at = /^([A-Z&]+)\s+(\d+)$/.exec(spotTxt.trim());
+                labelBits.push(at ? ('at ' + at[1] + ' ' + at[2]) : spotTxt);
+            } else if (!spotTxt && yte != null && who) {
+                // synthesize spot from yards-to-endzone + possession
+                var defAbbr = awayHas ? H.abbr : A.abbr;
+                var ownAbbr = who;
+                if (yte <= 50) labelBits.push('at ' + defAbbr + ' ' + yte);
+                else labelBits.push('at ' + ownAbbr + ' ' + (100 - yte));
+            }
+            if (yte != null && yte <= 20 && !isFinal) labelBits.push('RED ZONE');
+            var headLab = labelBits.map(function(x) {
+                return x === 'RED ZONE' ? '<span class="gc-red">RED ZONE</span>' : escHtml(x);
+            }).join(' · ');
+            var head = '<div class="gc-trk-head"><span>FIELD</span><b>' + headLab + '</b></div>';
+            var ezL = '<rect x="0" y="6" width="10" height="44" fill="' + ca + '" opacity="0.9"/>' +
+                '<image href="' + escHtml(A.logo || '') + '" x="1.3" y="16" width="7.4" height="14" preserveAspectRatio="xMidYMid meet"/>' +
+                '<text x="5" y="40" fill="#fff" font-size="3.2" text-anchor="middle" font-family="Inter,sans-serif" font-weight="900" opacity="0.95">' + escHtml(A.abbr || '') + '</text>';
+            var ezR = '<rect x="110" y="6" width="10" height="44" fill="' + ch + '" opacity="0.9"/>' +
+                '<image href="' + escHtml(H.logo || '') + '" x="111.3" y="16" width="7.4" height="14" preserveAspectRatio="xMidYMid meet"/>' +
+                '<text x="115" y="40" fill="#fff" font-size="3.2" text-anchor="middle" font-family="Inter,sans-serif" font-weight="900" opacity="0.95">' + escHtml(H.abbr || '') + '</text>';
+            var svg = '<svg class="gc-field" viewBox="0 0 120 56" preserveAspectRatio="none" aria-hidden="true">' +
+                '<rect x="0" y="6" width="120" height="44" fill="#0a2e18"/>' +
+                ezL + ezR +
+                '<rect x="10" y="6" width="100" height="44" fill="#0d3d1f"/>' +
+                rz + marks + hashes + drive + losG + firstG + ballG +
+                '<rect x="0" y="6" width="120" height="44" fill="none" stroke="rgba(255,255,255,0.35)" stroke-width="0.5"/>' +
+                '</svg>';
             return head + svg;
         }
-        // MLB strike zone + current at-bat pitches. ESPN pitchCoordinate is ~0–250 (catcher's view).
+        // MLB strike zone + current at-bat pitches. ESPN pitchCoordinate ~0–250; zone ~x 85–165, y 145–205.
+        function gcAthleteMap(d) {
+            var map = {};
+            try {
+                (d.boxscore && d.boxscore.players || []).forEach(function(t) {
+                    (t.statistics || []).forEach(function(st) {
+                        (st.athletes || []).forEach(function(a) {
+                            var ath = a.athlete || {};
+                            if (!ath.id) return;
+                            var head = ath.headshot;
+                            if (head && typeof head === 'object') head = head.href;
+                            map[String(ath.id)] = { name: ath.displayName || ath.shortName || '', head: head || '', abbr: (t.team && t.team.abbreviation) || '' };
+                        });
+                    });
+                });
+            } catch (e) {}
+            return map;
+        }
         function gcStrikeHtml(A, H, sit, d, st) {
             var plays = d.plays || [];
             if (!plays.length) return '';
@@ -3144,58 +3222,97 @@
             for (i = 0; i < plays.length; i++) {
                 var p = plays[i];
                 if (abId && p.atBatId !== abId) continue;
-                if (!abId && pitches.length && p.atBatId && p.atBatId !== abId) break;
-                var hasPitch = !!(p.pitchCoordinate || p.pitchType || p.pitchVelocity);
-                if (!hasPitch) continue;
+                if (!(p.pitchCoordinate || p.pitchType || p.pitchVelocity)) continue;
+                // skip non-pitch result markers
+                var ttxt = ((p.type && (p.type.text || p.type.type)) || p.text || '').toLowerCase();
+                if (/play result|end batter|end pitcher|pitching substitution|offensive substitution|defensive/.test(ttxt)) continue;
                 pitches.push(p);
             }
             if (!abId) pitches = pitches.slice(-8);
-            // Drop trailing non-pitch result rows that lack coords/type
-            pitches = pitches.filter(function(p) { return p.pitchCoordinate || p.pitchType || p.pitchVelocity; });
             var balls = (sit && sit.balls != null) ? sit.balls : (last.resultCount && last.resultCount.balls) || (last.pitchCount && last.pitchCount.balls) || 0;
             var strikes = (sit && sit.strikes != null) ? sit.strikes : (last.resultCount && last.resultCount.strikes) || (last.pitchCount && last.pitchCount.strikes) || 0;
             var outs = (sit && sit.outs != null) ? sit.outs : (last.outs != null ? last.outs : 0);
             function kind(p) {
                 var t = ((p.type && (p.type.type || p.type.text)) || p.text || '').toLowerCase();
-                if (/ball/.test(t) && !/in.play|hit.into/.test(t)) return 'b';
+                if (/ball/.test(t) && !/in.play|hit.into|foul/.test(t)) return 'b';
                 if (/strike|foul|tip/.test(t)) return 's';
                 if (/in.play|hit|ground|fly|line|pop|single|double|triple|home|out|fielders|error|sac/.test(t)) return 'i';
                 return /ball/.test(t) ? 'b' : 's';
             }
-            // Map ESPN 0–250 coords into SVG; strike zone roughly x 100–150, y 100–180 → box at (35,30)-(65,70)
+            // Calibrated: ESPN zone ~x 85–165, y 145–205 → SVG box (28,12)-(72,52). Home plate below.
             function xy(p) {
                 var c = p.pitchCoordinate || {}; if (c.x == null || c.y == null) return null;
-                return { x: Math.max(5, Math.min(95, (c.x / 250) * 100)), y: Math.max(5, Math.min(95, (c.y / 250) * 100)) };
+                var x = 28 + ((+c.x - 85) / 80) * 44;
+                var y = 12 + ((+c.y - 145) / 60) * 40;
+                return { x: Math.max(4, Math.min(96, x)), y: Math.max(4, Math.min(78, y)) };
             }
             var dots = '', list = '';
             pitches.forEach(function(p, idx) {
-                var k = kind(p), col = k === 'b' ? '#39ff14' : (k === 'i' ? '#facc15' : '#ff4d4d');
+                var k = kind(p), col = k === 'b' ? '#39ff14' : (k === 'i' ? '#3b9eff' : '#ff4d4d');
                 var pt = xy(p), n = idx + 1;
-                if (pt) dots += '<circle cx="' + pt.x.toFixed(1) + '" cy="' + pt.y.toFixed(1) + '" r="3.2" fill="' + col + '" stroke="#111" stroke-width="0.6"/>' +
-                    '<text x="' + pt.x.toFixed(1) + '" y="' + (pt.y + 1.2).toFixed(1) + '" fill="#111" font-size="3.2" text-anchor="middle" font-weight="900" font-family="Inter,sans-serif">' + n + '</text>';
-                var ty = (p.pitchType && (p.pitchType.abbreviation || p.pitchType.text)) || '';
-                var res = (p.type && (p.type.text || p.type.abbreviation)) || p.text || '';
+                if (pt) {
+                    dots += '<circle cx="' + pt.x.toFixed(1) + '" cy="' + pt.y.toFixed(1) + '" r="3.6" fill="' + col + '" stroke="#0a0a0a" stroke-width="0.7"/>' +
+                        '<text x="' + pt.x.toFixed(1) + '" y="' + (pt.y + 1.25).toFixed(1) + '" fill="#0a0a0a" font-size="3.4" text-anchor="middle" font-weight="900" font-family="Inter,sans-serif">' + n + '</text>';
+                }
+                var ty = (p.pitchType && (p.pitchType.text || p.pitchType.abbreviation)) || 'Pitch';
+                var res = (p.type && p.type.text) || p.text || '';
+                // Prefer short result words
+                if (/^pitch\s*\d/i.test(res)) res = (p.type && p.type.text) || '';
                 var mph = p.pitchVelocity != null ? Math.round(p.pitchVelocity) + ' mph' : '';
-                list += '<div class="' + k + '">' + n + '. ' + escHtml(ty || res || 'Pitch') + (mph ? ' · ' + mph : '') + (res && ty ? ' · ' + escHtml(res) : '') + '</div>';
+                list += '<div class="' + k + '">' + n + '. ' + escHtml(ty) + (mph ? ' · ' + mph : '') + (res ? ' · ' + escHtml(res) : '') + '</div>';
             });
-            var sz = '<svg class="gc-sz" viewBox="0 0 100 100" aria-hidden="true">' +
-                '<rect x="0" y="0" width="100" height="100" fill="#0a101a"/>' +
-                '<rect x="35" y="28" width="30" height="44" fill="none" stroke="rgba(255,255,255,0.85)" stroke-width="1.4"/>' +
-                '<line x1="35" y1="42.7" x2="65" y2="42.7" stroke="rgba(255,255,255,0.25)" stroke-width="0.5"/>' +
-                '<line x1="35" y1="57.3" x2="65" y2="57.3" stroke="rgba(255,255,255,0.25)" stroke-width="0.5"/>' +
-                '<line x1="45" y1="28" x2="45" y2="72" stroke="rgba(255,255,255,0.2)" stroke-width="0.5"/>' +
-                '<line x1="55" y1="28" x2="55" y2="72" stroke="rgba(255,255,255,0.2)" stroke-width="0.5"/>' +
-                dots + '</svg>';
-            var b1 = !!(sit && sit.onFirst), b2 = !!(sit && sit.onSecond), b3 = !!(sit && sit.onThird);
+            var grid = '';
+            for (var g = 1; g <= 2; g++) {
+                grid += '<line x1="' + (28 + g * (44 / 3)).toFixed(1) + '" y1="12" x2="' + (28 + g * (44 / 3)).toFixed(1) + '" y2="52" stroke="rgba(255,255,255,0.18)" stroke-width="0.45"/>';
+                grid += '<line x1="28" y1="' + (12 + g * (40 / 3)).toFixed(1) + '" x2="72" y2="' + (12 + g * (40 / 3)).toFixed(1) + '" stroke="rgba(255,255,255,0.18)" stroke-width="0.45"/>';
+            }
+            var plate = '<polygon points="40,56 60,56 66,62 50,70 34,62" fill="none" stroke="rgba(255,255,255,0.7)" stroke-width="1.1"/>';
+            var sz = '<svg class="gc-sz" viewBox="0 0 100 78" aria-hidden="true">' +
+                '<rect x="0" y="0" width="100" height="78" fill="#070c14"/>' +
+                '<rect x="28" y="12" width="44" height="40" fill="rgba(0,240,255,0.04)" stroke="rgba(255,255,255,0.9)" stroke-width="1.5"/>' +
+                grid + plate + dots + '</svg>';
+            var b1 = !!(sit && sit.onFirst) || !!last.onFirst;
+            var b2 = !!(sit && sit.onSecond) || !!last.onSecond;
+            var b3 = !!(sit && sit.onThird) || !!last.onThird;
+            // Also infer from play runner flags if present on last pitch
+            if (last.onFirst) b1 = true; if (last.onSecond) b2 = true; if (last.onThird) b3 = true;
             var bases = '<svg class="gc-bases" viewBox="0 0 100 80" aria-hidden="true">' +
-                '<polygon points="50,12 66,28 50,44 34,28" fill="' + (b2 ? '#facc15' : 'rgba(255,255,255,0.15)') + '" stroke="#fff" stroke-width="1"/>' +
-                '<polygon points="68,30 84,46 68,62 52,46" fill="' + (b1 ? '#facc15' : 'rgba(255,255,255,0.15)') + '" stroke="#fff" stroke-width="1"/>' +
-                '<polygon points="32,30 48,46 32,62 16,46" fill="' + (b3 ? '#facc15' : 'rgba(255,255,255,0.15)') + '" stroke="#fff" stroke-width="1"/>' +
-                '<circle cx="50" cy="64" r="4" fill="rgba(255,255,255,0.35)"/>' +
-                '<text x="50" y="78" fill="#fff" font-size="6" text-anchor="middle" font-family="Share Tech Mono,monospace">' + outs + ' OUT' + (outs === 1 ? '' : 'S') + '</text></svg>';
+                '<polygon points="50,8 68,26 50,44 32,26" fill="' + (b2 ? '#facc15' : 'rgba(255,255,255,0.12)') + '" stroke="#fff" stroke-width="1.4"/>' +
+                '<polygon points="70,28 88,46 70,64 52,46" fill="' + (b1 ? '#facc15' : 'rgba(255,255,255,0.12)') + '" stroke="#fff" stroke-width="1.4"/>' +
+                '<polygon points="30,28 48,46 30,64 12,46" fill="' + (b3 ? '#facc15' : 'rgba(255,255,255,0.12)') + '" stroke="#fff" stroke-width="1.4"/>' +
+                '<circle cx="50" cy="66" r="4.5" fill="rgba(255,255,255,0.3)" stroke="#fff" stroke-width="1"/>' +
+                '</svg>';
+            var outsHtml = '<div class="gc-outs">' + [0, 1, 2].map(function(o) { return '<i class="' + (o < outs ? 'on' : '') + '"></i>'; }).join('') + '</div>';
+            var ath = gcAthleteMap(d), batter = null, pitcher = null;
+            (last.participants || []).forEach(function(part) {
+                var id = part.athlete && String(part.athlete.id);
+                if (part.type === 'batter' && id) batter = ath[id] || { name: '', head: '' };
+                if (part.type === 'pitcher' && id) pitcher = ath[id] || { name: '', head: '' };
+            });
+            // Fallback: scan recent plays in this at-bat for participants
+            if ((!batter || !pitcher) && pitches.length) {
+                for (i = pitches.length - 1; i >= 0; i--) {
+                    (pitches[i].participants || []).forEach(function(part) {
+                        var id = part.athlete && String(part.athlete.id);
+                        if (part.type === 'batter' && id && !batter) batter = ath[id] || { name: '', head: '' };
+                        if (part.type === 'pitcher' && id && !pitcher) pitcher = ath[id] || { name: '', head: '' };
+                    });
+                    if (batter && pitcher) break;
+                }
+            }
+            var matchup = '';
+            if (batter || pitcher) {
+                function pl(role, who) {
+                    if (!who) return '';
+                    var img = who.head ? '<img src="' + escHtml(who.head) + '" alt="" onerror="this.style.display=\'none\'">' : '';
+                    return '<div class="gc-sz-pl">' + img + '<div><span class="role">' + role + '</span><span>' + escHtml(who.name || '') + '</span></div></div>';
+                }
+                matchup = '<div class="gc-sz-matchup">' + pl('PITCHING', pitcher) + '<div class="gc-sz-vs">VS</div>' + pl('BATTING', batter) + '</div>';
+            }
             var head = '<div class="gc-trk-head"><span>AT BAT</span><b>COUNT ' + balls + '–' + strikes + ' · ' + outs + ' OUT' + (outs === 1 ? '' : 'S') + '</b></div>';
-            return head + '<div class="gc-sz-wrap">' + sz + '<div class="gc-sz-list">' + (list || '<div class="gc-dim">NO PITCHES YET</div>') + '</div>' + bases + '</div>';
+            return head + matchup + '<div class="gc-sz-wrap"><div class="gc-sz-col">' + sz + '</div><div class="gc-sz-list">' + (list || '<div class="gc-dim">NO PITCHES YET</div>') + '</div><div class="gc-sz-side">' + bases + outsHtml + '</div></div>';
         }
+
         function gcFootballSit(d, sit) { // the summary has no situation block for football; rebuild it from the current (or last) drive
             var base = sit ? Object.assign({}, sit) : {};
             if (base.downDistanceText || base.shortDownDistanceText) {
