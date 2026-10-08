@@ -76,19 +76,24 @@
         .sm-btn.on { background: var(--accent-color); color: #000; border-color: var(--accent-color); box-shadow: 0 0 2vh var(--accent-color); }
         #sm-status { margin-top: 1vh; font-size: 1.8vh; color: rgba(255,255,255,0.8); }
         #sm-status b { color: var(--accent-color); }
-        .ff-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.4vw; padding-bottom: 5vh; will-change: transform; align-items: start; }
+        .ff-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.6vh 1.4vw; padding-bottom: 1vh; will-change: transform; align-items: start; }
         .ff-card.ff-wide { grid-column: 1 / -1; }
         .ff-card.ff-span2 { grid-column: span 2; }
         .ff-wide .fut-rows, .ff-span2 .fut-rows { display: grid; grid-template-columns: 1fr 1fr; column-gap: 2.4vw; }
         .ff-wide .fut-rows { grid-template-columns: repeat(4, 1fr); }
-        .ff-wide .fut-row:last-child, .ff-span2 .fut-row:last-child { border-bottom: 1px solid rgba(255,255,255,0.1); }
-        .ff-row { padding: 0.7vh 0; }
+        .ff-span2 .fut-row:nth-last-child(-n+2) { border-bottom: none; }
+        .fut-card.ff-card { padding: 1.1vh 1.6vh 0.4vh; }
+        .fut-card.ff-card .division-header { font-size: 2.5vh; line-height: 1.1; margin-bottom: 0.2vh; padding-bottom: 0.5vh; }
+        #fantasy-viewport { height: 59vh; } /* ends at the ticker's top edge (78vh) */
+        .ff-row { height: 5.4vh; padding: 0; box-sizing: border-box; }
+        .ff-row .fut-name { line-height: 1.05; }
+        .ff-pts small { line-height: 1.1; }
         .ff-row .fut-rank { width: 2.4vh; font-size: 2vh; }
-        .ff-head { width: 5.2vh; height: 5.2vh; margin: 0 0.9vh; }
+        .ff-head { width: 4.8vh; height: 4.8vh; margin: 0 0.9vh; }
         .ff-head.dst { object-fit: contain; border-radius: 0.6vh; background: transparent; border: none; }
-        .ff-row .fut-name { font-size: 2.3vh; }
-        .ff-row .fut-name.ff-long { font-size: 1.95vh; }
-        .ff-sub { font-size: 1.6vh; letter-spacing: 0.05vw; margin-top: 0.2vh; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .ff-row .fut-name { font-size: 2.4vh; }
+        .ff-row .fut-name.ff-long { font-size: 2vh; }
+        .ff-sub { font-size: 1.6vh; line-height: 1.2; letter-spacing: 0.05vw; margin-top: 0.2vh; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .ff-inj { display: inline-block; padding: 0 0.5vh; border-radius: 0.4vh; background: #ff2d55; color: #fff; font-size: 1.4vh; line-height: 1.9vh; }
         .ff-pts { display: flex; flex-direction: column; align-items: flex-end; margin-left: 0.8vh; flex-shrink: 0; color: #fff; text-shadow: 0 0 1vh rgba(255,255,255,0.35); }
         .ff-pts span { font-size: 2.8vh; font-family: 'Share Tech Mono', monospace; line-height: 1; }
@@ -1459,7 +1464,7 @@
         // ESPN Fantasy too, but only after the week's first kickoff and only while this slide is showing (60 s while an NFL
         // game is live, 15 min otherwise).
         var FF_API = 'https://lm-api-reads.fantasy.espn.com/apis/v3/games/ffl/seasons/';
-        var FF_POS = [['QB', 0, 5], ['RB', 2, 5], ['WR', 4, 5], ['TE', 6, 5], ['K', 17, 3], ['DST', 16, 3]];
+        var FF_POS = [['QB', 0, 4], ['RB', 2, 4], ['WR', 4, 4], ['TE', 6, 4], ['K', 17, 4], ['DST', 16, 4]]; // 4 per card: the whole slide fits above the ticker (no scroll)
         var FF_POS_BY_ID = { 1: 'QB', 2: 'RB', 3: 'WR', 4: 'TE', 5: 'K', 16: 'DST' };
         var ff = { data: null, at: 0, live: null, liveAt: 0, timer: null };
         function ffFetch(url, filter) {
@@ -1568,12 +1573,11 @@
         function ffCard(title, sub, rows, cls) { return '<div class="division-block glass-card fut-card ff-card ' + (cls || '') + '"><div class="division-header neon-text-cycle"><span>' + title + '</span><span class="fut-book">' + sub + '</span></div><div class="fut-rows">' + rows + '</div></div>'; }
         function ffRender(d, live) {
             var html = '';
-            if (live && live.leaders.length) {
-                var lr = live.leaders.slice(0, 8).map(function(r, i) { return ffRow(r, i, live, 'lead'); }).join('');
-                html += ffCard('<span class="ff-live-dot"></span>LIVE PPR LEADERS', 'WEEK ' + d.week + (ffNflLive() ? ' &middot; LIVE' : ' &middot; SO FAR'), lr, 'ff-wide ff-lead');
-            }
+            // row 1: QB RB WR TE (top 4). row 2: K + D/ST + HOT PICKUPS, or LIVE PPR LEADERS + HOT PICKUPS once the week has points.
+            var leadOn = !!(live && live.leaders.length);
             FF_POS.slice(0, 4).forEach(function(p) { var rows = (d.positions[p[0]] || []).slice(0, p[2]); if (rows.length) html += ffCard(p[0], live ? 'PPR &middot; PROJ' : 'PROJ PPR', rows.map(function(r, i) { return ffRow(r, i, live); }).join('')); });
-            FF_POS.slice(4).forEach(function(p) { var rows = (d.positions[p[0]] || []).slice(0, p[2]); if (rows.length) html += ffCard(p[0] === 'DST' ? 'D/ST' : p[0], 'PROJ', rows.map(function(r, i) { return ffRow(r, i, live); }).join('')); });
+            if (leadOn) html += ffCard('<span class="ff-live-dot"></span>LIVE PPR LEADERS', 'WEEK ' + d.week + (ffNflLive() ? ' &middot; LIVE' : ' &middot; SO FAR'), live.leaders.slice(0, 8).map(function(r, i) { return ffRow(r, i, live, 'lead'); }).join(''), 'ff-span2 ff-lead');
+            else FF_POS.slice(4).forEach(function(p) { var rows = (d.positions[p[0]] || []).slice(0, p[2]); if (rows.length) html += ffCard(p[0] === 'DST' ? 'D/ST' : p[0], 'PROJ', rows.map(function(r, i) { return ffRow(r, i, live); }).join('')); });
             if (d.pickups && d.pickups.length) html += ffCard('HOT PICKUPS', d.pickupSource && /sleeper/i.test(d.pickupSource) ? 'ADDS 24H' : 'OWN % RISING', d.pickups.slice(0, 8).map(function(r, i) { return ffRow(r, i, live, 'pick'); }).join(''), 'ff-span2 ff-picks');
             return html;
         }

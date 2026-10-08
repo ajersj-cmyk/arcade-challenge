@@ -43,7 +43,18 @@ const freeze = page => page.evaluate(() => { document.querySelectorAll('.slide-s
 async function goSlide(page, key, waitMs = 20000) {
   await page.evaluate(k => { arcadeNav.paused = false; navGoTo(k); arcadeNav.paused = true; }, key);
   await page.waitForFunction(() => [...document.querySelectorAll('.slide-screen')].some(s => s.style.display === 'flex'), { timeout: waitMs }).catch(() => {});
-  await sleep(3500); await freeze(page); await sleep(400);
+  await sleep(3500);
+  const hid = await page.evaluate(() => { // nothing ends up under the ticker: fits above it, or auto-scrolls far enough to reveal the last row
+    const sc = [...document.querySelectorAll('.slide-screen')].find(x => x.style.display === 'flex'); if (!sc) return null;
+    const vp = sc.querySelector('.content-viewport'), tr = vp && vp.firstElementChild; if (!tr) return null;
+    const tk = document.getElementById('sports-ticker').getBoundingClientRect().top, v = vp.getBoundingClientRect();
+    const scrolls = tr.scrollHeight > vp.clientHeight + 20;
+    const lastBottom = scrolls ? v.bottom - 80 : v.top + tr.scrollHeight; // applyScroll travels fH - vH + 80 px
+    const anim = String(tr.style.animation || '');
+    if (scrolls && !/scrollVerticalOnePass/.test(anim)) return sc.id + ': overflows but is not auto-scrolling';
+    return lastBottom > tk + 1 ? sc.id + ': last row ends at ' + Math.round(lastBottom) + ' > ticker ' + Math.round(tk) : null; });
+  if (hid) hiddenUnderTicker.push(key + ' ' + hid);
+  await freeze(page); await sleep(400);
   const ov = await page.evaluate(() => { // the mode pill must never sit on top of a slide title
     const p = document.getElementById('sm-pill'); if (!p || getComputedStyle(p).display === 'none') return null;
     const h = [...document.querySelectorAll('.slide-screen')].find(s => s.style.display === 'flex'); const hd = h && h.querySelector('.screen-header'); if (!hd) return null;
@@ -51,7 +62,7 @@ async function goSlide(page, key, waitMs = 20000) {
     return (a.left < b.right && b.left < a.right && a.top < b.bottom && b.top < a.bottom) ? hd.textContent.trim() : null; });
   if (ov) overlaps.push(key + ':' + ov);
 }
-const overlaps = [];
+const overlaps = [], hiddenUnderTicker = [];
 async function cycle(page, n) { // natural rotation (nextSlide, incl. skip-if-empty), forced past the pause
   const seen = [];
   for (let i = 0; i < n; i++) {
@@ -226,6 +237,7 @@ await p2.screenshot({ path: path.join(OUT, 'cbb-mode-empty-live.png') });
 await p2.evaluate(() => smSet('')); await sleep(500);
 await p2.close();
 
+check('nothing important hidden under the ticker (fits or auto-scrolls to the last row)', hiddenUnderTicker.length === 0, hiddenUnderTicker.join(' | '));
 check('mode pill never overlaps a slide title', overlaps.length === 0, overlaps.join(' | '));
 check('0 console errors', errors.length === 0, errors.slice(0, 5).join(' | '));
 console.log('screenshots:', OUT);

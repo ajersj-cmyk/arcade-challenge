@@ -57,6 +57,12 @@ async function showFantasySlide(page, waitMs = 15000) {
   await page.evaluate(() => { const t = document.getElementById('fantasy-track'); t.style.animation = 'none'; t.style.transform = 'translate3d(0,0,0)'; document.getElementById('nav-hud').classList.remove('show'); });
   await sleep(1500);
 }
+const fit = page => page.evaluate(() => { // every card fully visible above the ticker, inside the viewport, no scroll needed
+  const tk = document.getElementById('sports-ticker').getBoundingClientRect().top, vp = document.getElementById('fantasy-viewport'), vb = vp.getBoundingClientRect().bottom;
+  const tr = document.getElementById('fantasy-track');
+  const bad = [...tr.querySelectorAll('.ff-card')].filter(c => { const b = c.getBoundingClientRect(); return b.bottom > tk + 1 || b.bottom > vb + 1; }).map(c => c.querySelector('.division-header span').textContent.trim());
+  return { bad, maxBottom: Math.max(...[...tr.querySelectorAll('.ff-card')].map(c => Math.round(c.getBoundingClientRect().bottom))), tickerTop: Math.round(tk), vpBottom: Math.round(vb), scrolls: tr.scrollHeight > vp.clientHeight + 20 };
+});
 const info = page => page.evaluate(() => {
   const tr = document.getElementById('fantasy-track');
   const cards = [...tr.querySelectorAll('.ff-card')].map(c => ({ title: c.querySelector('.division-header span').textContent.trim(), rows: c.querySelectorAll('.ff-row').length }));
@@ -73,12 +79,14 @@ await showFantasySlide(page);
 let r = await info(page);
 const titles = r.cards.map(c => c.title);
 check('projection cards QB/RB/WR/TE/K/D/ST', ['QB', 'RB', 'WR', 'TE', 'K', 'D/ST'].every(t => titles.includes(t)), titles.join(','));
-check('5 rows per skill position', r.cards.filter(c => ['QB', 'RB', 'WR', 'TE'].includes(c.title)).every(c => c.rows === 5));
+check('4 rows per position card', r.cards.filter(c => ['QB', 'RB', 'WR', 'TE', 'K', 'D/ST'].includes(c.title)).every(c => c.rows === 4));
 check('hot pickups card with >= 4 rows', (r.cards.find(c => c.title === 'HOT PICKUPS') || {}).rows >= 4, JSON.stringify(r.cards.find(c => c.title === 'HOT PICKUPS')));
 check('ESPN headshots used', r.imgs.filter(s => /headshots\/nfl\/players\/full\/\d+\.png/.test(s)).length >= 20, r.imgs.length + ' imgs');
 check('meta shows week + update time', /WEEK \d+ · PPR/.test(r.meta) && /UPDATED/.test(r.meta), r.meta);
 check('no ESPN live call before kickoff (fantasy.json fresh)', page.ffCalls.length === 0, page.ffCalls.length + ' calls');
 check('no player name clipped at 1280x720', r.clipped.length === 0, r.clipped.join(', '));
+let fr = await fit(page);
+check('1280x720: all cards (incl. K, D/ST, HOT PICKUPS) above the ticker, no scroll', !fr.bad.length && !fr.scrolls, JSON.stringify(fr));
 await page.screenshot({ path: path.join(OUT, 'fantasy-projections-1280.png') });
 const nImgOk = await page.evaluate(() => [...document.querySelectorAll('#fantasy-track img')].filter(i => i.complete && i.naturalWidth > 0).length);
 check('headshots load', nImgOk >= 20, nImgOk + ' loaded');
@@ -90,6 +98,8 @@ await page.close();
 // 1080p look
 page = await newPage({ w: 1920, h: 1080, fantasyJson: pre });
 await showFantasySlide(page);
+fr = await fit(page);
+check('1920x1080: all cards above the ticker, no scroll', !fr.bad.length && !fr.scrolls, JSON.stringify(fr));
 await page.screenshot({ path: path.join(OUT, 'fantasy-projections-1920.png') });
 await page.close();
 
@@ -125,7 +135,10 @@ page = await newPage({ fantasyJson: live, mockEspn: mock });
 await page.evaluate(ev => { gcRegistry['nfl:' + ev] = { key: 'nfl:' + ev, cid: 'nfl', state: 'in', id: ev }; ff.live = null; ff.liveAt = 0; }, firstEvent);
 await showFantasySlide(page);
 r = await info(page);
-check('live: LIVE PPR LEADERS card', r.cards[0] && /LIVE PPR LEADERS/.test(r.cards[0].title) && r.cards[0].rows >= 6, JSON.stringify(r.cards[0]));
+const lc = r.cards.find(c => /LIVE PPR LEADERS/.test(c.title));
+check('live: LIVE PPR LEADERS card (8) + HOT PICKUPS both shown', lc && lc.rows === 8 && (r.cards.find(c => c.title === 'HOT PICKUPS') || {}).rows >= 4, JSON.stringify(r.cards));
+fr = await fit(page);
+check('live 1280x720: every card above the ticker, no scroll', !fr.bad.length && !fr.scrolls, JSON.stringify(fr));
 check('live: points shown on rows', r.live >= 20, r.live + ' live values');
 check('live: live dot for players in a live game', r.dots >= 2, r.dots + ' dots');
 check('live: meta shows LIVE PPR time', /LIVE PPR \d/.test(r.meta), r.meta);
@@ -143,6 +156,15 @@ check('live: exactly one refresh pair in ~60 s', page.ffCalls.length === 4, page
 await page.evaluate(() => { arcadeNav.paused = false; navStep(1); arcadeNav.paused = true; });
 await sleep(500);
 check('live: timer stops when the slide changes', await page.evaluate(() => ff.timer === null));
+await page.close();
+// live state at 1080p
+tick = 0;
+page = await newPage({ w: 1920, h: 1080, fantasyJson: live, mockEspn: mock });
+await page.evaluate(ev => { gcRegistry['nfl:' + ev] = { key: 'nfl:' + ev, cid: 'nfl', state: 'in', id: ev }; ff.live = null; ff.liveAt = 0; }, firstEvent);
+await showFantasySlide(page);
+fr = await fit(page);
+check('live 1920x1080: every card above the ticker, no scroll', !fr.bad.length && !fr.scrolls, JSON.stringify(fr));
+await page.screenshot({ path: path.join(OUT, 'fantasy-live-ppr-1920.png') });
 await page.close();
 
 check('0 console errors', errors.length === 0, errors.slice(0, 5).join(' | '));
