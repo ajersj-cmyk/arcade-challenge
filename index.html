@@ -276,7 +276,8 @@
         .gc-dot { width: 1.2vh; height: 1.2vh; border-radius: 50%; background: #39ff14; display: inline-block; box-shadow: 0 0 1vh #39ff14; }
         .gc-dot.on { animation: pulsePink 1s ease-in-out infinite; }
         .gc-recon { animation: pulsePink 1.2s ease-in-out infinite; }
-        .gc-hint { font-size: 1.8vh; color: rgba(255,255,255,0.55); }
+        .gc-hint { font-size: 1.8vh; color: rgba(255,255,255,0.55); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; flex-shrink: 1; }
+        .gc-close { flex: none; }
         #gamecast.gc-bad .gc-hint { display: none; }
         .gc-close { background: rgba(12,20,32,0.95); color: #fff; border: 2px solid #ff007f; border-radius: 1vh; padding: 0.8vh 1.8vh; font-family: 'Inter', sans-serif; font-size: 2.2vh; font-weight: 900; letter-spacing: 0.1vw; }
         .gc-close:focus, .gc-close:hover { outline: 0.4vh solid var(--accent-color); box-shadow: 0 0 2.5vh var(--accent-color); }
@@ -364,6 +365,66 @@
         .gc-chip-logo { width: 2.8vh; height: 2.8vh; object-fit: contain; }
         .gc-chip-st { font-size: 1.6vh; color: rgba(255,255,255,0.7); margin-left: 0.4vw; }
         .gc-chip-live { color: #ff007f; }
+        /* ---- Score celebration: full-screen team-colour strobe, beams, scrolling marquee, logo punch, confetti.
+           Only transform/opacity are animated (GPU-composited); the DOM is static and reused. ---- */
+        #celebrate { position: fixed; inset: 0; z-index: 40000; display: none; overflow: hidden; background: #000; contain: strict; --cel1: #ff007f; --cel2: #00f0ff; --cel-ms: 7000ms; }
+        #celebrate.show { display: block; animation: cel-life var(--cel-ms) ease forwards; }
+        #celebrate .cel-shake { position: absolute; inset: 0; animation: cel-shake 0.6s linear 0.15s 2; }
+        #celebrate .cel-wash { position: absolute; inset: 0; background: var(--cel1); }
+        #celebrate .cel-wash.w2 { background: var(--cel2); opacity: 0; animation: cel-strobe 0.36s steps(1, end) 0s 8, cel-breathe 1.6s ease-in-out 2.9s infinite alternate; }
+        #celebrate .cel-vig { position: absolute; inset: 0; background: radial-gradient(ellipse at 50% 50%, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0.55) 55%, rgba(0,0,0,0.85) 100%); }
+        #celebrate .cel-beam { position: absolute; bottom: -10vh; left: 50%; width: 14vw; height: 150vh; margin-left: -7vw; transform-origin: 50% 100%;
+                               background: linear-gradient(to top, rgba(255,255,255,0.85), rgba(255,255,255,0.25) 45%, rgba(255,255,255,0)); opacity: 0.55; mix-blend-mode: screen; will-change: transform; }
+        #celebrate .cel-beam.b1 { left: 12%; animation: cel-swing 1.3s ease-in-out infinite alternate; }
+        #celebrate .cel-beam.b2 { left: 36%; animation: cel-swing 1.1s ease-in-out -0.6s infinite alternate-reverse; }
+        #celebrate .cel-beam.b3 { left: 64%; animation: cel-swing 1.2s ease-in-out -0.3s infinite alternate; }
+        #celebrate .cel-beam.b4 { left: 88%; animation: cel-swing 1.4s ease-in-out -0.9s infinite alternate-reverse; }
+        #celebrate .cel-mq { position: absolute; left: 0; white-space: nowrap; font-family: 'Inter', sans-serif; font-weight: 900; font-style: italic; line-height: 1; letter-spacing: 0.4vw; will-change: transform; }
+        #celebrate .cel-mq span { display: inline-block; padding-right: 0; }
+        #celebrate .cel-mq.m1 { top: 3vh; font-size: 17vh; color: #fff; text-shadow: 0 0 3vh var(--cel2), 0.8vh 0.8vh 0 var(--cel1); animation: cel-mq-l 3.2s linear infinite; }
+        #celebrate .cel-mq.m2 { top: 38vh; font-size: 26vh; color: transparent; -webkit-text-stroke: 0.5vh rgba(255,255,255,0.9); opacity: 0.7; animation: cel-mq-r 4.2s linear infinite; }
+        #celebrate .cel-mq.m3 { bottom: 4vh; font-size: 17vh; color: var(--cel2); text-shadow: 0 0 3vh var(--cel2), 0.8vh 0.8vh 0 #000; animation: cel-mq-l 2.8s linear infinite; }
+        #celebrate .cel-ring { position: absolute; left: 50%; top: 50%; width: 60vh; height: 60vh; margin: -30vh 0 0 -30vh; border-radius: 50%; border: 1.4vh solid var(--cel2); opacity: 0; will-change: transform, opacity; animation: cel-ring 1.2s ease-out infinite; }
+        #celebrate .cel-ring.r2 { animation-delay: 0.6s; border-color: #fff; }
+        #celebrate .cel-sweep { position: absolute; top: -20%; bottom: -20%; left: 0; width: 20vw; background: linear-gradient(90deg, rgba(255,255,255,0), rgba(255,255,255,0.7), rgba(255,255,255,0)); transform: translateX(-30vw) skewX(-20deg); will-change: transform; animation: cel-sweep 1.4s ease-in-out 0.3s infinite; }
+        #celebrate .cel-conf { position: absolute; inset: 0; }
+        #celebrate .cel-conf i { position: absolute; top: -6vh; width: 1.4vh; height: 2.6vh; background: var(--cel1); opacity: 0.95; will-change: transform; animation: cel-fall var(--dur, 3s) linear var(--del, 0s) infinite; }
+        #celebrate .cel-conf i:nth-child(3n) { background: var(--cel2); }
+        #celebrate .cel-conf i:nth-child(4n) { background: #fff; width: 1vh; height: 1vh; border-radius: 50%; }
+        #celebrate .cel-center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        #celebrate .cel-logo { width: 50vh; height: 50vh; object-fit: contain; filter: drop-shadow(0 0 3vh rgba(0,0,0,0.9)) drop-shadow(0 0 5vh rgba(255,255,255,0.5)); will-change: transform; animation: cel-punch 0.75s cubic-bezier(.2,1.7,.4,1) both, cel-beat 0.6s ease-in-out 0.8s infinite; }
+        #celebrate .cel-sub { margin-top: 1vh; font-family: 'Share Tech Mono', monospace; font-weight: 900; font-size: 4.6vh; letter-spacing: 0.3vw; color: #fff; background: rgba(0,0,0,0.72); border: 0.35vh solid var(--cel2); border-radius: 1vh; padding: 0.6vh 2.6vh; white-space: nowrap; animation: cel-rise 0.5s ease-out 0.5s both; }
+        #celebrate.big .cel-logo { width: 56vh; height: 56vh; }
+        #celebrate.big .cel-ring { animation-duration: 0.9s; }
+        #celebrate.mini .cel-wash.w2, #celebrate.mini .cel-shake { animation: none; }
+        #celebrate.mini .cel-mq.m1, #celebrate.mini .cel-mq.m3, #celebrate.mini .cel-conf, #celebrate.mini .cel-beam.b1, #celebrate.mini .cel-beam.b4 { display: none; }
+        #celebrate.mini .cel-wash { opacity: 0.55; }
+        #celebrate.mini .cel-mq.m2 { color: #fff; -webkit-text-stroke: 0; opacity: 1; text-shadow: 0 0 3vh var(--cel2); top: auto; bottom: 6vh; font-size: 16vh; }
+        #celebrate.mini .cel-logo { width: 36vh; height: 36vh; margin-top: -18vh; }
+        @keyframes cel-life { 0% { opacity: 0; } 3% { opacity: 1; } 92% { opacity: 1; } 100% { opacity: 0; } }
+        @keyframes cel-shake { 0%, 100% { transform: none; } 20% { transform: translate(-1.2vh, 0.8vh) scale(1.02); } 40% { transform: translate(1.2vh, -0.8vh) scale(1.03); } 60% { transform: translate(-0.8vh, -0.6vh); } 80% { transform: translate(0.8vh, 0.6vh); } }
+        @keyframes cel-strobe { 0% { opacity: 1; } 50% { opacity: 0; } }
+        @keyframes cel-breathe { 0% { opacity: 0; } 100% { opacity: 0.55; } }
+        @keyframes cel-swing { 0% { transform: rotate(-32deg); } 100% { transform: rotate(32deg); } }
+        @keyframes cel-mq-l { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+        @keyframes cel-mq-r { 0% { transform: translateX(-50%); } 100% { transform: translateX(0); } }
+        @keyframes cel-ring { 0% { transform: scale(0.3); opacity: 0.95; } 100% { transform: scale(2.8); opacity: 0; } }
+        @keyframes cel-sweep { 0% { transform: translateX(-30vw) skewX(-20deg); } 100% { transform: translateX(125vw) skewX(-20deg); } }
+        @keyframes cel-fall { 0% { transform: translate3d(0, 0, 0) rotate(0deg); } 100% { transform: translate3d(var(--dx, 4vw), 115vh, 0) rotate(var(--rot, 720deg)); } }
+        @keyframes cel-punch { 0% { transform: scale(0.05) rotate(-30deg); } 70% { transform: scale(1.18) rotate(4deg); } 100% { transform: scale(1) rotate(0); } }
+        @keyframes cel-beat { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.08); } }
+        @keyframes cel-rise { 0% { transform: translateY(4vh); opacity: 0; } 100% { transform: none; opacity: 1; } }
+        @media (prefers-reduced-motion: reduce) { #celebrate .cel-wash.w2, #celebrate .cel-shake { animation: none !important; } }
+        /* Gamecast per-team celebrate toggles + delay control */
+        .gc-celcell { display: flex; }
+        .gc-celcell.right { justify-content: flex-end; }
+        .gc-cel, .gc-cel-d { background: rgba(12,20,32,0.9); color: rgba(255,255,255,0.7); border: 2px solid rgba(255,255,255,0.3); border-radius: 3vh; padding: 0.5vh 1.6vh; font-family: 'Inter', sans-serif; font-size: 1.9vh; font-weight: 900; letter-spacing: 0.1vw; cursor: pointer; white-space: nowrap; }
+        .gc-cel b { margin-left: 0.6vw; }
+        .gc-cel.on { color: #111; background: #ffe600; border-color: #ffe600; box-shadow: 0 0 2vh rgba(255,230,0,0.6); }
+        .gc-cel:disabled { opacity: 0.35; }
+        .gc-celmid { display: flex; align-items: center; justify-content: center; gap: 0.8vw; font-size: 1.9vh; font-weight: 900; color: rgba(255,255,255,0.75); }
+        .gc-cel-d { padding: 0.3vh 1.3vh; font-size: 2.2vh; }
+        body.nav-active #gamecast .gc-cel:focus, body.nav-active #gamecast .gc-cel-d:focus { outline: 0.4vh solid #00f0ff; outline-offset: 0.3vh; }
     </style>
 </head>
 <body class="theme-cyan">
@@ -513,6 +574,17 @@
                         <div style="font-size: 1.8vh; color: var(--accent-color); margin-bottom: 0.5vh; text-transform: uppercase;">Set Favorite Teams:</div>
                         <input type="text" id="set-mySquadTeams" style="width: 100%; padding: 1vh; border-radius: 0.5vh; background: rgba(0,0,0,0.5); color: white; border: 1px solid var(--accent-color); font-family: 'Inter', sans-serif;" onchange="updateSettings()">
                     </div>
+                    <div class="toggle-row"><span>Score Celebrations <span style="font-size:1.6vh; opacity:0.7;">(pick teams with &#9733; in Gamecast)</span></span> <input type="checkbox" id="set-celebrate" onchange="updateSettings()"></div>
+                    <div style="margin-bottom: 2vh;">
+                        <div style="font-size: 1.8vh; color: #ffe600; margin-bottom: 0.5vh; text-transform: uppercase;">Celebration Delay (match your TV's lag, &#9664; &#9654; to adjust):</div>
+                        <div style="display:flex; align-items:center; gap:2vh;">
+                            <button type="button" onclick="nudgeCelDelay(-1)" style="width:6vh;height:6vh;font-size:3vh;font-weight:900;background:rgba(0,0,0,0.5);color:#fff;border:2px solid #ffe600;border-radius:1vh;cursor:pointer;">&minus;</button>
+                            <button type="button" id="cel-delay-display" data-adjust="celDelay" style="min-width:9vh; height:6vh; font-size:3vh; font-weight:900; background:rgba(0,0,0,0.5); color:#fff; border:2px solid rgba(255,255,255,0.3); border-radius:1vh;">0s</button>
+                            <button type="button" onclick="nudgeCelDelay(1)" style="width:6vh;height:6vh;font-size:3vh;font-weight:900;background:rgba(0,0,0,0.5);color:#fff;border:2px solid #ffe600;border-radius:1vh;cursor:pointer;">+</button>
+                            <button type="button" id="cel-preview-btn" onclick="arcadeCelebrate('test')" style="height:6vh; padding:0 2vh; font-size:2vh; font-weight:900; background:rgba(0,0,0,0.5); color:#ffe600; border:2px solid #ffe600; border-radius:1vh; cursor:pointer;">&#9733; PREVIEW</button>
+                        </div>
+                        <input type="range" id="set-celebrateDelay" min="0" max="30" step="1" tabindex="-1" aria-hidden="true" style="display:none;">
+                    </div>
                     <div style="margin-bottom: 2vh;">
                         <div style="font-size: 1.8vh; color: #ff007f; margin-bottom: 0.5vh; text-transform: uppercase;">Custom Ticker Marquee:</div>
                         <input type="text" id="set-marqueeMessage" style="width: 100%; padding: 1vh; border-radius: 0.5vh; background: rgba(0,0,0,0.5); color: white; border: 1px solid #ff007f; font-family: 'Inter', sans-serif;" onchange="updateSettings()">
@@ -585,6 +657,10 @@
         <button class="r-btn" onclick="bc.postMessage({action:'forceNext'})">NEXT SLIDE</button>
     </div>
 
+    <div id="celebrate" aria-hidden="true"><div class="cel-shake"><div class="cel-wash"></div><div class="cel-wash w2"></div><div class="cel-beam b1"></div><div class="cel-beam b2"></div><div class="cel-beam b3"></div><div class="cel-beam b4"></div><div class="cel-vig"></div>
+        <div class="cel-mq m1"><span id="cel-mq1"></span></div><div class="cel-mq m2"><span id="cel-mq2"></span></div><div class="cel-mq m3"><span id="cel-mq3"></span></div>
+        <div class="cel-ring"></div><div class="cel-ring r2"></div><div class="cel-sweep"></div><div class="cel-conf"><i style="left:0%;--del:-0.00s;--dur:2.40s;--dx:-6vw;--rot:360deg"></i><i style="left:37%;--del:-0.23s;--dur:2.75s;--dx:1vw;--rot:600deg"></i><i style="left:74%;--del:-0.46s;--dur:3.10s;--dx:-5vw;--rot:840deg"></i><i style="left:11%;--del:-0.69s;--dur:3.45s;--dx:2vw;--rot:1080deg"></i><i style="left:48%;--del:-0.92s;--dur:3.80s;--dx:-4vw;--rot:360deg"></i><i style="left:85%;--del:-1.15s;--dur:2.40s;--dx:3vw;--rot:600deg"></i><i style="left:22%;--del:-1.38s;--dur:2.75s;--dx:-3vw;--rot:840deg"></i><i style="left:59%;--del:-1.61s;--dur:3.10s;--dx:4vw;--rot:1080deg"></i><i style="left:96%;--del:-1.84s;--dur:3.45s;--dx:-2vw;--rot:360deg"></i><i style="left:33%;--del:-2.07s;--dur:3.80s;--dx:5vw;--rot:600deg"></i><i style="left:70%;--del:-2.30s;--dur:2.40s;--dx:-1vw;--rot:840deg"></i><i style="left:7%;--del:-2.53s;--dur:2.75s;--dx:6vw;--rot:1080deg"></i><i style="left:44%;--del:-2.76s;--dur:3.10s;--dx:0vw;--rot:360deg"></i><i style="left:81%;--del:-2.99s;--dur:3.45s;--dx:-6vw;--rot:600deg"></i><i style="left:18%;--del:-0.22s;--dur:3.80s;--dx:1vw;--rot:840deg"></i><i style="left:55%;--del:-0.45s;--dur:2.40s;--dx:-5vw;--rot:1080deg"></i><i style="left:92%;--del:-0.68s;--dur:2.75s;--dx:2vw;--rot:360deg"></i><i style="left:29%;--del:-0.91s;--dur:3.10s;--dx:-4vw;--rot:600deg"></i><i style="left:66%;--del:-1.14s;--dur:3.45s;--dx:3vw;--rot:840deg"></i><i style="left:3%;--del:-1.37s;--dur:3.80s;--dx:-3vw;--rot:1080deg"></i><i style="left:40%;--del:-1.60s;--dur:2.40s;--dx:4vw;--rot:360deg"></i><i style="left:77%;--del:-1.83s;--dur:2.75s;--dx:-2vw;--rot:600deg"></i><i style="left:14%;--del:-2.06s;--dur:3.10s;--dx:5vw;--rot:840deg"></i><i style="left:51%;--del:-2.29s;--dur:3.45s;--dx:-1vw;--rot:1080deg"></i><i style="left:88%;--del:-2.52s;--dur:3.80s;--dx:6vw;--rot:360deg"></i><i style="left:25%;--del:-2.75s;--dur:2.40s;--dx:0vw;--rot:600deg"></i><i style="left:62%;--del:-2.98s;--dur:2.75s;--dx:-6vw;--rot:840deg"></i><i style="left:99%;--del:-0.21s;--dur:3.10s;--dx:1vw;--rot:1080deg"></i><i style="left:36%;--del:-0.44s;--dur:3.45s;--dx:-5vw;--rot:360deg"></i><i style="left:73%;--del:-0.67s;--dur:3.80s;--dx:2vw;--rot:600deg"></i></div>
+        <div class="cel-center"><img class="cel-logo" id="cel-logo" alt=""><div class="cel-sub" id="cel-sub"></div></div></div></div>
     <div id="gamecast" aria-hidden="true">
         <div class="gc-top">
             <span class="gc-brand neon-text-cycle">&#9673; GAMECAST</span>
@@ -592,13 +668,16 @@
             <span class="gc-net" id="gc-net"></span>
             <span class="gc-spacer"></span>
             <span id="gc-updated"></span>
-            <span class="gc-hint">&#9664; &#9654; SWITCH GAME &nbsp;&bull;&nbsp; BACK CLOSE</span>
+            <span class="gc-hint">&#9664; &#9654; GAME &nbsp;&bull;&nbsp; OK &#9733; &nbsp;&bull;&nbsp; BACK CLOSE</span>
             <button type="button" class="gc-close" id="gc-close" onclick="gcClose()">&#10005; CLOSE</button>
         </div>
         <div class="gc-board">
             <div class="gc-team" id="gc-away"></div>
             <div class="gc-mid" id="gc-mid"></div>
             <div class="gc-team" id="gc-home"></div>
+            <div class="gc-celcell"><button type="button" class="gc-cel" id="gc-cel-away" onclick="celToggle('away')" disabled>&#9733; CELEBRATE <span class="gc-cel-ab"></span><b>OFF</b></button></div>
+            <div class="gc-celmid"><button type="button" class="gc-cel-d" id="gc-cel-dminus" onclick="nudgeCelDelay(-1)">&minus;</button><span id="gc-cel-dval">DELAY 0s</span><button type="button" class="gc-cel-d" id="gc-cel-dplus" onclick="nudgeCelDelay(1)">+</button></div>
+            <div class="gc-celcell right"><button type="button" class="gc-cel" id="gc-cel-home" onclick="celToggle('home')" disabled>&#9733; CELEBRATE <span class="gc-cel-ab"></span><b>OFF</b></button></div>
         </div>
         <div class="gc-strip" id="gc-strip">
             <div class="gc-box" id="gc-line"></div>
@@ -644,6 +723,7 @@
             showWorldCup:true, showEPL:true, showUCL:true, showATP:true, showWTA:true, showNFL:true, showNBA:true, showNHL:true, showMLB:true, showCFB:true, showCBB:true, showCLB:true,
             cbb50:true, cfb75:true, clb50:true, apiBase:"https://site.api.espn.com/apis",
             mySquadTeams: "Carolina Hurricanes, Duke, ECU, East Carolina",
+            celebrate: true, celebrateDelay: 0,
             marqueeMessage: "WELCOME TO AHLERS ARCADE",
             tickerSpeed: 5
         };
@@ -698,6 +778,7 @@
                 }
             }); 
             if(document.getElementById('speed-display')) document.getElementById('speed-display').innerText = settings.tickerSpeed;
+            try { celDelayUI(); } catch (e) {}
             var remoteUrl = window.location.href.split('#')[0] + '#remote';
             document.getElementById('settings-qr').src = 'https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=' + encodeURIComponent(remoteUrl) + '&color=0a0a0a&bgcolor=00ffff';
         }
@@ -1186,7 +1267,9 @@
                                 gcList.push({ key: gameObj.gcKey, sport: c.s, league: c.l, cid: c.id, id: String(ev.id), label: displayLeague, away: aName, home: hName,
                                     awayAbbr: (a.team && a.team.abbreviation) || aName, homeAbbr: (h.team && h.team.abbreviation) || hName, aLogo: aLogo, hLogo: hLogo, aFallback: aFallback, hFallback: hFallback,
                                     aScore: a.score || '', hScore: h.score || '', state: status.state, status: status.shortDetail, time: gameObj.time, date: gameTime, tv: tv, weight: mWeight,
-                                    sitDown: trendData.downDist || '', sitSpot: trendData.spot || '' });
+                                    sitDown: trendData.downDist || '', sitSpot: trendData.spot || '',
+                                    aId: String((a.team && a.team.id) || ''), hId: String((h.team && h.team.id) || ''), aFull: (a.team && a.team.displayName) || aName, hFull: (h.team && h.team.displayName) || hName,
+                                    aColor: (a.team && a.team.color) || '', aAlt: (a.team && a.team.alternateColor) || '', hColor: (h.team && h.team.color) || '', hAlt: (h.team && h.team.alternateColor) || '' });
                             }
                             globalRawGames.push(gameObj);
                             newMarqueeGames.push(gameObj);
@@ -1247,6 +1330,7 @@
             
             globalLiveGamesData = newLivePage;
             gcRegisterGames(gcList);
+            try { celScanScoreboard(gcList); } catch (e) {}
             globalTVGuideData = newTVGuide;
             globalLeadersData = newLeaders.slice();
 
@@ -2138,6 +2222,195 @@
                    lastOk: 0, lastTry: 0, endedAt: 0, lastInput: 0, pollMs: GC_POLL_MS, scrollTimer: null, scrollHold: 0, html: {}, teams: {}, renderErr: null };
         var gcRegistry = {}, gcOrder = [];
 
+        // ---- Score celebration (ConnectedRoom-style, on screen): pick teams with the ★ toggles under each team in Gamecast
+        // (saved per team in localStorage, so a team stays on for its future games). Fires only on a score *increase* seen
+        // between two polls of the same game (Gamecast every 10 s, scoreboard every 5 min), never on the first look at a game,
+        // at most once per score (high-water mark), debounced per game, WIN once per game we saw live. Detection is immediate;
+        // the effect fires after Settings > Celebration Delay (0-30 s) to match the TV broadcast lag. Queued effects are
+        // dropped when their Gamecast closes or the score is corrected down before they fire.
+        var CEL_MS = 7000, CEL_BIG_MS = 8000, CEL_MINI_MS = 4000, CEL_DEBOUNCE_MS = 20000, CEL_KEY = 'ahlersCelebrateTeams1';
+        var cel = { showing: false, timer: null, qTimer: null, pending: [], queue: [], watch: {}, nWatch: 0, fired: 0, last: null, picks: {} };
+        try { cel.picks = JSON.parse(localStorage.getItem(CEL_KEY) || '{}') || {}; } catch (e) { cel.picks = {}; }
+        var CEL_DEMO = {
+            goal: { fam: 'hockey', delta: 1, T: { full: 'Carolina Hurricanes', abbr: 'CAR', score: 3, logo: 'https://a.espncdn.com/i/teamlogos/nhl/500/car.png', rawColor: 'ce1126', rawAlt: '000000' }, line: 'NYR 2 - 3 CAR' },
+            td:   { fam: 'football', delta: 6, T: { full: 'East Carolina Pirates', abbr: 'ECU', score: 27, logo: 'https://a.espncdn.com/i/teamlogos/ncaa/500/151.png', rawColor: '4b1869', rawAlt: 'fdc82f' }, line: 'ECU 27 - 24 TEM' },
+            fg:   { fam: 'football', delta: 3, T: { full: 'Carolina Panthers', abbr: 'CAR', score: 13, logo: 'https://a.espncdn.com/i/teamlogos/nfl/500/car.png', rawColor: '0085ca', rawAlt: '101820' }, line: 'ATL 10 - 13 CAR' },
+            run:  { fam: 'baseball', delta: 1, T: { full: 'Atlanta Braves', abbr: 'ATL', score: 4, logo: 'https://a.espncdn.com/i/teamlogos/mlb/500/atl.png', rawColor: '13274f', rawAlt: 'ce1141' }, line: 'ATL 4 - 3 NYM' },
+            hr:   { fam: 'baseball', delta: 2, hint: 'homered', T: { full: 'Atlanta Braves', abbr: 'ATL', score: 6, logo: 'https://a.espncdn.com/i/teamlogos/mlb/500/atl.png', rawColor: '13274f', rawAlt: 'ce1141' }, line: 'ATL 6 - 3 NYM' },
+            half: { mini: 'HALFTIME!', T: { full: 'East Carolina Pirates', abbr: 'ECU', logo: 'https://a.espncdn.com/i/teamlogos/ncaa/500/151.png', rawColor: '4b1869', rawAlt: 'fdc82f' }, line: 'ECU 17 - 14 TEM' },
+            period: { mini: 'END OF PERIOD', T: { full: 'Carolina Hurricanes', short: 'Hurricanes', abbr: 'CAR', logo: 'https://a.espncdn.com/i/teamlogos/nhl/500/car.png', rawColor: 'ce1126', rawAlt: '000000' }, line: 'NYR 1 - 2 CAR' },
+            win:  { fam: 'hockey', win: true, T: { full: 'Carolina Hurricanes', short: 'Hurricanes', abbr: 'CAR', logo: 'https://a.espncdn.com/i/teamlogos/nhl/500/car.png', rawColor: 'ce1126', rawAlt: '000000' }, line: 'FINAL  NYR 2 - 4 CAR' }
+        };
+        function celT(side, T, meta) { return { side: side, ck: (meta.league || '') + ':' + T.id, score: T.score, full: T.full || T.name, short: T.short, abbr: T.abbr, logo: T.logo, rawColor: T.rawColor, rawAlt: T.rawAlt }; }
+        function celOn(T) { return !!(T && T.ck && cel.picks[T.ck]); }
+        function celSave() { try { localStorage.setItem(CEL_KEY, JSON.stringify(cel.picks)); } catch (e) {} }
+        function celSync(meta, A, H) { // the ★ toggles are static buttons (focus survives re-renders); only their state changes
+            [['away', A], ['home', H]].forEach(function(x) {
+                var b = document.getElementById('gc-cel-' + x[0]); if (!b) return;
+                var T = x[1] || {}, ck = T.id ? (meta.league || '') + ':' + T.id : '';
+                b.setAttribute('data-ck', ck); b.setAttribute('data-name', T.full || T.name || '');
+                b.disabled = !ck;
+                var on = !!(ck && cel.picks[ck]);
+                b.classList.toggle('on', on); b.setAttribute('aria-pressed', on ? 'true' : 'false');
+                b.querySelector('.gc-cel-ab').textContent = T.abbr || '';
+                b.querySelector('b').textContent = on ? 'ON' : 'OFF';
+            });
+            celDelayUI();
+        }
+        function celToggle(side) {
+            var b = document.getElementById('gc-cel-' + side); if (!b) return;
+            var ck = b.getAttribute('data-ck'); if (!ck) return;
+            if (cel.picks[ck]) delete cel.picks[ck]; else cel.picks[ck] = b.getAttribute('data-name') || ck;
+            celSave();
+            var on = !!cel.picks[ck];
+            b.classList.toggle('on', on); b.setAttribute('aria-pressed', on ? 'true' : 'false'); b.querySelector('b').textContent = on ? 'ON' : 'OFF';
+            if (gc.open) gc.lastInput = Date.now();
+        }
+        function nudgeCelDelay(dir) {
+            var v = Math.max(0, Math.min(30, (parseInt(settings.celebrateDelay, 10) || 0) + dir));
+            var el = document.getElementById('set-celebrateDelay'); if (el) el.value = v;
+            settings.celebrateDelay = v;
+            updateSettings();
+        }
+        function celDelayUI() {
+            var v = (parseInt(settings.celebrateDelay, 10) || 0) + 's';
+            var a = document.getElementById('cel-delay-display'); if (a) a.textContent = v;
+            var b = document.getElementById('gc-cel-dval'); if (b) b.textContent = 'DELAY ' + v;
+        }
+        // Banner from the score delta plus the latest scoring play / play text when the summary has one.
+        function celKind(fam, delta, w, side, now, hint) {
+            hint = String(hint || '');
+            if (fam === 'hockey' || fam === 'soccer') return { text: 'GOAL!!' };
+            if (fam === 'baseball') {
+                if (/homer|home run|grand slam/i.test(hint)) return { text: 'HOME RUN!!', big: true };
+                return { text: delta > 1 ? delta + ' RUNS SCORE!' : 'RUN SCORES!' };
+            }
+            if (fam === 'football') {
+                var recentTd = w.tdAt[side] && now - w.tdAt[side] < 180000;
+                if (delta >= 6 || (/touchdown/i.test(hint) && delta >= 6)) { w.tdAt[side] = now; return { text: 'TOUCHDOWN!!', big: true }; }
+                if (delta === 3 || (/field goal/i.test(hint) && delta === 3)) return { text: 'FIELD GOAL!!!' };
+                if (delta === 2 && (/safety/i.test(hint) || (!recentTd && !/two-point|2-pt|conversion/i.test(hint)))) return { text: 'SAFETY!' };
+                return null; // extra point / 2-pt try belong to the touchdown we already celebrated
+            }
+            return null; // basketball etc.: only WIN / game-state moments
+        }
+        var CEL_NICK = { 'HURRICANES': 'CANES', 'MAPLE LEAFS': 'LEAFS', 'RED WINGS': 'WINGS', 'BLUE JACKETS': 'JACKETS', 'GOLDEN KNIGHTS': 'KNIGHTS', 'BLUE DEVILS': 'DEVILS', 'TAR HEELS': 'HEELS', 'WOLFPACK': 'PACK', 'DIAMONDBACKS': 'D-BACKS' };
+        function celShort(T) { var n = String(T.short || T.full || T.abbr || '').toUpperCase(); return CEL_NICK[n] || n; }
+        function celObserve(key, fam, state, teams, rebase, hint, fromGc, stName) {
+            if (!key) return;
+            var now = Date.now(), w = cel.watch[key];
+            if (!w) {
+                if (cel.nWatch > 80) { cel.watch = {}; cel.nWatch = 0; } // tiny, bounded memory
+                w = cel.watch[key] = { max: {}, state: state, won: false, at: 0, tdAt: {} }; cel.nWatch++;
+                rebase = true;
+            }
+            var prevState = w.state; if (state) w.state = state;
+            var prevSt = w.st; if (stName) w.st = stName;
+            var live = settings.celebrate && !rebase;
+            teams.forEach(function(T) {
+                var cur = parseInt(T.score, 10); if (isNaN(cur)) return;
+                var prev = w.max[T.side];
+                if (prev == null || rebase) { w.max[T.side] = cur; return; }
+                if (cur < prev) { if (celCancel(key, T.side, cur)) w.max[T.side] = cur; return; } // corrected before the delayed effect fired: forget it
+                if (cur === prev) return;
+                w.max[T.side] = cur;
+                if (!live || (state !== 'in' && prevState !== 'in') || !celOn(T)) return;
+                var kind = celKind(fam, cur - prev, w, T.side, now, hint); if (!kind) return;
+                if (now - w.at < CEL_DEBOUNCE_MS && !kind.big) return;
+                w.at = now;
+                celQueue({ key: key, side: T.side, score: cur, gc: !!fromGc, kind: kind, T: T, line: celLine(teams) });
+            });
+            if (state === 'post' && prevState && prevState !== 'post' && !w.won && teams.length === 2 && !rebase) {
+                w.won = true;
+                var a = parseInt(teams[0].score, 10), h = parseInt(teams[1].score, 10);
+                var winner = a > h ? teams[0] : (h > a ? teams[1] : null);
+                if (settings.celebrate && winner && celOn(winner)) celQueue({ key: key, side: winner.side, score: -1, gc: !!fromGc, kind: { text: celShort(winner) + ' WIN!!', big: true }, T: winner, line: 'FINAL  ' + celLine(teams) });
+                else if (live) { var mine = teams.filter(celOn)[0]; if (mine) celQueue({ key: key, side: mine.side, score: -1, gc: !!fromGc, kind: { text: 'FINAL', mini: true }, T: mine, line: celLine(teams) }); }
+            } else if (live && stName && prevSt && stName !== prevSt && state === 'in') { // smaller game-state moments for a toggled team's game
+                var moment = stName === 'STATUS_HALFTIME' ? 'HALFTIME!' : (stName === 'STATUS_END_PERIOD' ? (fam === 'hockey' ? 'END OF PERIOD' : (fam === 'football' || fam === 'basketball' ? 'END OF QUARTER' : '')) : '');
+                var mine2 = teams.filter(celOn)[0];
+                if (moment && mine2) celQueue({ key: key, side: mine2.side, score: -1, gc: !!fromGc, kind: { text: moment, mini: true }, T: mine2, line: celLine(teams) });
+            }
+        }
+        function celLine(teams) { return teams.map(function(T) { return (T.abbr || T.full || '') + ' ' + (T.score == null ? '' : T.score); }).join(' - '); }
+        function celScanScoreboard(list) { // 5-min refresh: cheap check of games that aren't open in Gamecast
+            list.forEach(function(m) {
+                if (gc.open && m.key === gc.key) return;
+                celObserve(m.key, gcFamily(m), m.state, [
+                    { side: 'away', ck: m.league + ':' + m.aId, score: m.aScore, full: m.aFull || m.away, short: m.away, abbr: m.awayAbbr, logo: m.aLogo, rawColor: m.aColor, rawAlt: m.aAlt },
+                    { side: 'home', ck: m.league + ':' + m.hId, score: m.hScore, full: m.hFull || m.home, short: m.home, abbr: m.homeAbbr, logo: m.hLogo, rawColor: m.hColor, rawAlt: m.hAlt }], false, '', false);
+            });
+        }
+        // delayed queue: detection is immediate, the effect waits settings.celebrateDelay seconds
+        function celQueue(ev) {
+            ev.at = Date.now() + Math.max(0, Math.min(30, parseInt(settings.celebrateDelay, 10) || 0)) * 1000;
+            cel.pending.push(ev);
+            celPump();
+        }
+        function celPump() {
+            clearTimeout(cel.qTimer); cel.qTimer = null;
+            if (!cel.pending.length) return;
+            var now = Date.now();
+            cel.pending.sort(function(a, b) { return a.at - b.at; });
+            while (cel.pending.length && cel.pending[0].at <= now) { var ev = cel.pending.shift(); celShow(ev.kind, ev.T, ev.line); }
+            if (cel.pending.length) cel.qTimer = setTimeout(celPump, Math.max(50, cel.pending[0].at - now));
+        }
+        function celCancel(key, side, score) { // side null = whole game (Gamecast closed: only its Gamecast events); returns true if anything was dropped
+            var n = cel.pending.length;
+            cel.pending = cel.pending.filter(function(ev) { return !(ev.key === key && (side === null ? ev.gc : (ev.side === side && ev.score > score))); });
+            if (cel.pending.length !== n) { celPump(); return true; }
+            return false;
+        }
+        function celHex(v, fb) { v = String(v || '').replace('#', ''); return /^[0-9a-f]{6}$/i.test(v) ? '#' + v : fb; }
+        function celShow(kind, T, line) {
+            if (cel.showing) { if (cel.queue.length < 2) cel.queue.push([kind, T, line]); return; }
+            var el = document.getElementById('celebrate'); if (!el) return;
+            var c1 = celHex(T.rawColor, '#ff007f'), c2 = celHex(T.rawAlt, '#00f0ff');
+            if (gcLum(c1) < 0.06) { var t = c1; c1 = c2; c2 = t; } // the wash needs some colour
+            if (gcLum(c2) < 0.25) c2 = gcLum(c1) >= 0.25 ? '#ffffff' : '#00f0ff'; // the glow colour must read on the wash
+            el.style.setProperty('--cel1', c1); el.style.setProperty('--cel2', c2);
+            var ms = kind.big ? CEL_BIG_MS : (kind.mini ? CEL_MINI_MS : CEL_MS);
+            el.style.setProperty('--cel-ms', ms + 'ms');
+            var img = document.getElementById('cel-logo');
+            img.onerror = function() { this.onerror = null; this.style.visibility = 'hidden'; };
+            img.style.visibility = ''; img.src = T.logo || 'https://a.espncdn.com/combiner/i?img=/i/teamlogos/default-team-logo-500.png';
+            var word = kind.text, rep = '';
+            for (var i = 0, n = Math.max(2, Math.ceil(24 / (word.length + 3))); i < n; i++) rep += word + ' \u2605 '; // just over a screen wide: huge strips re-raster every frame on TV GPUs
+            ['cel-mq1', 'cel-mq2', 'cel-mq3'].forEach(function(id) { document.getElementById(id).textContent = rep + rep; }); // doubled: seamless -50% loop
+            document.getElementById('cel-sub').textContent = (T.full || '').toUpperCase() + (line ? '   ' + line : '');
+            el.classList.remove('show', 'big', 'mini'); void el.offsetWidth; // restart the CSS animations
+            el.classList.add('show'); if (kind.big) el.classList.add('big'); if (kind.mini) el.classList.add('mini');
+            el.setAttribute('aria-hidden', 'false');
+            cel.showing = true; cel.fired++; cel.last = { text: kind.text, word: word, team: T.full || '', at: Date.now() };
+            clearTimeout(cel.timer); cel.timer = setTimeout(function() { celHide(false); }, ms);
+        }
+        function celHide(all) {
+            var el = document.getElementById('celebrate');
+            clearTimeout(cel.timer); cel.timer = null;
+            if (all) cel.queue = [];
+            if (el) { el.classList.remove('show', 'big', 'mini'); el.setAttribute('aria-hidden', 'true'); }
+            var img = document.getElementById('cel-logo'); if (img) img.removeAttribute('src'); // let the big logo go
+            ['cel-mq1', 'cel-mq2', 'cel-mq3'].forEach(function(id) { var n = document.getElementById(id); if (n) n.textContent = ''; });
+            var was = cel.showing; cel.showing = false;
+            if (was && cel.queue.length) { var n = cel.queue.shift(); cel.timer = setTimeout(function() { cel.timer = null; celShow(n[0], n[1], n[2]); }, 350); }
+        }
+        // Preview / test hook: arcadeCelebrate('goal' | 'td' | 'fg' | 'run' | 'hr' | 'win' | 'half' | 'period' | 'test') or open the page with ?celebrate=goal
+        function arcadeCelebrate(kind) {
+            kind = String(kind || 'test').toLowerCase();
+            var seq = kind === 'test' ? ['goal', 'td', 'win'] : [kind];
+            celHide(true);
+            seq.forEach(function(k) {
+                var d = CEL_DEMO[k] || CEL_DEMO.goal;
+                var kd = d.win ? { text: celShort(d.T) + ' WIN!!', big: true } : (d.mini ? { text: d.mini, mini: true } : celKind(d.fam, d.delta, { tdAt: {} }, 'x', Date.now(), d.hint));
+                if (cel.showing) cel.queue.push([kd, d.T, d.line]); else celShow(kd, d.T, d.line);
+            });
+            return true;
+        }
+        // Any remote key / click dismisses (capture phase, so the key isn't also used by the page underneath)
+        window.addEventListener('keydown', function(e) { if (!cel.showing) return; e.preventDefault(); e.stopImmediatePropagation(); celHide(true); }, true);
+        document.getElementById('celebrate').addEventListener('click', function(e) { e.stopPropagation(); celHide(true); });
+        (function() { var m = /[?&]celebrate=([a-z]+)/i.exec(location.search); if (m) setTimeout(function() { arcadeCelebrate(m[1]); }, 2500); })();
+
         function gcRegisterGames(list) { // list of meta objects from updateSportsTicker
             var reg = {}, live = [], pre = [], post = [];
             list.forEach(function(m) { reg[m.key] = m; (m.state === 'in' ? live : (m.state === 'pre' ? pre : post)).push(m); });
@@ -2174,7 +2447,7 @@
             if (arcadeNav.menuOpen) navCloseMenu(true);
             if (navIsSettingsOpen()) toggleSettings();
             gc.open = true; gc.meta = meta; gc.key = meta.key || (meta.cid + ':' + meta.id); gc.state = meta.state || null;
-            gc.fails = 0; gc.polls = 0; gc.lastOk = 0; gc.endedAt = 0; gc.lastInput = Date.now(); gc.html = {}; gc.teams = {}; gc.renderErr = null;
+            gc.fails = 0; gc.polls = 0; gc.lastOk = 0; gc.endedAt = 0; gc.lastInput = Date.now(); gc.html = {}; gc.teams = {}; gc.renderErr = null; gc.celFresh = true;
             var el = document.getElementById('gamecast');
             el.classList.add('open'); el.setAttribute('aria-hidden', 'false');
             document.body.classList.add('gc-open');
@@ -2193,6 +2466,7 @@
         function gcClose() {
             if (!gc.open) return;
             gcStop();
+            celCancel(gc.key, null, -1); // delayed celebrations for this game die with the Gamecast
             gc.open = false; gc.key = null; gc.meta = null; gc.teams = {};
             var el = document.getElementById('gamecast');
             el.classList.remove('open'); el.setAttribute('aria-hidden', 'true');
@@ -2285,6 +2559,7 @@
             return { id: String(t.id || c.id || side), abbr: t.abbreviation || (side === 'h' ? meta.home : meta.away), name: nm, loc: (nm !== full && t.location && full.indexOf(t.location) === 0) ? t.location : '',
                      short: t.shortDisplayName || t.abbreviation || '', logo: logo, rec: rec, score: (c.score != null ? String(c.score) : ''), poss: !!c.possession,
                      color: gcColor(t, side === 'h' ? '#ff007f' : '#00f0ff'), ls: (c.linescores || []).map(function(l) { return l.displayValue != null ? l.displayValue : (l.value != null ? l.value : ''); }),
+                     full: full, rawColor: t.color || '', rawAlt: t.alternateColor || '',
                      hits: c.hits, errors: c.errors, rank: (c.curatedRank && c.curatedRank.current && c.curatedRank.current <= 25) ? c.curatedRank.current : (c.rank || null) };
         }
         function gcFamily(meta) { var s = meta.sport; return (s === 'football' || s === 'basketball' || s === 'hockey' || s === 'baseball' || s === 'soccer') ? s : 'other'; }
@@ -2294,6 +2569,7 @@
             gcSet('gc-net', meta.tv && meta.tv !== 'TBD' && meta.tv !== 'TV' ? '&#128250; ' + escHtml(meta.tv) : '');
             var A = { name: meta.away, logo: meta.aLogo, score: meta.aScore, rec: '', color: '#00f0ff' }, H = { name: meta.home, logo: meta.hLogo, score: meta.hScore, rec: '', color: '#ff007f' };
             gcSet('gc-away', gcTeamHtml(A, 'away', meta)); gcSet('gc-home', gcTeamHtml(H, 'home', meta));
+            celSync(meta, { id: meta.aId, abbr: meta.awayAbbr, full: meta.aFull || meta.away }, { id: meta.hId, abbr: meta.homeAbbr, full: meta.hFull || meta.home });
             gcSet('gc-mid', '<div class="gc-pill ' + (meta.state === 'in' ? 'live' : '') + '">' + (meta.state === 'in' ? '&#9679; LIVE' : (meta.state === 'post' ? 'FINAL' : 'UPCOMING')) + '</div><div class="gc-clock">' + escHtml(meta.status || '') + '</div>');
             var wait = '<div class="gc-empty">LOADING GAMECAST&hellip;</div>';
             gcSet('gc-line', ''); gcSet('gc-wp', ''); var strip = document.getElementById('gc-strip'); if (strip) strip.style.display = 'none'; gcSet('gc-plays-body', wait); gcSet('gc-stats-body', wait); gcSet('gc-players-body', wait);
@@ -2317,6 +2593,14 @@
             if (fam === 'football') sit = gcFootballSit(d, sit);
             if (fam === 'football' && sit.possession && gc.state === 'in') { A.poss = String(sit.possession) === A.id; H.poss = String(sit.possession) === H.id; }
             gc.teams = {}; gc.teams[A.id] = A; gc.teams[H.id] = H;
+            celSync(meta, A, H);
+            try {
+                var sp = (d.scoringPlays && d.scoringPlays.length) ? d.scoringPlays[d.scoringPlays.length - 1] : null;
+                var lp = (d.plays && d.plays.length) ? d.plays[d.plays.length - 1] : (sit.lastPlay || null);
+                var hint = (sp ? ((sp.type && sp.type.text) || '') + ' ' + (sp.text || '') : '') + ' | ' + (lp ? ((lp.type && lp.type.text) || '') + ' ' + (lp.text || '') : '');
+                celObserve(gc.key, fam, gc.state, [celT('away', A, meta), celT('home', H, meta)], gc.celFresh, hint, true, st.name || '');
+            } catch (e) {}
+            gc.celFresh = false;
             var bcs = (comp.broadcasts || []).concat(d.broadcasts || []).map(function(b) { return (b.media && (b.media.shortName || b.media.name)) || b.station || ''; }).filter(Boolean);
             var net = bcs.filter(function(v, i) { return bcs.indexOf(v) === i; }).slice(0, 3).join(' / ') || (meta.tv !== 'TBD' && meta.tv !== 'TV' ? meta.tv : '');
             gcSet('gc-league', escHtml(meta.label || ''));
@@ -2704,6 +2988,7 @@
             });
         }
         function navBack() {
+            if (cel.showing) { celHide(true); return true; }
             if (navIsSettingsOpen()) { toggleSettings(); return true; }
             if (gc && gc.open) { gcClose(); return true; }
             if (arcadeNav.menuOpen) { navCloseMenu(); return true; }
@@ -2814,6 +3099,7 @@
             navTouch();
             if (navIsSettingsOpen()) {
                 if (nk === 'back') { e.preventDefault(); toggleSettings(); return; }
+                if ((nk === 'left' || nk === 'right') && ae && ae.getAttribute && ae.getAttribute('data-adjust') === 'celDelay') { e.preventDefault(); nudgeCelDelay(nk === 'left' ? -1 : 1); return; }
                 if (nk === 'up' || nk === 'down' || nk === 'left' || nk === 'right') { e.preventDefault(); navMove(navSettingsItems(), nk); return; }
                 if (nk === 'ok' && ae && ae.type === 'checkbox') { e.preventDefault(); ae.click(); return; }
                 if (nk === 'ok' && (!ae || ae === document.body)) { e.preventDefault(); var its = navSettingsItems(); if (its.length) its[0].focus(); }
@@ -2821,10 +3107,12 @@
             }
             if (gc.open) { // Gamecast: BACK closes, LEFT/RIGHT switch game, UP/DOWN scroll stats, OK focuses then presses CLOSE
                 gc.lastInput = Date.now();
+                var ctl = ['gc-cel-away', 'gc-cel-dminus', 'gc-cel-dplus', 'gc-cel-home', 'gc-close'].map(function(id) { return document.getElementById(id); }).filter(navVisible), onCtl = ctl.indexOf(ae) >= 0;
                 if (nk === 'back') { e.preventDefault(); gcClose(); return; }
+                if ((nk === 'left' || nk === 'right') && onCtl) { e.preventDefault(); ctl[(ctl.indexOf(ae) + (nk === 'left' ? -1 : 1) + ctl.length) % ctl.length].focus(); return; }
                 if (nk === 'left' || nk === 'right') { e.preventDefault(); gcStep(nk === 'left' ? -1 : 1); return; }
-                if (nk === 'up' || nk === 'down') { e.preventDefault(); gcScrollPanels(nk === 'up' ? -1 : 1); return; }
-                if (nk === 'ok') { e.preventDefault(); if (e.repeat) return; var cb = document.getElementById('gc-close'); if (ae === cb) gcClose(); else if (cb) cb.focus(); return; }
+                if (nk === 'up' || nk === 'down') { e.preventDefault(); if (onCtl) ae.blur(); gcScrollPanels(nk === 'up' ? -1 : 1); return; }
+                if (nk === 'ok') { e.preventDefault(); if (e.repeat) return; var cb = document.getElementById('gc-close'); if (ae === cb) gcClose(); else if (onCtl) ae.click(); else if (ctl.length) ctl[0].focus(); return; }
                 e.preventDefault(); return;
             }
             if (arcadeNav.menuOpen) {

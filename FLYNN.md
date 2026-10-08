@@ -72,6 +72,13 @@ reference finals/upcoming events (NFL, CFB, World Cup, MLB, EPL), screenshots ea
 "never more than one request in flight", the RECONNECTING state during an induced outage (and recovery), auto-close of a
 finished game, and a clean stop on close.
 
+`node tools/test-celebrate.mjs [preview.html]` tests score celebrations against mocked ESPN summaries (an NHL game
+NYR @ CAR and a CFB game TEM @ ECU): the per-team ★ toggles (mouse + D-pad) and their localStorage, no fire on first look,
+GOAL!! / TOUCHDOWN!! / FIELD GOAL!!! / CANES WIN!! / HALFTIME!, no repeat after a score correction, the delay (Gamecast
++/− and settings ◀/▶, 0–30 s), queued events cancelled by a correction or by closing, any key dismisses without leaking
+to the Gamecast, the `arcadeCelebrate('test')` / `?celebrate=td` hooks, and 0 console errors. It saves 1920x1080
+screenshots of the toggles, a Hurricanes goal, a Canes win, an ECU touchdown and the settings rows.
+
 `node tools/test-futures-fallback.mjs [preview.html]` tests the futures data fallbacks with request interception:
 no `futures.json` → Action Network live; no file + Action Network blocked → ESPN; stale file + both blocked → last saved file.
 
@@ -276,6 +283,29 @@ next slide shows right away.
   Live games stay open until closed.
 - Moving the mouse shows the cursor for 3 s (it's still `cursor: none` when idle), so clicks are possible on a desktop.
 
+### Score celebrations (full-screen team moment)
+
+- **Turn it on:** open any NHL / NFL / college football / MLB game in the Gamecast and press OK on **★ CELEBRATE <TEAM>**
+  under either team (or both). It turns yellow (ON). The choice is saved per team in `localStorage.ahlersCelebrateTeams1`
+  (`"<league>:<ESPN team id>"`). The master switch **Score Celebrations** (settings, default ON) turns everything off.
+- **Delay:** 0–30 s in 1 s steps, default 0 (`settings.celebrateDelay`). Change it with − / + in the Gamecast or ◀ / ▶ on
+  the delay row in settings. A score is detected right away, and the effect is queued until the delay is up. Queued events
+  are dropped if the score is corrected down or the Gamecast is closed (events found by the 5-min scoreboard refresh are
+  dropped on a correction).
+- **What fires:** only a score that goes *up* between two polls (never on first load, and never again after a correction
+  back up). Debounced per game (20 s, except touchdowns/wins). Hockey/soccer **GOAL!!**. Football **TOUCHDOWN!!** (+6),
+  **FIELD GOAL!!!** (+3), **SAFETY!** (+2, unless it's a two-point try just after a TD). PAT +1 doesn't fire. Baseball
+  **HOME RUN!!** (from the latest play text) or **RUN SCORES!** / **N RUNS SCORE!**. Win: **<SHORT NAME> WIN!!** (e.g. CANES WIN!!).
+  Smaller, shorter moments for **HALFTIME!**, **END OF PERIOD** / **END OF QUARTER** and **FINAL** (a toggled team that
+  didn't win). Basketball doesn't fire on baskets.
+- **Look:** team-colour wash and strobe, swinging light beams, a light sweep, three huge scrolling marquee rows of the
+  banner text, shake + zoom-punch logo, pulse rings, CSS confetti. CSS transform/opacity only, 4–8 s, no sound. Any remote
+  key or a click dismisses it (the key isn't passed on). Back closes it first.
+- **Preview:** console `arcadeCelebrate('goal' | 'td' | 'fg' | 'run' | 'hr' | 'win' | 'half' | 'period' | 'test')`, the
+  **★ PREVIEW** button in settings, or open the page with `?celebrate=td` (etc.). `test` plays GOAL → TD → WIN.
+- Performance note: marquee strips are only just over a screen wide. Long strips with glow text dropped software rendering
+  to about 4 fps.
+
 - *App shell?* Stay in the browser for now. A **TWA** needs Chrome on the TV (rare on Android TV). A **thin WebView
   wrapper** is only worth it if the TV browser swallows Back/Menu, sleeps the screen, or can't auto-launch on boot. The
   JS already accepts raw Android key codes for that case.
@@ -302,6 +332,8 @@ next slide shows right away.
 - [ ] `cursor: none`, no scrollbars, layout fills 16:9 at 1920x1080 and 1280x720
 - [ ] `#remote` mode shows the NEXT SLIDE controller and hides the TV view
 - [ ] localStorage migrations (old `mySquadTeams` values, removal of `oddsApiKey` / `ahlersPropsCache`)
+- [ ] Score celebrations: ★ toggles in the Gamecast, master switch + 0–30 s delay in settings, fire only on increases,
+      any key dismisses (`tools/test-celebrate.mjs`)
 - [ ] No API keys or secrets added; every new API is free, no-key and CORS-enabled
 - [ ] NFL FUTURES / NFL AWARDS / CFB FUTURES / NHL FUTURES slides populate, showing the 'UPDATED' time from futures.json, (from futures.json, or the live fallbacks) and can be toggled in settings
 - [ ] Idle kiosk shows **no** nav UI; ◀/▶, OK menu, Back, Play/Pause and auto-hide all work (harness remote checks)
