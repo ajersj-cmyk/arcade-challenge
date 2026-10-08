@@ -97,11 +97,12 @@ power-play banners, the Gamecast sync helper and the settings rows.
 sport's slides, a slide always visible), ticker/live/navigator filtered to the league while other leagues stay in the Gamecast
 registry, reload persistence, switching modes keeps the first snapshot, CBB rankings/futures/news, an empty CBB scoreboard (mocked)
 still rotating, OFF early, the **12 h expiry with a simulated clock** (`Date.now` shifted) restoring toggles changed during the mode,
-expiry found on reload, Gamecast + celebrations in a mode, the pill never covering a slide title, 0 console errors. Screenshots
+expiry found on reload, Gamecast + celebrations in a mode, the pill never covering a slide title, nothing left under the ticker
+(each slide fits above it or auto-scrolls far enough to show the last row), 0 console errors. Screenshots
 (1280x720) in `tools/out/*-sportmode/`.
 
-`node tools/test-fantasy.mjs [preview.html]` tests the NFL FANTASY slide: `fantasy.json` projections (QB/RB/WR/TE ×5, K/DST ×3) with
-headshots + hot pickups, no ESPN calls before the week's first kickoff, no clipped names, the settings toggle, the fallback live ESPN
+`node tools/test-fantasy.mjs [preview.html]` tests the NFL FANTASY slide: `fantasy.json` projections (4 per card) with
+headshots + hot pickups, every card above the ticker with no scroll at 1280x720 and 1920x1080 (pre and live), no ESPN calls before the week's first kickoff, no clipped names, the settings toggle, the fallback live ESPN
 Fantasy pull when `fantasy.json` is missing (real API, cached), and a simulated live week (mocked ESPN Fantasy): LIVE PPR LEADERS,
 live points on rows, live dots, 2 requests per refresh, numbers patched in place after ~60 s, timer stopped on slide change. Screenshots
 in `tools/out/*-fantasy/`.
@@ -159,7 +160,7 @@ right after `nflAwards` on the line below `ARCADE_SCREENS`.) A **sport mode** re
 | `futures-screen` | FUTURES | ESPN core futures: Super Bowl, CFB title, NBA title, World Series, Stanley Cup (top 8 each), cached 24 h (`ahlersFutures4`) | scroll rule (18 s) / 8 s |
 | `nflfut-screen` | NFL FUTURES | Super Bowl (8), AFC/NFC champion (6), 8 divisions (4), from `futures.json` (§4a) | scroll rule / 6 s "NO ODDS POSTED" |
 | `nflawards-screen` | NFL AWARDS ODDS | MVP, OPOY, DPOY, OROY, DROY, Comeback, Coach of the Year (6 each), with headshots | scroll rule / 6 s |
-| `fantasy-screen` | NFL FANTASY | Week N PPR projections QB/RB/WR/TE (5) K/DST (3) with headshots + HOT PICKUPS (8); after the week's first kickoff a LIVE PPR LEADERS card + live points per row (§4b) | scroll rule (18 s) / 6 s "FANTASY FEED DOWN" |
+| `fantasy-screen` | NFL FANTASY | Week N PPR projections, top 4 each: row 1 QB/RB/WR/TE, row 2 K + D/ST + HOT PICKUPS (8). After the week's first kickoff, row 2 becomes LIVE PPR LEADERS (8) + HOT PICKUPS and rows show live points (§4b). Fixed-height rows; the whole slide fits above the ticker at 720p/1080p (`#fantasy-viewport` 59vh), no scroll | 18 s / 6 s "FANTASY FEED DOWN" |
 | `nhlfut-screen` | NHL FUTURES | one wide Stanley Cup Winner panel, top 16 in two columns | scroll rule / 6 s |
 | `cfbfut-screen` | COLLEGE FOOTBALL FUTURES | National title, make CFP title game, Heisman (8); SEC/Big Ten/Big 12/ACC (5); AAC, MWC, Sun Belt, MAC, C-USA, Pac-12 (4) | scroll rule / 6 s |
 | `rankings-screen` | COLLEGE RANKINGS | ESPN CFB rankings top 25 + records (CFB standings, cached 24 h) | scroll rule / 5 s on error |
