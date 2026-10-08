@@ -60,6 +60,11 @@
         #settings-gear { position: fixed; top: 1.5vh; right: 3vw; z-index: 25000; width: 7vh; height: 7vh; cursor: pointer; opacity: 0.95; transition: transform 0.3s ease; color: var(--accent-color); background: rgba(0,0,0,0.55); border: 0.3vh solid var(--accent-color); border-radius: 1vh; padding: 0.8vh; }
         #settings-gear:hover, #settings-gear:focus { opacity: 1; transform: rotate(20deg); outline: 0.4vh solid #ff007f; }
         #fs-toggle { display: none !important; }
+        #net-pill { position: fixed; top: 1.2vh; left: 18vw; z-index: 25001; display: none; align-items: center; gap: 0.8vw;
+                    padding: 0.5vh 1.4vh; border-radius: 1vh; font-family: 'Share Tech Mono', monospace; font-size: 1.8vh; font-weight: 900;
+                    letter-spacing: 0.1vw; background: rgba(120,20,20,0.92); border: 2px solid #ff4d4d; color: #fff; }
+        #net-pill.show { display: inline-flex; }
+        #net-pill.stale { background: rgba(80,60,0,0.92); border-color: #ffe600; color: #ffe600; }
         #master-clock { position: fixed; top: 2.5vh; left: 3vw; z-index: 25000; color: #fff; font-family: 'Share Tech Mono', monospace; font-size: 4.5vh; font-weight: 900; letter-spacing: 0.2vw; text-shadow: 0 3px 6px rgba(0,0,0,0.8); }
 
         /* NEON ACCENTS (ZERO REPAINT CPU COST) */
@@ -276,7 +281,8 @@
         .gc-dot { width: 1.2vh; height: 1.2vh; border-radius: 50%; background: #39ff14; display: inline-block; box-shadow: 0 0 1vh #39ff14; }
         .gc-dot.on { animation: pulsePink 1s ease-in-out infinite; }
         .gc-recon { animation: pulsePink 1.2s ease-in-out infinite; }
-        .gc-hint { font-size: 1.8vh; color: rgba(255,255,255,0.55); }
+        .gc-hint { font-size: 1.8vh; color: rgba(255,255,255,0.55); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; flex-shrink: 1; }
+        .gc-close { flex: none; }
         #gamecast.gc-bad .gc-hint { display: none; }
         .gc-close { background: rgba(12,20,32,0.95); color: #fff; border: 2px solid #ff007f; border-radius: 1vh; padding: 0.8vh 1.8vh; font-family: 'Inter', sans-serif; font-size: 2.2vh; font-weight: 900; letter-spacing: 0.1vw; }
         .gc-close:focus, .gc-close:hover { outline: 0.4vh solid var(--accent-color); box-shadow: 0 0 2.5vh var(--accent-color); }
@@ -318,6 +324,90 @@
         .gc-wp-bar > div { height: 100%; transition: width 0.8s ease; }
         .gc-spark { width: 100%; height: 5.5vh; display: block; }
         .gc-spark-legend { display: flex; justify-content: space-between; font-size: 1.5vh; color: rgba(255,255,255,0.5); }
+        /* Gamecast trackers (football field / MLB strike zone) — SVG only, no libs */
+        #gc-track { margin-bottom: 1.4vh; }
+        #gc-track:empty { display: none !important; }
+        .gc-trk-head { display: flex; justify-content: space-between; align-items: baseline; font-size: 2vh; font-weight: 900; letter-spacing: 0.15vw; color: var(--accent-color); margin-bottom: 0.8vh; }
+        .gc-trk-head b { color: #fff; font-size: 2.4vh; letter-spacing: 0.05vw; }
+        .gc-field { width: 100%; aspect-ratio: 120 / 53.3; display: block; }
+        .gc-fld-leg { display: flex; justify-content: center; gap: 2.4vw; font-size: 1.6vh; font-weight: 900; letter-spacing: 0.1vw; color: rgba(255,255,255,0.6); margin-top: 0.8vh; }
+        .gc-fld-leg i { display: inline-block; width: 2.6vh; height: 0.5vh; margin-right: 0.5vw; vertical-align: middle; border-radius: 0.3vh; }
+        .gc-sz-wrap { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); gap: 1.2vh 1.4vw; align-items: start; }
+        .gc-sz-col { min-width: 0; }
+        .gc-sz { width: 100%; aspect-ratio: 1 / 1; height: auto; display: block; background: #070c14; border-radius: 0.8vh; border: 1px solid rgba(0,240,255,0.25); }
+        .gc-sz-info { display: flex; flex-direction: column; gap: 1.4vh; min-width: 0; }
+        .gc-sz-matchup { display: flex; flex-direction: column; align-items: flex-start; gap: 1vh; width: 100%; }
+        .gc-sz-sit { display: flex; align-items: center; gap: 1.6vw; }
+        .gc-sz-wrap .gc-sz-list { grid-column: 1 / -1; column-count: 2; column-gap: 1.6vw; max-height: none; font-size: 1.85vh; }
+        .gc-sz-wrap .gc-sz-list div { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; break-inside: avoid; }
+        /* Gamecast views: tabs (FIELD | BOX SCORE ...) switch a class on #gamecast; every block keeps updating while hidden */
+        .gc-tabs { display: none; align-items: center; gap: 1vw; margin: 0 0 1.2vh; }
+        #gamecast.gc-tabbed .gc-tabs { display: flex; }
+        .gc-tab { background: rgba(12,20,32,0.9); color: rgba(255,255,255,0.72); border: 2px solid rgba(255,255,255,0.3); border-radius: 3vh; padding: 0.55vh 2.6vh; font-family: 'Inter', sans-serif; font-size: 2vh; font-weight: 900; letter-spacing: 0.2vw; white-space: nowrap; }
+        .gc-tab.on { background: var(--accent-color); border-color: var(--accent-color); color: #05080f; box-shadow: 0 0 1.6vh var(--accent-color); }
+        body.nav-active #gamecast .gc-tab:focus { outline: 0.4vh solid #fff; outline-offset: 0.3vh; }
+        body.mouse-active #gamecast .gc-tab { cursor: pointer; }
+        .gc-tab-hint { margin-left: auto; font-size: 1.7vh; font-weight: 900; letter-spacing: 0.1vw; color: rgba(255,255,255,0.55); white-space: nowrap; }
+        .gc-body { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+        #gc-bxs { display: none; }
+        #gamecast.gcv-field .gc-body, #gamecast.gcv-box .gc-body, #gamecast.gcv-mlb .gc-body { display: grid; gap: 1.4vh 1.6vw; }
+        #gamecast.gcv-field .gc-strip, #gamecast.gcv-box .gc-strip, #gamecast.gcv-mlb .gc-strip,
+        #gamecast.gcv-field .gc-panels, #gamecast.gcv-box .gc-panels, #gamecast.gcv-mlb .gc-panels { display: contents; }
+        #gamecast.gcv-field #gc-track, #gamecast.gcv-box #gc-track, #gamecast.gcv-mlb #gc-track { margin: 0; min-height: 0; }
+        #gamecast.gcv-field .gc-panel, #gamecast.gcv-box .gc-panel, #gamecast.gcv-mlb .gc-panel { display: none; }
+        #gamecast.gcv-field .gc-body { grid-template-columns: minmax(0, 1.9fr) minmax(0, 1fr); grid-template-rows: auto auto minmax(0, 1fr); grid-template-areas: "track line" "track wp" "track plays"; }
+        #gamecast.gcv-field #gc-track { grid-area: track; display: flex; flex-direction: column; }
+        #gamecast.gcv-field .gc-field { flex: 1 1 0; min-height: 0; height: auto; aspect-ratio: auto; }
+        #gamecast.gcv-field #gc-line { grid-area: line; } #gamecast.gcv-field #gc-wp { grid-area: wp; }
+        #gamecast.gcv-field #gc-p-plays { grid-area: plays; display: flex; }
+        #gamecast.gcv-box .gc-body { grid-template-columns: minmax(0, 1fr) minmax(0, 2.1fr); grid-template-rows: auto minmax(0, 1fr); grid-template-areas: "line bxs" "stats bxs"; }
+        #gamecast.gcv-box #gc-line { grid-area: line; } #gamecast.gcv-box #gc-wp, #gamecast.gcv-box #gc-track { display: none; }
+        #gamecast.gcv-box #gc-p-stats { grid-area: stats; display: flex; }
+        #gamecast.gcv-box #gc-bxs { grid-area: bxs; display: flex; }
+        #gamecast.gcv-mlb .gc-body { grid-template-columns: minmax(0, 1fr) minmax(0, 1.08fr); grid-template-rows: auto minmax(0, 1fr); grid-template-areas: "track line" "track bxs"; }
+        #gamecast.gcv-mlb #gc-track { grid-area: track; } #gamecast.gcv-mlb #gc-line { grid-area: line; } #gamecast.gcv-mlb #gc-wp { display: none; }
+        #gamecast.gcv-mlb #gc-bxs { grid-area: bxs; display: flex; }
+        #gamecast.gcv-plays #gc-track { display: none; }
+        #gamecast.gc-tabbed .gc-board { min-height: 0; margin: 0.6vh 0 1vh; row-gap: 1.1vh; }
+        #gamecast.gc-tabbed .gc-logo { width: 10vh; height: 10vh; }
+        #gamecast.gc-tabbed .gc-score { font-size: 10.5vh; }
+        #gamecast.gcv-mlb .gc-sz-wrap { grid-template-columns: auto minmax(0, 1fr); }
+        #gamecast.gcv-mlb .gc-sz { width: auto; height: 40vh; aspect-ratio: 1 / 1; }
+        #gamecast.gcv-mlb .gc-sz-info .gc-sz-pl span { font-size: 2vh; max-width: 13vw; }
+        #gamecast.gcv-mlb .gc-sz-list { max-height: 11.6vh; overflow: hidden; }
+        #gamecast.gcv-mlb .gc-body { grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.2fr); }
+        #gamecast.gcv-mlb .gc-bxs-t { font-size: 1.7vh; }
+        #gamecast.gcv-mlb .gc-bxs-t td, #gamecast.gcv-mlb .gc-bxs-t th { padding-left: 0.25vw; padding-right: 0.25vw; }
+        #gamecast.gcv-mlb .gc-bxs-t td.nm { max-width: 8.5vw; }
+        .gc-bxs-cols { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 1.4vw; }
+        .gc-bxs-team { position: sticky; top: 0; z-index: 1; background: rgb(10, 16, 26); display: flex; align-items: center; gap: 0.6vw; font-size: 2.1vh; font-weight: 900; letter-spacing: 0.1vw; border-bottom: 2px solid currentColor; padding-bottom: 0.4vh; margin-bottom: 0.6vh; text-transform: uppercase; white-space: nowrap; overflow: hidden; }
+        .gc-bxs-team img { width: 3vh; height: 3vh; object-fit: contain; flex: none; }
+        .gc-bxs-t { width: 100%; border-collapse: collapse; font-size: 1.8vh; font-weight: 800; margin-bottom: 1.1vh; }
+        .gc-bxs-t th { font-size: 1.45vh; font-weight: 900; color: rgba(255,255,255,0.55); text-align: right; padding: 0.3vh 0.35vw; letter-spacing: 0.05vw; white-space: nowrap; }
+        .gc-bxs-t th.nm { text-align: left; color: var(--accent-color); font-size: 1.6vh; }
+        .gc-bxs-t td { text-align: right; padding: 0.3vh 0.35vw; border-top: 1px solid rgba(255,255,255,0.07); white-space: nowrap; font-variant-numeric: tabular-nums; }
+        .gc-bxs-t td.nm { text-align: left; max-width: 10vw; overflow: hidden; text-overflow: ellipsis; }
+        .gc-bxs-t td.nm i { font-style: normal; font-size: 1.4vh; color: rgba(255,255,255,0.45); margin-left: 0.3vw; }
+        .gc-bxs-t tr.sub td.nm { padding-left: 1vw; color: rgba(255,255,255,0.75); }
+        .gc-bxs-t tr.tot td { color: var(--accent-color); border-top: 1px solid rgba(255,255,255,0.3); font-weight: 900; }
+        .gc-sz-pl { display: flex; align-items: center; gap: 0.6vw; min-width: 0; }
+        .gc-sz-pl img { width: 4.2vh; height: 4.2vh; border-radius: 50%; object-fit: cover; border: 2px solid rgba(255,255,255,0.35); background: #111; flex: none; }
+        .gc-sz-pl span { font-size: 1.9vh; font-weight: 800; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 14vw; }
+        .gc-sz-pl .role { display: block; font-size: 1.4vh; color: var(--accent-color); letter-spacing: 0.12vw; font-weight: 900; }
+        .gc-sz-info .gc-sz-pl img { width: 5.6vh; height: 5.6vh; }
+        .gc-sz-info .gc-sz-pl span { font-size: 2.3vh; max-width: 22vw; }
+        .gc-sz-info .gc-sz-pl .role { font-size: 1.5vh; }
+        .gc-sz-info .gc-bases { width: 15vh; height: 12vh; }
+        .gc-sz-info .gc-outs i { width: 2vh; height: 2vh; }
+        .gc-sz-vs { font-size: 1.8vh; font-weight: 900; color: rgba(255,255,255,0.45); }
+        .gc-sz-list { font-size: 2vh; font-weight: 800; line-height: 1.5; max-height: 26vh; overflow: hidden; padding-top: 0.4vh; }
+        .gc-sz-list div { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding: 0.25vh 0; }
+        .gc-sz-list .b { color: #39ff14; } .gc-sz-list .s { color: #ff4d4d; } .gc-sz-list .i { color: #3b9eff; }
+        .gc-sz-side { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1vh; }
+        .gc-bases { width: 18vh; height: 14vh; display: block; }
+        .gc-outs { display: flex; gap: 0.7vh; justify-content: center; }
+        .gc-outs i { width: 1.6vh; height: 1.6vh; border-radius: 50%; border: 2px solid rgba(255,255,255,0.55); display: inline-block; background: transparent; }
+        .gc-outs i.on { background: #ff2d55; border-color: #ff2d55; box-shadow: 0 0 0.8vh #ff2d55; }
         .gc-odds { font-size: 2.2vh; font-weight: 800; margin-top: 0.6vh; color: rgba(255,255,255,0.85); }
         .gc-odds b { color: #39ff14; }
         .gc-dim { color: rgba(255,255,255,0.45); font-weight: 700; }
@@ -364,6 +454,138 @@
         .gc-chip-logo { width: 2.8vh; height: 2.8vh; object-fit: contain; }
         .gc-chip-st { font-size: 1.6vh; color: rgba(255,255,255,0.7); margin-left: 0.4vw; }
         .gc-chip-live { color: #ff007f; }
+        /* ---- Score celebration: full-screen team-colour strobe, beams, scrolling marquee, logo punch, confetti.
+           Only transform/opacity are animated (GPU-composited); the DOM is static and reused. ---- */
+        #celebrate { position: fixed; inset: 0; z-index: 40000; display: none; overflow: hidden; background: #000; contain: strict; --cel1: #ff007f; --cel2: #00f0ff; --cel-ms: 7000ms; }
+        #celebrate.show { display: block; animation: cel-life var(--cel-ms) ease forwards; }
+        #celebrate .cel-shake { position: absolute; inset: 0; animation: cel-shake 0.6s linear 0.15s 2; }
+        #celebrate .cel-wash { position: absolute; inset: 0; background: var(--cel1); }
+        #celebrate .cel-wash.w2 { background: var(--cel2); opacity: 0; animation: cel-strobe 0.36s steps(1, end) 0s 8, cel-breathe 1.6s ease-in-out 2.9s infinite alternate; }
+        #celebrate .cel-vig { position: absolute; inset: 0; background: radial-gradient(ellipse at 50% 50%, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0.55) 55%, rgba(0,0,0,0.85) 100%); }
+        #celebrate .cel-beam { position: absolute; bottom: -10vh; left: 50%; width: 14vw; height: 150vh; margin-left: -7vw; transform-origin: 50% 100%;
+                               background: linear-gradient(to top, rgba(255,255,255,0.85), rgba(255,255,255,0.25) 45%, rgba(255,255,255,0)); opacity: 0.55; mix-blend-mode: screen; will-change: transform; }
+        #celebrate .cel-beam.b1 { left: 12%; animation: cel-swing 1.3s ease-in-out infinite alternate; }
+        #celebrate .cel-beam.b2 { left: 36%; animation: cel-swing 1.1s ease-in-out -0.6s infinite alternate-reverse; }
+        #celebrate .cel-beam.b3 { left: 64%; animation: cel-swing 1.2s ease-in-out -0.3s infinite alternate; }
+        #celebrate .cel-beam.b4 { left: 88%; animation: cel-swing 1.4s ease-in-out -0.9s infinite alternate-reverse; }
+        #celebrate .cel-mq { position: absolute; left: 0; white-space: nowrap; font-family: 'Inter', sans-serif; font-weight: 900; font-style: italic; line-height: 1; letter-spacing: 0.4vw; will-change: transform; }
+        #celebrate .cel-mq span { display: inline-block; padding-right: 0; }
+        #celebrate .cel-mq.m1 { top: 3vh; font-size: 17vh; color: #fff; text-shadow: 0 0 3vh var(--cel2), 0.8vh 0.8vh 0 var(--cel1); animation: cel-mq-l 3.2s linear infinite; }
+        #celebrate .cel-mq.m2 { top: 38vh; font-size: 26vh; color: transparent; -webkit-text-stroke: 0.5vh rgba(255,255,255,0.9); opacity: 0.7; animation: cel-mq-r 4.2s linear infinite; }
+        #celebrate .cel-mq.m3 { bottom: 4vh; font-size: 17vh; color: var(--cel2); text-shadow: 0 0 3vh var(--cel2), 0.8vh 0.8vh 0 #000; animation: cel-mq-l 2.8s linear infinite; }
+        #celebrate .cel-ring { position: absolute; left: 50%; top: 50%; width: 60vh; height: 60vh; margin: -30vh 0 0 -30vh; border-radius: 50%; border: 1.4vh solid var(--cel2); opacity: 0; will-change: transform, opacity; animation: cel-ring 1.2s ease-out infinite; }
+        #celebrate .cel-ring.r2 { animation-delay: 0.6s; border-color: #fff; }
+        #celebrate .cel-sweep { position: absolute; top: -20%; bottom: -20%; left: 0; width: 20vw; background: linear-gradient(90deg, rgba(255,255,255,0), rgba(255,255,255,0.7), rgba(255,255,255,0)); transform: translateX(-30vw) skewX(-20deg); will-change: transform; animation: cel-sweep 1.4s ease-in-out 0.3s infinite; }
+        #celebrate .cel-conf { position: absolute; inset: 0; }
+        #celebrate .cel-conf i { position: absolute; top: -6vh; width: 1.4vh; height: 2.6vh; background: var(--cel1); opacity: 0.95; will-change: transform; animation: cel-fall var(--dur, 3s) linear var(--del, 0s) infinite; }
+        #celebrate .cel-conf i:nth-child(3n) { background: var(--cel2); }
+        #celebrate .cel-conf i:nth-child(4n) { background: #fff; width: 1vh; height: 1vh; border-radius: 50%; }
+        #celebrate .cel-center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        #celebrate .cel-logo { width: 50vh; height: 50vh; object-fit: contain; filter: drop-shadow(0 0 3vh rgba(0,0,0,0.9)) drop-shadow(0 0 5vh rgba(255,255,255,0.5)); will-change: transform; animation: cel-punch 0.75s cubic-bezier(.2,1.7,.4,1) both, cel-beat 0.6s ease-in-out 0.8s infinite; }
+        #celebrate .cel-sub { margin-top: 1vh; font-family: 'Share Tech Mono', monospace; font-weight: 900; font-size: 4.6vh; letter-spacing: 0.3vw; color: #fff; background: rgba(0,0,0,0.72); border: 0.35vh solid var(--cel2); border-radius: 1vh; padding: 0.6vh 2.6vh; white-space: nowrap; animation: cel-rise 0.5s ease-out 0.5s both; }
+        #celebrate.big .cel-logo { width: 56vh; height: 56vh; }
+        #celebrate.big .cel-ring { animation-duration: 0.9s; }
+        #celebrate.mini .cel-wash.w2, #celebrate.mini .cel-shake { animation: none; }
+        #celebrate.mini .cel-mq.m1, #celebrate.mini .cel-mq.m3, #celebrate.mini .cel-conf, #celebrate.mini .cel-beam.b1, #celebrate.mini .cel-beam.b4 { display: none; }
+        #celebrate.mini .cel-wash { opacity: 0.55; }
+        #celebrate.mini .cel-mq.m2 { color: #fff; -webkit-text-stroke: 0; opacity: 1; text-shadow: 0 0 3vh var(--cel2); top: auto; bottom: 6vh; font-size: 16vh; }
+        #celebrate.mini .cel-logo { width: 36vh; height: 36vh; margin-top: -18vh; }
+        @keyframes cel-life { 0% { opacity: 0; } 3% { opacity: 1; } 92% { opacity: 1; } 100% { opacity: 0; } }
+        @keyframes cel-shake { 0%, 100% { transform: none; } 20% { transform: translate(-1.2vh, 0.8vh) scale(1.02); } 40% { transform: translate(1.2vh, -0.8vh) scale(1.03); } 60% { transform: translate(-0.8vh, -0.6vh); } 80% { transform: translate(0.8vh, 0.6vh); } }
+        @keyframes cel-strobe { 0% { opacity: 1; } 50% { opacity: 0; } }
+        @keyframes cel-breathe { 0% { opacity: 0; } 100% { opacity: 0.55; } }
+        @keyframes cel-swing { 0% { transform: rotate(-32deg); } 100% { transform: rotate(32deg); } }
+        @keyframes cel-mq-l { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+        @keyframes cel-mq-r { 0% { transform: translateX(-50%); } 100% { transform: translateX(0); } }
+        @keyframes cel-ring { 0% { transform: scale(0.3); opacity: 0.95; } 100% { transform: scale(2.8); opacity: 0; } }
+        @keyframes cel-sweep { 0% { transform: translateX(-30vw) skewX(-20deg); } 100% { transform: translateX(125vw) skewX(-20deg); } }
+        @keyframes cel-fall { 0% { transform: translate3d(0, 0, 0) rotate(0deg); } 100% { transform: translate3d(var(--dx, 4vw), 115vh, 0) rotate(var(--rot, 720deg)); } }
+        @keyframes cel-punch { 0% { transform: scale(0.05) rotate(-30deg); } 70% { transform: scale(1.18) rotate(4deg); } 100% { transform: scale(1) rotate(0); } }
+        @keyframes cel-beat { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.08); } }
+        @keyframes cel-rise { 0% { transform: translateY(4vh); opacity: 0; } 100% { transform: none; opacity: 1; } }
+        @media (prefers-reduced-motion: reduce) { #celebrate .cel-wash.w2, #celebrate .cel-shake { animation: none !important; } }
+        /* LITE = Full layout frozen (default; TV app / reduced-motion always). Same top+bottom glowing GOAL strips,
+           huge outlined name behind center, logo + headshot card + score, ring + star outline, red wash + static shards.
+           Only strip scroll (transform), one logo scale-in, and 2–3 white flashes at start. No strobe/confetti fall/shake/
+           beams/sweep/beat, no animated filters. Extra Lite-only layers (title/wm/bg/shards) stay hidden. */
+        #celebrate .cel-wm, #celebrate .cel-bg, #celebrate .cel-shards, #celebrate .cel-title { display: none !important; }
+        #celebrate.lite .cel-beam, #celebrate.lite .cel-sweep { display: none; }
+        #celebrate.lite .cel-shake { animation: none; }
+        #celebrate.lite .cel-wash.w2 { background: #fff; opacity: 0; will-change: opacity; animation: cel-lite-flash 0.95s linear 0.05s 1 both; }
+        #celebrate.lite .cel-mq.m1, #celebrate.lite .cel-mq.m3 { color: #fff; text-shadow: 0 0 3vh rgba(255,255,255,0.85), 0.8vh 0.8vh 0 rgba(0,0,0,0.35); }
+        #celebrate.lite .cel-mq.m2 { opacity: 0.38; -webkit-text-stroke: 0.45vh rgba(255,255,255,0.75); } /* huge outlined name behind center */
+        #celebrate.lite .cel-ring { animation: none; opacity: 0.5; transform: scale(1.15); border-color: rgba(255,255,255,0.8); border-width: 0.55vh; width: 72vh; height: 72vh; margin: -36vh 0 0 -36vh; }
+        #celebrate.lite .cel-ring.r2 { animation: none; opacity: 0.45; left: 14%; top: 38%; width: 28vh; height: 28vh; margin: 0; border: none; border-radius: 0; background: transparent;
+                                       display: flex; align-items: center; justify-content: center; font-size: 28vh; line-height: 1; color: transparent;
+                                       -webkit-text-stroke: 0.4vh rgba(255,255,255,0.55); transform: none; }
+        #celebrate.lite .cel-ring.r2::before { content: '\2605'; }
+        #celebrate.lite .cel-conf { display: block; }
+        #celebrate.lite .cel-conf i { animation: none !important; will-change: auto; top: auto; opacity: 0.7; }
+        #celebrate.lite .cel-conf i:nth-child(1)  { left: 6%;  top: 18%; }
+        #celebrate.lite .cel-conf i:nth-child(2)  { left: 18%; top: 55%; }
+        #celebrate.lite .cel-conf i:nth-child(3)  { left: 28%; top: 12%; background: #fff; }
+        #celebrate.lite .cel-conf i:nth-child(4)  { left: 40%; top: 70%; }
+        #celebrate.lite .cel-conf i:nth-child(5)  { left: 52%; top: 22%; }
+        #celebrate.lite .cel-conf i:nth-child(6)  { left: 64%; top: 62%; background: #fff; }
+        #celebrate.lite .cel-conf i:nth-child(7)  { left: 74%; top: 16%; }
+        #celebrate.lite .cel-conf i:nth-child(8)  { left: 86%; top: 48%; }
+        #celebrate.lite .cel-conf i:nth-child(9)  { left: 10%; top: 78%; background: #fff; }
+        #celebrate.lite .cel-conf i:nth-child(10) { left: 92%; top: 28%; }
+        #celebrate.lite .cel-conf i:nth-child(n+11) { display: none; } /* keep a handful of static shards */
+        #celebrate.lite .cel-logo, #celebrate.lite.big .cel-logo, #celebrate.lite.has-player .cel-logo {
+            filter: none; animation: cel-punch 0.7s cubic-bezier(.2,1.5,.4,1) both; /* one scale-in, no continuous beat */
+        }
+        #celebrate.lite.has-player .cel-logo { width: 42vh; height: 42vh; }
+        #celebrate.lite .cel-head { box-shadow: 0 0 2vh rgba(255,255,255,0.55); }
+        #celebrate.lite .cel-sub { animation: cel-rise 0.45s ease-out 0.35s both; }
+        #celebrate.lite.mini .cel-conf, #celebrate.lite.mini .cel-ring, #celebrate.lite.mini .cel-ring.r2 { display: none; }
+        @keyframes cel-lite-flash { 0% { opacity: 0.9; } 15% { opacity: 0; } 32% { opacity: 0.7; } 48% { opacity: 0; } 66% { opacity: 0.5; } 82%, 100% { opacity: 0; } }
+        #cel-alert.lite .al-bar { box-shadow: none; animation: al-in 0.45s ease-out both; }
+        #cel-alert.lite .al-shine { display: none; }
+        #cel-alert.lite .al-logo { animation: none; }
+        #cel-alert.lite .al-title { text-shadow: none; }
+        /* scorer card inside the celebration */
+        #celebrate .cel-row { display: flex; align-items: center; justify-content: center; gap: 4vw; }
+        #celebrate .cel-player { display: none; flex-direction: column; align-items: center; animation: cel-rise 0.5s ease-out 0.35s both; }
+        #celebrate.has-player .cel-player { display: flex; }
+        #celebrate.has-player .cel-logo, #celebrate.big.has-player .cel-logo { width: 40vh; height: 40vh; }
+        #celebrate .cel-head { width: 34vh; height: 34vh; border-radius: 50%; object-fit: cover; object-position: top; background: rgba(0,0,0,0.55); border: 0.8vh solid var(--cel2); box-shadow: 0 0 4vh var(--cel2); }
+        #celebrate .cel-pname { margin-top: 1.4vh; font-family: 'Inter', sans-serif; font-weight: 900; font-style: italic; font-size: 6vh; line-height: 1.1; color: #fff; text-shadow: 0 0 2vh var(--cel2), 0.5vh 0.5vh 0 #000; white-space: nowrap; background: rgba(0,0,0,0.6); padding: 0.4vh 2vh; border-radius: 1vh; }
+        #celebrate .cel-pmore { margin-top: 0.8vh; font-family: 'Share Tech Mono', monospace; font-weight: 900; font-size: 3vh; color: #fff; background: rgba(0,0,0,0.65); padding: 0.3vh 1.4vh; border-radius: 0.8vh; white-space: nowrap; }
+        #celebrate .cel-pmore:empty { display: none; }
+        #celebrate.mini .cel-player { display: none; }
+        /* smaller alert banners (red zone, power play, game start, lead change, big plays) */
+        #cel-alert { position: fixed; left: 0; right: 0; bottom: 7vh; height: 17vh; z-index: 39000; display: none; --al1: #ff007f; --al2: #00f0ff; }
+        #cel-alert.show { display: block; animation: al-life 4800ms ease forwards; }
+        #cel-alert .al-bar { position: absolute; left: 4vw; right: 4vw; top: 0; bottom: 0; display: flex; align-items: center; gap: 2.4vw; padding: 0 3vw; overflow: hidden; border-radius: 2vh; border: 0.5vh solid var(--al2);
+                             background: linear-gradient(100deg, var(--al1) 0%, var(--al1) 55%, rgba(0,0,0,0.92) 100%); box-shadow: 0 0 5vh var(--al1), 0 2vh 4vh rgba(0,0,0,0.7); will-change: transform; animation: al-in 0.5s cubic-bezier(.2,1.4,.4,1) both; }
+        #cel-alert .al-shine { position: absolute; top: 0; bottom: 0; left: 0; width: 14vw; background: linear-gradient(90deg, rgba(255,255,255,0), rgba(255,255,255,0.55), rgba(255,255,255,0)); transform: translateX(-30vw) skewX(-20deg); will-change: transform; animation: cel-sweep 1.6s ease-in-out 0.4s 2; }
+        #cel-alert .al-logo { width: 13vh; height: 13vh; object-fit: contain; flex: none; will-change: transform; animation: cel-beat 0.6s ease-in-out 0.5s infinite; }
+        #cel-alert .al-txt { flex: 1; min-width: 0; position: relative; }
+        #cel-alert .al-title { font-family: 'Inter', sans-serif; font-weight: 900; font-style: italic; font-size: 8.5vh; line-height: 1; letter-spacing: 0.2vw; color: #fff; white-space: nowrap; text-shadow: 0 0 2vh var(--al2), 0.5vh 0.5vh 0 rgba(0,0,0,0.6); }
+        #cel-alert .al-sub { margin-top: 0.8vh; font-family: 'Share Tech Mono', monospace; font-weight: 900; font-size: 3.2vh; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        #cel-alert .al-tag { flex: none; position: relative; font-family: 'Inter', sans-serif; font-weight: 900; font-size: 2.6vh; letter-spacing: 0.2vw; color: #111; background: var(--al2); padding: 0.7vh 1.6vh; border-radius: 1vh; }
+        #cel-alert.redzone .al-bar { border-color: #ff2a2a; background: repeating-linear-gradient(135deg, rgba(255,0,0,0.0) 0 3vh, rgba(255,0,0,0.25) 3vh 6vh), linear-gradient(100deg, #c40000 0%, var(--al1) 60%, rgba(0,0,0,0.92) 100%); }
+        #cel-alert.redzone .al-tag { background: #ff2a2a; color: #fff; }
+        #cel-alert.pp .al-tag { background: #ffe600; }
+        @keyframes al-life { 0% { opacity: 0; } 4% { opacity: 1; } 92% { opacity: 1; } 100% { opacity: 0; } }
+        @keyframes al-in { 0% { transform: translateX(-110%) skewX(-12deg); } 100% { transform: none; } }
+        /* Gamecast data clock + SYNC NOW (delay helper) */
+        .gc-sync { display: inline-flex; align-items: center; gap: 0.6vw; margin-left: 0.8vw; padding-left: 1vw; border-left: 2px solid rgba(255,255,255,0.2); }
+        #gc-dclock { font-family: 'Share Tech Mono', monospace; color: #00f0ff; min-width: 15vh; }
+        .gc-cel-d.gc-sync-btn { font-size: 1.8vh; padding: 0.45vh 1.3vh; color: #ffe600; border-color: #ffe600; }
+        .gc-cel-d.gc-sync-btn.arm { background: #ffe600; color: #111; }
+        /* Gamecast per-team celebrate toggles + delay control */
+        .gc-celcell { display: flex; }
+        .gc-celcell.right { justify-content: flex-end; }
+        .gc-cel, .gc-cel-d { background: rgba(12,20,32,0.9); color: rgba(255,255,255,0.7); border: 2px solid rgba(255,255,255,0.3); border-radius: 3vh; padding: 0.5vh 1.6vh; font-family: 'Inter', sans-serif; font-size: 1.9vh; font-weight: 900; letter-spacing: 0.1vw; cursor: pointer; white-space: nowrap; }
+        .gc-cel b { margin-left: 0.6vw; }
+        .gc-cel.on { color: #111; background: #ffe600; border-color: #ffe600; box-shadow: 0 0 2vh rgba(255,230,0,0.6); }
+        .gc-cel:disabled { opacity: 0.35; }
+        .gc-celmid { width: 0; justify-self: center; /* overflow both ways: the controls never widen the score column */ display: flex; align-items: center; justify-content: center; gap: 0.8vw; font-size: 1.9vh; font-weight: 900; color: rgba(255,255,255,0.75); }
+        .gc-cel-d { padding: 0.3vh 1.3vh; font-size: 2.2vh; }
+        .gc-celmid > * { flex: none; white-space: nowrap; }
+        body.nav-active #gamecast .gc-cel:focus, body.nav-active #gamecast .gc-cel-d:focus { outline: 0.4vh solid #00f0ff; outline-offset: 0.3vh; }
     </style>
 </head>
 <body class="theme-cyan">
@@ -372,6 +594,7 @@
     <div class="cyber-grid-container"><div class="cyber-grid"></div></div>
     
     <div id="master-clock">12:00 PM</div>
+    <div id="net-pill" aria-live="polite"></div>
 
     <button type="button" id="settings-gear" tabindex="1" aria-label="Settings" onclick="toggleSettings()">
         <svg viewBox="0 0 24 24" style="width:100%;height:100%;fill:currentColor;pointer-events:none;">
@@ -513,6 +736,28 @@
                         <div style="font-size: 1.8vh; color: var(--accent-color); margin-bottom: 0.5vh; text-transform: uppercase;">Set Favorite Teams:</div>
                         <input type="text" id="set-mySquadTeams" style="width: 100%; padding: 1vh; border-radius: 0.5vh; background: rgba(0,0,0,0.5); color: white; border: 1px solid var(--accent-color); font-family: 'Inter', sans-serif;" onchange="updateSettings()">
                     </div>
+                    <div class="toggle-row"><span>Score Celebrations <span style="font-size:1.6vh; opacity:0.7;">(pick teams with &#9733; in Gamecast)</span></span> <input type="checkbox" id="set-celebrate" onchange="updateSettings()"></div>
+                    <div class="toggle-row"><span>Full Effects <span style="font-size:1.6vh; opacity:0.7;">(strobes, confetti, shake; off = Lite, smooth on budget TV boxes; TV app always Lite)</span></span> <input type="checkbox" id="set-celFull" onchange="updateSettings()"></div>
+                    <div style="margin-bottom: 2vh;">
+                        <div style="font-size: 1.8vh; color: #ffe600; margin-bottom: 0.5vh; text-transform: uppercase;">Celebration Delay (match your TV's lag, &#9664; &#9654; to adjust):</div>
+                        <div style="display:flex; align-items:center; gap:2vh;">
+                            <button type="button" onclick="nudgeCelDelay(-1)" style="width:6vh;height:6vh;font-size:3vh;font-weight:900;background:rgba(0,0,0,0.5);color:#fff;border:2px solid #ffe600;border-radius:1vh;cursor:pointer;">&minus;</button>
+                            <button type="button" id="cel-delay-display" data-adjust="celDelay" style="min-width:9vh; height:6vh; font-size:3vh; font-weight:900; background:rgba(0,0,0,0.5); color:#fff; border:2px solid rgba(255,255,255,0.3); border-radius:1vh;">0s</button>
+                            <button type="button" onclick="nudgeCelDelay(1)" style="width:6vh;height:6vh;font-size:3vh;font-weight:900;background:rgba(0,0,0,0.5);color:#fff;border:2px solid #ffe600;border-radius:1vh;cursor:pointer;">+</button>
+                            <button type="button" id="cel-preview-btn" onclick="arcadeCelebrate('test')" style="height:6vh; padding:0 2vh; font-size:2vh; font-weight:900; background:rgba(0,0,0,0.5); color:#ffe600; border:2px solid #ffe600; border-radius:1vh; cursor:pointer;">&#9733; PREVIEW</button>
+                        </div>
+                        <input type="range" id="set-celebrateDelay" min="0" max="30" step="1" tabindex="-1" aria-hidden="true" style="display:none;">
+                    </div>
+                    <div style="margin-bottom: 2vh;">
+                        <div style="font-size: 1.8vh; color: #ffe600; margin-bottom: 0.5vh; text-transform: uppercase;">Alerts for &#9733; teams (smaller banners, same delay):</div>
+                        <div>
+                            <div class="toggle-row"><span>Red Zone <span style="font-size:1.6vh; opacity:0.7;">(football)</span></span> <input type="checkbox" id="set-alertRedzone" onchange="updateSettings()"></div>
+                            <div class="toggle-row"><span>Power Play <span style="font-size:1.6vh; opacity:0.7;">(NHL)</span></span> <input type="checkbox" id="set-alertPP" onchange="updateSettings()"></div>
+                            <div class="toggle-row"><span>Game Start</span> <input type="checkbox" id="set-alertStart" onchange="updateSettings()"></div>
+                            <div class="toggle-row"><span>Lead Change</span> <input type="checkbox" id="set-alertLead" onchange="updateSettings()"></div>
+                            <div class="toggle-row"><span>Big Plays <span style="font-size:1.6vh; opacity:0.7;">(25+ yd, turnovers, 2B/3B)</span></span> <input type="checkbox" id="set-alertBig" onchange="updateSettings()"></div>
+                        </div>
+                    </div>
                     <div style="margin-bottom: 2vh;">
                         <div style="font-size: 1.8vh; color: #ff007f; margin-bottom: 0.5vh; text-transform: uppercase;">Custom Ticker Marquee:</div>
                         <input type="text" id="set-marqueeMessage" style="width: 100%; padding: 1vh; border-radius: 0.5vh; background: rgba(0,0,0,0.5); color: white; border: 1px solid #ff007f; font-family: 'Inter', sans-serif;" onchange="updateSettings()">
@@ -585,6 +830,13 @@
         <button class="r-btn" onclick="bc.postMessage({action:'forceNext'})">NEXT SLIDE</button>
     </div>
 
+    <div id="celebrate" aria-hidden="true"><div class="cel-shake"><div class="cel-wash"></div><div class="cel-wash w2"></div><div class="cel-beam b1"></div><div class="cel-beam b2"></div><div class="cel-beam b3"></div><div class="cel-beam b4"></div><div class="cel-vig"></div>
+        <div class="cel-mq m1"><span id="cel-mq1"></span></div><div class="cel-mq m2"><span id="cel-mq2"></span></div><div class="cel-mq m3"><span id="cel-mq3"></span></div>
+        <div class="cel-ring"></div><div class="cel-ring r2"></div><div class="cel-sweep"></div>
+        <img class="cel-wm" id="cel-wm" alt=""><div class="cel-bg" id="cel-bg" aria-hidden="true"><span class="b1"></span><span class="b2"></span><span class="b3"></span><span class="b4"></span></div>
+        <div class="cel-shards" aria-hidden="true"><i style="left:8%;top:12%"></i><i class="d" style="left:22%;top:28%"></i><i class="t" style="left:78%;top:10%"></i><i style="left:88%;top:32%"></i><i class="d" style="left:12%;top:62%"></i><i class="t" style="left:70%;top:58%"></i><i style="left:92%;top:70%"></i><i class="d" style="left:4%;top:42%"></i><i class="t" style="left:48%;top:8%"></i><i style="left:58%;top:78%"></i><i class="d" style="left:34%;top:72%"></i><i class="t" style="left:82%;top:48%"></i></div><div class="cel-conf"><i style="left:0%;--del:-0.00s;--dur:2.40s;--dx:-6vw;--rot:360deg"></i><i style="left:37%;--del:-0.23s;--dur:2.75s;--dx:1vw;--rot:600deg"></i><i style="left:74%;--del:-0.46s;--dur:3.10s;--dx:-5vw;--rot:840deg"></i><i style="left:11%;--del:-0.69s;--dur:3.45s;--dx:2vw;--rot:1080deg"></i><i style="left:48%;--del:-0.92s;--dur:3.80s;--dx:-4vw;--rot:360deg"></i><i style="left:85%;--del:-1.15s;--dur:2.40s;--dx:3vw;--rot:600deg"></i><i style="left:22%;--del:-1.38s;--dur:2.75s;--dx:-3vw;--rot:840deg"></i><i style="left:59%;--del:-1.61s;--dur:3.10s;--dx:4vw;--rot:1080deg"></i><i style="left:96%;--del:-1.84s;--dur:3.45s;--dx:-2vw;--rot:360deg"></i><i style="left:33%;--del:-2.07s;--dur:3.80s;--dx:5vw;--rot:600deg"></i><i style="left:70%;--del:-2.30s;--dur:2.40s;--dx:-1vw;--rot:840deg"></i><i style="left:7%;--del:-2.53s;--dur:2.75s;--dx:6vw;--rot:1080deg"></i><i style="left:44%;--del:-2.76s;--dur:3.10s;--dx:0vw;--rot:360deg"></i><i style="left:81%;--del:-2.99s;--dur:3.45s;--dx:-6vw;--rot:600deg"></i><i style="left:18%;--del:-0.22s;--dur:3.80s;--dx:1vw;--rot:840deg"></i><i style="left:55%;--del:-0.45s;--dur:2.40s;--dx:-5vw;--rot:1080deg"></i><i style="left:92%;--del:-0.68s;--dur:2.75s;--dx:2vw;--rot:360deg"></i><i style="left:29%;--del:-0.91s;--dur:3.10s;--dx:-4vw;--rot:600deg"></i><i style="left:66%;--del:-1.14s;--dur:3.45s;--dx:3vw;--rot:840deg"></i><i style="left:3%;--del:-1.37s;--dur:3.80s;--dx:-3vw;--rot:1080deg"></i><i style="left:40%;--del:-1.60s;--dur:2.40s;--dx:4vw;--rot:360deg"></i><i style="left:77%;--del:-1.83s;--dur:2.75s;--dx:-2vw;--rot:600deg"></i><i style="left:14%;--del:-2.06s;--dur:3.10s;--dx:5vw;--rot:840deg"></i><i style="left:51%;--del:-2.29s;--dur:3.45s;--dx:-1vw;--rot:1080deg"></i><i style="left:88%;--del:-2.52s;--dur:3.80s;--dx:6vw;--rot:360deg"></i><i style="left:25%;--del:-2.75s;--dur:2.40s;--dx:0vw;--rot:600deg"></i><i style="left:62%;--del:-2.98s;--dur:2.75s;--dx:-6vw;--rot:840deg"></i><i style="left:99%;--del:-0.21s;--dur:3.10s;--dx:1vw;--rot:1080deg"></i><i style="left:36%;--del:-0.44s;--dur:3.45s;--dx:-5vw;--rot:360deg"></i><i style="left:73%;--del:-0.67s;--dur:3.80s;--dx:2vw;--rot:600deg"></i></div>
+        <div class="cel-center"><div class="cel-title" id="cel-title"></div><div class="cel-row"><img class="cel-logo" id="cel-logo" alt=""><div class="cel-player"><img class="cel-head" id="cel-head" alt=""><div class="cel-pname" id="cel-pname"></div><div class="cel-pmore" id="cel-pmore"></div></div></div><div class="cel-sub" id="cel-sub"></div></div></div></div>
+    <div id="cel-alert" aria-hidden="true"><div class="al-bar"><div class="al-shine"></div><img class="al-logo" id="al-logo" alt=""><div class="al-txt"><div class="al-title" id="al-title"></div><div class="al-sub" id="al-sub"></div></div><div class="al-tag" id="al-tag"></div></div></div>
     <div id="gamecast" aria-hidden="true">
         <div class="gc-top">
             <span class="gc-brand neon-text-cycle">&#9673; GAMECAST</span>
@@ -592,22 +844,30 @@
             <span class="gc-net" id="gc-net"></span>
             <span class="gc-spacer"></span>
             <span id="gc-updated"></span>
-            <span class="gc-hint">&#9664; &#9654; SWITCH GAME &nbsp;&bull;&nbsp; BACK CLOSE</span>
+            <span class="gc-hint">&#9664; &#9654; GAME &nbsp;&bull;&nbsp; OK &#9733; &nbsp;&bull;&nbsp; BACK CLOSE</span>
             <button type="button" class="gc-close" id="gc-close" onclick="gcClose()">&#10005; CLOSE</button>
         </div>
         <div class="gc-board">
             <div class="gc-team" id="gc-away"></div>
             <div class="gc-mid" id="gc-mid"></div>
             <div class="gc-team" id="gc-home"></div>
+            <div class="gc-celcell"><button type="button" class="gc-cel" id="gc-cel-away" onclick="celToggle('away')" disabled>&#9733; CELEBRATE <span class="gc-cel-ab"></span><b>OFF</b></button></div>
+            <div class="gc-celmid"><button type="button" class="gc-cel-d" id="gc-cel-dminus" onclick="nudgeCelDelay(-1)">&minus;</button><span id="gc-cel-dval">DELAY 0s</span><button type="button" class="gc-cel-d" id="gc-cel-dplus" onclick="nudgeCelDelay(1)">+</button><span class="gc-sync"><span id="gc-dclock">DATA --</span><button type="button" class="gc-cel-d gc-sync-btn" id="gc-cel-sync" onclick="celSyncPress()">SYNC NOW</button></span></div>
+            <div class="gc-celcell right"><button type="button" class="gc-cel" id="gc-cel-home" onclick="celToggle('home')" disabled>&#9733; CELEBRATE <span class="gc-cel-ab"></span><b>OFF</b></button></div>
         </div>
+        <div class="gc-tabs" id="gc-tabs"><button type="button" class="gc-tab" id="gc-tab-0" onclick="gcSetView(0)"></button><button type="button" class="gc-tab" id="gc-tab-1" onclick="gcSetView(1)"></button><span class="gc-tab-hint" id="gc-tab-hint"></span></div>
+        <div class="gc-body" id="gc-body">
         <div class="gc-strip" id="gc-strip">
             <div class="gc-box" id="gc-line"></div>
             <div class="gc-box" id="gc-wp"></div>
         </div>
+        <div class="gc-box" id="gc-track"></div>
+        <div class="gc-panel gc-box" id="gc-bxs"><div class="gc-panel-head neon-text-cycle">LIVE BOX SCORE</div><div class="gc-panel-body" id="gc-bxs-body"></div></div>
         <div class="gc-panels">
-            <div class="gc-panel gc-box"><div class="gc-panel-head neon-text-cycle" id="gc-plays-head">LAST PLAYS</div><div class="gc-panel-body" id="gc-plays-body"></div></div>
-            <div class="gc-panel gc-box"><div class="gc-panel-head neon-text-cycle" id="gc-stats-head">TEAM STATS</div><div class="gc-panel-body" id="gc-stats-body"></div></div>
-            <div class="gc-panel gc-box"><div class="gc-panel-head neon-text-cycle" id="gc-players-head">PLAYER STATS</div><div class="gc-panel-body" id="gc-players-body"></div></div>
+            <div class="gc-panel gc-box" id="gc-p-plays"><div class="gc-panel-head neon-text-cycle" id="gc-plays-head">LAST PLAYS</div><div class="gc-panel-body" id="gc-plays-body"></div></div>
+            <div class="gc-panel gc-box" id="gc-p-stats"><div class="gc-panel-head neon-text-cycle" id="gc-stats-head">TEAM STATS</div><div class="gc-panel-body" id="gc-stats-body"></div></div>
+            <div class="gc-panel gc-box" id="gc-p-players"><div class="gc-panel-head neon-text-cycle" id="gc-players-head">PLAYER STATS</div><div class="gc-panel-body" id="gc-players-body"></div></div>
+        </div>
         </div>
     </div>
     <div id="nav-menu" aria-hidden="true">
@@ -631,7 +891,52 @@
         var bc = null;
         try { if (window.BroadcastChannel) bc = new BroadcastChannel('cinema_channel'); } catch(e) {}
         
-        var rotationStep = 0, slideTimer, triviaRevealTimer;
+        var rotationStep = 0, slideTimer, triviaRevealTimer, slideWatchdog = null, slideStartedAt = 0;
+        var FETCH_MS = 9000, SLIDE_MAX_MS = 90000; // hard caps so a hung API cannot freeze rotation
+        var scoreboardCache = {}, netState = { offline: false, stale: false, fails: 0 };
+        try { scoreboardCache = JSON.parse(localStorage.getItem('ahlersScoreboardCache1') || '{}') || {}; } catch (e) { scoreboardCache = {}; }
+
+        function arcadeFetch(url, opts) {
+            opts = opts || {};
+            var ms = opts.timeout != null ? opts.timeout : FETCH_MS, ctl = (typeof AbortController !== 'undefined') ? new AbortController() : null;
+            var t = ctl ? setTimeout(function() { try { ctl.abort(); } catch (e) {} }, ms) : null;
+            var init = { cache: opts.cache || 'no-store' }; if (ctl) init.signal = ctl.signal;
+            return fetch(url, init).then(function(r) { if (t) clearTimeout(t); return r; }, function(err) { if (t) clearTimeout(t); throw err; });
+        }
+        function netSet(offline, stale, msg) {
+            netState.offline = !!offline; netState.stale = !!stale;
+            var el = document.getElementById('net-pill'); if (!el) return;
+            if (!offline && !stale) { el.className = ''; el.textContent = ''; return; }
+            el.className = 'show' + (stale && !offline ? ' stale' : '');
+            el.textContent = offline ? (msg || 'OFFLINE — SHOWING LAST DATA') : (msg || 'STALE DATA');
+        }
+        function netMarkOk() { netState.fails = 0; netSet(false, netState.stale && !arguments[0] ? false : netState.stale); }
+        function netClearStale() { netState.stale = false; if (!netState.offline) netSet(false, false); }
+        function netMarkFail() { netState.fails++; if (netState.fails >= 2) netSet(true, true); }
+        function cacheScoreboard(id, payload) {
+            try { scoreboardCache[id] = { at: Date.now(), d: payload }; localStorage.setItem('ahlersScoreboardCache1', JSON.stringify(scoreboardCache)); } catch (e) {}
+        }
+        function readScoreboardCache(id) { var c = scoreboardCache[id]; return (c && c.d) ? c : null; }
+        function armSlideWatchdog() {
+            clearTimeout(slideWatchdog); slideStartedAt = Date.now();
+            slideWatchdog = setTimeout(function() {
+                if ((gc && gc.open) || (arcadeNav && arcadeNav.paused)) { armSlideWatchdog(); return; }
+                slideTimer = null; nextSlide();
+            }, SLIDE_MAX_MS);
+        }
+        function clearSlideTimers() { clearTimeout(slideTimer); slideTimer = null; clearTimeout(slideWatchdog); slideWatchdog = null; }
+        var wakeLock = null;
+        async function requestWakeLock() {
+            try { if (!navigator.wakeLock || !navigator.wakeLock.request) return; wakeLock = await navigator.wakeLock.request('screen'); wakeLock.addEventListener('release', function() { wakeLock = null; }); }
+            catch (e) { wakeLock = null; }
+        }
+        document.addEventListener('visibilitychange', function() { if (document.visibilityState === 'visible') requestWakeLock(); });
+        function scheduleSoftReload() {
+            if (window.ArcadeTV) return; // TV app already soft-reloads
+            function msUntil4() { var n = new Date(), t = new Date(n); t.setHours(4, 0, 0, 0); if (t <= n) t.setDate(t.getDate() + 1); return t - n; }
+            setTimeout(function tick() { if (gc && gc.open) { setTimeout(tick, 60000); return; } location.reload(); }, msUntil4());
+        }
+
         var globalLiveGamesData = [], globalRawGames = [], globalPropsData = [];
         var globalTVGuideData = [], globalLeadersData = [], newMarqueeGames = [];
         var currentTrivia = null;
@@ -644,6 +949,7 @@
             showWorldCup:true, showEPL:true, showUCL:true, showATP:true, showWTA:true, showNFL:true, showNBA:true, showNHL:true, showMLB:true, showCFB:true, showCBB:true, showCLB:true,
             cbb50:true, cfb75:true, clb50:true, apiBase:"https://site.api.espn.com/apis",
             mySquadTeams: "Carolina Hurricanes, Duke, ECU, East Carolina",
+            celebrate: true, celebrateDelay: 0, celFull: false, alertRedzone: true, alertPP: true, alertStart: true, alertLead: true, alertBig: true,
             marqueeMessage: "WELCOME TO AHLERS ARCADE",
             tickerSpeed: 5
         };
@@ -698,6 +1004,7 @@
                 }
             }); 
             if(document.getElementById('speed-display')) document.getElementById('speed-display').innerText = settings.tickerSpeed;
+            try { celDelayUI(); } catch (e) {}
             var remoteUrl = window.location.href.split('#')[0] + '#remote';
             document.getElementById('settings-qr').src = 'https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=' + encodeURIComponent(remoteUrl) + '&color=0a0a0a&bgcolor=00ffff';
         }
@@ -761,7 +1068,7 @@
 
         async function fetchNextTrivia() {
             try {
-                var res = await fetch('https://opentdb.com/api.php?amount=1&category=21&type=multiple');
+                var res = await arcadeFetch('https://opentdb.com/api.php?amount=1&category=21&type=multiple');
                 var d = await res.json();
                 if (d.results && d.results.length > 0) {
                     var t = d.results[0];
@@ -778,7 +1085,7 @@
         async function fetchCommandData() {
             if(!settings.command) return;
             try {
-                var weatherRes = await fetch("https://api.open-meteo.com/v1/forecast?latitude=35.6127&longitude=-77.3663&current=temperature_2m,weather_code&daily=temperature_2m_max,temperature_2m_min&temperature_unit=fahrenheit&timezone=America%2FNew_York");
+                var weatherRes = await arcadeFetch("https://api.open-meteo.com/v1/forecast?latitude=35.6127&longitude=-77.3663&current=temperature_2m,weather_code&daily=temperature_2m_max,temperature_2m_min&temperature_unit=fahrenheit&timezone=America%2FNew_York");
                 var weatherData = await weatherRes.json();
                 document.getElementById('local-temp').innerText = Math.round(weatherData.current.temperature_2m) + '°F';
                 document.getElementById('local-highlow').innerText = 'HIGH: ' + Math.round(weatherData.daily.temperature_2m_max[0]) + '° | LOW: ' + Math.round(weatherData.daily.temperature_2m_min[0]) + '°';
@@ -997,8 +1304,9 @@
 
         function nextSlide() {
             if ((arcadeNav.paused || (gc && gc.open)) && !arcadeNav.forcing) { arcadeNav.pending = true; return; } // paused or a Gamecast is open
-            clearTimeout(slideTimer);
+            clearSlideTimers();
             clearTimeout(triviaRevealTimer);
+            armSlideWatchdog();
             slideGen++;
             var gen = slideGen;
             if (nextSlide._guard > 40) { nextSlide._guard = 0; showSlideEmpty('WAITING ON DATA'); return; }
@@ -1052,10 +1360,11 @@
                 showSlideEmpty('SLIDE ERROR');
             }
             rotationStep++;
+            nextSlide._guard = 0;
+            // Safety net: each slide sets its own slideTimer. If nothing did within 1.5 s, schedule a normal advance.
             setTimeout(function() {
-                nextSlide._guard = 0;
-                if (!slideTimer) slideTimer = setTimeout(nextSlide, 22000);
-            }, 800);
+                if (!slideTimer && !(gc && gc.open) && !(arcadeNav && arcadeNav.paused)) slideTimer = setTimeout(nextSlide, 20000);
+            }, 1500);
         }
 
         function getNetworkLogo(networkStr) {
@@ -1098,10 +1407,20 @@
             for (var i=0; i<configs.length; i++) { 
                 var c = configs[i];
                 if (!settings[c.t]) continue;
+                var d = null, fromCache = false;
                 try { 
-                    var res = await fetch(settings.apiBase + '/site/v2/sports/' + c.s + '/' + c.l + '/scoreboard' + (c.g ? '?groups=' + c.g : ''));
-                    var d = await res.json();
-                    if (!d || !d.events) continue;
+                    var res = await arcadeFetch(settings.apiBase + '/site/v2/sports/' + c.s + '/' + c.l + '/scoreboard' + (c.g ? '?groups=' + c.g : ''));
+                    if (!res.ok) throw new Error('HTTP ' + res.status);
+                    d = await res.json();
+                    if (!d || !d.events) throw new Error('empty');
+                    cacheScoreboard(c.id, d);
+                } catch (fetchErr) {
+                    var cached = readScoreboardCache(c.id);
+                    if (!cached) continue;
+                    d = cached.d; fromCache = true; netState.stale = true;
+                }
+                if (!d || !d.events) continue;
+                try {
                     
                     d.events.forEach(function(ev) { 
                         try {
@@ -1186,7 +1505,9 @@
                                 gcList.push({ key: gameObj.gcKey, sport: c.s, league: c.l, cid: c.id, id: String(ev.id), label: displayLeague, away: aName, home: hName,
                                     awayAbbr: (a.team && a.team.abbreviation) || aName, homeAbbr: (h.team && h.team.abbreviation) || hName, aLogo: aLogo, hLogo: hLogo, aFallback: aFallback, hFallback: hFallback,
                                     aScore: a.score || '', hScore: h.score || '', state: status.state, status: status.shortDetail, time: gameObj.time, date: gameTime, tv: tv, weight: mWeight,
-                                    sitDown: trendData.downDist || '', sitSpot: trendData.spot || '' });
+                                    sitDown: trendData.downDist || '', sitSpot: trendData.spot || '',
+                                    aId: String((a.team && a.team.id) || ''), hId: String((h.team && h.team.id) || ''), aFull: (a.team && a.team.displayName) || aName, hFull: (h.team && h.team.displayName) || hName,
+                                    aColor: (a.team && a.team.color) || '', aAlt: (a.team && a.team.alternateColor) || '', hColor: (h.team && h.team.color) || '', hAlt: (h.team && h.team.alternateColor) || '' });
                             }
                             globalRawGames.push(gameObj);
                             newMarqueeGames.push(gameObj);
@@ -1244,9 +1565,12 @@
                     });
                 } catch(e) {} 
             }
+            if (netState.stale) netSet(netState.fails >= 2, true);
+            else { netState.fails = 0; netSet(false, false); }
             
             globalLiveGamesData = newLivePage;
             gcRegisterGames(gcList);
+            try { celScanScoreboard(gcList); } catch (e) {}
             globalTVGuideData = newTVGuide;
             globalLeadersData = newLeaders.slice();
 
@@ -1340,7 +1664,7 @@
         }
 
         function showTrivia() {
-            if(!currentTrivia) { fetchNextTrivia(); rotationStep++; nextSlide(); return; }
+            if(!currentTrivia) { fetchNextTrivia(); nextSlide(); return; }
             document.getElementById('trivia-screen').style.display = 'flex';
             var mc = document.getElementById('master-clock'); if (mc) mc.style.display = 'none';
             document.getElementById('trivia-q').innerText = currentTrivia.q;
@@ -1352,7 +1676,7 @@
             clearTimeout(triviaRevealTimer);
             triviaRevealTimer = setTimeout(function() {
                 document.querySelectorAll('.trivia-ans').forEach(function(opt) { if (opt.getAttribute('data-correct') === 'true') opt.classList.add('correct'); else opt.classList.add('wrong'); });
-                slideTimer = setTimeout(function() { fetchNextTrivia(); rotationStep++; nextSlide(); }, 5000);
+                slideTimer = setTimeout(function() { fetchNextTrivia(); nextSlide(); }, 5000);
             }, 15000);
         }
 
@@ -1375,7 +1699,7 @@
 
         async function showPGA(gen) {
             try {
-                var res = await fetch(settings.apiBase + '/site/v2/sports/golf/pga/scoreboard'); var d = await res.json();
+                var res = await arcadeFetch(settings.apiBase + '/site/v2/sports/golf/pga/scoreboard'); var d = await res.json();
                 if (!isCurrentSlide(gen)) return;
                 var ev0 = (d.events && d.events[0]) ? d.events[0] : null;
                 var golfers = (ev0 && ev0.competitions && ev0.competitions[0] && ev0.competitions[0].competitors) ? ev0.competitions[0].competitors : [];
@@ -1411,7 +1735,7 @@
 
         async function showUFC(gen) {
             try {
-                var res = await fetch(settings.apiBase + '/site/v2/sports/mma/ufc/scoreboard'); var d = await res.json();
+                var res = await arcadeFetch(settings.apiBase + '/site/v2/sports/mma/ufc/scoreboard'); var d = await res.json();
                 if (!isCurrentSlide(gen)) return;
                 if(!d.events || d.events.length === 0) {
                     document.getElementById('ufc-screen').style.display = 'flex';
@@ -1464,7 +1788,7 @@
             for (var i=0; i<leagues.length; i++) {
                 if(!settings[leagues[i].t]) continue;
                 try {
-                    var res = await fetch(settings.apiBase + '/site/v2/sports/soccer/' + leagues[i].id + '/scoreboard'); var d = await res.json();
+                    var res = await arcadeFetch(settings.apiBase + '/site/v2/sports/soccer/' + leagues[i].id + '/scoreboard'); var d = await res.json();
                     if(!d.events) continue;
                     d.events.forEach(function(ev) {
                         var comp = ev.competitions[0]; var diffHours = (new Date(ev.date).getTime() - nowTime) / (1000 * 60 * 60);
@@ -1508,7 +1832,7 @@
                 var sources = [{ url: 'https://api.rss2json.com/v1/api.json?rss_url=https%3A%2F%2Fsports.yahoo.com%2Frss%2F', name: 'YAHOO SPORTS' }, { url: 'https://api.rss2json.com/v1/api.json?rss_url=https%3A%2F%2Fwww.cbssports.com%2Frss%2Fheadlines%2F', name: 'CBS SPORTS' }];
                 var combinedNews = [];
                 for (var i=0; i<sources.length; i++) {
-                    try { var res = await fetch(sources[i].url); var data = await res.json(); if (data.status === 'ok') { data.items.forEach(function(item) { var title = cleanHeadline(item.title); if (title.length < 8) return; combinedNews.push({ title: title, img: item.thumbnail || (item.enclosure && item.enclosure.link) || '', source: sources[i].name, time: new Date(String(item.pubDate || '').replace(/-/g, '/')).getTime() }); }); } } catch(e) {}
+                    try { var res = await arcadeFetch(sources[i].url); var data = await res.json(); if (data.status === 'ok') { data.items.forEach(function(item) { var title = cleanHeadline(item.title); if (title.length < 8) return; combinedNews.push({ title: title, img: item.thumbnail || (item.enclosure && item.enclosure.link) || '', source: sources[i].name, time: new Date(String(item.pubDate || '').replace(/-/g, '/')).getTime() }); }); } } catch(e) {}
                 }
                 if (combinedNews.length === 0) {
                     document.getElementById('news-screen').style.display = 'flex';
@@ -2138,6 +2462,414 @@
                    lastOk: 0, lastTry: 0, endedAt: 0, lastInput: 0, pollMs: GC_POLL_MS, scrollTimer: null, scrollHold: 0, html: {}, teams: {}, renderErr: null };
         var gcRegistry = {}, gcOrder = [];
 
+        // ---- Score celebration (ConnectedRoom-style, on screen): pick teams with the ★ toggles under each team in Gamecast
+        // (saved per team in localStorage, so a team stays on for its future games). Fires only on a score *increase* seen
+        // between two polls of the same game (Gamecast every 10 s, scoreboard every 5 min), never on the first look at a game,
+        // at most once per score (high-water mark), debounced per game, WIN once per game we saw live. Detection is immediate;
+        // the effect fires after Settings > Celebration Delay (0-30 s) to match the TV broadcast lag. Queued effects are
+        // dropped when their Gamecast closes or the score is corrected down before they fire.
+        var CEL_MS = 7000, CEL_BIG_MS = 8000, CEL_MINI_MS = 4000, CEL_DEBOUNCE_MS = 20000, CEL_KEY = 'ahlersCelebrateTeams1';
+        var CEL_ALERT_MS = 4800, CEL_FG_HOLD_MS = 5000; // field goals wait a little longer, so a FG never shows before a TD would be known
+        var CEL_ALERT_SET = { redzone: 'alertRedzone', pp: 'alertPP', start: 'alertStart', lead: 'alertLead', big: 'alertBig' };
+        var cel = { showing: false, timer: null, qTimer: null, pending: [], queue: [], watch: {}, nWatch: 0, fired: 0, last: null, picks: {}, alShowing: false, alTimer: null, aq: [], alFired: 0, alLast: null };
+        try { cel.picks = JSON.parse(localStorage.getItem(CEL_KEY) || '{}') || {}; } catch (e) { cel.picks = {}; }
+        var CEL_DEMO = {
+            goal: { fam: 'hockey', delta: 1, T: { full: 'Carolina Hurricanes', abbr: 'CAR', score: 3, logo: 'https://a.espncdn.com/i/teamlogos/nhl/500/car.png', rawColor: 'ce1126', rawAlt: '000000' }, line: 'NYR 2 - 3 CAR',
+                    player: { name: 'Sebastian Aho', head: 'https://a.espncdn.com/i/headshots/nhl/players/full/3904173.png', more: 'ASSISTS: S. Jarvis, A. Svechnikov' } },
+            td:   { fam: 'football', delta: 6, T: { full: 'East Carolina Pirates', abbr: 'ECU', score: 27, logo: 'https://a.espncdn.com/i/teamlogos/ncaa/500/151.png', rawColor: '4b1869', rawAlt: 'fdc82f' }, line: 'ECU 27 - 24 TEM' },
+            fg:   { fam: 'football', delta: 3, T: { full: 'Carolina Panthers', abbr: 'CAR', score: 13, logo: 'https://a.espncdn.com/i/teamlogos/nfl/500/car.png', rawColor: '0085ca', rawAlt: '101820' }, line: 'ATL 10 - 13 CAR' },
+            run:  { fam: 'baseball', delta: 1, T: { full: 'Atlanta Braves', abbr: 'ATL', score: 4, logo: 'https://a.espncdn.com/i/teamlogos/mlb/500/atl.png', rawColor: '13274f', rawAlt: 'ce1141' }, line: 'ATL 4 - 3 NYM' },
+            hr:   { fam: 'baseball', delta: 2, hint: 'homered', T: { full: 'Atlanta Braves', abbr: 'ATL', score: 6, logo: 'https://a.espncdn.com/i/teamlogos/mlb/500/atl.png', rawColor: '13274f', rawAlt: 'ce1141' }, line: 'ATL 6 - 3 NYM' },
+            half: { mini: 'HALFTIME!', T: { full: 'East Carolina Pirates', abbr: 'ECU', logo: 'https://a.espncdn.com/i/teamlogos/ncaa/500/151.png', rawColor: '4b1869', rawAlt: 'fdc82f' }, line: 'ECU 17 - 14 TEM' },
+            period: { mini: 'END OF PERIOD', T: { full: 'Carolina Hurricanes', short: 'Hurricanes', abbr: 'CAR', logo: 'https://a.espncdn.com/i/teamlogos/nhl/500/car.png', rawColor: 'ce1126', rawAlt: '000000' }, line: 'NYR 1 - 2 CAR' },
+            win:  { fam: 'hockey', win: true, T: { full: 'Carolina Hurricanes', short: 'Hurricanes', abbr: 'CAR', logo: 'https://a.espncdn.com/i/teamlogos/nhl/500/car.png', rawColor: 'ce1126', rawAlt: '000000' }, line: 'FINAL  NYR 2 - 4 CAR' }
+        };
+        var CEL_DEMO_AL = {
+            redzone: ['redzone', 'RED ZONE!', 'td', '1st & 10 at TEM 18'],
+            pp: ['pp', 'POWER PLAY!', 'goal', '2 MIN \u2022 Mika Zibanejad Hooking against Sebastian Aho'],
+            start: ['start', 'PUCK DROP!', 'goal', 'NYR @ CAR'],
+            lead: ['lead', 'CANES TAKE THE LEAD!', 'goal', 'NYR 2 - CAR 3'],
+            big: ['big', 'INTERCEPTION!', 'td', 'Pirates pick it off at the ECU 30']
+        };
+        function celT(side, T, meta) { return { side: side, ck: (meta.league || '') + ':' + T.id, score: T.score, full: T.full || T.name, short: T.short, abbr: T.abbr, logo: T.logo, rawColor: T.rawColor, rawAlt: T.rawAlt }; }
+        function celOn(T) { return !!(T && T.ck && cel.picks[T.ck]); }
+        function celSave() { try { localStorage.setItem(CEL_KEY, JSON.stringify(cel.picks)); } catch (e) {} }
+        function celSync(meta, A, H) { // the ★ toggles are static buttons (focus survives re-renders); only their state changes
+            [['away', A], ['home', H]].forEach(function(x) {
+                var b = document.getElementById('gc-cel-' + x[0]); if (!b) return;
+                var T = x[1] || {}, ck = T.id ? (meta.league || '') + ':' + T.id : '';
+                b.setAttribute('data-ck', ck); b.setAttribute('data-name', T.full || T.name || '');
+                b.disabled = !ck;
+                var on = !!(ck && cel.picks[ck]);
+                b.classList.toggle('on', on); b.setAttribute('aria-pressed', on ? 'true' : 'false');
+                b.querySelector('.gc-cel-ab').textContent = T.abbr || '';
+                b.querySelector('b').textContent = on ? 'ON' : 'OFF';
+            });
+            celDelayUI();
+        }
+        function celToggle(side) {
+            var b = document.getElementById('gc-cel-' + side); if (!b) return;
+            var ck = b.getAttribute('data-ck'); if (!ck) return;
+            if (cel.picks[ck]) delete cel.picks[ck]; else cel.picks[ck] = b.getAttribute('data-name') || ck;
+            celSave();
+            var on = !!cel.picks[ck];
+            b.classList.toggle('on', on); b.setAttribute('aria-pressed', on ? 'true' : 'false'); b.querySelector('b').textContent = on ? 'ON' : 'OFF';
+            if (gc.open) gc.lastInput = Date.now();
+        }
+        function nudgeCelDelay(dir) {
+            var v = Math.max(0, Math.min(30, (parseInt(settings.celebrateDelay, 10) || 0) + dir));
+            var el = document.getElementById('set-celebrateDelay'); if (el) el.value = v;
+            settings.celebrateDelay = v;
+            updateSettings();
+        }
+        function celDelayUI() {
+            var v = (parseInt(settings.celebrateDelay, 10) || 0) + 's';
+            var a = document.getElementById('cel-delay-display'); if (a) a.textContent = v;
+            var b = document.getElementById('gc-cel-dval'); if (b) b.textContent = 'DELAY ' + v;
+        }
+        // Banner from the score delta plus the latest scoring play / play text when the summary has one.
+        function celKind(fam, delta, w, side, now, hint) {
+            hint = String(hint || '');
+            if (fam === 'hockey' || fam === 'soccer') return { text: 'GOAL!!' };
+            if (fam === 'baseball') {
+                if (/homer|home run|grand slam/i.test(hint)) return { text: 'HOME RUN!!', big: true };
+                return { text: delta > 1 ? delta + ' RUNS SCORE!' : 'RUN SCORES!' };
+            }
+            if (fam === 'football') {
+                var recentTd = w.tdAt[side] && now - w.tdAt[side] < 180000;
+                if (delta >= 6 || (/touchdown/i.test(hint) && delta >= 6)) { w.tdAt[side] = now; return { text: 'TOUCHDOWN!!', big: true }; }
+                if (delta === 3 || (/field goal/i.test(hint) && delta === 3)) return { text: 'FIELD GOAL!!!', hold: CEL_FG_HOLD_MS };
+                if (delta === 2 && (/safety/i.test(hint) || (!recentTd && !/two-point|2-pt|conversion/i.test(hint)))) return { text: 'SAFETY!' };
+                return null; // extra point / 2-pt try belong to the touchdown we already celebrated
+            }
+            return null; // basketball etc.: only WIN / game-state moments
+        }
+        var CEL_NICK = { 'HURRICANES': 'CANES', 'MAPLE LEAFS': 'LEAFS', 'RED WINGS': 'WINGS', 'BLUE JACKETS': 'JACKETS', 'GOLDEN KNIGHTS': 'KNIGHTS', 'BLUE DEVILS': 'DEVILS', 'TAR HEELS': 'HEELS', 'WOLFPACK': 'PACK', 'DIAMONDBACKS': 'D-BACKS' };
+        function celShort(T) { var n = String(T.short || T.full || T.abbr || '').toUpperCase(); return CEL_NICK[n] || n; }
+        function celObserve(key, fam, state, teams, rebase, hint, fromGc, stName, x) {
+            if (!key) return;
+            var now = Date.now(), w = cel.watch[key];
+            if (!w) {
+                if (cel.nWatch > 80) { cel.watch = {}; cel.nWatch = 0; } // tiny, bounded memory
+                w = cel.watch[key] = { max: {}, state: state, won: false, at: 0, tdAt: {} }; cel.nWatch++;
+                rebase = true;
+            }
+            var prevState = w.state; if (state) w.state = state;
+            var prevSt = w.st; if (stName) w.st = stName;
+            var live = settings.celebrate && !rebase;
+            teams.forEach(function(T) {
+                var cur = parseInt(T.score, 10); if (isNaN(cur)) return;
+                var prev = w.max[T.side];
+                if (prev == null || rebase) { w.max[T.side] = cur; return; }
+                if (cur < prev) { if (celCancel(key, T.side, cur)) w.max[T.side] = cur; return; } // corrected before the delayed effect fired: forget it
+                if (cur === prev) return;
+                w.max[T.side] = cur;
+                if (!live || (state !== 'in' && prevState !== 'in') || !celOn(T)) return;
+                var kind = celKind(fam, cur - prev, w, T.side, now, hint); if (!kind) return;
+                if (now - w.at < CEL_DEBOUNCE_MS && !kind.big) return;
+                if (x && x.sp && x.sp.player && x.sp.side === T.side && x.sp.id !== w.spId) kind.player = x.sp.player; // fresh scoring play by this team
+                w.at = now;
+                celQueue({ key: key, side: T.side, score: cur, gc: !!fromGc, kind: kind, T: T, line: celLine(teams) });
+            });
+            try { celAlerts(key, fam, state, prevState, teams, rebase, live, fromGc, x, w); } catch (e) {}
+            if (state === 'post' && prevState && prevState !== 'post' && !w.won && teams.length === 2 && !rebase) {
+                w.won = true;
+                var a = parseInt(teams[0].score, 10), h = parseInt(teams[1].score, 10);
+                var winner = a > h ? teams[0] : (h > a ? teams[1] : null);
+                if (settings.celebrate && winner && celOn(winner)) celQueue({ key: key, side: winner.side, score: -1, gc: !!fromGc, kind: { text: celShort(winner) + ' WIN!!', big: true }, T: winner, line: 'FINAL  ' + celLine(teams) });
+                else if (live) { var mine = teams.filter(celOn)[0]; if (mine) celQueue({ key: key, side: mine.side, score: -1, gc: !!fromGc, kind: { text: 'FINAL', mini: true }, T: mine, line: celLine(teams) }); }
+            } else if (live && stName && prevSt && stName !== prevSt && state === 'in') { // smaller game-state moments for a toggled team's game
+                var moment = stName === 'STATUS_HALFTIME' ? 'HALFTIME!' : (stName === 'STATUS_END_PERIOD' ? (fam === 'hockey' ? 'END OF PERIOD' : (fam === 'football' || fam === 'basketball' ? 'END OF QUARTER' : '')) : '');
+                var mine2 = teams.filter(celOn)[0];
+                if (moment && mine2) celQueue({ key: key, side: mine2.side, score: -1, gc: !!fromGc, kind: { text: moment, mini: true }, T: mine2, line: celLine(teams) });
+            }
+        }
+        function celLine(teams) { return teams.map(function(T) { return (T.abbr || T.full || '') + ' ' + (T.score == null ? '' : T.score); }).join(' - '); }
+        function celSideT(teams, side) { return teams.filter(function(T) { return T.side === side; })[0]; }
+        function celAlertQ(key, type, T, title, sub, fromGc) {
+            if (!T || !celOn(T) || !settings.celebrate || settings[CEL_ALERT_SET[type]] === false) return false;
+            celQueue({ key: key, side: T.side, score: -1, gc: !!fromGc, kind: { alert: type, text: title }, T: T, line: sub || '' });
+            return true;
+        }
+        // Alerts: game start, lead change (from the high-water scores, so a correction can't re-fire it), red zone (once per
+        // drive), and new power-play / big-play events from the play-by-play (each play id once).
+        function celAlerts(key, fam, state, prevState, teams, rebase, live, fromGc, x, w) {
+            var on = live && state === 'in';
+            if (on && prevState === 'pre') {
+                var mine = teams.filter(celOn)[0];
+                var st = { hockey: 'PUCK DROP!', football: 'KICKOFF!', baseball: 'FIRST PITCH!', basketball: 'TIP-OFF!', soccer: 'KICK-OFF!' }[fam] || 'GAME ON!';
+                if (mine) celAlertQ(key, 'start', mine, st, teams.map(function(T) { return T.abbr || T.full; }).join(' @ '), fromGc);
+            }
+            if (teams.length === 2) {
+                var a = w.max.away, h = w.max.home, ld = (a == null || h == null) ? -1 : (a > h ? 0 : (h > a ? 1 : -1));
+                if (ld >= 0) {
+                    if (on && w.lead != null && w.lead !== ld) celAlertQ(key, 'lead', teams[ld], celShort(teams[ld]) + ' TAKE THE LEAD!', celLine(teams), fromGc);
+                    w.lead = ld;
+                }
+            }
+            if (!x) return;
+            if (rebase || !w.seen) { w.seen = {}; x.ev.forEach(function(e) { w.seen[e.id] = 1; }); w.rz = x.rz ? x.rz.k : null; }
+            else {
+                var fresh = x.ev.filter(function(e) { return !w.seen[e.id]; });
+                fresh.forEach(function(e) { w.seen[e.id] = 1; });
+                if (on) fresh.slice(-2).forEach(function(e) { celAlertQ(key, e.type, celSideT(teams, e.side), e.title, e.sub, fromGc); });
+                if (x.rz && x.rz.k !== w.rz) { w.rz = x.rz.k; if (on) celAlertQ(key, 'redzone', celSideT(teams, x.rz.side), 'RED ZONE!', x.rz.sub, fromGc); }
+            }
+            if (x.sp) w.spId = x.sp.id;
+        }
+        // From the summary: latest scoring play + its player, red-zone drive, recent power plays / big plays.
+        function celExtras(meta, d, fam, A, H, sit) {
+            var x = { sp: null, rz: null, ev: [] }, lg = meta.league || '', box = null;
+            function side(id) { id = String(id == null ? '' : id); return id && id === String(A.id) ? 'away' : (id && id === String(H.id) ? 'home' : null); }
+            function other(s) { return s === 'away' ? 'home' : (s === 'home' ? 'away' : null); }
+            function ath() {
+                if (box) return box; box = { id: {}, nm: {} };
+                ((d.boxscore && d.boxscore.players) || []).forEach(function(tp) { (tp.statistics || []).forEach(function(g) { (g.athletes || []).forEach(function(r) {
+                    var a = r.athlete; if (!a || !a.id) return; box.id[a.id] = a; if (a.displayName) box.nm[a.displayName.toLowerCase()] = a; }); }); });
+                return box;
+            }
+            function person(id, name, hs) {
+                var a = (id && ath().id[id]) || (name && ath().nm[String(name).toLowerCase()]) || null;
+                name = (a && a.displayName) || name || ''; if (!name) return null;
+                id = id || (a && a.id);
+                var href = (hs && hs.href) || (a && a.headshot && a.headshot.href) || (id && /^(nhl|nfl|mlb|nba|college-football)$/.test(lg) ? 'https://a.espncdn.com/i/headshots/' + lg + '/players/full/' + id + '.png' : '');
+                return { name: String(name).trim(), head: href };
+            }
+            var plays = d.plays || [], spl = d.scoringPlays || [], sp = null, i;
+            for (i = plays.length - 1; i >= 0 && i >= plays.length - 60; i--) if (plays[i].scoringPlay) { sp = plays[i]; break; }
+            if (!sp && spl.length) sp = spl[spl.length - 1];
+            if (sp) x.sp = { id: String(sp.id || sp.text || ''), side: side(sp.team && sp.team.id), player: celScorer(sp, fam, person) };
+            if (fam === 'football') {
+                var dr = d.drives || {}, drives = (dr.previous || []).slice(-2);
+                if (dr.current && (!drives.length || drives[drives.length - 1].id !== dr.current.id)) drives.push(dr.current);
+                drives.forEach(function(dv) {
+                    var off = side(dv.team && dv.team.id);
+                    (dv.plays || []).forEach(function(p) {
+                        if (!p || p.scoringPlay || !p.id) return;
+                        var tt = (p.type && p.type.text) || '', yd = parseInt(p.statYardage, 10) || 0, e = null;
+                        if (/interception/i.test(tt)) e = { side: other(off), title: 'INTERCEPTION!' };
+                        else if (/fumble recovery \(opponent\)|opp fumble recovery|fumble return/i.test(tt)) e = { side: other(off), title: 'FUMBLE RECOVERED!' };
+                        else if (yd >= 25 && /pass|rush|reception|run/i.test(tt) && !/kickoff|punt|penalty/i.test(tt)) e = { side: off, title: 'BIG PLAY! ' + yd + ' YDS' };
+                        if (e && e.side) x.ev.push({ id: String(p.id), type: 'big', side: e.side, title: e.title, sub: String(p.text || '').slice(0, 110) });
+                    });
+                });
+                var cur = dr.current;
+                if (sit && sit.isRedZone && sit.possession && side(sit.possession)) x.rz = { side: side(sit.possession), k: side(sit.possession) + ':' + ((cur && cur.id) || ''), sub: (sit.downDistanceText || sit.shortDownDistanceText || '') };
+            } else if (fam === 'hockey') {
+                for (i = Math.max(0, plays.length - 30); i < plays.length; i++) {
+                    var q = plays[i], ty = q.type || {};
+                    if (!ty.penaltyMinutes || /misconduct|fighting/i.test((ty.text || '') + ' ' + (ty.penaltyType || ''))) continue;
+                    var pps = other(side(q.team && q.team.id));
+                    if (pps && q.id) x.ev.push({ id: String(q.id), type: 'pp', side: pps, title: 'POWER PLAY!', sub: ty.penaltyMinutes + ' MIN \u2022 ' + (q.text || ty.text || '') });
+                }
+            } else if (fam === 'baseball') {
+                for (i = Math.max(0, plays.length - 40); i < plays.length; i++) {
+                    var b = plays[i], bt = (b.type && b.type.text) || '';
+                    if (!/^(double|triple)$/i.test(bt) || !b.id) continue;
+                    var bat = (b.participants || []).filter(function(r) { return r.type === 'batter'; })[0], who = bat && bat.athlete ? person(bat.athlete.id, bat.athlete.displayName) : null;
+                    var bs = side(b.team && b.team.id);
+                    if (bs) x.ev.push({ id: String(b.id), type: 'big', side: bs, title: bt.toUpperCase() + '!', sub: who ? who.name : '' });
+                }
+            }
+            return x;
+        }
+        function celScorer(sp, fam, person) {
+            var parts = sp.participants || [], txt = String(sp.text || ''), main = null, more = '', m;
+            function pick(re) { return parts.filter(function(r) { return re.test(r.type || ''); }); }
+            var sc = pick(/scorer|batter|scoring/)[0] || (fam === 'soccer' ? parts[0] : null);
+            if (sc && sc.athlete) main = person(sc.athlete.id, sc.athlete.displayName, sc.athlete.headshot);
+            if (fam === 'hockey') {
+                if (!main && (m = /^(.+?)\s+(?:Goal\b|\(\d+\))/.exec(txt))) main = person(null, m[1]);
+                var as = pick(/assist/).map(function(r) { return r.athlete && (r.athlete.shortName || r.athlete.displayName); }).filter(Boolean);
+                if (!as.length && (m = /assists?:\s*(.+)$/i.exec(txt))) as = m[1].split(',').map(function(v) { return v.replace(/\(\d+\)/g, '').trim(); }).filter(Boolean);
+                if (as.length) more = (as.length > 1 ? 'ASSISTS: ' : 'ASSIST: ') + as.join(', ');
+                else if (/unassisted/i.test(txt)) more = 'UNASSISTED';
+            } else if (fam === 'football') {
+                if (!main && (m = /^(.+?)\s+\d+\s+Yd\b/i.exec(txt))) main = person(null, m[1]);
+                if ((m = /pass from\s+(.+?)\s*(\(|$)/i.exec(txt))) more = 'PASS FROM ' + m[1].trim();
+            } else if (fam === 'baseball') {
+                if (!main && (m = /^(.+?)\s+(homered|singled|doubled|tripled|grounded|flied|lined|walked|reached|hit)\b/i.exec(txt))) main = person(null, m[1]);
+            }
+            if (main && more) main.more = more;
+            return main;
+        }
+        // Delay-sync helper: the Gamecast shows the feed's game clock (ticking between polls while it runs). SYNC NOW
+        // locks the clock it shows; press again when the TV shows that clock and the gap becomes the delay (0-30 s).
+        function celSecs(v) { var m = /^(\d+):(\d{2})/.exec(String(v || '')); return m ? (+m[1]) * 60 + (+m[2]) : null; }
+        function celClockRec(fam, stt, st, state) {
+            var per = stt.period || 0, disp = stt.displayClock || '', sec = celSecs(disp);
+            if (sec == null && typeof stt.clock === 'number' && fam !== 'baseball') sec = Math.round(stt.clock);
+            if (fam === 'baseball') { sec = null; disp = st.shortDetail || st.detail || ''; }
+            var p = gc.dclk;
+            gc.dclk = { fam: fam, per: per, sec: sec, disp: disp, at: Date.now(), state: state, dir: fam === 'soccer' ? 1 : -1,
+                        run: !!(p && state === 'in' && sec != null && p.sec != null && p.per === per && p.sec !== sec) };
+        }
+        function celClockText(now) {
+            var c = gc.dclk; if (!c || c.state !== 'in') return '--';
+            if (c.sec == null) return c.disp || '--';
+            var s = Math.max(0, Math.round(c.sec + c.dir * (c.run ? Math.min(12, (now - c.at) / 1000) : 0)));
+            if (c.fam === 'soccer') return Math.floor(s / 60) + "'";
+            var pl = c.fam === 'hockey' ? (c.per > 3 ? 'OT' : 'P' + c.per) : (c.per > 4 ? 'OT' : 'Q' + c.per);
+            return pl + ' ' + Math.floor(s / 60) + ':' + ('0' + (s % 60)).slice(-2);
+        }
+        function celClockTick() {
+            var now = Date.now(); if (!gc.open || now - (gc.clkAt || 0) < 400) return; gc.clkAt = now;
+            var t = document.getElementById('gc-dclock'), v = 'DATA ' + celClockText(now); if (t && t.textContent !== v) t.textContent = v;
+            var b = document.getElementById('gc-cel-sync'); if (!b) return;
+            if (gc.sync && now - gc.sync.at > 60000) { gc.sync = null; b.classList.remove('arm'); }
+            if (!gc.sync && now > (gc.syncMsgUntil || 0) && b.textContent !== 'SYNC NOW') b.textContent = 'SYNC NOW';
+        }
+        function celSyncPress() {
+            var b = document.getElementById('gc-cel-sync'); if (!b || !gc.open) return;
+            var now = Date.now(), c = gc.dclk; gc.lastInput = now;
+            function msg(t) { b.textContent = t; gc.syncMsgUntil = now + 2500; }
+            if (!gc.sync) {
+                if (!c || c.state !== 'in' || c.sec == null) { msg('NO LIVE CLOCK'); return; }
+                gc.sync = { at: now, txt: celClockText(now) };
+                b.classList.add('arm'); b.textContent = 'PRESS AT TV ' + gc.sync.txt;
+                return;
+            }
+            var raw = Math.round((now - gc.sync.at) / 1000), v = Math.max(0, Math.min(30, raw));
+            gc.sync = null; b.classList.remove('arm');
+            settings.celebrateDelay = v; var el = document.getElementById('set-celebrateDelay'); if (el) el.value = v;
+            updateSettings();
+            msg('SYNCED ' + v + 's' + (raw > 30 ? ' (MAX)' : ''));
+        }
+        function celScanScoreboard(list) { // 5-min refresh: cheap check of games that aren't open in Gamecast
+            list.forEach(function(m) {
+                if (gc.open && m.key === gc.key) return;
+                celObserve(m.key, gcFamily(m), m.state, [
+                    { side: 'away', ck: m.league + ':' + m.aId, score: m.aScore, full: m.aFull || m.away, short: m.away, abbr: m.awayAbbr, logo: m.aLogo, rawColor: m.aColor, rawAlt: m.aAlt },
+                    { side: 'home', ck: m.league + ':' + m.hId, score: m.hScore, full: m.hFull || m.home, short: m.home, abbr: m.homeAbbr, logo: m.hLogo, rawColor: m.hColor, rawAlt: m.hAlt }], false, '', false);
+            });
+        }
+        // delayed queue: detection is immediate, the effect waits settings.celebrateDelay seconds
+        function celQueue(ev) {
+            ev.at = Date.now() + Math.max(0, Math.min(30, parseInt(settings.celebrateDelay, 10) || 0)) * 1000 + ((ev.kind && ev.kind.hold) || 0);
+            cel.pending.push(ev);
+            celPump();
+        }
+        function celPump() {
+            clearTimeout(cel.qTimer); cel.qTimer = null;
+            if (!cel.pending.length) return;
+            var now = Date.now();
+            cel.pending.sort(function(a, b) { return a.at - b.at; });
+            while (cel.pending.length && cel.pending[0].at <= now) { var ev = cel.pending.shift(); if (ev.kind.alert) alShow(ev.kind, ev.T, ev.line); else celShow(ev.kind, ev.T, ev.line); }
+            if (cel.pending.length) cel.qTimer = setTimeout(celPump, Math.max(50, cel.pending[0].at - now));
+        }
+        function celCancel(key, side, score) { // side null = whole game (Gamecast closed: only its Gamecast events); returns true if anything was dropped
+            var n = cel.pending.length;
+            cel.pending = cel.pending.filter(function(ev) { return !(ev.key === key && (side === null ? ev.gc : (ev.side === side && ev.score > score))); });
+            if (cel.pending.length !== n) { celPump(); return true; }
+            return false;
+        }
+        function celLite() { // Lite unless Full is chosen; the TV app (budget Google TV boxes) and reduced-motion always get Lite
+            try { if (window.ArcadeTV || (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches)) return true; } catch (e) {}
+            return !settings.celFull;
+        }
+        function celHex(v, fb) { v = String(v || '').replace('#', ''); return /^[0-9a-f]{6}$/i.test(v) ? '#' + v : fb; }
+        function celShow(kind, T, line) {
+            if (cel.showing) { if (cel.queue.length < 2) cel.queue.push([kind, T, line]); return; }
+            var el = document.getElementById('celebrate'); if (!el) return;
+            if (cel.alShowing) alHide(true); // the big moment takes over from a banner
+            var cc = celColors(T), c1 = cc[0], c2 = cc[1];
+            el.style.setProperty('--cel1', c1); el.style.setProperty('--cel2', c2);
+            var ms = kind.big ? CEL_BIG_MS : (kind.mini ? CEL_MINI_MS : CEL_MS);
+            el.style.setProperty('--cel-ms', ms + 'ms');
+            var img = document.getElementById('cel-logo'), logoUrl = T.logo || 'https://a.espncdn.com/combiner/i?img=/i/teamlogos/default-team-logo-500.png';
+            img.onerror = function() { this.onerror = null; this.style.visibility = 'hidden'; };
+            img.style.visibility = ''; img.src = logoUrl;
+            var wm = document.getElementById('cel-wm');
+            if (wm) { wm.onerror = function() { this.onerror = null; this.style.visibility = 'hidden'; }; wm.style.visibility = ''; wm.src = logoUrl; }
+            var P = (!kind.mini && kind.player && kind.player.name) ? kind.player : null, head = document.getElementById('cel-head');
+            head.onerror = function() { this.onerror = null; this.style.display = 'none'; };
+            head.style.display = (P && P.head) ? '' : 'none'; if (P && P.head) head.src = P.head; else head.removeAttribute('src');
+            document.getElementById('cel-pname').textContent = P ? P.name.toUpperCase() : '';
+            document.getElementById('cel-pmore').textContent = P && P.more ? P.more.toUpperCase() : '';
+            var word = kind.text + (P ? ' \u2605 ' + P.name.toUpperCase() : ''), rep = '';
+            for (var i = 0, n = Math.max(2, Math.ceil(24 / (word.length + 3))); i < n; i++) rep += word + ' \u2605 '; // just over a screen wide: huge strips re-raster every frame on TV GPUs
+            ['cel-mq1', 'cel-mq2', 'cel-mq3'].forEach(function(id) { document.getElementById(id).textContent = rep + rep; }); // doubled: seamless -50% loop
+            var bg = document.getElementById('cel-bg');
+            if (bg) { var bgLine = (rep + rep).slice(0, 96); Array.prototype.forEach.call(bg.children, function(n) { n.textContent = bgLine; }); }
+            document.getElementById('cel-title').textContent = kind.text;
+            document.getElementById('cel-sub').textContent = (T.full || '').toUpperCase() + (line ? '   ' + line : '');
+            el.classList.remove('show', 'big', 'mini', 'has-player', 'lite'); void el.offsetWidth; // restart the CSS animations
+            if (celLite()) el.classList.add('lite');
+            el.classList.add('show'); if (kind.big) el.classList.add('big'); if (kind.mini) el.classList.add('mini'); if (P) el.classList.add('has-player');
+            el.setAttribute('aria-hidden', 'false');
+            cel.showing = true; cel.fired++; cel.last = { text: kind.text, word: word, team: T.full || '', player: P ? P.name : '', more: P ? (P.more || '') : '', at: Date.now() };
+            clearTimeout(cel.timer); cel.timer = setTimeout(function() { celHide(false); }, ms);
+        }
+        function celHide(all) {
+            var el = document.getElementById('celebrate');
+            clearTimeout(cel.timer); cel.timer = null;
+            if (all) cel.queue = [];
+            if (el) { el.classList.remove('show', 'big', 'mini', 'has-player'); el.setAttribute('aria-hidden', 'true'); }
+            var img = document.getElementById('cel-logo'); if (img) img.removeAttribute('src'); // let the big logo go
+            var wm = document.getElementById('cel-wm'); if (wm) wm.removeAttribute('src');
+            var hd = document.getElementById('cel-head'); if (hd) hd.removeAttribute('src');
+            ['cel-mq1', 'cel-mq2', 'cel-mq3'].forEach(function(id) { var n = document.getElementById(id); if (n) n.textContent = ''; });
+            var bg = document.getElementById('cel-bg'); if (bg) Array.prototype.forEach.call(bg.children, function(n) { n.textContent = ''; });
+            var was = cel.showing; cel.showing = false;
+            if (was && cel.queue.length) { var n = cel.queue.shift(); cel.timer = setTimeout(function() { cel.timer = null; celShow(n[0], n[1], n[2]); }, 350); }
+            else alNext();
+        }
+        function celColors(T) {
+            var c1 = celHex(T.rawColor, '#ff007f'), c2 = celHex(T.rawAlt, '#00f0ff');
+            if (gcLum(c1) < 0.06) { var t = c1; c1 = c2; c2 = t; } // the wash needs some colour
+            if (gcLum(c2) < 0.25) c2 = gcLum(c1) >= 0.25 ? '#ffffff' : '#00f0ff'; // the glow colour must read on the wash
+            return [c1, c2];
+        }
+        var CEL_AL_TAG = { redzone: 'RED ZONE', pp: 'POWER PLAY', start: 'GAME ON', lead: 'LEAD CHANGE', big: 'BIG PLAY' };
+        function alShow(kind, T, line) {
+            if (cel.showing || cel.alShowing) { if (cel.aq.length < 3) cel.aq.push([kind, T, line]); return; }
+            var el = document.getElementById('cel-alert'); if (!el) return;
+            var cc = celColors(T); el.style.setProperty('--al1', cc[0]); el.style.setProperty('--al2', cc[1]);
+            var img = document.getElementById('al-logo');
+            img.onerror = function() { this.onerror = null; this.style.visibility = 'hidden'; };
+            img.style.visibility = ''; img.src = T.logo || 'https://a.espncdn.com/combiner/i?img=/i/teamlogos/default-team-logo-500.png';
+            document.getElementById('al-title').textContent = kind.text;
+            document.getElementById('al-sub').textContent = ((T.abbr || T.full || '') + (line ? '  \u2022  ' + line : '')).toUpperCase();
+            document.getElementById('al-tag').textContent = CEL_AL_TAG[kind.alert] || 'ALERT';
+            el.className = ''; void el.offsetWidth; el.className = 'show ' + kind.alert + (celLite() ? ' lite' : ''); el.setAttribute('aria-hidden', 'false');
+            cel.alShowing = true; cel.alFired++; cel.alLast = { type: kind.alert, text: kind.text, team: T.full || '', sub: line || '', at: Date.now() };
+            clearTimeout(cel.alTimer); cel.alTimer = setTimeout(function() { alHide(false); }, CEL_ALERT_MS);
+        }
+        function alHide(quiet) {
+            clearTimeout(cel.alTimer); cel.alTimer = null;
+            var el = document.getElementById('cel-alert'); if (el) { el.className = ''; el.setAttribute('aria-hidden', 'true'); }
+            var img = document.getElementById('al-logo'); if (img) img.removeAttribute('src');
+            cel.alShowing = false;
+            if (!quiet) alNext();
+        }
+        function alNext() {
+            if (cel.showing || cel.alShowing || !cel.aq.length) return;
+            clearTimeout(cel.alTimer); cel.alTimer = setTimeout(function() { cel.alTimer = null; if (cel.showing || cel.alShowing || !cel.aq.length) return; var n = cel.aq.shift(); alShow(n[0], n[1], n[2]); }, 300);
+        }
+        // Preview / test hook: arcadeCelebrate('goal' | 'td' | 'fg' | 'run' | 'hr' | 'win' | 'half' | 'period' | 'test') or open the page with ?celebrate=goal
+        function arcadeCelebrate(kind) {
+            kind = String(kind || 'test').toLowerCase();
+            if (kind === 'alerts' || CEL_DEMO_AL[kind]) {
+                celHide(true); alHide(true); cel.aq = [];
+                (kind === 'alerts' ? Object.keys(CEL_DEMO_AL) : [kind]).forEach(function(k) { var a = CEL_DEMO_AL[k], d = CEL_DEMO[a[2]]; alShow({ alert: a[0], text: a[1] }, d.T, a[3]); });
+                return true;
+            }
+            var seq = kind === 'test' ? ['goal', 'td', 'win'] : [kind];
+            celHide(true); alHide(true);
+            seq.forEach(function(k) {
+                var d = CEL_DEMO[k] || CEL_DEMO.goal;
+                var kd = d.win ? { text: celShort(d.T) + ' WIN!!', big: true } : (d.mini ? { text: d.mini, mini: true } : celKind(d.fam, d.delta, { tdAt: {} }, 'x', Date.now(), d.hint));
+                if (kd && d.player) kd.player = d.player;
+                if (cel.showing) cel.queue.push([kd, d.T, d.line]); else celShow(kd, d.T, d.line);
+            });
+            return true;
+        }
+        // Any remote key / click dismisses (capture phase, so the key isn't also used by the page underneath)
+        window.addEventListener('keydown', function(e) { if (!cel.showing) return; e.preventDefault(); e.stopImmediatePropagation(); celHide(true); }, true);
+        document.getElementById('celebrate').addEventListener('click', function(e) { e.stopPropagation(); celHide(true); });
+        document.getElementById('cel-alert').addEventListener('click', function(e) { e.stopPropagation(); alHide(false); });
+        (function() { var m = /[?&]celebrate=([a-z]+)/i.exec(location.search); if (m) setTimeout(function() { arcadeCelebrate(m[1]); }, 2500); })();
+
         function gcRegisterGames(list) { // list of meta objects from updateSportsTicker
             var reg = {}, live = [], pre = [], post = [];
             list.forEach(function(m) { reg[m.key] = m; (m.state === 'in' ? live : (m.state === 'pre' ? pre : post)).push(m); });
@@ -2149,10 +2881,29 @@
             if (gc.open && gc.meta && reg[gc.key]) gc.meta = Object.assign({}, gc.meta, { sitDown: reg[gc.key].sitDown, sitSpot: reg[gc.key].sitSpot, tv: reg[gc.key].tv });
         }
         function gcAttr(key) { return key ? ' data-gc="' + escHtml(key) + '"' : ''; }
+        var GC_MORPH = { 'gc-bxs-body': 1, 'gc-stats-body': 1 };
         function gcSet(id, html) { // only touch the DOM when the markup actually changed (no image flicker, no scroll reset)
             if (gc.html[id] === html) return;
-            gc.html[id] = html;
-            var el = document.getElementById(id); if (el) el.innerHTML = html;
+            var had = gc.html[id] != null; gc.html[id] = html;
+            var el = document.getElementById(id); if (!el) return;
+            var top = el.scrollTop;
+            if (had && GC_MORPH[id] && el.firstChild) { var t = document.createElement('template'); t.innerHTML = html; gcMorph(el, t.content); }
+            else el.innerHTML = html;
+            if (top) el.scrollTop = top;
+        }
+        function gcMorph(a, b) { // patch live node a to match b: only changed text/attributes are touched (box score updates in place, no flicker)
+            var ac = a.childNodes, bc = b.childNodes, i, j;
+            if (ac.length !== bc.length) { while (a.firstChild) a.removeChild(a.firstChild); for (i = 0; i < bc.length; i++) a.appendChild(bc[i].cloneNode(true)); return; }
+            for (i = 0; i < bc.length; i++) {
+                var x = ac[i], y = bc[i];
+                if (x.nodeType !== y.nodeType || x.nodeName !== y.nodeName) { a.replaceChild(y.cloneNode(true), x); continue; }
+                if (x.nodeType === 3) { if (x.nodeValue !== y.nodeValue) x.nodeValue = y.nodeValue; continue; }
+                if (x.nodeType !== 1 || x.nodeName === 'IMG') continue; // team logos are fixed per game; keep them (and any onerror fallback)
+                var at = y.attributes;
+                for (j = 0; j < at.length; j++) if (x.getAttribute(at[j].name) !== at[j].value) x.setAttribute(at[j].name, at[j].value);
+                for (j = x.attributes.length - 1; j >= 0; j--) if (!y.hasAttribute(x.attributes[j].name)) x.removeAttribute(x.attributes[j].name);
+                gcMorph(x, y);
+            }
         }
         function gcFmtTime(t) { return new Date(t).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', second: '2-digit' }); }
         function gcLum(hex) { var m = /^#?([0-9a-f]{6})$/i.exec(hex || ''); if (!m) return 0; var n = parseInt(m[1], 16); return (0.299 * (n >> 16) + 0.587 * ((n >> 8) & 255) + 0.114 * (n & 255)) / 255; }
@@ -2174,11 +2925,11 @@
             if (arcadeNav.menuOpen) navCloseMenu(true);
             if (navIsSettingsOpen()) toggleSettings();
             gc.open = true; gc.meta = meta; gc.key = meta.key || (meta.cid + ':' + meta.id); gc.state = meta.state || null;
-            gc.fails = 0; gc.polls = 0; gc.lastOk = 0; gc.endedAt = 0; gc.lastInput = Date.now(); gc.html = {}; gc.teams = {}; gc.renderErr = null;
+            gc.fails = 0; gc.polls = 0; gc.lastOk = 0; gc.endedAt = 0; gc.lastInput = Date.now(); gc.html = {}; gc.teams = {}; gc.renderErr = null; gc.celFresh = true; gc.dclk = null; gc.sync = null; gc.syncMsgUntil = 0;
             var el = document.getElementById('gamecast');
             el.classList.add('open'); el.setAttribute('aria-hidden', 'false');
             document.body.classList.add('gc-open');
-            ['gc-plays-body', 'gc-stats-body', 'gc-players-body'].forEach(function(id) { var b = document.getElementById(id); if (b) b.scrollTop = 0; });
+            ['gc-plays-body', 'gc-stats-body', 'gc-players-body', 'gc-bxs-body'].forEach(function(id) { var b = document.getElementById(id); if (b) b.scrollTop = 0; });
             gcRenderShell(meta);
             gcPoll();
             gc.scrollTimer = setInterval(gcAutoScroll, 60);
@@ -2193,12 +2944,13 @@
         function gcClose() {
             if (!gc.open) return;
             gcStop();
+            celCancel(gc.key, null, -1); // delayed celebrations for this game die with the Gamecast
             gc.open = false; gc.key = null; gc.meta = null; gc.teams = {};
             var el = document.getElementById('gamecast');
             el.classList.remove('open'); el.setAttribute('aria-hidden', 'true');
             document.body.classList.remove('gc-open');
             Object.keys(gc.html).forEach(function(id) { var n = document.getElementById(id); if (n) n.innerHTML = ''; }); // free the DOM
-            gc.html = {};
+            gc.html = {}; gcApplyViews([]); gc.view = 0;
             var ae = document.activeElement; if (ae && ae.closest && ae.closest('#gamecast')) ae.blur();
             if (!arcadeNav.paused && arcadeNav.pending) { arcadeNav.pending = false; nextSlide(); } // rotation resumes where it left off
         }
@@ -2254,9 +3006,10 @@
             el.innerHTML = html;
         }
         function gcAutoScroll() {
+            try { celClockTick(); } catch (e) {}
             if (!gc.open || Date.now() < gc.scrollHold) return;
-            ['gc-stats-body', 'gc-players-body'].forEach(function(id) {
-                var el = document.getElementById(id); if (!el) return;
+            GC_SCROLLERS.forEach(function(id) {
+                var el = document.getElementById(id); if (!el || !el.offsetParent) return; // hidden view: leave its scroll alone
                 var max = el.scrollHeight - el.clientHeight;
                 if (max <= 4) { el.scrollTop = 0; return; }
                 var now = Date.now();
@@ -2266,10 +3019,47 @@
                 el.scrollTop = el.scrollTop + 1;
             });
         }
+        var GC_SCROLLERS = ['gc-stats-body', 'gc-players-body', 'gc-bxs-body'];
         function gcScrollPanels(dir) {
             gc.scrollHold = Date.now() + 8000;
-            ['gc-stats-body', 'gc-players-body'].forEach(function(id) { var el = document.getElementById(id); if (el) el.scrollTop += dir * Math.round(window.innerHeight * 0.12); });
+            GC_SCROLLERS.forEach(function(id) { var el = document.getElementById(id); if (el && el.offsetParent) el.scrollTop += dir * Math.round(window.innerHeight * 0.12); });
         }
+        function gcPanelsAtTop() { return GC_SCROLLERS.concat('gc-plays-body').every(function(id) { var el = document.getElementById(id); return !el || !el.offsetParent || el.scrollTop <= 2; }); }
+        // Views: [label, class on #gamecast]. Tabs only when there is something to switch between.
+        function gcViews(fam, state, trk, bxs) {
+            if (state === 'pre' || !bxs) return [];
+            if (fam === 'football') return [[trk ? 'FIELD' : 'GAME', trk ? 'gcv-field' : ''], ['BOX SCORE', 'gcv-box']];
+            if (fam === 'baseball') return [[trk ? 'AT BAT + BOX SCORE' : 'BOX SCORE', trk ? 'gcv-mlb' : 'gcv-box'], ['PLAYS & STATS', 'gcv-plays']];
+            if (fam === 'hockey' || fam === 'basketball') return [['GAME', ''], ['BOX SCORE', 'gcv-box']];
+            return [];
+        }
+        function gcApplyViews(views) {
+            gc.views = views;
+            if (!(gc.view >= 0 && gc.view < views.length)) gc.view = 0;
+            var cls = views.length ? views[gc.view][1] : '', root = document.getElementById('gamecast');
+            var sig = views.map(function(v) { return v[0]; }).join('|') + '#' + gc.view;
+            if (root && gc.vcls !== cls) { ['gcv-field', 'gcv-box', 'gcv-mlb', 'gcv-plays'].forEach(function(c) { root.classList.toggle(c, c === cls); }); gc.vcls = cls; }
+            if (root) root.classList.toggle('gc-tabbed', views.length > 1);
+            gcTabHint();
+            if (gc.vsig === sig) return;
+            gc.vsig = sig;
+            for (var i = 0; i < 2; i++) {
+                var b = document.getElementById('gc-tab-' + i); if (!b) continue;
+                b.textContent = views[i] ? views[i][0] : ''; b.style.display = views[i] ? '' : 'none'; b.classList.toggle('on', i === gc.view);
+            }
+            gcTabHint();
+        }
+        function gcTabHint() {
+            var h = document.getElementById('gc-tab-hint'), ae = document.activeElement; if (!h) return;
+            var t = (ae && /^gc-tab-/.test(ae.id || '')) ? '&#9664; &#9654; SWITCH VIEW &nbsp;&bull;&nbsp; &#9660; BACK TO STATS' : '&#9650; AT TOP = TABS &nbsp;&bull;&nbsp; &#9650;&#9660; SCROLL &nbsp;&bull;&nbsp; PLAY/PAUSE = SWITCH';
+            if (h.innerHTML !== t) h.innerHTML = t;
+        }
+        function gcSetView(i) {
+            if (!gc.views || !gc.views[i]) return;
+            gc.view = i; gc.lastInput = Date.now(); gc.vsig = null;
+            gcApplyViews(gc.views);
+        }
+        function gcTabEls() { return [0, 1].map(function(i) { return document.getElementById('gc-tab-' + i); }).filter(function(b) { return b && b.offsetParent && b.style.display !== 'none'; }); }
 
         // ---- data helpers
         function gcPick(cs, side) { for (var i = 0; i < cs.length; i++) if (cs[i].homeAway === side) return cs[i]; return cs[side === 'home' ? 0 : 1] || {}; }
@@ -2285,6 +3075,7 @@
             return { id: String(t.id || c.id || side), abbr: t.abbreviation || (side === 'h' ? meta.home : meta.away), name: nm, loc: (nm !== full && t.location && full.indexOf(t.location) === 0) ? t.location : '',
                      short: t.shortDisplayName || t.abbreviation || '', logo: logo, rec: rec, score: (c.score != null ? String(c.score) : ''), poss: !!c.possession,
                      color: gcColor(t, side === 'h' ? '#ff007f' : '#00f0ff'), ls: (c.linescores || []).map(function(l) { return l.displayValue != null ? l.displayValue : (l.value != null ? l.value : ''); }),
+                     full: full, rawColor: t.color || '', rawAlt: t.alternateColor || '',
                      hits: c.hits, errors: c.errors, rank: (c.curatedRank && c.curatedRank.current && c.curatedRank.current <= 25) ? c.curatedRank.current : (c.rank || null) };
         }
         function gcFamily(meta) { var s = meta.sport; return (s === 'football' || s === 'basketball' || s === 'hockey' || s === 'baseball' || s === 'soccer') ? s : 'other'; }
@@ -2294,14 +3085,16 @@
             gcSet('gc-net', meta.tv && meta.tv !== 'TBD' && meta.tv !== 'TV' ? '&#128250; ' + escHtml(meta.tv) : '');
             var A = { name: meta.away, logo: meta.aLogo, score: meta.aScore, rec: '', color: '#00f0ff' }, H = { name: meta.home, logo: meta.hLogo, score: meta.hScore, rec: '', color: '#ff007f' };
             gcSet('gc-away', gcTeamHtml(A, 'away', meta)); gcSet('gc-home', gcTeamHtml(H, 'home', meta));
+            celSync(meta, { id: meta.aId, abbr: meta.awayAbbr, full: meta.aFull || meta.away }, { id: meta.hId, abbr: meta.homeAbbr, full: meta.hFull || meta.home });
             gcSet('gc-mid', '<div class="gc-pill ' + (meta.state === 'in' ? 'live' : '') + '">' + (meta.state === 'in' ? '&#9679; LIVE' : (meta.state === 'post' ? 'FINAL' : 'UPCOMING')) + '</div><div class="gc-clock">' + escHtml(meta.status || '') + '</div>');
             var wait = '<div class="gc-empty">LOADING GAMECAST&hellip;</div>';
-            gcSet('gc-line', ''); gcSet('gc-wp', ''); var strip = document.getElementById('gc-strip'); if (strip) strip.style.display = 'none'; gcSet('gc-plays-body', wait); gcSet('gc-stats-body', wait); gcSet('gc-players-body', wait);
+            gcApplyViews([]); gcSet('gc-bxs-body', wait);
+            gcSet('gc-line', ''); gcSet('gc-wp', ''); gcSet('gc-track', ''); var strip = document.getElementById('gc-strip'); if (strip) strip.style.display = 'none'; gcSet('gc-plays-body', wait); gcSet('gc-stats-body', wait); gcSet('gc-players-body', wait);
             gcStatus(true);
         }
         function gcTeamHtml(T, side, meta) {
             var lg = gcImg(T.logo, side === 'home' ? meta.hFallback : meta.aFallback, 'gc-logo');
-            var info = '<div class="gc-tinfo"><div class="gc-tname">' + (T.rank ? '<span class="gc-rank">' + T.rank + '</span>' : '') + escHtml(T.name || '') + '</div><div class="gc-rec">' + (T.loc ? escHtml(T.loc.toUpperCase()) + ' &bull; ' : '') + escHtml(T.rec || '') + (T.rec ? ' &bull; ' : '') + (side === 'home' ? 'HOME' : 'AWAY') + '</div></div>';
+            var info = '<div class="gc-tinfo"><div class="gc-tname">' + (T.rank ? '<span class="gc-rank">' + T.rank + '</span>' : '') + escHtml(T.name || '') + '</div><div class="gc-rec">' + (T.loc ? escHtml(T.loc.toUpperCase()) + ' &bull; ' : '') + (T.rec ? '<span style="white-space:nowrap">' + escHtml(T.rec) + '</span> &bull; ' : '') + (side === 'home' ? 'HOME' : 'AWAY') + '</div></div>';
             var sc = '<div class="gc-score" style="color:' + T.color + '; text-shadow: 0 0 3vh ' + T.color + '">' + escHtml(T.score === '' || T.score == null ? '-' : T.score) + (T.poss ? '<span class="gc-poss" title="possession">&#9679;</span>' : '') + '</div>';
             return lg + info + sc;
         }
@@ -2317,6 +3110,16 @@
             if (fam === 'football') sit = gcFootballSit(d, sit);
             if (fam === 'football' && sit.possession && gc.state === 'in') { A.poss = String(sit.possession) === A.id; H.poss = String(sit.possession) === H.id; }
             gc.teams = {}; gc.teams[A.id] = A; gc.teams[H.id] = H;
+            celSync(meta, A, H);
+            try {
+                var sp = (d.scoringPlays && d.scoringPlays.length) ? d.scoringPlays[d.scoringPlays.length - 1] : null;
+                var lp = (d.plays && d.plays.length) ? d.plays[d.plays.length - 1] : (sit.lastPlay || null);
+                var hint = (sp ? ((sp.type && sp.type.text) || '') + ' ' + (sp.text || '') : '') + ' | ' + (lp ? ((lp.type && lp.type.text) || '') + ' ' + (lp.text || '') : '');
+                var cx = null; try { cx = celExtras(meta, d, fam, A, H, sit); } catch (e2) {}
+                celObserve(gc.key, fam, gc.state, [celT('away', A, meta), celT('home', H, meta)], gc.celFresh, hint, true, st.name || '', cx);
+            } catch (e) {}
+            gc.celFresh = false;
+            try { celClockRec(fam, stt, st, gc.state); } catch (e) {}
             var bcs = (comp.broadcasts || []).concat(d.broadcasts || []).map(function(b) { return (b.media && (b.media.shortName || b.media.name)) || b.station || ''; }).filter(Boolean);
             var net = bcs.filter(function(v, i) { return bcs.indexOf(v) === i; }).slice(0, 3).join(' / ') || (meta.tv !== 'TBD' && meta.tv !== 'TV' ? meta.tv : '');
             gcSet('gc-league', escHtml(meta.label || ''));
@@ -2328,6 +3131,11 @@
             gcSet('gc-line', lsHtml);
             gcSet('gc-wp', wpHtml);
             var strip = document.getElementById('gc-strip'); if (strip) { strip.classList.toggle('one', !wpHtml || !lsHtml); strip.style.display = (wpHtml || lsHtml) ? '' : 'none'; }
+            var trk = ''; try { trk = gcTrackHtml(fam, A, H, sit, d, st); } catch (e) { trk = ''; }
+            gcSet('gc-track', trk);
+            var bxs = ''; try { bxs = gc.state === 'pre' ? '' : gcBoxScoreHtml(d, fam, A, H); } catch (e) { bxs = ''; }
+            gcSet('gc-bxs-body', bxs || '<div class="gc-empty">BOX SCORE NOT AVAILABLE YET</div>');
+            gcApplyViews(gcViews(fam, gc.state, trk, bxs));
             gcSet('gc-plays-head', gc.state === 'pre' ? 'GAME INFO' : 'LAST PLAYS');
             gcSet('gc-plays-body', gcPlaysHtml(meta, d, fam));
             gcSet('gc-stats-head', gc.state === 'pre' ? 'SEASON TEAM STATS' : 'TEAM STATS');
@@ -2376,15 +3184,288 @@
             }
             return pill + '<div class="gc-clock">' + clock + '</div>' + (s ? '<div class="gc-sit">' + s + '</div>' : '');
         }
-        function gcFootballSit(d, sit) { // the summary has no situation block for football; rebuild it from the current drive
-            if (sit && (sit.downDistanceText || sit.shortDownDistanceText)) return sit;
-            var cur = d.drives && d.drives.current, plays = (cur && cur.plays) || [];
-            var out = { possession: cur && cur.team && cur.team.id };
+        function gcTrackHtml(fam, A, H, sit, d, st) {
+            if (fam === 'football') return gcFieldHtml(A, H, sit, d, st);
+            if (fam === 'baseball') return gcStrikeHtml(A, H, sit, d, st);
+            return '';
+        }
+        // NFL/CFB field: away end zone left, home right. Ball x from yardsToEndzone + possession.
+        function gcFieldHtml(A, H, sit, d, st) {
+            var dr = d.drives || {}, cur = dr.current || null;
+            if (!cur && Array.isArray(dr.previous) && dr.previous.length) cur = dr.previous[dr.previous.length - 1];
+            if (sit && sit.drive) cur = sit.drive;
+            var plays = (cur && cur.plays) || [];
+            var yte = null, down = '', dist = null, spotTxt = '', possId = sit && sit.possession ? String(sit.possession) : (cur && cur.team && String(cur.team.id)) || '';
+            var best = null;
+            for (var i = plays.length - 1; i >= 0; i--) {
+                var e = plays[i].end || {}, s0 = plays[i].start || {};
+                var src = (e.yardsToEndzone != null) ? e : ((s0.yardsToEndzone != null) ? s0 : null);
+                if (!src) continue;
+                if (!best) best = src;
+                if (src.down > 0) { best = src; break; }
+            }
+            if (best) {
+                yte = +best.yardsToEndzone;
+                dist = best.distance;
+                down = best.shortDownDistanceText || best.downDistanceText || '';
+                if (!down && best.down > 0 && best.distance != null) down = ['', '1st', '2nd', '3rd', '4th'][best.down] + ' & ' + best.distance;
+                spotTxt = best.possessionText || '';
+            }
+            if (yte == null && sit) {
+                if (sit.yardsToEndzone != null) yte = +sit.yardsToEndzone;
+                down = sit.shortDownDistanceText || sit.downDistanceText || down;
+                if (sit.down > 0 && sit.distance != null) down = down || (['', '1st', '2nd', '3rd', '4th'][sit.down] + ' & ' + sit.distance);
+                if (sit.distance != null) dist = sit.distance;
+                spotTxt = sit.possessionText || spotTxt;
+            }
+            if (yte == null && st && st.state === 'pre') return '';
+            var awayHas = possId && possId === String(A.id);
+            var homeHas = possId && possId === String(H.id);
+            // Field x: 0=away EZ left, 100=home EZ right. Away attacks right; home attacks left.
+            function fieldX(yteV, teamIsAway) { return teamIsAway ? (100 - yteV) : yteV; }
+            var ball = yte == null ? null : fieldX(yte, awayHas || (!homeHas));
+            var first = (ball != null && dist != null) ? Math.max(0, Math.min(100, ball + (awayHas ? dist : (homeHas ? -dist : dist)))) : null;
+            var los = ball;
+            var drivePts = [];
+            if (cur) {
+                var aDir = cur.team && String(cur.team.id) === String(A.id);
+                var firstPlay = plays[0], fp = (firstPlay && (firstPlay.start || firstPlay.end)) || {};
+                if (fp.yardsToEndzone != null) drivePts.push(fieldX(+fp.yardsToEndzone, aDir));
+                plays.forEach(function(p) {
+                    var pe = p.end || {};
+                    if (pe.yardsToEndzone == null) return;
+                    drivePts.push(fieldX(+pe.yardsToEndzone, aDir));
+                });
+            }
+            var ca = A.color || '#00f0ff', ch = H.color || '#ff007f';
+            var driveCol = awayHas ? ca : (homeHas ? ch : '#fff');
+            // Real proportions: viewBox 120 x 53.3 yards (end zones x 0-10 / 110-120), scaled with "meet" so it is never stretched
+            var W = 53.3, MY = 26.65;
+            function vx(y) { return 10 + y; } // yard 0..100 -> svg x
+            var marks = '', hashes = '', stripes = '';
+            for (var sy = 0; sy < 100; sy += 10) stripes += '<rect x="' + vx(sy) + '" y="0" width="10" height="' + W + '" fill="' + ((sy / 10) % 2 ? '#0f4423' : '#0d3d1f') + '"/>';
+            for (var y = 5; y <= 95; y += 5) {
+                var x = vx(y), ten = y % 10 === 0;
+                marks += '<line x1="' + x + '" y1="0" x2="' + x + '" y2="' + W + '" stroke="rgba(255,255,255,' + (y === 50 ? 0.6 : (ten ? 0.38 : 0.2)) + ')" stroke-width="' + (y === 50 ? 0.45 : 0.3) + '"/>';
+                if (!ten) continue;
+                var num = (y <= 50 ? y : 100 - y);
+                marks += '<text x="' + x + '" y="10.6" fill="rgba(255,255,255,0.88)" font-size="4.4" text-anchor="middle" font-family="Share Tech Mono,monospace" font-weight="700">' + num + '</text>';
+                marks += '<text x="' + x + '" y="46.2" fill="rgba(255,255,255,0.88)" font-size="4.4" text-anchor="middle" font-family="Share Tech Mono,monospace" font-weight="700">' + num + '</text>';
+            }
+            for (var h = 1; h < 100; h += 1) {
+                if (h % 5 === 0) continue;
+                var hx = vx(h);
+                hashes += '<line x1="' + hx + '" y1="0" x2="' + hx + '" y2="1.1" stroke="rgba(255,255,255,0.3)" stroke-width="0.2"/><line x1="' + hx + '" y1="' + (W - 1.1) + '" x2="' + hx + '" y2="' + W + '" stroke="rgba(255,255,255,0.3)" stroke-width="0.2"/>';
+                hashes += '<line x1="' + hx + '" y1="22.4" x2="' + hx + '" y2="23.5" stroke="rgba(255,255,255,0.3)" stroke-width="0.2"/><line x1="' + hx + '" y1="29.8" x2="' + hx + '" y2="30.9" stroke="rgba(255,255,255,0.3)" stroke-width="0.2"/>';
+            }
+            // Red zone: only the defending side when ball is inside the 20
+            var rz = '';
+            if (yte != null && yte <= 20) {
+                if (awayHas) rz = '<rect x="' + vx(80) + '" y="0" width="20" height="' + W + '" fill="rgba(255,45,85,0.24)"/>'; // attacking home EZ
+                else if (homeHas) rz = '<rect x="' + vx(0) + '" y="0" width="20" height="' + W + '" fill="rgba(255,45,85,0.24)"/>';
+            }
+            var drive = '';
+            if (drivePts.length >= 2) {
+                var pts = drivePts.map(function(yy) { return vx(Math.max(0, Math.min(100, yy))); });
+                var path = pts.map(function(x, i) { return (i ? 'L' : 'M') + x.toFixed(1) + ',' + MY; }).join(' ');
+                drive = '<path d="' + path + '" fill="none" stroke="' + driveCol + '" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" opacity="0.9"/>';
+                var x1 = pts[pts.length - 2], x2 = pts[pts.length - 1], dir = x2 >= x1 ? 1 : -1;
+                drive += '<polygon points="' + (x2 + dir * 2.6).toFixed(1) + ',' + MY + ' ' + x2.toFixed(1) + ',' + (MY - 2.4) + ' ' + x2.toFixed(1) + ',' + (MY + 2.4) + '" fill="' + driveCol + '"/>';
+                pts.forEach(function(x, i) {
+                    if (i === pts.length - 1) return;
+                    drive += '<circle cx="' + x.toFixed(1) + '" cy="' + MY + '" r="0.95" fill="#fff" stroke="' + driveCol + '" stroke-width="0.35"/>';
+                });
+            }
+            var ballG = '', losG = '', firstG = '';
+            if (los != null) losG = '<line x1="' + vx(los).toFixed(1) + '" y1="0" x2="' + vx(los).toFixed(1) + '" y2="' + W + '" stroke="#3b9eff" stroke-width="0.7"/>';
+            if (first != null) firstG = '<line x1="' + vx(first).toFixed(1) + '" y1="0" x2="' + vx(first).toFixed(1) + '" y2="' + W + '" stroke="#ffe600" stroke-width="0.8" stroke-dasharray="1.8 1.1"/>';
+            if (ball != null) {
+                var bx = vx(ball).toFixed(1);
+                ballG = '<circle cx="' + bx + '" cy="' + MY + '" r="3.3" fill="#f5d76e" opacity="0.2"/>' +
+                    '<ellipse cx="' + bx + '" cy="' + MY + '" rx="2.1" ry="1.35" fill="#8b5a2b" stroke="#f5d76e" stroke-width="0.4"/>' +
+                    '<line x1="' + (+bx - 0.9) + '" y1="' + MY + '" x2="' + (+bx + 0.9) + '" y2="' + MY + '" stroke="#fff" stroke-width="0.25"/>';
+            }
+            var who = awayHas ? A.abbr : (homeHas ? H.abbr : '');
+            var isFinal = st && (st.state === 'post' || st.completed);
+            var labelBits = [];
+            if (isFinal) labelBits.push('FINAL DRIVE');
+            if (who) labelBits.push(who + ' BALL');
+            if (down) labelBits.push(down);
+            if (spotTxt && (!down || spotTxt.indexOf(String(down.split('&')[0] || '')) < 0)) {
+                // prefer "at WSH 35" style
+                var at = /^([A-Z&]+)\s+(\d+)$/.exec(spotTxt.trim());
+                labelBits.push(at ? ('at ' + at[1] + ' ' + at[2]) : spotTxt);
+            } else if (!spotTxt && yte != null && who) {
+                // synthesize spot from yards-to-endzone + possession
+                var defAbbr = awayHas ? H.abbr : A.abbr;
+                var ownAbbr = who;
+                if (yte <= 50) labelBits.push('at ' + defAbbr + ' ' + yte);
+                else labelBits.push('at ' + ownAbbr + ' ' + (100 - yte));
+            }
+            if (yte != null && yte <= 20 && !isFinal) labelBits.push('RED ZONE');
+            var headLab = labelBits.map(function(x) {
+                return x === 'RED ZONE' ? '<span class="gc-red">RED ZONE</span>' : escHtml(x);
+            }).join(' · ');
+            var dsc = (cur && cur.description) ? String(cur.description).toUpperCase() : '';
+            var head = '<div class="gc-trk-head"><span>' + (dsc ? 'DRIVE &bull; ' + escHtml(dsc) : 'FIELD') + '</span><b>' + headLab + '</b></div>';
+            function ez(x0, T, col, rot) {
+                var cx = x0 + 5;
+                return '<rect x="' + x0 + '" y="0" width="10" height="' + W + '" fill="' + col + '" opacity="0.92"/>' +
+                    '<image href="' + escHtml(T.logo || '') + '" x="' + (x0 + 1) + '" y="' + (MY - 4) + '" width="8" height="8" preserveAspectRatio="xMidYMid meet"/>' +
+                    [12.5, 40.8].map(function(ty) { return '<text transform="translate(' + cx + ',' + ty + ') rotate(' + rot + ')" fill="#fff" font-size="4.6" text-anchor="middle" dominant-baseline="central" font-family="Inter,sans-serif" font-weight="900" letter-spacing="0.4" opacity="0.95">' + escHtml(T.abbr || '') + '</text>'; }).join('');
+            }
+            var svg = '<svg class="gc-field" viewBox="0 0 120 ' + W + '" preserveAspectRatio="xMidYMid meet" aria-hidden="true">' +
+                ez(0, A, ca, -90) + ez(110, H, ch, 90) + stripes + rz + marks + hashes + drive + losG + firstG + ballG +
+                '<rect x="0.15" y="0.15" width="119.7" height="' + (W - 0.3) + '" fill="none" stroke="rgba(255,255,255,0.55)" stroke-width="0.3"/>' +
+                '<line x1="10" y1="0" x2="10" y2="' + W + '" stroke="#fff" stroke-width="0.5"/><line x1="110" y1="0" x2="110" y2="' + W + '" stroke="#fff" stroke-width="0.5"/>' +
+                '</svg>';
+            var leg = '<div class="gc-fld-leg"><span><i style="background:#3b9eff"></i>LINE OF SCRIMMAGE</span><span><i style="background:#ffe600"></i>LINE TO GAIN</span><span><i style="background:' + driveCol + '"></i>DRIVE</span>' + (rz ? '<span><i style="background:rgba(255,45,85,0.7)"></i>RED ZONE</span>' : '') + '</div>';
+            return head + svg + leg;
+        }
+        // MLB strike zone + current at-bat pitches. ESPN pitchCoordinate ~0–250; zone ~x 85–165, y 145–205.
+        function gcAthleteMap(d) {
+            var map = {};
+            try {
+                (d.boxscore && d.boxscore.players || []).forEach(function(t) {
+                    (t.statistics || []).forEach(function(st) {
+                        (st.athletes || []).forEach(function(a) {
+                            var ath = a.athlete || {};
+                            if (!ath.id) return;
+                            var head = ath.headshot;
+                            if (head && typeof head === 'object') head = head.href;
+                            map[String(ath.id)] = { name: ath.displayName || ath.shortName || '', head: head || '', abbr: (t.team && t.team.abbreviation) || '' };
+                        });
+                    });
+                });
+            } catch (e) {}
+            return map;
+        }
+        function gcStrikeHtml(A, H, sit, d, st) {
+            var plays = d.plays || [];
+            if (!plays.length) return '';
+            var last = null, i;
+            for (i = plays.length - 1; i >= 0; i--) { if (plays[i].pitchCoordinate || plays[i].pitchType) { last = plays[i]; break; } }
+            if (!last) { for (i = plays.length - 1; i >= 0; i--) { if (plays[i].atBatId) { last = plays[i]; break; } } }
+            if (!last) return '';
+            var abId = last.atBatId, pitches = [];
+            for (i = 0; i < plays.length; i++) {
+                var p = plays[i];
+                if (abId && p.atBatId !== abId) continue;
+                if (!(p.pitchCoordinate || p.pitchType || p.pitchVelocity)) continue;
+                // skip non-pitch result markers
+                var ttxt = ((p.type && (p.type.text || p.type.type)) || p.text || '').toLowerCase();
+                if (/play result|end batter|end pitcher|pitching substitution|offensive substitution|defensive/.test(ttxt)) continue;
+                pitches.push(p);
+            }
+            if (!abId) pitches = pitches.slice(-8);
+            var balls = (sit && sit.balls != null) ? sit.balls : (last.resultCount && last.resultCount.balls) || (last.pitchCount && last.pitchCount.balls) || 0;
+            var strikes = (sit && sit.strikes != null) ? sit.strikes : (last.resultCount && last.resultCount.strikes) || (last.pitchCount && last.pitchCount.strikes) || 0;
+            var outs = (sit && sit.outs != null) ? sit.outs : (last.outs != null ? last.outs : 0);
+            function kind(p) {
+                var t = ((p.type && (p.type.type || p.type.text)) || p.text || '').toLowerCase();
+                if (/ball/.test(t) && !/in.play|hit.into|foul/.test(t)) return 'b';
+                if (/strike|foul|tip/.test(t)) return 's';
+                if (/in.play|hit|ground|fly|line|pop|single|double|triple|home|out|fielders|error|sac/.test(t)) return 'i';
+                return /ball/.test(t) ? 'b' : 's';
+            }
+            // Calibrated: ESPN zone ~x 85–165, y 145–205 → SVG box (28,12)-(72,52). Home plate below.
+            function xy(p) {
+                var c = p.pitchCoordinate || {}; if (c.x == null || c.y == null) return null;
+                var x = 28 + ((+c.x - 85) / 80) * 44;
+                var y = 12 + ((+c.y - 145) / 60) * 40;
+                return { x: Math.max(18.5, Math.min(81.5, x)), y: Math.max(7.5, Math.min(70.5, y)) };
+            }
+            var dots = '', list = '', rows = [];
+            pitches.forEach(function(p, idx) {
+                var k = kind(p), col = k === 'b' ? '#39ff14' : (k === 'i' ? '#3b9eff' : '#ff4d4d');
+                var pt = xy(p), n = idx + 1;
+                if (pt) {
+                    dots += '<circle cx="' + pt.x.toFixed(1) + '" cy="' + pt.y.toFixed(1) + '" r="3.6" fill="' + col + '" stroke="#0a0a0a" stroke-width="0.7"/>' +
+                        '<text x="' + pt.x.toFixed(1) + '" y="' + (pt.y + 1.25).toFixed(1) + '" fill="#0a0a0a" font-size="3.4" text-anchor="middle" font-weight="900" font-family="Inter,sans-serif">' + n + '</text>';
+                }
+                var ty = (p.pitchType && (p.pitchType.text || p.pitchType.abbreviation)) || 'Pitch';
+                var res = (p.type && p.type.text) || p.text || '';
+                // Prefer short result words
+                if (/^pitch\s*\d/i.test(res)) res = (p.type && p.type.text) || '';
+                var mph = p.pitchVelocity != null ? Math.round(p.pitchVelocity) + ' mph' : '';
+                rows.push('<div class="' + k + '">' + n + '. ' + escHtml(ty) + (mph ? ' · ' + mph : '') + (res ? ' · ' + escHtml(res) : '') + '</div>');
+            });
+            list = rows.reverse().join(''); // newest first
+            var grid = '';
+            for (var g = 1; g <= 2; g++) {
+                grid += '<line x1="' + (28 + g * (44 / 3)).toFixed(1) + '" y1="12" x2="' + (28 + g * (44 / 3)).toFixed(1) + '" y2="52" stroke="rgba(255,255,255,0.18)" stroke-width="0.45"/>';
+                grid += '<line x1="28" y1="' + (12 + g * (40 / 3)).toFixed(1) + '" x2="72" y2="' + (12 + g * (40 / 3)).toFixed(1) + '" stroke="rgba(255,255,255,0.18)" stroke-width="0.45"/>';
+            }
+            var plate = '<polygon points="40,56 60,56 66,62 50,70 34,62" fill="none" stroke="rgba(255,255,255,0.7)" stroke-width="1.1"/>';
+            var sz = '<svg class="gc-sz" viewBox="15 4 70 70" aria-hidden="true">' +
+                '<rect x="0" y="0" width="100" height="78" fill="#070c14"/>' +
+                '<rect x="28" y="12" width="44" height="40" fill="rgba(0,240,255,0.04)" stroke="rgba(255,255,255,0.9)" stroke-width="1.5"/>' +
+                grid + plate + dots + '</svg>';
+            var b1 = !!(sit && sit.onFirst) || !!last.onFirst;
+            var b2 = !!(sit && sit.onSecond) || !!last.onSecond;
+            var b3 = !!(sit && sit.onThird) || !!last.onThird;
+            // Also infer from play runner flags if present on last pitch
+            if (last.onFirst) b1 = true; if (last.onSecond) b2 = true; if (last.onThird) b3 = true;
+            var bases = '<svg class="gc-bases" viewBox="0 0 100 80" aria-hidden="true">' +
+                '<polygon points="50,8 68,26 50,44 32,26" fill="' + (b2 ? '#facc15' : 'rgba(255,255,255,0.12)') + '" stroke="#fff" stroke-width="1.4"/>' +
+                '<polygon points="70,28 88,46 70,64 52,46" fill="' + (b1 ? '#facc15' : 'rgba(255,255,255,0.12)') + '" stroke="#fff" stroke-width="1.4"/>' +
+                '<polygon points="30,28 48,46 30,64 12,46" fill="' + (b3 ? '#facc15' : 'rgba(255,255,255,0.12)') + '" stroke="#fff" stroke-width="1.4"/>' +
+                '<circle cx="50" cy="66" r="4.5" fill="rgba(255,255,255,0.3)" stroke="#fff" stroke-width="1"/>' +
+                '</svg>';
+            var outsHtml = '<div class="gc-outs">' + [0, 1, 2].map(function(o) { return '<i class="' + (o < outs ? 'on' : '') + '"></i>'; }).join('') + '</div>';
+            var ath = gcAthleteMap(d), batter = null, pitcher = null;
+            (last.participants || []).forEach(function(part) {
+                var id = part.athlete && String(part.athlete.id);
+                if (part.type === 'batter' && id) batter = ath[id] || { name: '', head: '' };
+                if (part.type === 'pitcher' && id) pitcher = ath[id] || { name: '', head: '' };
+            });
+            // Fallback: scan recent plays in this at-bat for participants
+            if ((!batter || !pitcher) && pitches.length) {
+                for (i = pitches.length - 1; i >= 0; i--) {
+                    (pitches[i].participants || []).forEach(function(part) {
+                        var id = part.athlete && String(part.athlete.id);
+                        if (part.type === 'batter' && id && !batter) batter = ath[id] || { name: '', head: '' };
+                        if (part.type === 'pitcher' && id && !pitcher) pitcher = ath[id] || { name: '', head: '' };
+                    });
+                    if (batter && pitcher) break;
+                }
+            }
+            var matchup = '';
+            if (batter || pitcher) {
+                function pl(role, who) {
+                    if (!who) return '';
+                    var img = who.head ? '<img src="' + escHtml(who.head) + '" alt="" onerror="this.style.display=\'none\'">' : '';
+                    return '<div class="gc-sz-pl">' + img + '<div><span class="role">' + role + '</span><span>' + escHtml(who.name || '') + '</span></div></div>';
+                }
+                matchup = '<div class="gc-sz-matchup">' + pl('PITCHING', pitcher) + pl('AT BAT', batter) + '</div>';
+            }
+            var head = '<div class="gc-trk-head"><span>AT BAT</span><b>COUNT ' + balls + '–' + strikes + ' · ' + outs + ' OUT' + (outs === 1 ? '' : 'S') + '</b></div>';
+            return head + '<div class="gc-sz-wrap"><div class="gc-sz-col">' + sz + '</div><div class="gc-sz-info">' + matchup + '<div class="gc-sz-sit">' + bases + outsHtml + '</div></div><div class="gc-sz-list">' + (list || '<div class="gc-dim">NO PITCHES YET</div>') + '</div></div>';
+        }
+
+        function gcFootballSit(d, sit) { // the summary has no situation block for football; rebuild it from the current (or last) drive
+            var base = sit ? Object.assign({}, sit) : {};
+            if (base.downDistanceText || base.shortDownDistanceText) {
+                if (base.yardsToEndzone == null && base.isRedZone == null) { /* keep */ }
+                else return base;
+            }
+            var dr = d.drives || {}, cur = dr.current || null;
+            if (!cur && Array.isArray(dr.previous) && dr.previous.length) cur = dr.previous[dr.previous.length - 1];
+            var plays = (cur && cur.plays) || [];
+            var out = Object.assign({}, base, { possession: (cur && cur.team && cur.team.id) || base.possession, drive: cur || base.drive });
             for (var i = plays.length - 1; i >= 0; i--) {
                 var e = plays[i].end || {}, s = plays[i].start || {};
-                if (e.downDistanceText) { out.downDistanceText = e.downDistanceText; out.isRedZone = e.yardsToEndzone != null && e.yardsToEndzone <= 20; break; }
-                if (e.down > 0 && e.distance != null) { out.shortDownDistanceText = ['', '1st', '2nd', '3rd', '4th'][e.down] + ' & ' + e.distance; out.possessionText = e.possessionText || ''; out.isRedZone = e.yardsToEndzone != null && e.yardsToEndzone <= 20; break; }
-                if (s.downDistanceText) { out.downDistanceText = s.downDistanceText; out.isRedZone = s.yardsToEndzone != null && s.yardsToEndzone <= 20; break; }
+                var src = (e.yardsToEndzone != null || e.down > 0) ? e : ((s.yardsToEndzone != null || s.down > 0) ? s : null);
+                if (!src) continue;
+                if (src.yardsToEndzone != null) out.yardsToEndzone = src.yardsToEndzone;
+                if (src.down > 0) out.down = src.down;
+                if (src.distance != null) out.distance = src.distance;
+                if (src.downDistanceText) out.downDistanceText = src.downDistanceText;
+                if (src.shortDownDistanceText) out.shortDownDistanceText = src.shortDownDistanceText;
+                else if (src.down > 0 && src.distance != null) out.shortDownDistanceText = ['', '1st', '2nd', '3rd', '4th'][src.down] + ' & ' + src.distance;
+                out.isRedZone = src.yardsToEndzone != null && src.yardsToEndzone <= 20;
+                if (src.possessionText) out.possessionText = src.possessionText;
+                break;
             }
             return out;
         }
@@ -2572,7 +3653,7 @@
                 if (fam === 'basketball') box += gcBoxTable(T, 'BOX SCORE', first, ['PTS', 'REB', 'AST', 'FG', '3PT', 'MIN'], function(a, l) { return gcStatOf(a, l, 'PTS') * 100 + gcStatOf(a, l, 'REB'); }, 8);
                 else if (fam === 'hockey') {
                     var sk = { labels: (G.forwards || G.skaters || {}).labels, athletes: [].concat((G.forwards || {}).athletes || [], (G.defenses || {}).athletes || [], (G.skaters || {}).athletes || []) };
-                    box += gcBoxTable(T, 'SKATERS', sk, ['G', 'A', 'SOG', '+/-', 'HT', 'TOI'], function(a, l) { return (gcStatOf(a, l, 'G') + gcStatOf(a, l, 'A')) * 100 + gcStatOf(a, l, 'SOG') * 10 + gcStatOf(a, l, 'HT'); }, 6);
+                    box += gcBoxTable(T, 'SKATERS', sk, ['G', 'A', 'S', '+/-', 'HT', 'TOI'], function(a, l) { return (gcStatOf(a, l, 'G') + gcStatOf(a, l, 'A')) * 100 + gcStatOf(a, l, 'S') * 10 + gcStatOf(a, l, 'HT'); }, 6);
                     box += gcBoxTable(T, 'GOALIE', G.goalies, ['SA', 'SV', 'GA', 'SV%', 'TOI'], null, 2);
                 } else if (fam === 'baseball') {
                     box += gcBoxTable(T, 'BATTING', G.batting, ['H-AB', 'R', 'RBI', 'HR', 'BB', 'K'], function(a, l) { return gcStatOf(a, l, 'H') * 100 + gcStatOf(a, l, 'RBI') * 10 + gcStatOf(a, l, 'R'); }, 6);
@@ -2598,6 +3679,64 @@
             }
             if (box) html += '<div class="gc-sub-title">BOX SCORE</div>' + box;
             return html || '<div class="gc-empty">PLAYER STATS NOT AVAILABLE YET</div>';
+        }
+
+        // LIVE BOX SCORE: full per-team tables side by side (away | home), rebuilt every poll and patched in place by gcSet/gcMorph
+        function gcBxT(title, grp, cols, o) {
+            o = o || {};
+            if (!grp || !grp.athletes || !grp.athletes.length) return '';
+            var labels = grp.labels || [];
+            cols = cols.filter(function(c) { return labels.indexOf(c.split('=')[0]) >= 0; });
+            if (!cols.length) return '';
+            var idx = cols.map(function(c) { return labels.indexOf(c.split('=')[0]); });
+            cols = cols.map(function(c) { return c.split('=').pop(); });
+            var aths = grp.athletes.filter(function(a) { return a.stats && a.stats.length && !a.didNotPlay; });
+            if (o.sort) aths.sort(function(x, y) { return o.sort(y, labels) - o.sort(x, labels); });
+            if (o.limit) aths = aths.slice(0, o.limit);
+            if (!aths.length) return '';
+            var h = '<table class="gc-bxs-t"><tr><th class="nm">' + escHtml(title) + '</th>' + cols.map(function(c) { return '<th>' + escHtml(c) + '</th>'; }).join('') + '</tr>';
+            aths.forEach(function(a) {
+                var at = a.athlete || {}, pos = o.pos && at.position && at.position.abbreviation;
+                h += '<tr' + (o.subs && a.starter === false ? ' class="sub"' : '') + '><td class="nm">' + escHtml(at.shortName || at.displayName || '') + (pos ? '<i>' + escHtml(pos) + '</i>' : '') + '</td>' +
+                     idx.map(function(i) { return '<td>' + escHtml(a.stats[i] != null && a.stats[i] !== '' ? String(a.stats[i]) : '-') + '</td>'; }).join('') + '</tr>';
+            });
+            var tot = grp.totals || [];
+            if (o.totals && tot.length) h += '<tr class="tot"><td class="nm">TEAM</td>' + idx.map(function(i) { return '<td>' + escHtml(tot[i] != null ? String(tot[i]) : '') + '</td>'; }).join('') + '</tr>';
+            return h + '</table>';
+        }
+        function gcBoxScoreHtml(d, fam, A, H) {
+            var groups = (d.boxscore && d.boxscore.players) || [], any = false;
+            var cols = [A, H].map(function(T) {
+                var tp = groups.filter(function(g) { return g.team && String(g.team.id) === T.id; })[0];
+                if (!tp) return '';
+                var G = {}; (tp.statistics || []).forEach(function(x, i) { G[x.name || x.type || ('g' + i)] = x; });
+                var by = function(lab) { return function(a, l) { return gcStatOf(a, l, lab); }; }, h = '';
+                if (fam === 'football') {
+                    h += gcBxT('PASSING', G.passing, ['C/ATT', 'YDS', 'AVG', 'TD', 'INT', 'RTG'], { totals: G.passing && G.passing.athletes && G.passing.athletes.length > 1 });
+                    h += gcBxT('RUSHING', G.rushing, ['CAR', 'YDS', 'AVG', 'TD', 'LONG'], { sort: by('YDS'), totals: true });
+                    h += gcBxT('RECEIVING', G.receiving, ['REC', 'YDS', 'AVG', 'TD', 'LONG', 'TGTS'], { sort: by('YDS'), totals: true });
+                    h += gcBxT('DEFENSE', G.defensive, ['TOT', 'SOLO', 'SACKS', 'TFL', 'PD'], { sort: function(a, l) { return gcStatOf(a, l, 'TOT') + gcStatOf(a, l, 'SACKS') * 5; }, limit: 8 });
+                    h += gcBxT('INTERCEPTIONS', G.interceptions, ['INT', 'YDS', 'TD']);
+                    h += gcBxT('FUMBLES', G.fumbles, ['FUM', 'LOST', 'REC']);
+                    h += gcBxT('KICKING', G.kicking, ['FG', 'PCT', 'LONG', 'XP', 'PTS']);
+                    h += gcBxT('PUNTING', G.punting, ['NO', 'YDS', 'AVG', 'In 20', 'LONG']);
+                    h += gcBxT('KICK RETURNS', G.kickReturns, ['NO', 'YDS', 'AVG', 'LONG', 'TD']);
+                    h += gcBxT('PUNT RETURNS', G.puntReturns, ['NO', 'YDS', 'AVG', 'LONG', 'TD']);
+                } else if (fam === 'baseball') {
+                    h += gcBxT('BATTING', G.batting, ['AB', 'R', 'H', 'RBI', 'BB', 'K', 'AVG'], { pos: true, subs: true, totals: true });
+                    h += gcBxT('PITCHING', G.pitching, ['IP', 'H', 'R', 'ER', 'BB', 'K', 'PC'], { totals: true });
+                } else if (fam === 'hockey') {
+                    var sk = { labels: (G.forwards || G.skaters || G.defenses || {}).labels, athletes: [].concat((G.forwards || {}).athletes || [], (G.defenses || {}).athletes || [], (G.skaters || {}).athletes || []) };
+                    h += gcBxT('SKATERS', sk, ['G', 'A', 'S=SOG', '+/-', 'HT', 'BS', 'TOI'], { pos: true, sort: function(a, l) { return (gcStatOf(a, l, 'G') + gcStatOf(a, l, 'A')) * 1000 + gcStatOf(a, l, 'G') * 100 + gcStatOf(a, l, 'S'); } });
+                    h += gcBxT('GOALIES', G.goalies, ['SA', 'SV', 'GA', 'SV%', 'TOI']);
+                } else if (fam === 'basketball') {
+                    var first = (tp.statistics || [])[0];
+                    h += gcBxT('PLAYERS', first, ['MIN', 'PTS', 'REB', 'AST', 'FG', '3PT', 'STL', 'BLK'], { pos: true, subs: true, totals: true });
+                }
+                if (h) any = true;
+                return '<div class="gc-bxs-col"><div class="gc-bxs-team" style="color:' + T.color + '">' + gcImg(T.logo, '', '') + escHtml(T.abbr) + ' <span class="gc-dim">' + escHtml(T.name || '') + '</span></div>' + (h || '<div class="gc-dim">NO STATS YET</div>') + '</div>';
+            });
+            return any ? '<div class="gc-bxs-cols">' + cols.join('') + '</div>' : '';
         }
 
         function gcChipHtml(m, i) {
@@ -2704,6 +3843,7 @@
             });
         }
         function navBack() {
+            if (cel.showing) { celHide(true); return true; }
             if (navIsSettingsOpen()) { toggleSettings(); return true; }
             if (gc && gc.open) { gcClose(); return true; }
             if (arcadeNav.menuOpen) { navCloseMenu(); return true; }
@@ -2814,6 +3954,7 @@
             navTouch();
             if (navIsSettingsOpen()) {
                 if (nk === 'back') { e.preventDefault(); toggleSettings(); return; }
+                if ((nk === 'left' || nk === 'right') && ae && ae.getAttribute && ae.getAttribute('data-adjust') === 'celDelay') { e.preventDefault(); nudgeCelDelay(nk === 'left' ? -1 : 1); return; }
                 if (nk === 'up' || nk === 'down' || nk === 'left' || nk === 'right') { e.preventDefault(); navMove(navSettingsItems(), nk); return; }
                 if (nk === 'ok' && ae && ae.type === 'checkbox') { e.preventDefault(); ae.click(); return; }
                 if (nk === 'ok' && (!ae || ae === document.body)) { e.preventDefault(); var its = navSettingsItems(); if (its.length) its[0].focus(); }
@@ -2821,10 +3962,20 @@
             }
             if (gc.open) { // Gamecast: BACK closes, LEFT/RIGHT switch game, UP/DOWN scroll stats, OK focuses then presses CLOSE
                 gc.lastInput = Date.now();
+                var ctl = ['gc-cel-away', 'gc-cel-dminus', 'gc-cel-dplus', 'gc-cel-sync', 'gc-cel-home', 'gc-close'].map(function(id) { return document.getElementById(id); }).filter(navVisible), onCtl = ctl.indexOf(ae) >= 0;
+                var tabs = gcTabEls(), onTab = tabs.indexOf(ae) >= 0;
                 if (nk === 'back') { e.preventDefault(); gcClose(); return; }
+                if (tabs.length && (nk === 'play' || (onTab && (nk === 'left' || nk === 'right' || nk === 'ok')))) { // switch FIELD / BOX SCORE (focus follows)
+                    e.preventDefault(); if (e.repeat && nk !== 'left' && nk !== 'right') return;
+                    var vi = (gc.view + (nk === 'left' ? -1 : 1) + tabs.length) % tabs.length; gcSetView(vi);
+                    if (onTab) { tabs[vi].focus(); gcTabHint(); } return;
+                }
+                if (onTab) { e.preventDefault(); if (nk === 'up' && ctl.length) ctl[0].focus(); else if (nk === 'down') ae.blur(); gcTabHint(); return; }
+                if (tabs.length && ((nk === 'down' && onCtl) || (nk === 'up' && !onCtl && gcPanelsAtTop()))) { e.preventDefault(); tabs[Math.min(gc.view, tabs.length - 1)].focus(); gcTabHint(); return; }
+                if ((nk === 'left' || nk === 'right') && onCtl) { e.preventDefault(); ctl[(ctl.indexOf(ae) + (nk === 'left' ? -1 : 1) + ctl.length) % ctl.length].focus(); return; }
                 if (nk === 'left' || nk === 'right') { e.preventDefault(); gcStep(nk === 'left' ? -1 : 1); return; }
-                if (nk === 'up' || nk === 'down') { e.preventDefault(); gcScrollPanels(nk === 'up' ? -1 : 1); return; }
-                if (nk === 'ok') { e.preventDefault(); if (e.repeat) return; var cb = document.getElementById('gc-close'); if (ae === cb) gcClose(); else if (cb) cb.focus(); return; }
+                if (nk === 'up' || nk === 'down') { e.preventDefault(); if (onCtl) ae.blur(); gcScrollPanels(nk === 'up' ? -1 : 1); return; }
+                if (nk === 'ok') { e.preventDefault(); if (e.repeat) return; var cb = document.getElementById('gc-close'); if (ae === cb) gcClose(); else if (onCtl) ae.click(); else if (ctl.length) ctl[0].focus(); return; }
                 e.preventDefault(); return;
             }
             if (arcadeNav.menuOpen) {
@@ -2850,11 +4001,14 @@
         window.addEventListener('load', async function() { 
             checkMode(); loadSettingsUI(); updateClock(); setInterval(updateClock, 1000);
             renderSkeletons();
+            requestWakeLock(); scheduleSoftReload();
             fetchCommandData(); fetchNextTrivia();
             await updateSportsTicker();
             nextSlide(); 
             setInterval(function(){ updateSportsTicker().catch(function(){}); }, 300000);
             setInterval(fetchCommandData, 900000);
+            window.addEventListener('online', function() { netState.fails = 0; netSet(false, netState.stale); updateSportsTicker().catch(function(){}); });
+            window.addEventListener('offline', function() { netSet(true, true); });
         });
     </script>
 </body>

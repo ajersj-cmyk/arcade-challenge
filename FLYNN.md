@@ -72,6 +72,26 @@ reference finals/upcoming events (NFL, CFB, World Cup, MLB, EPL), screenshots ea
 "never more than one request in flight", the RECONNECTING state during an induced outage (and recovery), auto-close of a
 finished game, and a clean stop on close.
 
+`node tools/test-reliability.mjs [preview.html]` checks hung-fetch abort, trivia no longer skips leaders, the
+rotation watchdog helpers, stale scoreboard cache + offline pill, and soft-reload skipped when `window.ArcadeTV` exists.
+
+`node tools/test-trackers.mjs [preview.html]` checks Gamecast football field + MLB strike-zone trackers against mocked
+feeds and optional real ESPN dumps (`/tmp/nfl2.json`, `/tmp/mlb2.json`): SVG field (ball, line-to-gain, drive path),
+pitch dots/list/bases/count, graceful degrade, and 0 console errors. With real dumps (`/tmp/nfl2.json`, `/tmp/cfb2.json`,
+`/tmp/mlb2.json`, `/tmp/nhl.json`) it also checks the views at 1280x720: FIELD default + 2.25:1 field size, remote ▲ → tabs → ▶ BOX
+SCORE → ▼ scroll, Play/Pause and mouse tab switching, the view surviving a poll, box-score tables per sport, and an in-place poll
+update (same DOM nodes, new value, scroll kept). Screenshots land in `tools/out/*-trackers/`.
+
+`node tools/test-celebrate.mjs [preview.html]` tests score celebrations against mocked ESPN summaries (an NHL game
+NYR @ CAR and a CFB game TEM @ ECU): the per-team ★ toggles (mouse + D-pad) and their localStorage, no fire on first look,
+GOAL!! / TOUCHDOWN!! / FIELD GOAL!!! / CANES WIN!! / HALFTIME!, no repeat after a score correction, the delay (Gamecast
++/− and settings ◀/▶, 0–30 s), queued events cancelled by a correction or by closing, any key dismisses without leaking
+to the Gamecast, the `arcadeCelebrate('test')` / `?celebrate=td` hooks, and 0 console errors. It also checks the scorer
+card (name + headshot + assists, logo-only fallback), the FG hold-back, every alert banner (red zone once per drive, big
+play, interception, lead change, puck drop, power play once per penalty, per-type off switch) and SYNC NOW. It saves
+1920x1080 screenshots of the toggles, a Hurricanes goal with Aho's card, a Canes win, an ECU touchdown, the red-zone and
+power-play banners, the Gamecast sync helper and the settings rows.
+
 `node tools/test-futures-fallback.mjs [preview.html]` tests the futures data fallbacks with request interception:
 no `futures.json` → Action Network live; no file + Action Network blocked → ESPN; stale file + both blocked → last saved file.
 
@@ -252,9 +272,23 @@ next slide shows right away.
 |---|---|
 | Back / Esc / Backspace, or click ✕ CLOSE | close, back to rotation |
 | ◀ / ▶ | previous / next game (live first, then upcoming, then recent finals) |
-| ▲ / ▼ | scroll the team-stats and player-stats panels (auto-scroll resumes after 8 s) |
-| OK | focus ✕ CLOSE (a second OK closes) |
+| ▲ / ▼ | scroll the visible stats / box-score panels (auto-scroll resumes after 8 s) |
+| ▲ when the panels are at the top (or ▼ from the ★ row) | focus the **view tabs**; then ◀ / ▶ (or OK) switch view, ▼ goes back to scrolling, ▲ goes to the ★ row |
+| Play/Pause (Space / P) | switch view directly (FIELD ⇄ BOX SCORE etc.) |
+| OK | focus the first ★ CELEBRATE toggle (◀/▶ walk the ★ / delay / SYNC / CLOSE row) |
 
+- **Views (tabs under the ★ row, live/final games only):** football **FIELD | BOX SCORE**; baseball **AT BAT + BOX SCORE |
+  PLAYS & STATS**; hockey/basketball **GAME | BOX SCORE**. Pre-game and soccer have no tabs (classic layout). The tab sets a
+  class on `#gamecast` (`gcv-field`, `gcv-box`, `gcv-mlb`, `gcv-plays`, none = classic) and a CSS grid rearranges the same blocks,
+  so every block keeps updating on each poll while hidden. The chosen tab survives polls and ◀/▶ game switches; it resets on close.
+  - FIELD: real-proportion field (SVG viewBox 120 × 53.3 yd, `meet`, never stretched) + linescore, win prob, last plays.
+  - BOX SCORE: linescore + team-stat bars | **LIVE BOX SCORE** (`gcBoxScoreHtml`): away | home side by side. NFL/CFB passing,
+    rushing, receiving (TEAM totals), defense, INTs, fumbles, kicking, punting, returns; MLB batting AB R H RBI BB K AVG (subs
+    indented) + pitching IP H R ER BB K PC; NHL skaters G A SOG(+/-) HT BS TOI + goalies SA SV GA SV% TOI (ESPN's NHL `S` label is
+    shots on goal; its `SOG` column is always 0); NBA MIN PTS REB AST FG 3PT STL BLK.
+  - MLB AT BAT + BOX SCORE: big strike zone + pitcher/batter + bases/outs + pitch list (newest first) next to linescore + box score.
+  - The box score and team stats are patched in place (`gcMorph`: only changed text/attributes are touched, logos kept), and
+    `gcSet` keeps every panel's scroll position, so the 10 s poll never flickers or jumps.
 - **Content:** a scoreboard with logos, records, score, period/clock and status. It also shows the in-game situation:
   - football: possession, down and distance, red zone
   - MLB: count, bases, outs, batter vs pitcher
@@ -263,9 +297,12 @@ next slide shows right away.
   - soccer: possession
 
   Below that: a linescore (MLB adds R/H/E), win probability with a sparkline (or the matchup predictor and line before
-  kickoff), the last 6 plays, every team stat as comparison bars, top performers, and box-score tables (NBA/NFL/NHL/MLB
-  from `boxscore.players`, soccer from `rosters`). Upcoming games show season stats/leaders, venue, weather, probables and
-  the line. Missing blocks are simply left out.
+  kickoff), **sport trackers** (NFL/CFB horizontal field with end zones/logos, ball, line-to-gain, possession arrow, red-zone
+  shading and drive path; MLB strike-zone box with numbered pitch dots colored ball/strike/in-play, pitch list with type+mph,
+  count, outs and base diamond — both update on the 10 s poll, SVG/simple DOM, degrade if fields missing), the last 6 plays,
+  every team stat as comparison bars, top performers, and box-score tables (NBA/NFL/NHL/MLB from `boxscore.players`, soccer
+  from `rosters`). Upcoming games show season stats/leaders, venue, weather, probables and the line. Missing blocks are simply
+  left out.
 - **Polling:** one summary request every **10 s** (start to start) while open. The previous request is aborted first, so
   requests never overlap, and each one times out after 8 s. After 3 failures in a row the gap backs off to 20 s, then 30 s,
   and the header shows **⚠ RECONNECTING… LAST UPDATE h:mm:ss** while the last good data stays on screen. Otherwise the
@@ -275,6 +312,54 @@ next slide shows right away.
 - **Auto-close:** a finished game closes itself after 10 min with no input. An upcoming game closes after 30 min idle.
   Live games stay open until closed.
 - Moving the mouse shows the cursor for 3 s (it's still `cursor: none` when idle), so clicks are possible on a desktop.
+
+### Score celebrations (full-screen team moment)
+
+- **Turn it on:** open any NHL / NFL / college football / MLB game in the Gamecast and press OK on **★ CELEBRATE <TEAM>**
+  under either team (or both). It turns yellow (ON). The choice is saved per team in `localStorage.ahlersCelebrateTeams1`
+  (`"<league>:<ESPN team id>"`). The master switch **Score Celebrations** (settings, default ON) turns everything off.
+- **Delay:** 0–30 s in 1 s steps, default 0 (`settings.celebrateDelay`). Change it with − / + in the Gamecast or ◀ / ▶ on
+  the delay row in settings. A score is detected right away, and the effect is queued until the delay is up. Queued events
+  are dropped if the score is corrected down or the Gamecast is closed (events found by the 5-min scoreboard refresh are
+  dropped on a correction).
+- **What fires:** only a score that goes *up* between two polls (never on first load, and never again after a correction
+  back up). Debounced per game (20 s, except touchdowns/wins). Hockey/soccer **GOAL!!**. Football **TOUCHDOWN!!** (+6),
+  **FIELD GOAL!!!** (+3), **SAFETY!** (+2, unless it's a two-point try just after a TD). PAT +1 doesn't fire. Baseball
+  **HOME RUN!!** (from the latest play text) or **RUN SCORES!** / **N RUNS SCORE!**. Win: **<SHORT NAME> WIN!!** (e.g. CANES WIN!!).
+  Smaller, shorter moments for **HALFTIME!**, **END OF PERIOD** / **END OF QUARTER** and **FINAL** (a toggled team that
+  didn't win). Basketball doesn't fire on baskets.
+- **Look:** team-colour wash and strobe, swinging light beams, a light sweep, three huge scrolling marquee rows of the
+  banner text, shake + zoom-punch logo, pulse rings, CSS confetti. CSS transform/opacity only, 4–8 s, no sound. Any remote
+  key or a click dismisses it (the key isn't passed on). Back closes it first.
+- **Scorer:** scoring celebrations show the player when the summary has a *new* scoring play for that team: name in the
+  marquee (`GOAL!! ★ SEBASTIAN AHO`) plus a headshot card with assists (NHL) or "PASS FROM …" (football). The name comes
+  from `participants` (NHL/MLB plays) or the scoring-play text (football). The headshot comes from the feed, the boxscore
+  athlete, or `a.espncdn.com/i/headshots/<league>/players/full/<id>.png`. With no player found, only the team logo shows.
+- **Effects level:** **Lite** is the default (Settings → *Full Effects* off), and the TV app (`window.ArcadeTV`) and
+  `prefers-reduced-motion` always use it. It keeps Full's colours: the Full layout frozen as a static frame: top + bottom glowing 'GOAL!! ★ PLAYER' strips (transform scroll), huge outlined
+  name behind the center, logo + headshot card + score bar, ring + star outline, red wash, small static shard/dot accents.
+  Motion is cheap: strip scroll, one logo scale-in, and 2–3 white flashes at the start. No strobe, falling confetti, shake,
+  beams, sweep, continuous beat, or animated filters. **Full** is the original 3-strip strobe/confetti/shake version. Headless Chrome
+  (software compositing, frames from 0.5–3.5 s): Lite goal/TD 60/60 fps at 1x and 60/59 fps at 6x CPU throttle; Full about
+  11–16 fps.
+- **Field goals** are held back 5 s on top of the delay, so a FG never shows before a TD would be known.
+- **Alerts (smaller banners)** for ★ teams use the same delay and the master switch, and each type has its own switch
+  in settings (`alertRedzone`, `alertPP`, `alertStart`, `alertLead`, `alertBig`, default ON):
+  **RED ZONE!** (football, once per drive, from the drive's yards-to-endzone), **POWER PLAY!** (NHL, for the team
+  whose opponent took a minor/major penalty, once per penalty play), **PUCK DROP! / KICKOFF! / FIRST PITCH! / TIP-OFF!**
+  (pre → in), **<TEAM> TAKE THE LEAD!** (from the high-water scores, so corrections can't re-fire it), **BIG PLAY! N YDS**
+  (25+ yd pass/run), **INTERCEPTION! / FUMBLE RECOVERED!** (for the defence), **DOUBLE! / TRIPLE!** (MLB). The
+  play-by-play alerts only come from an open Gamecast. Start and lead change also come from the 5-min scoreboard refresh.
+  A banner waits while a full celebration is showing, then follows it.
+- **Delay sync (SYNC NOW):** the Gamecast shows the feed's clock (`DATA P2 12:22`, ticking between polls while it runs)
+  next to the delay. Press **SYNC NOW**: it locks the clock shown and reads `PRESS AT TV P2 12:22`. Press again when the
+  TV shows that clock. The gap becomes the delay (0–30 s, 1 s steps, saved). The lock expires after 60 s. There's no
+  live clock for MLB, so it shows "NO LIVE CLOCK".
+- **Preview:** console `arcadeCelebrate('goal' | 'td' | 'fg' | 'run' | 'hr' | 'win' | 'half' | 'period' | 'test')`,
+  `arcadeCelebrate('redzone' | 'pp' | 'start' | 'lead' | 'big' | 'alerts')` for the banners, the
+  **★ PREVIEW** button in settings, or open the page with `?celebrate=td` (etc.). `test` plays GOAL → TD → WIN.
+- Performance note: marquee strips are only just over a screen wide. Long strips with glow text dropped software rendering
+  to about 4 fps.
 
 - *App shell?* Stay in the browser for now. A **TWA** needs Chrome on the TV (rare on Android TV). A **thin WebView
   wrapper** is only worth it if the TV browser swallows Back/Menu, sleeps the screen, or can't auto-launch on boot. The
@@ -302,6 +387,8 @@ next slide shows right away.
 - [ ] `cursor: none`, no scrollbars, layout fills 16:9 at 1920x1080 and 1280x720
 - [ ] `#remote` mode shows the NEXT SLIDE controller and hides the TV view
 - [ ] localStorage migrations (old `mySquadTeams` values, removal of `oddsApiKey` / `ahlersPropsCache`)
+- [ ] Score celebrations: ★ toggles in the Gamecast, master switch + 0–30 s delay in settings, fire only on increases,
+      any key dismisses. Alerts: once per situation, per-type switches. SYNC NOW sets the delay (`tools/test-celebrate.mjs`)
 - [ ] No API keys or secrets added; every new API is free, no-key and CORS-enabled
 - [ ] NFL FUTURES / NFL AWARDS / CFB FUTURES / NHL FUTURES slides populate, showing the 'UPDATED' time from futures.json, (from futures.json, or the live fallbacks) and can be toggled in settings
 - [ ] Idle kiosk shows **no** nav UI; ◀/▶, OK menu, Back, Play/Pause and auto-hide all work (harness remote checks)
@@ -318,8 +405,8 @@ next slide shows right away.
 |---|---|---|
 | 1 | ✅ *Fixed in PR #2 (no longer called; names come from ESPN core $refs).* **ESPN `/teams?limit=400` sends no `Access-Control-Allow-Origin`** (200 to curl, but browsers block it) | 5 console CORS errors per futures build (once / 24 h on the TV). `loadTeamMap()` falls back to the hard-coded NFL/NBA/MLB/NHL maps. **CFB has no fallback, so "CFB TITLE" never renders.** |
 | 2 | ✅ *Fixed in PR #2.* Futures market matching used `name` and `new Date().getFullYear()` | NBA title also missing (on 2026-10-07 only SUPER BOWL, WORLD SERIES, STANLEY CUP rendered). ESPN files upcoming NBA/NHL seasons under next year. |
-| 3 | **Rotation skips a slide around trivia.** `showTrivia()` increments `rotationStep` itself, then `nextSlide()` increments again | After a normal trivia slide, **leaders** is skipped. When trivia isn't loaded yet, leaders shows but **PGA** is skipped. (The harness saw PGA skipped when OpenTDB returned 429.) |
-| 4 | **The 800 ms fallback timer in `nextSlide()` never fires.** It checks `if (!slideTimer)`, but `slideTimer` still holds a stale id | If an async slide's `fetch` hangs (no timeouts anywhere), rotation freezes on that slide. The initial `await updateSportsTicker()` has the same risk at startup. |
+| 3 | ~~**Rotation skips a slide around trivia.**~~ **FIXED** (PR reliability): `showTrivia()` increments `rotationStep` itself, then `nextSlide()` increments again | After a normal trivia slide, **leaders** is skipped. When trivia isn't loaded yet, leaders shows but **PGA** is skipped. (The harness saw PGA skipped when OpenTDB returned 429.) |
+| 4 | ~~Hung-fetch freezes rotation~~ | **Fixed** in reliability: `arcadeFetch` 9 s AbortController + 90 s slide watchdog |
 | 5 | ✅ *Fixed in PR #2.* Gear click/tap double-toggles (§5) | The gear only works from the keyboard/remote |
 | 6 | ✅ *Fixed in PR #2 (D-pad navigation).* No Back/Escape/arrow handling (§5) | Hard to drive with a D-pad |
 | 7 | `BroadcastChannel` phone remote is same-device only | The QR "remote" doesn't reach the TV |
@@ -370,10 +457,10 @@ Small, incremental steps. Each one keeps every §6 item working and goes through
 2b. ✅ **(PR #4) Gamecast.** Full-screen live game overlay from the Live Action cards, the ticker or the navigator's GAMES
    row. It shows the scoreboard, situation, linescore, win probability, last plays, full team stats and box-score player
    stats, polls every 10 s, and has reconnecting and auto-close behaviour (§5).
-3. **Resilience.** `fetch` timeouts (AbortController ~8 s), a working rotation watchdog (issue 4), `res.ok` checks,
-   last-good-data cache with a small "stale" badge when an API is down.
-4. **Kiosk hardening.** Screen Wake Lock, a nightly soft reload (~4 AM) to clear memory on 24/7 runs, offline indicator +
-   auto-recover, favicon.
+3. ✅ **Resilience + kiosk** (PR reliability / Gamecast trackers). 9 s `arcadeFetch`, 90 s slide watchdog, trivia skip fix,
+   last-good scoreboard cache + STALE/OFFLINE pill, Screen Wake Lock (re-acquire on visibilitychange; no-op if unsupported /
+   ArcadeTV), ~4 AM soft reload only if no Gamecast and not ArcadeTV.
+4. **Kiosk leftovers.** Favicon (issue 14).
 5. **Smarter live data.** Refresh every 60 s while games are live (5 min otherwise), fetch the 12 scoreboards in parallel,
    and update the ticker without restarting its scroll (issue 10).
 6. **Performance.** Drop the unused Tailwind Play CDN and inline only the Preflight rules the page depends on.
