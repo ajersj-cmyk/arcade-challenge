@@ -1,0 +1,85 @@
+name: Build TV app (tvapp)
+
+# Builds the thin Android TV WebView shell in tvapp/ (the legacy android-tv/ app has its own workflow).
+on:
+  push:
+    branches: [main, "flynn/tv-app"]
+    paths:
+      - "tvapp/**"
+      - ".github/workflows/tvapp.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: tvapp-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    defaults:
+      run:
+        working-directory: tvapp
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: gradle
+          cache-dependency-path: |
+            tvapp/**/*.gradle.kts
+            tvapp/gradle/wrapper/gradle-wrapper.properties
+
+      - name: Android SDK packages
+        run: |
+          SDKM="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
+          yes | "$SDKM" --licenses > /dev/null || true
+          "$SDKM" --install "platforms;android-37.0" "build-tools;37.0.0" > /dev/null
+          echo "Using SDK at $ANDROID_HOME"
+
+      - name: Signing key
+        # Self-signed release key from repo secrets so every build can update the previous install.
+        # Without the secrets (forks), Gradle falls back to the debug key.
+        env:
+          KEYSTORE_B64: ${{ secrets.TVAPP_KEYSTORE_B64 }}
+        run: |
+          if [ -n "$KEYSTORE_B64" ]; then
+            echo "$KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/arcade-tvapp.jks"
+            echo "TVAPP_KEYSTORE=$RUNNER_TEMP/arcade-tvapp.jks" >> "$GITHUB_ENV"
+            echo "Release key: present"
+          else
+            echo "::warning::TVAPP_KEYSTORE_B64 secret not set - APK will be debug-signed"
+          fi
+
+      - name: Build + lint
+        env:
+          TVAPP_KEYSTORE_PASSWORD: ${{ secrets.TVAPP_KEYSTORE_PASSWORD }}
+          TVAPP_KEY_ALIAS: ${{ secrets.TVAPP_KEY_ALIAS }}
+          TVAPP_KEY_PASSWORD: ${{ secrets.TVAPP_KEY_PASSWORD }}
+        run: ./gradlew --no-daemon assembleRelease lintRelease
+
+      - name: Verify APK
+        run: |
+          APK=$(ls app/build/outputs/apk/release/*.apk)
+          BT="$ANDROID_HOME/build-tools/37.0.0"
+          "$BT/aapt2" dump badging "$APK" | grep -E "^(package|sdkVersion|minSdkVersion|targetSdkVersion|leanback-launchable-activity|uses-permission|application:)"
+          "$BT/aapt2" dump badging "$APK" | grep -q "^leanback-launchable-activity" || { echo "::error::no LEANBACK_LAUNCHER entry"; exit 1; }
+          "$BT/apksigner" verify --print-certs "$APK" | grep -E "Signer #1 certificate (DN|SHA-256)"
+          SIZE=$(stat -c %s "$APK")
+          echo "APK size: $SIZE bytes"
+          mkdir -p dist && cp "$APK" dist/ahlers-arcade-tv-$(sed -n 's/.*appVersionName = "\(.*\)".*/\1/p' app/build.gradle.kts).apk
+          ls -la dist
+          echo "### Ahlers Arcade TV APK" >> "$GITHUB_STEP_SUMMARY"
+          echo "\`$(ls dist)\` - $SIZE bytes - commit \`${GITHUB_SHA::7}\`" >> "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ahlers-arcade-tv-apk
+          path: tvapp/dist/*.apk
+          if-no-files-found: error
+          retention-days: 90

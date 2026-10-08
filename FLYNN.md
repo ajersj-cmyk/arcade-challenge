@@ -16,6 +16,8 @@ This is the working guide for the arcade's live scoreboard site. Read it before 
    `march 11 working`, `oldworkingplayer`, `original main combo`, `Working GAME ONLY`,
    `WOrking Movie poster and challenge thing`). **Don't edit, delete, rename or refactor them.**
    `background.mp4` and `header.PNG` sit in the root but `index.html` doesn't reference them (see §4).
+   The **new** Android TV app lives in `tvapp/` (+ `.github/workflows/tvapp.yml`), see §9. It is a separate, maintained
+   project; the legacy `android-tv/` folder is not.
 2. **Test in a preview copy first.** Copy `index.html` to `preview.html` (gitignored), make the change there, and run
    the test script until it passes. Only then copy the change into `index.html`.
 3. **Branch + PR only.** Never push to `main`. Use branches named `flynn/<topic>`, open a PR, and **Jordan merges.**
@@ -276,9 +278,8 @@ next slide shows right away.
   Live games stay open until closed.
 - Moving the mouse shows the cursor for 3 s (it's still `cursor: none` when idle), so clicks are possible on a desktop.
 
-- *App shell?* Stay in the browser for now. A **TWA** needs Chrome on the TV (rare on Android TV). A **thin WebView
-  wrapper** is only worth it if the TV browser swallows Back/Menu, sleeps the screen, or can't auto-launch on boot. The
-  JS already accepts raw Android key codes for that case.
+- *App shell?* Done: the thin WebView app in `tvapp/` (§9) loads this same live page, keeps the screen on and routes
+  BACK / MENU / Play-Pause into `arcadeNav`. The page still works the same in a plain browser.
 
 ---
 
@@ -355,6 +356,9 @@ Small, incremental steps. Each one keeps every §6 item working and goes through
 > Pages. Keep the page light for low-RAM TV boxes: Gamecast keeps no response history, polls one request at a time and
 > frees its DOM on close. Dropping the Tailwind CDN (item 6) and the nightly reload (item 4) help here too. (The old
 > `android-tv/` folder stays untouched; the new shell should be its own fresh folder/PR.)
+>
+> ✅ **Step 1 shipped (PR #5, `tvapp/`, pre-release `tvapp-v0.1.0`):** see §9 for what v0.1.0 does, how to install it,
+> and the next increments.
 
 1. ✅ **(PR #2) D-pad remote navigation (Android TV).** Visible focus ring. ←/→ = previous/next slide. OK/Enter (or Menu) opens an
    on-screen menu to jump to a section and pause/resume rotation. Back/Escape closes the menu or modal. The menu auto-hides
@@ -384,3 +388,128 @@ Small, incremental steps. Each one keeps every §6 item working and goes through
    mapping (issue 8) and add a 3-day forecast from the Open-Meteo call the page already makes.
 9. **Fix the rotation skip** (issue 3) so leaders and PGA show every cycle. This changes visible behaviour, so it needs Jordan's OK.
 10. **Phone remote that actually works** (issue 7). It needs a relay (e.g. a tiny free worker), so it comes later and is optional.
+
+---
+
+## 9. Android TV app (`tvapp/`)
+
+A thin, memory-light Android TV wrapper around the **live** site. It loads
+<https://ajersj-cmyk.github.io/arcade-challenge/>, so every change merged to `main` shows up on the TV on the next
+load. **You never need to reinstall for site changes.** Reinstall only when the app itself changes (new `tvapp-v*` release).
+
+### Install / update on the TV (sideload)
+
+Latest APK (v0.1.0, about 130 KB):
+<https://github.com/ajersj-cmyk/arcade-challenge/releases/download/tvapp-v0.1.0/ahlers-arcade-tv-0.1.0.apk>
+(release page: <https://github.com/ajersj-cmyk/arcade-challenge/releases/tag/tvapp-v0.1.0>)
+
+**Option A: the Downloader app (no computer needed)**
+1. On the TV, install **Downloader** (by AFTVnews) from the Play Store / Amazon Appstore.
+2. Allow it to install apps: *Settings → Apps → Security & restrictions → Unknown sources → Downloader → On*
+   (Google TV: *Settings → System → Developer options / Apps → Install unknown apps*; Fire TV: *My Fire TV → Developer
+   options → Install unknown apps*).
+3. Open Downloader, type the APK link above into the URL box, press **Go**, then **Install** → **Done**.
+   (Tip: make a short link to that URL first, e.g. with any URL shortener or an AFTVnews short code, so there's less
+   to type with the remote.)
+4. Open **Ahlers Arcade** from the apps row. It shows the arcade-style banner. Long-press it to move it to favourites.
+
+**Option B: ADB from a computer on the same Wi-Fi**
+1. TV: *Settings → Device Preferences → About → Build*, press OK 7 times to enable Developer options. Then turn on
+   *Developer options → USB debugging / Network debugging*. Note the TV's IP (*Settings → Network*).
+2. Computer: `adb connect <tv-ip>:5555`, accept the prompt on the TV, then
+   `adb install -r ahlers-arcade-tv-0.1.0.apk`.
+
+**Updating:** install the newer APK the same way. Every build is signed with the same key, so it installs over the
+old one and keeps the site's settings (localStorage). If the TV says "App not installed", an older build signed
+with a different key is on it: uninstall it first. The legacy `android-tv` APK is a different app
+(`com.ahlersarcade.tv`) and can stay or be uninstalled. The new one is `com.ahlersarcade.tvapp`.
+
+### Using it
+
+| Remote key | What it does |
+|---|---|
+| D-pad / OK | goes straight to the page (`arcadeNav`: ◀/▶ slides, OK menu, GAMES row, Gamecast…) |
+| **BACK** | closes whatever is open on the site first (Gamecast → navigator menu → settings). If nothing is open, a small dialog appears: **press BACK again to exit**, or pick *Keep watching / Exit / Reload scoreboard / Launch on boot ON-OFF*. The dialog closes itself after 15 s. |
+| Play/Pause (and Play, Pause) | pause / resume slide rotation (same as the site's Play key) |
+| ⏩ / ⏭  and  ⏪ / ⏮ | next / previous slide (or next / previous game inside Gamecast) |
+| MENU (if the remote has one) | opens the site's settings |
+
+- **Offline:** if the page can't load, a neon **SIGNAL LOST** screen shows the reason and retries automatically
+  (5 s, 10 s, 20 s, 30 s, then every 60 s). It also retries as soon as the network comes back. OK = retry now.
+  Once the page has loaded, API outages are handled by the page itself (feed-down states, Gamecast RECONNECTING).
+- **Launch on boot (optional, off by default):** BACK → *Launch on boot: ON*. On Android 10+ the system only lets an
+  app start itself at boot if it may *display over other apps*. The toggle opens that settings screen when the TV has
+  one. If it doesn't (common on Google TV), grant it once from a computer:
+  `adb shell appops set com.ahlersarcade.tvapp SYSTEM_ALERT_WINDOW allow`.
+  Android 7-9 boxes and most Fire TVs need nothing extra.
+
+### What v0.1.0 does (technical)
+
+- Plain Java, framework APIs only (no AndroidX, no Kotlin, no libraries). Release APK ≈ 130 KB after R8.
+  `minSdk 24` (Android 7), `targetSdk/compileSdk 37`. AGP 9.4.1, Gradle 9.8.1 wrapper, JDK 17.
+- Leanback launcher entry + 320×180 banner, plus a normal launcher entry so it also works on Fire TV and phones. Art
+  is generated by `tvapp/tools/make_art.py` (Press Start 2P + Orbitron, synthwave grid).
+- One `Activity`, one `WebView` (built in code, no layouts). Landscape, immersive fullscreen, `FLAG_KEEP_SCREEN_ON`,
+  hardware acceleration. `singleTask`, and handles every config change itself, so HDMI/resolution changes don't reload the page.
+- WebView: JavaScript, DOM storage (settings persist), media autoplay without a gesture, `LOAD_DEFAULT` HTTP caching,
+  mixed content `COMPATIBILITY_MODE` (cleartext traffic off), text zoom pinned at 100 % (the layout is vh-based),
+  file/content access off, no zoom, metrics opt-out, a blank default video poster (no grey play icon). The user agent is
+  the stock WebView UA + ` AhlersArcadeTV/0.1.0`. WebView debugging (chrome://inspect) is on in **debug** builds only.
+- Navigation is locked to `ajersj-cmyk.github.io`. Other links open in the app that owns them (e.g. YouTube), or are ignored.
+- BACK: `OnBackInvokedCallback` on Android 13+ (apps targeting 16+ no longer get `KEYCODE_BACK`), and the key path on
+  older versions. Both call the page's `navBack()` (which returns true when it closed something) via `evaluateJavascript`.
+  If the page doesn't answer within 700 ms, the exit dialog shows anyway, so a hung page can't trap you.
+  Media keys and MENU are sent as synthetic `keydown` events (`MediaPlayPause`/179, `ArrowLeft/Right`, `ContextMenu`).
+- JS bridge `window.ArcadeTV`: `isTvApp()`, `version()`, `getLaunchOnBoot()`, `setLaunchOnBoot(bool)`, `exitApp()`.
+  The site doesn't use it yet. It's there so a later site change can show the boot toggle in its own settings.
+- Low RAM: `onStop` pauses the WebView and its JS timers (no polling while another app is in front). `onTrimMemory`
+  drops the in-memory cache while visible (and fires a `arcade-lowmem` window event the page can listen for). Once the
+  app is in the background it **destroys the WebView entirely** and rebuilds it on return. The renderer is marked
+  "waived when not visible". A renderer crash or OOM kill (`onRenderProcessGone`) rebuilds the WebView instead of
+  crashing the app, and after 3 crashes within a minute it shows the offline screen. A nightly reload around 4 AM
+  (if the page has been up 6 h+) clears slow leaks on 24/7 runs.
+- Boot: `BootReceiver` is **disabled in the manifest** and only enabled when the toggle is on, so it costs nothing when off.
+
+### Build
+
+- **CI:** `.github/workflows/tvapp.yml` runs on pushes to `main` / `flynn/tv-app` that touch `tvapp/**`, and on
+  *Run workflow*. It runs `assembleRelease` + `lintRelease`, checks the APK with `aapt2` (leanback entry) and `apksigner`,
+  and uploads the **`ahlers-arcade-tv-apk`** artifact (kept 90 days).
+- **Signing:** a self-signed release key (`CN=Ahlers Arcade TV`, RSA 3072, valid 50 years, SHA-256
+  `7D:07:2C:A2:…:DF:3A:43`). It's stored as repo secrets `TVAPP_KEYSTORE_B64`, `TVAPP_KEYSTORE_PASSWORD`,
+  `TVAPP_KEY_ALIAS` and `TVAPP_KEY_PASSWORD`, plus a copy on Flynn's box (`~/android-dev/keys/`, never committed).
+  **Losing the key means the next APK can't update the installed one** (uninstall/reinstall, and the site settings
+  reset), so keep a backup. Without the secrets (forks), Gradle falls back to the debug key.
+- **Local:** JDK 17 + Android SDK (`platforms;android-37.0`, `build-tools;37.0.0`), then
+  `cd tvapp && ./gradlew assembleRelease` (export `TVAPP_KEYSTORE`, `TVAPP_KEYSTORE_PASSWORD`, … to sign with the
+  release key). Output: `tvapp/app/build/outputs/apk/release/ahlers-arcade-tv-<version>-release.apk`.
+- **Releasing a new version:** bump `appVersionName` / `appVersionCode` in `tvapp/app/build.gradle.kts`, merge, let the
+  workflow build it, then attach the artifact APK to a new pre-release tagged `tvapp-v<version>`.
+
+### The legacy `android-tv/` app (read-only notes; don't edit it)
+
+It's a Kotlin WebView + ExoPlayer app (`com.ahlersarcade.tv`, appcompat + media3 + constraintlayout). It loads the
+same URL, sends `.mp4`/`.m3u8` links to a native player screen and YouTube links to the YouTube app, and exposes
+`ArcadeTV.playVideo()`. Its workflow did build successfully (one run, 2026-09-07, on `main`). Why it wasn't a good
+kiosk app:
+- **BACK:** it called `webView.goBack()` whenever history existed. Since PR #2 the site pushes a history entry, so BACK
+  ran the page's popstate handler and the app could never be exited with BACK. Before PR #2, BACK just quit the app.
+- **No keep-screen-on, no immersive mode, no offline/error screen, no renderer-crash handling**, and no Play/Pause or
+  MENU forwarding.
+- The banner/icon was a plain cyan-outlined rectangle (an empty box in the launcher).
+- **Every CI build was signed with that runner's throwaway debug key**, so a new APK could never update an installed
+  one ("App not installed"). It also depended on whatever `gradle` the runner had installed (`gradle wrapper` at build time).
+- `MIXED_CONTENT_ALWAYS_ALLOW` + cleartext traffic on. A few MB of libraries for a page shell. Fixed `versionCode 1`.
+  Missing `uiMode`/`screenLayout` in `configChanges`, so some HDMI/display events recreate the activity and reload the page.
+- The artifact expired after 90 days, and there was no release link to sideload from.
+
+### Next increments (proposed)
+
+1. Site side: when `window.ArcadeTV` exists, show *Launch on boot* and *Exit app* in the settings modal, and hide the
+   desktop-only bits (mouse cursor reveal).
+2. Last-good snapshot: keep a small offline copy of the last loaded page (or bundle `index.html` in the APK), so a cold
+   boot without internet shows the board with a stale badge instead of SIGNAL LOST.
+3. In-app update check: compare `version()` with the latest `tvapp-v*` release and show "Update available" (still a
+   manual install, no extra permissions).
+4. Screensaver/Daydream entry so the TV's idle screensaver can be the scoreboard.
+5. Watchdog: if the page stops rotating (no `nextSlide` heartbeat via the bridge for N minutes), reload it.
