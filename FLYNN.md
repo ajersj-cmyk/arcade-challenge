@@ -94,7 +94,7 @@ It's a single self-contained HTML page (inline CSS + JS, no build step) made for
 ### Slide rotation order (`nextSlide()`)
 
 `live → props → mySquad → trivia → leaders → pga → ufc → command → soccerSlide → tvGuide → news → odds → futures →
-nflFutures → nflAwards → cfbFutures → rankings → nfl → nba → nhl → mlb` → (loop). The order lives in the global
+nflFutures → nflAwards → cfbFutures → nhlFutures → rankings → nfl → nba → nhl → mlb` → (loop). The order lives in the global
 `ARCADE_SCREENS` array. `live` and `props` always show. The rest can be switched off in settings.
 
 | Slide (DOM id) | Title | Data | Timing |
@@ -114,6 +114,7 @@ nflFutures → nflAwards → cfbFutures → rankings → nfl → nba → nhl →
 | `futures-screen` | FUTURES | ESPN core futures: Super Bowl, CFB title, NBA title, World Series, Stanley Cup (top 8 each), cached 24 h (`ahlersFutures4`) | scroll rule (18 s) / 8 s |
 | `nflfut-screen` | NFL FUTURES | Super Bowl (8), AFC/NFC champion (6), 8 divisions (4), from `futures.json` (§4a) | scroll rule / 6 s "NO ODDS POSTED" |
 | `nflawards-screen` | NFL AWARDS ODDS | MVP, OPOY, DPOY, OROY, DROY, Comeback, Coach of the Year (6 each), with headshots | scroll rule / 6 s |
+| `nhlfut-screen` | NHL FUTURES | one wide Stanley Cup Winner panel, top 16 in two columns | scroll rule / 6 s |
 | `cfbfut-screen` | COLLEGE FOOTBALL FUTURES | National title, make CFP title game, Heisman (8); SEC/Big Ten/Big 12/ACC (5); AAC, MWC, Sun Belt, MAC, C-USA, Pac-12 (4) | scroll rule / 6 s |
 | `rankings-screen` | COLLEGE RANKINGS | ESPN CFB rankings top 25 + records (CFB standings, cached 24 h) | scroll rule / 5 s on error |
 | `nfl/nba/nhl/mlb-screen` | XXX STANDINGS | ESPN standings grouped by division (NBA by conference) | scroll rule / 6 s |
@@ -154,7 +155,7 @@ None of them need an API key, and **no keys or tokens are embedded**. The code a
 | ESPN core futures | `https://sports.core.api.espn.com/v2/sports/{sport}/leagues/{league}/seasons/{year}/futures?limit=50`. Tries the likely season years per sport and keeps the fullest market. Matches on `displayName` + `name`. | futures slide, cached 24 h (`ahlersFutures4`) | futures |
 | ESPN core $ref | `https://sports.core.api.espn.com/v2/sports/.../teams/{id}` (and `/athletes/{id}` for the ESPN fallback) | resolves team names missing from the built-in maps (e.g. CFB) | futures slides |
 | futures.json (same origin) | `futures.json?t=<30-min bucket>`, written daily by `.github/workflows/futures.yml` | each football futures slide, re-checked every 30 min | NFL/CFB futures + awards (§4a) |
-| Action Network | `https://api.actionnetwork.com/web/v1/leagues/{1=NFL,2=NCAAF}/futures/available` and `.../futures/{type}?bookIds=15,68,69,75,123`. CORS echoes the page origin, no key. | **browser fallback only** (file missing or > ~2 days old), cached 3 h (`ahlersFootballFutures1`) | NFL/CFB futures |
+| Action Network | `https://api.actionnetwork.com/web/v1/leagues/{1=NFL,2=NCAAF,3=NHL}/futures/available` and `.../futures/{type}?bookIds=15,68,69,75,123`. CORS echoes the page origin, no key. | **browser fallback only** (file missing or > ~2 days old), cached 3 h (`ahlersFootballFutures1`) | NFL/CFB/NHL futures |
 | Open-Meteo | `https://api.open-meteo.com/v1/forecast?latitude=35.6127&longitude=-77.3663&current=temperature_2m,weather_code&daily=temperature_2m_max,temperature_2m_min&temperature_unit=fahrenheit&timezone=America/New_York` | on load, then every **15 min** (only if Command Center is on) | Command Center weather |
 | Open Trivia DB | `https://opentdb.com/api.php?amount=1&category=21&type=multiple` | on load and after each trivia slide | trivia (rate limit 1 req / 5 s / IP) |
 | rss2json | `https://api.rss2json.com/v1/api.json?rss_url=` + Yahoo Sports RSS / CBS Sports headlines RSS | each time the news slide shows | headlines (free tier, rate-limited) |
@@ -167,14 +168,17 @@ None of them need an API key, and **no keys or tokens are embedded**. The code a
 ### 4a. Football futures data pipeline
 1. **Daily GitHub Action** (`.github/workflows/futures.yml`, 10:17 UTC ≈ 6:17 AM ET, also runnable by hand) runs
    `node scripts/fetch-futures.mjs futures.json`. It pulls Action Network (consensus line + DK/FD/MGM/Caesars) and fills
-   missing markets from ESPN core (DraftKings; e.g. NFL Coach of the Year). It commits `futures.json` to `main` only if
+   missing markets from ESPN core (DraftKings; e.g. NFL Coach of the Year). NHL Stanley Cup: Action Network league 3,
+   ESPN fallback `hockey/nhl`. ESPN files the 2026-27 NHL season under **2026** (checked 2026-10-07; 2027 only has a Hart
+   market), so the script tries both candidate seasons and keeps the fullest market. `FUTURES_SKIP_AN=1` tests the
+   ESPN-only path. It commits `futures.json` to `main` only if
    the file changed. **If fewer than 5 markets come back, the last good file is kept.** Scheduled runs only start after
    this workflow is on `main`.
 2. **In the browser** (`loadFootballFutures()`): `futures.json` if it's < ~2.2 days old → else localStorage cache of a
    live pull (< 3 h) → else Action Network live (+ ESPN fill) → else ESPN core only → else the stale file ("LAST SAVED FEED").
    Each slide's subtitle shows the source and update time.
 3. File shape: `{ generatedAt, season, nfl: { super_bowl, afc_champ, …, coy }, ncaaf: { cfb_title, heisman, … },
-   errors }`. Each market is `{ title, source, primaryBook, rows: [{ name, short, team, logo, teamLogo, player, odds, implied, books }] }`.
+   nhl: { stanley_cup }, errors }`. Each market is `{ title, source, primaryBook, rows: [{ name, short, team, logo, teamLogo, player, odds, implied, books }] }`.
 
 Local assets: `index.html` references **no** local files apart from `futures.json`. `background.mp4` (1.3 MB) and `header.PNG` (710 KB) exist
 but aren't used: there's no `<video>` element, and the background is pure CSS.
@@ -254,7 +258,7 @@ auto-close after **90 s**. Pause auto-resumes after **10 min**.
 - [ ] `#remote` mode shows the NEXT SLIDE controller and hides the TV view
 - [ ] localStorage migrations (old `mySquadTeams` values, removal of `oddsApiKey` / `ahlersPropsCache`)
 - [ ] No API keys or secrets added; every new API is free, no-key and CORS-enabled
-- [ ] NFL FUTURES / NFL AWARDS / CFB FUTURES slides populate (from futures.json, or the live fallbacks) and can be toggled in settings
+- [ ] NFL FUTURES / NFL AWARDS / CFB FUTURES / NHL FUTURES slides populate, showing the 'UPDATED' time from futures.json, (from futures.json, or the live fallbacks) and can be toggled in settings
 - [ ] Idle kiosk shows **no** nav UI; ◀/▶, OK menu, Back, Play/Pause and auto-hide all work (harness remote checks)
 - [ ] Mouse click on the gear opens settings; SAVE & CLOSE closes it
 

@@ -285,10 +285,17 @@ async function runOne(opts, file, outDir, label) {
       result.slidesNotSeen = allSlides.filter(x => !seen.has(x));
       result.futuresSections = await page.evaluate(() => { try { return (JSON.parse(localStorage.getItem('ahlersFutures4') || localStorage.getItem('ahlersFutures3') || '{}').sections || []).map(x => x.title + ' (' + x.rows.length + ')'); } catch (e) { return []; } });
       // football futures/awards slides (only when the page has them)
-      for (const [sid, min] of [['nflfut-screen', 8], ['nflawards-screen', 5], ['cfbfut-screen', 8]]) {
+      for (const [sid, min] of [['nflfut-screen', 8], ['nflawards-screen', 5], ['cfbfut-screen', 8], ['nhlfut-screen', 1]]) {
         if (!allSlides.includes(sid)) continue;
         const best = result.slides.filter(x => x.id === sid).sort((a, b) => b.cards - a.cards)[0];
         check(`${sid} populated with real odds (>= ${min} markets)`, best && best.cards >= min, best ? `${best.cards} markets, ${best.rows} rows` : 'never shown');
+        if (best) result.futuresSlideText = Object.assign(result.futuresSlideText || {}, { [sid]: best.text });
+      }
+      if (allSlides.includes('nflfut-screen')) {
+        const gen = JSON.parse(fs.readFileSync(path.join(REPO, 'futures.json'), 'utf8')).generatedAt;
+        const expect = await page.evaluate(g => { const d = new Date(g); return 'UPDATED ' + d.toLocaleDateString([], { month: 'short', day: 'numeric' }) + ' ' + d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }); }, gen);
+        const metas = Object.values(result.futuresSlideText || {});
+        check("futures slides show 'Updated' time from futures.json generatedAt", metas.length > 0 && metas.every(t => t.toUpperCase().includes(expect.toUpperCase())), `${expect} (generatedAt ${gen})`);
       }
       if (await page.evaluate(() => !!localStorage.getItem('ahlersFutures4'))) {
         check('FUTURES slide has CFB TITLE + NBA TITLE sections', ['CFB TITLE', 'NBA TITLE'].every(t => result.futuresSections.some(x => x.startsWith(t))), result.futuresSections.join(', '));
