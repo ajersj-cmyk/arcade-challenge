@@ -75,6 +75,10 @@ finished game, and a clean stop on close.
 `node tools/test-reliability.mjs [preview.html]` checks hung-fetch abort, trivia no longer skips leaders, the
 rotation watchdog helpers, stale scoreboard cache + offline pill, and soft-reload skipped when `window.ArcadeTV` exists.
 
+`node tools/test-trackers.mjs [preview.html]` checks Gamecast football field + MLB strike-zone trackers against mocked
+feeds and optional real ESPN dumps (`/tmp/nfl2.json`, `/tmp/mlb2.json`): SVG field (ball, line-to-gain, drive path),
+pitch dots/list/bases/count, graceful degrade, and 0 console errors. Screenshots land in `tools/out/*-trackers/`.
+
 `node tools/test-celebrate.mjs [preview.html]` tests score celebrations against mocked ESPN summaries (an NHL game
 NYR @ CAR and a CFB game TEM @ ECU): the per-team ★ toggles (mouse + D-pad) and their localStorage, no fire on first look,
 GOAL!! / TOUCHDOWN!! / FIELD GOAL!!! / CANES WIN!! / HALFTIME!, no repeat after a score correction, the delay (Gamecast
@@ -276,9 +280,12 @@ next slide shows right away.
   - soccer: possession
 
   Below that: a linescore (MLB adds R/H/E), win probability with a sparkline (or the matchup predictor and line before
-  kickoff), the last 6 plays, every team stat as comparison bars, top performers, and box-score tables (NBA/NFL/NHL/MLB
-  from `boxscore.players`, soccer from `rosters`). Upcoming games show season stats/leaders, venue, weather, probables and
-  the line. Missing blocks are simply left out.
+  kickoff), **sport trackers** (NFL/CFB horizontal field with end zones/logos, ball, line-to-gain, possession arrow, red-zone
+  shading and drive path; MLB strike-zone box with numbered pitch dots colored ball/strike/in-play, pitch list with type+mph,
+  count, outs and base diamond — both update on the 10 s poll, SVG/simple DOM, degrade if fields missing), the last 6 plays,
+  every team stat as comparison bars, top performers, and box-score tables (NBA/NFL/NHL/MLB from `boxscore.players`, soccer
+  from `rosters`). Upcoming games show season stats/leaders, venue, weather, probables and the line. Missing blocks are simply
+  left out.
 - **Polling:** one summary request every **10 s** (start to start) while open. The previous request is aborted first, so
   requests never overlap, and each one times out after 8 s. After 3 failures in a row the gap backs off to 20 s, then 30 s,
   and the header shows **⚠ RECONNECTING… LAST UPDATE h:mm:ss** while the last good data stays on screen. Otherwise the
@@ -433,10 +440,10 @@ Small, incremental steps. Each one keeps every §6 item working and goes through
 2b. ✅ **(PR #4) Gamecast.** Full-screen live game overlay from the Live Action cards, the ticker or the navigator's GAMES
    row. It shows the scoreboard, situation, linescore, win probability, last plays, full team stats and box-score player
    stats, polls every 10 s, and has reconnecting and auto-close behaviour (§5).
-3. **Resilience.** ~~`fetch` timeouts / watchdog~~ **Shipped** (reliability): 9 s `arcadeFetch`, 90 s watchdog, stale scoreboard cache, offline pill, Wake Lock, 4 AM soft reload (browser only). Remaining:
-   last-good-data cache with a small "stale" badge when an API is down.
-4. **Kiosk hardening.** Screen Wake Lock, a nightly soft reload (~4 AM) to clear memory on 24/7 runs, offline indicator +
-   auto-recover, favicon.
+3. ✅ **Resilience + kiosk** (PR reliability / Gamecast trackers). 9 s `arcadeFetch`, 90 s slide watchdog, trivia skip fix,
+   last-good scoreboard cache + STALE/OFFLINE pill, Screen Wake Lock (re-acquire on visibilitychange; no-op if unsupported /
+   ArcadeTV), ~4 AM soft reload only if no Gamecast and not ArcadeTV.
+4. **Kiosk leftovers.** Favicon (issue 14).
 5. **Smarter live data.** Refresh every 60 s while games are live (5 min otherwise), fetch the 12 scoreboards in parallel,
    and update the ticker without restarting its scroll (issue 10).
 6. **Performance.** Drop the unused Tailwind Play CDN and inline only the Preflight rules the page depends on.
