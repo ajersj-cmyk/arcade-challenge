@@ -1,5 +1,6 @@
 name: Refresh futures odds
 # Once a day: fetch NFL + college football futures/awards + NHL Stanley Cup odds and commit futures.json beside index.html.
+# Same run: NFL fantasy projections + trending pickups -> fantasy.json (scripts/fetch-fantasy.mjs; keeps the old file on failure).
 # GitHub Pages serves it same-origin for the scoreboard's futures slides. If fewer than 5 markets come back,
 # scripts/fetch-futures.mjs keeps the last good file and nothing is committed.
 on:
@@ -22,11 +23,14 @@ jobs:
           node-version: 20
       - name: Build futures.json
         run: node scripts/fetch-futures.mjs futures.json
+      - name: Build fantasy.json
+        run: node scripts/fetch-fantasy.mjs fantasy.json
+        continue-on-error: true
       - name: Commit if changed
         run: |
           git config user.name  "futures-bot"
           git config user.email "futures-bot@users.noreply.github.com"
-          git add futures.json
+          git add futures.json fantasy.json
           if git diff --cached --quiet; then echo "No change"; exit 0; fi
-          git commit -m "chore: refresh futures odds [skip ci]"
+          git commit -m "chore: refresh futures odds + fantasy [skip ci]"
           git push

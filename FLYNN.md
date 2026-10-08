@@ -92,6 +92,20 @@ play, interception, lead change, puck drop, power play once per penalty, per-typ
 1920x1080 screenshots of the toggles, a Hurricanes goal with Aho's card, a Canes win, an ECU touchdown, the red-zone and
 power-play banners, the Gamecast sync helper and the settings rows.
 
+`node tools/test-sportmode.mjs [preview.html]` tests SPORT MODE: the settings row (D-pad ▶▶▶ + OK, mouse), the saved state
+(`ahlersSportMode1`, 12 h expiry, snapshot), that user settings are untouched, the indicator pill, NFL/CFB/CBB rotations (only that
+sport's slides, a slide always visible), ticker/live/navigator filtered to the league while other leagues stay in the Gamecast
+registry, reload persistence, switching modes keeps the first snapshot, CBB rankings/futures/news, an empty CBB scoreboard (mocked)
+still rotating, OFF early, the **12 h expiry with a simulated clock** (`Date.now` shifted) restoring toggles changed during the mode,
+expiry found on reload, Gamecast + celebrations in a mode, the pill never covering a slide title, 0 console errors. Screenshots
+(1280x720) in `tools/out/*-sportmode/`.
+
+`node tools/test-fantasy.mjs [preview.html]` tests the NFL FANTASY slide: `fantasy.json` projections (QB/RB/WR/TE ×5, K/DST ×3) with
+headshots + hot pickups, no ESPN calls before the week's first kickoff, no clipped names, the settings toggle, the fallback live ESPN
+Fantasy pull when `fantasy.json` is missing (real API, cached), and a simulated live week (mocked ESPN Fantasy): LIVE PPR LEADERS,
+live points on rows, live dots, 2 requests per refresh, numbers patched in place after ~60 s, timer stopped on slide change. Screenshots
+in `tools/out/*-fantasy/`.
+
 `node tools/test-futures-fallback.mjs [preview.html]` tests the futures data fallbacks with request interception:
 no `futures.json` → Action Network live; no file + Action Network blocked → ESPN; stale file + both blocked → last saved file.
 
@@ -124,7 +138,8 @@ It's a single self-contained HTML page (inline CSS + JS, no build step) made for
 ### Slide rotation order (`nextSlide()`)
 
 `live → props → mySquad → trivia → leaders → pga → ufc → command → soccerSlide → tvGuide → news → odds → futures →
-nflFutures → nflAwards → cfbFutures → nhlFutures → rankings → nfl → nba → nhl → mlb` → (loop). The order lives in the global
+nflFutures → nflAwards → fantasy → cfbFutures → nhlFutures → rankings → nfl → nba → nhl → mlb` → (loop). (`fantasy` is spliced in
+right after `nflAwards` on the line below `ARCADE_SCREENS`.) A **sport mode** replaces this list for 12 h (§3a). The order lives in the global
 `ARCADE_SCREENS` array. `live` and `props` always show. The rest can be switched off in settings.
 
 | Slide (DOM id) | Title | Data | Timing |
@@ -144,6 +159,7 @@ nflFutures → nflAwards → cfbFutures → nhlFutures → rankings → nfl → 
 | `futures-screen` | FUTURES | ESPN core futures: Super Bowl, CFB title, NBA title, World Series, Stanley Cup (top 8 each), cached 24 h (`ahlersFutures4`) | scroll rule (18 s) / 8 s |
 | `nflfut-screen` | NFL FUTURES | Super Bowl (8), AFC/NFC champion (6), 8 divisions (4), from `futures.json` (§4a) | scroll rule / 6 s "NO ODDS POSTED" |
 | `nflawards-screen` | NFL AWARDS ODDS | MVP, OPOY, DPOY, OROY, DROY, Comeback, Coach of the Year (6 each), with headshots | scroll rule / 6 s |
+| `fantasy-screen` | NFL FANTASY | Week N PPR projections QB/RB/WR/TE (5) K/DST (3) with headshots + HOT PICKUPS (8); after the week's first kickoff a LIVE PPR LEADERS card + live points per row (§4b) | scroll rule (18 s) / 6 s "FANTASY FEED DOWN" |
 | `nhlfut-screen` | NHL FUTURES | one wide Stanley Cup Winner panel, top 16 in two columns | scroll rule / 6 s |
 | `cfbfut-screen` | COLLEGE FOOTBALL FUTURES | National title, make CFP title game, Heisman (8); SEC/Big Ten/Big 12/ACC (5); AAC, MWC, Sun Belt, MAC, C-USA, Pac-12 (4) | scroll rule / 6 s |
 | `rankings-screen` | COLLEGE RANKINGS | ESPN CFB rankings top 25 + records (CFB standings, cached 24 h) | scroll rule / 5 s on error |
@@ -151,6 +167,28 @@ nflFutures → nflAwards → cfbFutures → nhlFutures → rankings → nfl → 
 
 \*Scroll rule (`applyScroll`): if content is taller than the viewport, hold 4 s, scroll at 22 px/s (min 8 s), hold 5 s,
 then advance. Otherwise show for `max(base, 16 s)`.
+
+### 3a. Sport mode (Settings → SPORT MODE · 12 HOURS)
+Buttons **OFF · COLLEGE FOOTBALL · COLLEGE BASKETBALL · NFL** at the top of the settings modal (first D-pad stop).
+- **State:** `localStorage.ahlersSportMode1 = { mode, start, until: start + 12 h, snap, step }`. It survives reloads, the 4 AM
+  soft reload and the TV app. **The user's settings are never changed by a mode**; `snap` is a copy of the slide + league
+  toggles (`ARCADE_SCREENS` keys + `show*`) taken when the first mode starts (switching modes keeps it).
+- **Rotation:** `arcadeScreens()` returns the mode's list (`SPORT_MODES` in index.html), ignoring the slide toggles:
+  NFL `live props fantasy odds nflFutures nflAwards news tvGuide nfl`; CFB `live props mySquad odds cfbFutures rankings news tvGuide`;
+  CBB `live props mySquad odds rankings futures news tvGuide`. `slideOn(k)` / `navEnabled` / navigator / HUD / ◀▶ all use it.
+  Data slides with nothing to show (props, odds, TV guide, My Squad) are skipped in a mode (`smSlideEmpty`); `live` always shows,
+  so the rotation is never empty.
+- **Data:** all 12 scoreboards are still fetched (the mode's league even if its ticker toggle is off), so ★ celebrations and the
+  Gamecast registry keep every league, but ticker, live cards, leaders, TV guide, odds, My Squad and the marquee only get the mode's
+  league. The mode league looks ahead 45 days for upcoming games (CBB in October shows the Nov 1 exhibitions as UP NEXT). With
+  nothing live, LIVE ACTION shows that sport's next games / latest finals. Ticker head reads `NFL MODE · LIVE NOW` etc.
+  News = ESPN `/{sport}/news` for the sport (`NFL / CFB / HOOPS HEADLINES`); rankings = CBB AP poll in hoops mode
+  (`COLLEGE HOOPS TOP 25`, poll points when there's no record); futures = ESPN core CBB markets in hoops mode
+  (national title, Final Four, ACC/SEC/Big Ten; cached 24 h as `ahlersFuturesCBB1`).
+- **Indicator:** pill under the clock, `NFL MODE · 11:42 LEFT` (updated by the 1 s clock tick). Settings shows the end time.
+- **End:** OFF (early) or `Date.now() >= until` (checked every second, and on load if it ran out while the TV was off): the state
+  is removed, the snapshot is written back to `settings`/`ahlersArcadeSettings` (only if something differs), the rotation step
+  is restored, scoreboards are refetched and the HUD says `SPORT MODE ENDED · ALL SLIDES BACK`.
 
 ### Ticker
 `LIVE NOW` + live games (pulsing dot, logos, scores, status) or, if nothing is live, `UPCOMING` + games in the next
@@ -187,6 +225,10 @@ None of them need an API key, and **no keys or tokens are embedded**. The code a
 | ESPN core $ref | `https://sports.core.api.espn.com/v2/sports/.../teams/{id}` (and `/athletes/{id}` for the ESPN fallback) | resolves team names missing from the built-in maps (e.g. CFB) | futures slides |
 | futures.json (same origin) | `futures.json?t=<30-min bucket>`, written daily by `.github/workflows/futures.yml` | each football futures slide, re-checked every 30 min | NFL/CFB futures + awards (§4a) |
 | Action Network | `https://api.actionnetwork.com/web/v1/leagues/{1=NFL,2=NCAAF,3=NHL}/futures/available` and `.../futures/{type}?bookIds=15,68,69,75,123`. CORS echoes the page origin, no key. | **browser fallback only** (file missing or > ~2 days old), cached 3 h (`ahlersFootballFutures2`) | NFL/CFB/NHL futures |
+| ESPN news (sport mode) | `https://site.api.espn.com/apis/site/v2/sports/{football/nfl, football/college-football, basketball/mens-college-basketball}/news?limit=15` (CORS `*`) | news slide, only in a sport mode | headlines |
+| ESPN CBB rankings | `.../basketball/mens-college-basketball/rankings` (CORS `*`, ~290 KB) | rankings slide in hoops mode | AP top 25 |
+| fantasy.json (same origin) | `fantasy.json?t=<30-min bucket>`, written daily by the futures workflow (§4b) | fantasy slide | projections + pickups |
+| ESPN Fantasy | `https://lm-api-reads.fantasy.espn.com/apis/v3/games/ffl/seasons/{yr}/segments/0/leaguedefaults/3?scoringPeriodId={wk}&view=kona_playercard` + `X-Fantasy-Filter` header (CORS echoes the origin and allows that header; no key). ~5 KB/player with the rank filters | live PPR: 2 requests per refresh, only after the week's first kickoff and only while the slide shows (60 s while an NFL game is live, else 15 min cache). Projection fallback (~9 requests) only if `fantasy.json` is missing/> 2.5 days old, cached 12 h (`ahlersFantasy1`) | fantasy slide |
 | Open-Meteo | `https://api.open-meteo.com/v1/forecast?latitude=35.6127&longitude=-77.3663&current=temperature_2m,weather_code&daily=temperature_2m_max,temperature_2m_min&temperature_unit=fahrenheit&timezone=America/New_York` | on load, then every **15 min** (only if Command Center is on) | Command Center weather |
 | Open Trivia DB | `https://opentdb.com/api.php?amount=1&category=21&type=multiple` | on load and after each trivia slide | trivia (rate limit 1 req / 5 s / IP) |
 | rss2json | `https://api.rss2json.com/v1/api.json?rss_url=` + Yahoo Sports RSS / CBS Sports headlines RSS | each time the news slide shows | headlines (free tier, rate-limited) |
@@ -211,7 +253,20 @@ None of them need an API key, and **no keys or tokens are embedded**. The code a
 3. File shape: `{ generatedAt, season, nfl: { super_bowl, afc_champ, …, coy }, ncaaf: { cfb_title, heisman, … },
    nhl: { stanley_cup }, errors }`. Each market is `{ title, source, primaryBook, rows: [{ name, short, team, logo, teamLogo, player, odds, implied, books }] }`.
 
-Local assets: `index.html` references **no** local files apart from `futures.json`. `background.mp4` (1.3 MB) and `header.PNG` (710 KB) exist
+### 4b. NFL fantasy data pipeline
+1. **Daily** (same workflow/run as futures, `continue-on-error`): `node scripts/fetch-fantasy.mjs fantasy.json`.
+   ESPN Fantasy PPR (`leaguedefaults/3`): current week (`seasons/{yr}.currentScoringPeriod`), pro-team schedules (opponent + ESPN
+   event id), top ~60 owned per slot → weekly projection (stat source 1, split 1), drop bye/OUT/IR, keep the top 8 (K/DST 5).
+   Pickups: Sleeper `players/nfl/trending/add` (24 h) resolved through Sleeper's players map (`espn_id`; too big for the TV, fine
+   in the Action) then ESPN ownership/projection; < 75% owned, max 2 D/ST + 1 K; fallback ESPN `sortPercChanged`. Keeps the old file if
+   fewer than 4 positions come back. ~12 KB.
+2. **Browser** (`ffLoad`): `fantasy.json` if < 2.5 days old → `ahlersFantasy1` (< 12 h) → live ESPN pull → stale file. Live points
+   (`ffLoadLive`): one leaders request (sort by week points, 8) + one `filterIds` request for the ~34 players on screen; patched in place.
+   Headshots `a.espncdn.com/combiner/i?img=/i/headshots/nfl/players/full/{espnId}.png&w=96&h=70` (D/ST: team logo).
+3. Shape: `{ generatedAt, season, week, scoring, source, pickupSource, teams{proTeamId:abbr}, games{proTeamId:{opp,home,date,eventId}},
+   positions{QB,RB,WR,TE,K,DST:[{id,name,first,last,pos,team,opp,kick,eventId,proj,own,chg,inj}]}, pickups[…+adds], errors }`.
+
+Local assets: `index.html` references **no** local files apart from `futures.json` and `fantasy.json`. `background.mp4` (1.3 MB) and `header.PNG` (710 KB) exist
 but aren't used: there's no `<video>` element, and the background is pure CSS.
 
 ---
@@ -393,6 +448,9 @@ next slide shows right away.
 - [ ] NFL FUTURES / NFL AWARDS / CFB FUTURES / NHL FUTURES slides populate, showing the 'UPDATED' time from futures.json, (from futures.json, or the live fallbacks) and can be toggled in settings
 - [ ] Idle kiosk shows **no** nav UI; ◀/▶, OK menu, Back, Play/Pause and auto-hide all work (harness remote checks)
 - [ ] Mouse click on the gear opens settings; SAVE & CLOSE closes it
+- [ ] Sport mode: OFF/CFB/CBB/NFL in settings, only that sport for 12 h, pill with time left, survives reload, auto-reverts
+      to the snapshot, never an empty rotation (`tools/test-sportmode.mjs`)
+- [ ] NFL FANTASY slide: projections + pickups from `fantasy.json` (or ESPN fallback), live PPR only while it shows (`tools/test-fantasy.mjs`)
 - [ ] Gamecast opens from a Live Action card / ticker click and from the navigator GAMES row (D-pad). It pauses rotation,
       polls every ~10 s with no overlapping requests, shows RECONNECTING on failure, and closes with Back/Esc/✕. Closing
       stops every timer and request and resumes rotation (`tools/test-gamecast.mjs` + harness checks).
