@@ -415,24 +415,37 @@
         @keyframes cel-beat { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.08); } }
         @keyframes cel-rise { 0% { transform: translateY(4vh); opacity: 0; } 100% { transform: none; opacity: 1; } }
         @media (prefers-reduced-motion: reduce) { #celebrate .cel-wash.w2, #celebrate .cel-shake { animation: none !important; } }
-        /* LITE effects (default; always in the TV app / reduced motion). Same team-colour look as Full but GPU-cheap: static
-           team-colour wash + static vignette, 3 quick white flashes on ONE layer (opacity only) then steady, one slow sheen
-           pass (transform only), logo scale-in, scorer card, ONE marquee strip with a static (pre-rendered) glow. No confetti,
-           shake, beams, rings or continuous strobe; nothing animates a filter, blur or background. */
-        #celebrate.lite .cel-beam, #celebrate.lite .cel-ring, #celebrate.lite .cel-conf, #celebrate.lite .cel-mq.m1, #celebrate.lite .cel-mq.m3 { display: none; }
+        /* LITE effects (default; always in the TV app / reduced motion). Dense static look: deep team-colour
+           gradient, large faint watermark logo, multiple slanted static 'GOAL!! ★ PLAYER' text layers, small static
+           shard accents, bright white title + logo + scorer card + score bar + ONE scrolling bottom strip. 3 quick
+           white flashes (opacity only) then hold. No confetti/shake/beams/continuous strobe; no animated filters/blur. */
+        #celebrate .cel-wm, #celebrate .cel-bg, #celebrate .cel-shards { display: none; }
+        #celebrate.lite .cel-beam, #celebrate.lite .cel-ring.r2, #celebrate.lite .cel-conf, #celebrate.lite .cel-mq.m1, #celebrate.lite .cel-mq.m3, #celebrate.lite .cel-sweep { display: none; }
         #celebrate.lite .cel-shake { animation: none; }
-        #celebrate .cel-title { display: none; }
-        #celebrate.lite .cel-title { display: block; margin-bottom: 1.5vh; font-family: 'Inter', sans-serif; font-weight: 900; font-style: italic; font-size: 13vh; line-height: 1; letter-spacing: 0.4vw; color: #fff; white-space: nowrap;
-                                     text-shadow: 0 0 3vh var(--cel2), 0.8vh 0.8vh 0 rgba(0,0,0,0.35); will-change: transform; animation: cel-in 0.55s cubic-bezier(.2,1.5,.4,1) both; }
-        #celebrate.lite .cel-wash { background: linear-gradient(135deg, var(--cel1) 0%, var(--cel1) 50%, var(--cel2) 185%); }
-        #celebrate.lite .cel-vig { background: radial-gradient(ellipse at 50% 45%, rgba(0,0,0,0) 0%, rgba(0,0,0,0.18) 60%, rgba(0,0,0,0.55) 100%); }
+        #celebrate.lite .cel-wash { background: radial-gradient(ellipse at 50% 42%, var(--cel1) 0%, var(--cel1) 42%, #000 120%); }
+        #celebrate.lite .cel-vig { background: radial-gradient(ellipse at 50% 45%, rgba(0,0,0,0) 0%, rgba(0,0,0,0.25) 55%, rgba(0,0,0,0.7) 100%); }
         #celebrate.lite .cel-wash.w2 { background: #fff; opacity: 0; will-change: opacity; animation: cel-lite-flash 0.95s linear 0.05s 1 both; }
-        #celebrate.lite .cel-sweep { width: 45vw; background: linear-gradient(90deg, rgba(255,255,255,0), rgba(255,255,255,0.22), rgba(255,255,255,0)); animation: cel-sweep 6s linear 0.8s 1 both; }
-        #celebrate.lite .cel-mq.m2, #celebrate.lite.mini .cel-mq.m2 { top: auto; bottom: 3.5vh; font-size: 17vh; color: #fff; -webkit-text-stroke: 0; opacity: 1; text-shadow: 0 0 2.5vh var(--cel2), 0.7vh 0.7vh 0 rgba(0,0,0,0.45); animation: cel-mq-r 5s linear infinite; }
+        #celebrate.lite .cel-wm { display: block; position: absolute; left: 50%; top: 46%; width: 95vh; height: 95vh; margin: -47.5vh 0 0 -47.5vh; object-fit: contain; opacity: 0.14; pointer-events: none; }
+        #celebrate.lite .cel-bg { display: block; position: absolute; inset: 0; overflow: hidden; pointer-events: none; font-family: 'Inter', sans-serif; font-weight: 900; font-style: italic; letter-spacing: 0.3vw; white-space: nowrap; color: #fff; }
+        #celebrate.lite .cel-bg span { position: absolute; left: -8vw; display: block; line-height: 1; }
+        #celebrate.lite .cel-bg .b1 { top: 2vh;  font-size: 14vh; opacity: 0.22; transform: rotate(-7deg); color: transparent; -webkit-text-stroke: 0.35vh rgba(255,255,255,0.55); }
+        #celebrate.lite .cel-bg .b2 { top: 22vh; font-size: 11vh; opacity: 0.18; transform: rotate(5deg);  color: transparent; -webkit-text-stroke: 0.3vh rgba(255,255,255,0.45); }
+        #celebrate.lite .cel-bg .b3 { top: 58vh; font-size: 13vh; opacity: 0.16; transform: rotate(-4deg); color: transparent; -webkit-text-stroke: 0.32vh rgba(255,255,255,0.5); }
+        #celebrate.lite .cel-bg .b4 { top: 78vh; font-size: 10vh; opacity: 0.14; transform: rotate(6deg);  color: transparent; -webkit-text-stroke: 0.28vh rgba(255,255,255,0.4); }
+        #celebrate.lite .cel-shards { display: block; position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+        #celebrate.lite .cel-shards i { position: absolute; width: 1.1vh; height: 2.2vh; background: #fff; opacity: 0.55; transform: rotate(25deg); }
+        #celebrate.lite .cel-shards i.d { width: 1vh; height: 1vh; border-radius: 50%; opacity: 0.45; transform: none; background: var(--cel2); }
+        #celebrate.lite .cel-shards i.t { width: 0; height: 0; background: transparent; border-left: 0.7vh solid transparent; border-right: 0.7vh solid transparent; border-bottom: 1.6vh solid #fff; opacity: 0.5; transform: rotate(-18deg); }
+        #celebrate.lite .cel-ring { display: block; animation: none; opacity: 0.22; border-width: 0.5vh; width: 70vh; height: 70vh; margin: -35vh 0 0 -35vh; }
+        #celebrate .cel-title { display: none; }
+        #celebrate.lite .cel-title { display: block; margin-bottom: 1.2vh; font-family: 'Inter', sans-serif; font-weight: 900; font-style: italic; font-size: 12vh; line-height: 1; letter-spacing: 0.4vw; color: #fff; white-space: nowrap;
+                                     text-shadow: 0 0 3vh var(--cel2), 0.8vh 0.8vh 0 rgba(0,0,0,0.35); will-change: transform; animation: cel-in 0.55s cubic-bezier(.2,1.5,.4,1) both; }
+        #celebrate.lite .cel-mq.m2, #celebrate.lite.mini .cel-mq.m2 { top: auto; bottom: 3.5vh; font-size: 16vh; color: #fff; -webkit-text-stroke: 0; opacity: 1; text-shadow: 0 0 2.5vh var(--cel2), 0.7vh 0.7vh 0 rgba(0,0,0,0.45); animation: cel-mq-r 5s linear infinite; }
         #celebrate.lite .cel-center { padding-bottom: 20vh; }
         #celebrate.lite .cel-logo, #celebrate.lite.big .cel-logo, #celebrate.lite.has-player .cel-logo { width: 38vh; height: 38vh; filter: none; animation: cel-in 0.6s cubic-bezier(.2,1.4,.4,1) both; }
         #celebrate.lite.mini .cel-logo { width: 32vh; height: 32vh; margin-top: 0; }
         #celebrate.lite .cel-head { width: 27vh; height: 27vh; box-shadow: 0 0 2.5vh var(--cel2); }
+        #celebrate.lite.mini .cel-wm, #celebrate.lite.mini .cel-bg, #celebrate.lite.mini .cel-shards, #celebrate.lite.mini .cel-ring { display: none; }
         @keyframes cel-in { 0% { transform: scale(0.6); opacity: 0; } 100% { transform: none; opacity: 1; } }
         @keyframes cel-lite-flash { 0% { opacity: 0.9; } 15% { opacity: 0; } 32% { opacity: 0.75; } 48% { opacity: 0; } 66% { opacity: 0.55; } 82%, 100% { opacity: 0; } }
         #cel-alert.lite .al-bar { box-shadow: none; animation: al-in 0.45s ease-out both; }
@@ -726,7 +739,9 @@
 
     <div id="celebrate" aria-hidden="true"><div class="cel-shake"><div class="cel-wash"></div><div class="cel-wash w2"></div><div class="cel-beam b1"></div><div class="cel-beam b2"></div><div class="cel-beam b3"></div><div class="cel-beam b4"></div><div class="cel-vig"></div>
         <div class="cel-mq m1"><span id="cel-mq1"></span></div><div class="cel-mq m2"><span id="cel-mq2"></span></div><div class="cel-mq m3"><span id="cel-mq3"></span></div>
-        <div class="cel-ring"></div><div class="cel-ring r2"></div><div class="cel-sweep"></div><div class="cel-conf"><i style="left:0%;--del:-0.00s;--dur:2.40s;--dx:-6vw;--rot:360deg"></i><i style="left:37%;--del:-0.23s;--dur:2.75s;--dx:1vw;--rot:600deg"></i><i style="left:74%;--del:-0.46s;--dur:3.10s;--dx:-5vw;--rot:840deg"></i><i style="left:11%;--del:-0.69s;--dur:3.45s;--dx:2vw;--rot:1080deg"></i><i style="left:48%;--del:-0.92s;--dur:3.80s;--dx:-4vw;--rot:360deg"></i><i style="left:85%;--del:-1.15s;--dur:2.40s;--dx:3vw;--rot:600deg"></i><i style="left:22%;--del:-1.38s;--dur:2.75s;--dx:-3vw;--rot:840deg"></i><i style="left:59%;--del:-1.61s;--dur:3.10s;--dx:4vw;--rot:1080deg"></i><i style="left:96%;--del:-1.84s;--dur:3.45s;--dx:-2vw;--rot:360deg"></i><i style="left:33%;--del:-2.07s;--dur:3.80s;--dx:5vw;--rot:600deg"></i><i style="left:70%;--del:-2.30s;--dur:2.40s;--dx:-1vw;--rot:840deg"></i><i style="left:7%;--del:-2.53s;--dur:2.75s;--dx:6vw;--rot:1080deg"></i><i style="left:44%;--del:-2.76s;--dur:3.10s;--dx:0vw;--rot:360deg"></i><i style="left:81%;--del:-2.99s;--dur:3.45s;--dx:-6vw;--rot:600deg"></i><i style="left:18%;--del:-0.22s;--dur:3.80s;--dx:1vw;--rot:840deg"></i><i style="left:55%;--del:-0.45s;--dur:2.40s;--dx:-5vw;--rot:1080deg"></i><i style="left:92%;--del:-0.68s;--dur:2.75s;--dx:2vw;--rot:360deg"></i><i style="left:29%;--del:-0.91s;--dur:3.10s;--dx:-4vw;--rot:600deg"></i><i style="left:66%;--del:-1.14s;--dur:3.45s;--dx:3vw;--rot:840deg"></i><i style="left:3%;--del:-1.37s;--dur:3.80s;--dx:-3vw;--rot:1080deg"></i><i style="left:40%;--del:-1.60s;--dur:2.40s;--dx:4vw;--rot:360deg"></i><i style="left:77%;--del:-1.83s;--dur:2.75s;--dx:-2vw;--rot:600deg"></i><i style="left:14%;--del:-2.06s;--dur:3.10s;--dx:5vw;--rot:840deg"></i><i style="left:51%;--del:-2.29s;--dur:3.45s;--dx:-1vw;--rot:1080deg"></i><i style="left:88%;--del:-2.52s;--dur:3.80s;--dx:6vw;--rot:360deg"></i><i style="left:25%;--del:-2.75s;--dur:2.40s;--dx:0vw;--rot:600deg"></i><i style="left:62%;--del:-2.98s;--dur:2.75s;--dx:-6vw;--rot:840deg"></i><i style="left:99%;--del:-0.21s;--dur:3.10s;--dx:1vw;--rot:1080deg"></i><i style="left:36%;--del:-0.44s;--dur:3.45s;--dx:-5vw;--rot:360deg"></i><i style="left:73%;--del:-0.67s;--dur:3.80s;--dx:2vw;--rot:600deg"></i></div>
+        <div class="cel-ring"></div><div class="cel-ring r2"></div><div class="cel-sweep"></div>
+        <img class="cel-wm" id="cel-wm" alt=""><div class="cel-bg" id="cel-bg" aria-hidden="true"><span class="b1"></span><span class="b2"></span><span class="b3"></span><span class="b4"></span></div>
+        <div class="cel-shards" aria-hidden="true"><i style="left:8%;top:12%"></i><i class="d" style="left:22%;top:28%"></i><i class="t" style="left:78%;top:10%"></i><i style="left:88%;top:32%"></i><i class="d" style="left:12%;top:62%"></i><i class="t" style="left:70%;top:58%"></i><i style="left:92%;top:70%"></i><i class="d" style="left:4%;top:42%"></i><i class="t" style="left:48%;top:8%"></i><i style="left:58%;top:78%"></i><i class="d" style="left:34%;top:72%"></i><i class="t" style="left:82%;top:48%"></i></div><div class="cel-conf"><i style="left:0%;--del:-0.00s;--dur:2.40s;--dx:-6vw;--rot:360deg"></i><i style="left:37%;--del:-0.23s;--dur:2.75s;--dx:1vw;--rot:600deg"></i><i style="left:74%;--del:-0.46s;--dur:3.10s;--dx:-5vw;--rot:840deg"></i><i style="left:11%;--del:-0.69s;--dur:3.45s;--dx:2vw;--rot:1080deg"></i><i style="left:48%;--del:-0.92s;--dur:3.80s;--dx:-4vw;--rot:360deg"></i><i style="left:85%;--del:-1.15s;--dur:2.40s;--dx:3vw;--rot:600deg"></i><i style="left:22%;--del:-1.38s;--dur:2.75s;--dx:-3vw;--rot:840deg"></i><i style="left:59%;--del:-1.61s;--dur:3.10s;--dx:4vw;--rot:1080deg"></i><i style="left:96%;--del:-1.84s;--dur:3.45s;--dx:-2vw;--rot:360deg"></i><i style="left:33%;--del:-2.07s;--dur:3.80s;--dx:5vw;--rot:600deg"></i><i style="left:70%;--del:-2.30s;--dur:2.40s;--dx:-1vw;--rot:840deg"></i><i style="left:7%;--del:-2.53s;--dur:2.75s;--dx:6vw;--rot:1080deg"></i><i style="left:44%;--del:-2.76s;--dur:3.10s;--dx:0vw;--rot:360deg"></i><i style="left:81%;--del:-2.99s;--dur:3.45s;--dx:-6vw;--rot:600deg"></i><i style="left:18%;--del:-0.22s;--dur:3.80s;--dx:1vw;--rot:840deg"></i><i style="left:55%;--del:-0.45s;--dur:2.40s;--dx:-5vw;--rot:1080deg"></i><i style="left:92%;--del:-0.68s;--dur:2.75s;--dx:2vw;--rot:360deg"></i><i style="left:29%;--del:-0.91s;--dur:3.10s;--dx:-4vw;--rot:600deg"></i><i style="left:66%;--del:-1.14s;--dur:3.45s;--dx:3vw;--rot:840deg"></i><i style="left:3%;--del:-1.37s;--dur:3.80s;--dx:-3vw;--rot:1080deg"></i><i style="left:40%;--del:-1.60s;--dur:2.40s;--dx:4vw;--rot:360deg"></i><i style="left:77%;--del:-1.83s;--dur:2.75s;--dx:-2vw;--rot:600deg"></i><i style="left:14%;--del:-2.06s;--dur:3.10s;--dx:5vw;--rot:840deg"></i><i style="left:51%;--del:-2.29s;--dur:3.45s;--dx:-1vw;--rot:1080deg"></i><i style="left:88%;--del:-2.52s;--dur:3.80s;--dx:6vw;--rot:360deg"></i><i style="left:25%;--del:-2.75s;--dur:2.40s;--dx:0vw;--rot:600deg"></i><i style="left:62%;--del:-2.98s;--dur:2.75s;--dx:-6vw;--rot:840deg"></i><i style="left:99%;--del:-0.21s;--dur:3.10s;--dx:1vw;--rot:1080deg"></i><i style="left:36%;--del:-0.44s;--dur:3.45s;--dx:-5vw;--rot:360deg"></i><i style="left:73%;--del:-0.67s;--dur:3.80s;--dx:2vw;--rot:600deg"></i></div>
         <div class="cel-center"><div class="cel-title" id="cel-title"></div><div class="cel-row"><img class="cel-logo" id="cel-logo" alt=""><div class="cel-player"><img class="cel-head" id="cel-head" alt=""><div class="cel-pname" id="cel-pname"></div><div class="cel-pmore" id="cel-pmore"></div></div></div><div class="cel-sub" id="cel-sub"></div></div></div></div>
     <div id="cel-alert" aria-hidden="true"><div class="al-bar"><div class="al-shine"></div><img class="al-logo" id="al-logo" alt=""><div class="al-txt"><div class="al-title" id="al-title"></div><div class="al-sub" id="al-sub"></div></div><div class="al-tag" id="al-tag"></div></div></div>
     <div id="gamecast" aria-hidden="true">
@@ -2604,9 +2619,11 @@
             el.style.setProperty('--cel1', c1); el.style.setProperty('--cel2', c2);
             var ms = kind.big ? CEL_BIG_MS : (kind.mini ? CEL_MINI_MS : CEL_MS);
             el.style.setProperty('--cel-ms', ms + 'ms');
-            var img = document.getElementById('cel-logo');
+            var img = document.getElementById('cel-logo'), logoUrl = T.logo || 'https://a.espncdn.com/combiner/i?img=/i/teamlogos/default-team-logo-500.png';
             img.onerror = function() { this.onerror = null; this.style.visibility = 'hidden'; };
-            img.style.visibility = ''; img.src = T.logo || 'https://a.espncdn.com/combiner/i?img=/i/teamlogos/default-team-logo-500.png';
+            img.style.visibility = ''; img.src = logoUrl;
+            var wm = document.getElementById('cel-wm');
+            if (wm) { wm.onerror = function() { this.onerror = null; this.style.visibility = 'hidden'; }; wm.style.visibility = ''; wm.src = logoUrl; }
             var P = (!kind.mini && kind.player && kind.player.name) ? kind.player : null, head = document.getElementById('cel-head');
             head.onerror = function() { this.onerror = null; this.style.display = 'none'; };
             head.style.display = (P && P.head) ? '' : 'none'; if (P && P.head) head.src = P.head; else head.removeAttribute('src');
@@ -2615,6 +2632,8 @@
             var word = kind.text + (P ? ' \u2605 ' + P.name.toUpperCase() : ''), rep = '';
             for (var i = 0, n = Math.max(2, Math.ceil(24 / (word.length + 3))); i < n; i++) rep += word + ' \u2605 '; // just over a screen wide: huge strips re-raster every frame on TV GPUs
             ['cel-mq1', 'cel-mq2', 'cel-mq3'].forEach(function(id) { document.getElementById(id).textContent = rep + rep; }); // doubled: seamless -50% loop
+            var bg = document.getElementById('cel-bg');
+            if (bg) { var line = (rep + rep).slice(0, 96); Array.prototype.forEach.call(bg.children, function(n) { n.textContent = line; }); }
             document.getElementById('cel-title').textContent = kind.text;
             document.getElementById('cel-sub').textContent = (T.full || '').toUpperCase() + (line ? '   ' + line : '');
             el.classList.remove('show', 'big', 'mini', 'has-player', 'lite'); void el.offsetWidth; // restart the CSS animations
@@ -2630,8 +2649,10 @@
             if (all) cel.queue = [];
             if (el) { el.classList.remove('show', 'big', 'mini', 'has-player'); el.setAttribute('aria-hidden', 'true'); }
             var img = document.getElementById('cel-logo'); if (img) img.removeAttribute('src'); // let the big logo go
+            var wm = document.getElementById('cel-wm'); if (wm) wm.removeAttribute('src');
             var hd = document.getElementById('cel-head'); if (hd) hd.removeAttribute('src');
             ['cel-mq1', 'cel-mq2', 'cel-mq3'].forEach(function(id) { var n = document.getElementById(id); if (n) n.textContent = ''; });
+            var bg = document.getElementById('cel-bg'); if (bg) Array.prototype.forEach.call(bg.children, function(n) { n.textContent = ''; });
             var was = cel.showing; cel.showing = false;
             if (was && cel.queue.length) { var n = cel.queue.shift(); cel.timer = setTimeout(function() { cel.timer = null; celShow(n[0], n[1], n[2]); }, 350); }
             else alNext();
