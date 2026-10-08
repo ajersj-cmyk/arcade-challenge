@@ -62,6 +62,16 @@ What it does:
 8. **Football futures checks** run when the page has the NFL/CFB futures slides. Each slide must render real markets, and
    the FUTURES slide must include CFB TITLE + NBA TITLE.
 
+9. **Gamecast checks** run when the page has `gcOpen`. The harness mouse-clicks a Live Action card (or a ticker game),
+   checks the overlay populates from the ESPN summary API, that rotation is paused, that polls arrive **every ~10 s**
+   (start-to-start gaps 8.5–12 s), then clicks CLOSE and checks timers stop, no request follows for 11.5 s and rotation
+   resumes. Then by D-pad: OK → GAMES row → OK opens a game, ▶ switches game, Back closes.
+
+`node tools/test-gamecast.mjs [preview.html]` opens a Gamecast for every live league in the page's game registry plus
+reference finals/upcoming events (NFL, CFB, World Cup, MLB, EPL), screenshots each at 1920x1080, and checks poll cadence,
+"never more than one request in flight", the RECONNECTING state during an induced outage (and recovery), auto-close of a
+finished game, and a clean stop on close.
+
 `node tools/test-futures-fallback.mjs [preview.html]` tests the futures data fallbacks with request interception:
 no `futures.json` → Action Network live; no file + Action Network blocked → ESPN; stale file + both blocked → last saved file.
 
@@ -148,6 +158,7 @@ None of them need an API key, and **no keys or tokens are embedded**. The code a
 |---|---|---|---|
 | ESPN site scoreboard | `https://site.api.espn.com/apis/site/v2/sports/{sport}/{league}/scoreboard` for hockey/nhl, football/nfl, basketball/nba, baseball/mlb, football/college-football `?groups=80`, basketball/mens-college-basketball `?groups=50` (if `cbb50`), baseball/college-baseball, soccer/fifa.world, soccer/eng.1, soccer/uefa.champions, tennis/atp, tennis/wta. Base comes from `settings.apiBase` | on load, then every **5 min** (sequential, each league toggleable) | ticker, live, props, leaders, my squad, TV guide, odds, marquee |
 | ESPN site scoreboard (slide) | `.../golf/pga/scoreboard`, `.../mma/ufc/scoreboard`, `.../soccer/{fifa.world,eng.1,uefa.champions}/scoreboard` | each time the PGA / UFC / soccer slide shows | those slides |
+| ESPN summary (Gamecast) | `https://site.api.espn.com/apis/site/v2/sports/{sport}/{league}/summary?event={id}` (CORS `*`, no key). 0.1–1 MB per response (MLB is the largest) | only while a Gamecast is open: every **10 s**, 8 s timeout, previous request aborted first | Gamecast overlay |
 | ESPN standings | `https://site.api.espn.com/apis/v2/sports/{football/nfl, basketball/nba, hockey/nhl, baseball/mlb}/standings` | each time the slide shows | standings slides |
 | ESPN CFB standings | `https://site.api.espn.com/apis/v2/sports/football/college-football/standings` | rankings slide, cached 24 h (`ahlersCfbRecords`) | ranking records |
 | ESPN CFB rankings | `https://site.api.espn.com/apis/site/v2/sports/football/college-football/rankings` | each time the rankings slide shows | rankings |
@@ -155,7 +166,7 @@ None of them need an API key, and **no keys or tokens are embedded**. The code a
 | ESPN core futures | `https://sports.core.api.espn.com/v2/sports/{sport}/leagues/{league}/seasons/{year}/futures?limit=50`. Tries the likely season years per sport and keeps the fullest market. Matches on `displayName` + `name`. | futures slide, cached 24 h (`ahlersFutures4`) | futures |
 | ESPN core $ref | `https://sports.core.api.espn.com/v2/sports/.../teams/{id}` (and `/athletes/{id}` for the ESPN fallback) | resolves team names missing from the built-in maps (e.g. CFB) | futures slides |
 | futures.json (same origin) | `futures.json?t=<30-min bucket>`, written daily by `.github/workflows/futures.yml` | each football futures slide, re-checked every 30 min | NFL/CFB futures + awards (§4a) |
-| Action Network | `https://api.actionnetwork.com/web/v1/leagues/{1=NFL,2=NCAAF,3=NHL}/futures/available` and `.../futures/{type}?bookIds=15,68,69,75,123`. CORS echoes the page origin, no key. | **browser fallback only** (file missing or > ~2 days old), cached 3 h (`ahlersFootballFutures1`) | NFL/CFB/NHL futures |
+| Action Network | `https://api.actionnetwork.com/web/v1/leagues/{1=NFL,2=NCAAF,3=NHL}/futures/available` and `.../futures/{type}?bookIds=15,68,69,75,123`. CORS echoes the page origin, no key. | **browser fallback only** (file missing or > ~2 days old), cached 3 h (`ahlersFootballFutures2`) | NFL/CFB/NHL futures |
 | Open-Meteo | `https://api.open-meteo.com/v1/forecast?latitude=35.6127&longitude=-77.3663&current=temperature_2m,weather_code&daily=temperature_2m_max,temperature_2m_min&temperature_unit=fahrenheit&timezone=America/New_York` | on load, then every **15 min** (only if Command Center is on) | Command Center weather |
 | Open Trivia DB | `https://opentdb.com/api.php?amount=1&category=21&type=multiple` | on load and after each trivia slide | trivia (rate limit 1 req / 5 s / IP) |
 | rss2json | `https://api.rss2json.com/v1/api.json?rss_url=` + Yahoo Sports RSS / CBS Sports headlines RSS | each time the news slide shows | headlines (free tier, rate-limited) |
@@ -231,6 +242,40 @@ auto-close after **90 s**. Pause auto-resumes after **10 min**.
 - The menu lists every enabled slide (current one highlighted), plus PAUSE/RESUME, SETTINGS and CLOSE. Mouse clicks work too.
 - Text fields keep their arrow/backspace keys. Typing "s" in a settings field no longer closes the modal.
 - After the first remote key press, one history entry is pushed so the Android TV Back button closes overlays instead of leaving the page.
+### Gamecast (live game overlay, PR #4)
+Open it from a **Live Action card** or **My Squad card** (mouse click), a **ticker game** (click), or the navigator's
+**GAMES row** (OK, then OK again; on the Live Action slide, OK lands straight on the first game). It covers the whole
+screen and **pauses rotation**. When it closes, rotation picks up again: if the slide timer fired while it was open, the
+next slide shows right away.
+
+| Key | Gamecast |
+|---|---|
+| Back / Esc / Backspace, or click ✕ CLOSE | close, back to rotation |
+| ◀ / ▶ | previous / next game (live first, then upcoming, then recent finals) |
+| ▲ / ▼ | scroll the team-stats and player-stats panels (auto-scroll resumes after 8 s) |
+| OK | focus ✕ CLOSE (a second OK closes) |
+
+- **Content:** a scoreboard with logos, records, score, period/clock and status. It also shows the in-game situation:
+  - football: possession, down and distance, red zone
+  - MLB: count, bases, outs, batter vs pitcher
+  - NHL: shots on goal
+  - NBA: FG%
+  - soccer: possession
+
+  Below that: a linescore (MLB adds R/H/E), win probability with a sparkline (or the matchup predictor and line before
+  kickoff), the last 6 plays, every team stat as comparison bars, top performers, and box-score tables (NBA/NFL/NHL/MLB
+  from `boxscore.players`, soccer from `rosters`). Upcoming games show season stats/leaders, venue, weather, probables and
+  the line. Missing blocks are simply left out.
+- **Polling:** one summary request every **10 s** (start to start) while open. The previous request is aborted first, so
+  requests never overlap, and each one times out after 8 s. After 3 failures in a row the gap backs off to 20 s, then 30 s,
+  and the header shows **⚠ RECONNECTING… LAST UPDATE h:mm:ss** while the last good data stays on screen. Otherwise the
+  header shows **UPDATED h:mm:ss**.
+- **Memory:** only the latest response is parsed. It isn't stored and is released once rendered. The DOM is only rewritten
+  when a block's markup changes, and the overlay's DOM is emptied on close. One 60 ms scroll timer runs, and only while open.
+- **Auto-close:** a finished game closes itself after 10 min with no input. An upcoming game closes after 30 min idle.
+  Live games stay open until closed.
+- Moving the mouse shows the cursor for 3 s (it's still `cursor: none` when idle), so clicks are possible on a desktop.
+
 - *App shell?* Stay in the browser for now. A **TWA** needs Chrome on the TV (rare on Android TV). A **thin WebView
   wrapper** is only worth it if the TV browser swallows Back/Menu, sleeps the screen, or can't auto-launch on boot. The
   JS already accepts raw Android key codes for that case.
@@ -261,6 +306,9 @@ auto-close after **90 s**. Pause auto-resumes after **10 min**.
 - [ ] NFL FUTURES / NFL AWARDS / CFB FUTURES / NHL FUTURES slides populate, showing the 'UPDATED' time from futures.json, (from futures.json, or the live fallbacks) and can be toggled in settings
 - [ ] Idle kiosk shows **no** nav UI; ◀/▶, OK menu, Back, Play/Pause and auto-hide all work (harness remote checks)
 - [ ] Mouse click on the gear opens settings; SAVE & CLOSE closes it
+- [ ] Gamecast opens from a Live Action card / ticker click and from the navigator GAMES row (D-pad). It pauses rotation,
+      polls every ~10 s with no overlapping requests, shows RECONNECTING on failure, and closes with Back/Esc/✕. Closing
+      stops every timer and request and resumes rotation (`tools/test-gamecast.mjs` + harness checks).
 
 ---
 
@@ -300,6 +348,14 @@ auto-close after **90 s**. Pause auto-resumes after **10 min**.
 
 Small, incremental steps. Each one keeps every §6 item working and goes through preview → test → PR.
 
+> **Next phase (Jordan, 2026-10-07): package the site as an Android TV APK, built up step by step as a thin WebView
+> app.** Step 1: a WebView shell that loads the GitHub Pages URL full-screen. It keeps the screen on, starts on boot,
+> passes the D-pad and Back keys through to the page (the JS already accepts raw Android key codes), and sets a normal
+> Chrome user agent. Later steps: an offline/error screen, an optional bundled copy of index.html, and auto-update from
+> Pages. Keep the page light for low-RAM TV boxes: Gamecast keeps no response history, polls one request at a time and
+> frees its DOM on close. Dropping the Tailwind CDN (item 6) and the nightly reload (item 4) help here too. (The old
+> `android-tv/` folder stays untouched; the new shell should be its own fresh folder/PR.)
+
 1. ✅ **(PR #2) D-pad remote navigation (Android TV).** Visible focus ring. ←/→ = previous/next slide. OK/Enter (or Menu) opens an
    on-screen menu to jump to a section and pause/resume rotation. Back/Escape closes the menu or modal. The menu auto-hides
    after inactivity, so the idle kiosk looks the same as now. Also fixes issues 5 and 6.
@@ -311,6 +367,9 @@ Small, incremental steps. Each one keeps every §6 item working and goes through
 2. ✅ **(PR #2) NFL + college football futures/awards odds slides.** Super Bowl, conferences, divisions, MVP/OPOY/DPOY/OROY/DROY/
    Comeback/Coach of the Year; NCAAF title, Heisman, CFP, conferences. Data source comes from the separate research
    thread. This step also fixes issues 1 and 2 for the existing futures slide.
+2b. ✅ **(PR #4) Gamecast.** Full-screen live game overlay from the Live Action cards, the ticker or the navigator's GAMES
+   row. It shows the scoreboard, situation, linescore, win probability, last plays, full team stats and box-score player
+   stats, polls every 10 s, and has reconnecting and auto-close behaviour (§5).
 3. **Resilience.** `fetch` timeouts (AbortController ~8 s), a working rotation watchdog (issue 4), `res.ok` checks,
    last-good-data cache with a small "stale" badge when an API is down.
 4. **Kiosk hardening.** Screen Wake Lock, a nightly soft reload (~4 AM) to clear memory on 24/7 runs, offline indicator +
