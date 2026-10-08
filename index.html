@@ -415,6 +415,24 @@
         @keyframes cel-beat { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.08); } }
         @keyframes cel-rise { 0% { transform: translateY(4vh); opacity: 0; } 100% { transform: none; opacity: 1; } }
         @media (prefers-reduced-motion: reduce) { #celebrate .cel-wash.w2, #celebrate .cel-shake { animation: none !important; } }
+        /* LITE effects (default; always in the TV app / reduced motion): one wash fade, one gentle logo scale-in, ONE marquee
+           strip (transform only), the scorer card. No strobe, confetti, shake, beams, rings, sweep, blur shadows or filters. */
+        #celebrate.lite .cel-wash { background: linear-gradient(180deg, var(--cel1) 0%, var(--cel1) 55%, #000 140%); }
+        #celebrate.lite .cel-wash.w2, #celebrate.lite .cel-beam, #celebrate.lite .cel-vig, #celebrate.lite .cel-ring, #celebrate.lite .cel-sweep, #celebrate.lite .cel-conf,
+        #celebrate.lite .cel-mq.m1, #celebrate.lite .cel-mq.m3 { display: none; }
+        #celebrate.lite .cel-shake { animation: none; }
+        #celebrate.lite .cel-mq.m2, #celebrate.lite.mini .cel-mq.m2 { top: auto; bottom: 4vh; font-size: 16vh; color: #fff; -webkit-text-stroke: 0; opacity: 1; text-shadow: none; animation: cel-mq-r 5s linear infinite; }
+        #celebrate.lite .cel-center { padding-bottom: 16vh; }
+        #celebrate.lite .cel-logo, #celebrate.lite.big .cel-logo, #celebrate.lite.has-player .cel-logo { width: 42vh; height: 42vh; filter: none; animation: cel-in 0.6s ease-out both; }
+        #celebrate.lite.mini .cel-logo { width: 32vh; height: 32vh; margin-top: 0; }
+        #celebrate.lite .cel-head { width: 30vh; height: 30vh; box-shadow: none; }
+        #celebrate.lite .cel-pname { text-shadow: none; }
+        #celebrate.lite .cel-sub { box-shadow: none; text-shadow: none; }
+        @keyframes cel-in { 0% { transform: scale(0.7); opacity: 0; } 100% { transform: none; opacity: 1; } }
+        #cel-alert.lite .al-bar { box-shadow: none; animation: al-in 0.45s ease-out both; }
+        #cel-alert.lite .al-shine { display: none; }
+        #cel-alert.lite .al-logo { animation: none; }
+        #cel-alert.lite .al-title { text-shadow: none; }
         /* scorer card inside the celebration */
         #celebrate .cel-row { display: flex; align-items: center; justify-content: center; gap: 4vw; }
         #celebrate .cel-player { display: none; flex-direction: column; align-items: center; animation: cel-rise 0.5s ease-out 0.35s both; }
@@ -607,6 +625,7 @@
                         <input type="text" id="set-mySquadTeams" style="width: 100%; padding: 1vh; border-radius: 0.5vh; background: rgba(0,0,0,0.5); color: white; border: 1px solid var(--accent-color); font-family: 'Inter', sans-serif;" onchange="updateSettings()">
                     </div>
                     <div class="toggle-row"><span>Score Celebrations <span style="font-size:1.6vh; opacity:0.7;">(pick teams with &#9733; in Gamecast)</span></span> <input type="checkbox" id="set-celebrate" onchange="updateSettings()"></div>
+                    <div class="toggle-row"><span>Full Effects <span style="font-size:1.6vh; opacity:0.7;">(strobes, confetti, shake; off = Lite, smooth on budget TV boxes; TV app always Lite)</span></span> <input type="checkbox" id="set-celFull" onchange="updateSettings()"></div>
                     <div style="margin-bottom: 2vh;">
                         <div style="font-size: 1.8vh; color: #ffe600; margin-bottom: 0.5vh; text-transform: uppercase;">Celebration Delay (match your TV's lag, &#9664; &#9654; to adjust):</div>
                         <div style="display:flex; align-items:center; gap:2vh;">
@@ -766,7 +785,7 @@
             showWorldCup:true, showEPL:true, showUCL:true, showATP:true, showWTA:true, showNFL:true, showNBA:true, showNHL:true, showMLB:true, showCFB:true, showCBB:true, showCLB:true,
             cbb50:true, cfb75:true, clb50:true, apiBase:"https://site.api.espn.com/apis",
             mySquadTeams: "Carolina Hurricanes, Duke, ECU, East Carolina",
-            celebrate: true, celebrateDelay: 0, alertRedzone: true, alertPP: true, alertStart: true, alertLead: true, alertBig: true,
+            celebrate: true, celebrateDelay: 0, celFull: false, alertRedzone: true, alertPP: true, alertStart: true, alertLead: true, alertBig: true,
             marqueeMessage: "WELCOME TO AHLERS ARCADE",
             tickerSpeed: 5
         };
@@ -2566,6 +2585,10 @@
             if (cel.pending.length !== n) { celPump(); return true; }
             return false;
         }
+        function celLite() { // Lite unless Full is chosen; the TV app (budget Google TV boxes) and reduced-motion always get Lite
+            try { if (window.ArcadeTV || (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches)) return true; } catch (e) {}
+            return !settings.celFull;
+        }
         function celHex(v, fb) { v = String(v || '').replace('#', ''); return /^[0-9a-f]{6}$/i.test(v) ? '#' + v : fb; }
         function celShow(kind, T, line) {
             if (cel.showing) { if (cel.queue.length < 2) cel.queue.push([kind, T, line]); return; }
@@ -2587,7 +2610,8 @@
             for (var i = 0, n = Math.max(2, Math.ceil(24 / (word.length + 3))); i < n; i++) rep += word + ' \u2605 '; // just over a screen wide: huge strips re-raster every frame on TV GPUs
             ['cel-mq1', 'cel-mq2', 'cel-mq3'].forEach(function(id) { document.getElementById(id).textContent = rep + rep; }); // doubled: seamless -50% loop
             document.getElementById('cel-sub').textContent = (T.full || '').toUpperCase() + (line ? '   ' + line : '');
-            el.classList.remove('show', 'big', 'mini', 'has-player'); void el.offsetWidth; // restart the CSS animations
+            el.classList.remove('show', 'big', 'mini', 'has-player', 'lite'); void el.offsetWidth; // restart the CSS animations
+            if (celLite()) el.classList.add('lite');
             el.classList.add('show'); if (kind.big) el.classList.add('big'); if (kind.mini) el.classList.add('mini'); if (P) el.classList.add('has-player');
             el.setAttribute('aria-hidden', 'false');
             cel.showing = true; cel.fired++; cel.last = { text: kind.text, word: word, team: T.full || '', player: P ? P.name : '', more: P ? (P.more || '') : '', at: Date.now() };
@@ -2622,7 +2646,7 @@
             document.getElementById('al-title').textContent = kind.text;
             document.getElementById('al-sub').textContent = ((T.abbr || T.full || '') + (line ? '  \u2022  ' + line : '')).toUpperCase();
             document.getElementById('al-tag').textContent = CEL_AL_TAG[kind.alert] || 'ALERT';
-            el.className = ''; void el.offsetWidth; el.className = 'show ' + kind.alert; el.setAttribute('aria-hidden', 'false');
+            el.className = ''; void el.offsetWidth; el.className = 'show ' + kind.alert + (celLite() ? ' lite' : ''); el.setAttribute('aria-hidden', 'false');
             cel.alShowing = true; cel.alFired++; cel.alLast = { type: kind.alert, text: kind.text, team: T.full || '', sub: line || '', at: Date.now() };
             clearTimeout(cel.alTimer); cel.alTimer = setTimeout(function() { alHide(false); }, CEL_ALERT_MS);
         }
