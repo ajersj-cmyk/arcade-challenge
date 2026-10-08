@@ -76,8 +76,11 @@ finished game, and a clean stop on close.
 NYR @ CAR and a CFB game TEM @ ECU): the per-team ★ toggles (mouse + D-pad) and their localStorage, no fire on first look,
 GOAL!! / TOUCHDOWN!! / FIELD GOAL!!! / CANES WIN!! / HALFTIME!, no repeat after a score correction, the delay (Gamecast
 +/− and settings ◀/▶, 0–30 s), queued events cancelled by a correction or by closing, any key dismisses without leaking
-to the Gamecast, the `arcadeCelebrate('test')` / `?celebrate=td` hooks, and 0 console errors. It saves 1920x1080
-screenshots of the toggles, a Hurricanes goal, a Canes win, an ECU touchdown and the settings rows.
+to the Gamecast, the `arcadeCelebrate('test')` / `?celebrate=td` hooks, and 0 console errors. It also checks the scorer
+card (name + headshot + assists, logo-only fallback), the FG hold-back, every alert banner (red zone once per drive, big
+play, interception, lead change, puck drop, power play once per penalty, per-type off switch) and SYNC NOW. It saves
+1920x1080 screenshots of the toggles, a Hurricanes goal with Aho's card, a Canes win, an ECU touchdown, the red-zone and
+power-play banners, the Gamecast sync helper and the settings rows.
 
 `node tools/test-futures-fallback.mjs [preview.html]` tests the futures data fallbacks with request interception:
 no `futures.json` → Action Network live; no file + Action Network blocked → ESPN; stale file + both blocked → last saved file.
@@ -301,7 +304,25 @@ next slide shows right away.
 - **Look:** team-colour wash and strobe, swinging light beams, a light sweep, three huge scrolling marquee rows of the
   banner text, shake + zoom-punch logo, pulse rings, CSS confetti. CSS transform/opacity only, 4–8 s, no sound. Any remote
   key or a click dismisses it (the key isn't passed on). Back closes it first.
-- **Preview:** console `arcadeCelebrate('goal' | 'td' | 'fg' | 'run' | 'hr' | 'win' | 'half' | 'period' | 'test')`, the
+- **Scorer:** scoring celebrations show the player when the summary has a *new* scoring play for that team: name in the
+  marquee (`GOAL!! ★ SEBASTIAN AHO`) plus a headshot card with assists (NHL) or "PASS FROM …" (football). The name comes
+  from `participants` (NHL/MLB plays) or the scoring-play text (football). The headshot comes from the feed, the boxscore
+  athlete, or `a.espncdn.com/i/headshots/<league>/players/full/<id>.png`. With no player found, only the team logo shows.
+- **Field goals** are held back 5 s on top of the delay, so a FG never shows before a TD would be known.
+- **Alerts (smaller banners)** for ★ teams use the same delay and the master switch, and each type has its own switch
+  in settings (`alertRedzone`, `alertPP`, `alertStart`, `alertLead`, `alertBig`, default ON):
+  **RED ZONE!** (football, once per drive, from the drive's yards-to-endzone), **POWER PLAY!** (NHL, for the team
+  whose opponent took a minor/major penalty, once per penalty play), **PUCK DROP! / KICKOFF! / FIRST PITCH! / TIP-OFF!**
+  (pre → in), **<TEAM> TAKE THE LEAD!** (from the high-water scores, so corrections can't re-fire it), **BIG PLAY! N YDS**
+  (25+ yd pass/run), **INTERCEPTION! / FUMBLE RECOVERED!** (for the defence), **DOUBLE! / TRIPLE!** (MLB). The
+  play-by-play alerts only come from an open Gamecast. Start and lead change also come from the 5-min scoreboard refresh.
+  A banner waits while a full celebration is showing, then follows it.
+- **Delay sync (SYNC NOW):** the Gamecast shows the feed's clock (`DATA P2 12:22`, ticking between polls while it runs)
+  next to the delay. Press **SYNC NOW**: it locks the clock shown and reads `PRESS AT TV P2 12:22`. Press again when the
+  TV shows that clock. The gap becomes the delay (0–30 s, 1 s steps, saved). The lock expires after 60 s. There's no
+  live clock for MLB, so it shows "NO LIVE CLOCK".
+- **Preview:** console `arcadeCelebrate('goal' | 'td' | 'fg' | 'run' | 'hr' | 'win' | 'half' | 'period' | 'test')`,
+  `arcadeCelebrate('redzone' | 'pp' | 'start' | 'lead' | 'big' | 'alerts')` for the banners, the
   **★ PREVIEW** button in settings, or open the page with `?celebrate=td` (etc.). `test` plays GOAL → TD → WIN.
 - Performance note: marquee strips are only just over a screen wide. Long strips with glow text dropped software rendering
   to about 4 fps.
@@ -333,7 +354,7 @@ next slide shows right away.
 - [ ] `#remote` mode shows the NEXT SLIDE controller and hides the TV view
 - [ ] localStorage migrations (old `mySquadTeams` values, removal of `oddsApiKey` / `ahlersPropsCache`)
 - [ ] Score celebrations: ★ toggles in the Gamecast, master switch + 0–30 s delay in settings, fire only on increases,
-      any key dismisses (`tools/test-celebrate.mjs`)
+      any key dismisses. Alerts: once per situation, per-type switches. SYNC NOW sets the delay (`tools/test-celebrate.mjs`)
 - [ ] No API keys or secrets added; every new API is free, no-key and CORS-enabled
 - [ ] NFL FUTURES / NFL AWARDS / CFB FUTURES / NHL FUTURES slides populate, showing the 'UPDATED' time from futures.json, (from futures.json, or the live fallbacks) and can be toggled in settings
 - [ ] Idle kiosk shows **no** nav UI; ◀/▶, OK menu, Back, Play/Pause and auto-hide all work (harness remote checks)
