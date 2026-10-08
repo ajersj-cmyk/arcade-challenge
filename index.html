@@ -60,6 +60,11 @@
         #settings-gear { position: fixed; top: 1.5vh; right: 3vw; z-index: 25000; width: 7vh; height: 7vh; cursor: pointer; opacity: 0.95; transition: transform 0.3s ease; color: var(--accent-color); background: rgba(0,0,0,0.55); border: 0.3vh solid var(--accent-color); border-radius: 1vh; padding: 0.8vh; }
         #settings-gear:hover, #settings-gear:focus { opacity: 1; transform: rotate(20deg); outline: 0.4vh solid #ff007f; }
         #fs-toggle { display: none !important; }
+        #net-pill { position: fixed; top: 1.2vh; left: 18vw; z-index: 25001; display: none; align-items: center; gap: 0.8vw;
+                    padding: 0.5vh 1.4vh; border-radius: 1vh; font-family: 'Share Tech Mono', monospace; font-size: 1.8vh; font-weight: 900;
+                    letter-spacing: 0.1vw; background: rgba(120,20,20,0.92); border: 2px solid #ff4d4d; color: #fff; }
+        #net-pill.show { display: inline-flex; }
+        #net-pill.stale { background: rgba(80,60,0,0.92); border-color: #ffe600; color: #ffe600; }
         #master-clock { position: fixed; top: 2.5vh; left: 3vw; z-index: 25000; color: #fff; font-family: 'Share Tech Mono', monospace; font-size: 4.5vh; font-weight: 900; letter-spacing: 0.2vw; text-shadow: 0 3px 6px rgba(0,0,0,0.8); }
 
         /* NEON ACCENTS (ZERO REPAINT CPU COST) */
@@ -505,6 +510,7 @@
     <div class="cyber-grid-container"><div class="cyber-grid"></div></div>
     
     <div id="master-clock">12:00 PM</div>
+    <div id="net-pill" aria-live="polite"></div>
 
     <button type="button" id="settings-gear" tabindex="1" aria-label="Settings" onclick="toggleSettings()">
         <svg viewBox="0 0 24 24" style="width:100%;height:100%;fill:currentColor;pointer-events:none;">
@@ -796,7 +802,52 @@
         var bc = null;
         try { if (window.BroadcastChannel) bc = new BroadcastChannel('cinema_channel'); } catch(e) {}
         
-        var rotationStep = 0, slideTimer, triviaRevealTimer;
+        var rotationStep = 0, slideTimer, triviaRevealTimer, slideWatchdog = null, slideStartedAt = 0;
+        var FETCH_MS = 9000, SLIDE_MAX_MS = 90000; // hard caps so a hung API cannot freeze rotation
+        var scoreboardCache = {}, netState = { offline: false, stale: false, fails: 0 };
+        try { scoreboardCache = JSON.parse(localStorage.getItem('ahlersScoreboardCache1') || '{}') || {}; } catch (e) { scoreboardCache = {}; }
+
+        function arcadeFetch(url, opts) {
+            opts = opts || {};
+            var ms = opts.timeout != null ? opts.timeout : FETCH_MS, ctl = (typeof AbortController !== 'undefined') ? new AbortController() : null;
+            var t = ctl ? setTimeout(function() { try { ctl.abort(); } catch (e) {} }, ms) : null;
+            var init = { cache: opts.cache || 'no-store' }; if (ctl) init.signal = ctl.signal;
+            return fetch(url, init).then(function(r) { if (t) clearTimeout(t); return r; }, function(err) { if (t) clearTimeout(t); throw err; });
+        }
+        function netSet(offline, stale, msg) {
+            netState.offline = !!offline; netState.stale = !!stale;
+            var el = document.getElementById('net-pill'); if (!el) return;
+            if (!offline && !stale) { el.className = ''; el.textContent = ''; return; }
+            el.className = 'show' + (stale && !offline ? ' stale' : '');
+            el.textContent = offline ? (msg || 'OFFLINE — SHOWING LAST DATA') : (msg || 'STALE DATA');
+        }
+        function netMarkOk() { netState.fails = 0; netSet(false, netState.stale && !arguments[0] ? false : netState.stale); }
+        function netClearStale() { netState.stale = false; if (!netState.offline) netSet(false, false); }
+        function netMarkFail() { netState.fails++; if (netState.fails >= 2) netSet(true, true); }
+        function cacheScoreboard(id, payload) {
+            try { scoreboardCache[id] = { at: Date.now(), d: payload }; localStorage.setItem('ahlersScoreboardCache1', JSON.stringify(scoreboardCache)); } catch (e) {}
+        }
+        function readScoreboardCache(id) { var c = scoreboardCache[id]; return (c && c.d) ? c : null; }
+        function armSlideWatchdog() {
+            clearTimeout(slideWatchdog); slideStartedAt = Date.now();
+            slideWatchdog = setTimeout(function() {
+                if ((gc && gc.open) || (arcadeNav && arcadeNav.paused)) { armSlideWatchdog(); return; }
+                slideTimer = null; nextSlide();
+            }, SLIDE_MAX_MS);
+        }
+        function clearSlideTimers() { clearTimeout(slideTimer); slideTimer = null; clearTimeout(slideWatchdog); slideWatchdog = null; }
+        var wakeLock = null;
+        async function requestWakeLock() {
+            try { if (!navigator.wakeLock || !navigator.wakeLock.request) return; wakeLock = await navigator.wakeLock.request('screen'); wakeLock.addEventListener('release', function() { wakeLock = null; }); }
+            catch (e) { wakeLock = null; }
+        }
+        document.addEventListener('visibilitychange', function() { if (document.visibilityState === 'visible') requestWakeLock(); });
+        function scheduleSoftReload() {
+            if (window.ArcadeTV) return; // TV app already soft-reloads
+            function msUntil4() { var n = new Date(), t = new Date(n); t.setHours(4, 0, 0, 0); if (t <= n) t.setDate(t.getDate() + 1); return t - n; }
+            setTimeout(function tick() { if (gc && gc.open) { setTimeout(tick, 60000); return; } location.reload(); }, msUntil4());
+        }
+
         var globalLiveGamesData = [], globalRawGames = [], globalPropsData = [];
         var globalTVGuideData = [], globalLeadersData = [], newMarqueeGames = [];
         var currentTrivia = null;
@@ -928,7 +979,7 @@
 
         async function fetchNextTrivia() {
             try {
-                var res = await fetch('https://opentdb.com/api.php?amount=1&category=21&type=multiple');
+                var res = await arcadeFetch('https://opentdb.com/api.php?amount=1&category=21&type=multiple');
                 var d = await res.json();
                 if (d.results && d.results.length > 0) {
                     var t = d.results[0];
@@ -945,7 +996,7 @@
         async function fetchCommandData() {
             if(!settings.command) return;
             try {
-                var weatherRes = await fetch("https://api.open-meteo.com/v1/forecast?latitude=35.6127&longitude=-77.3663&current=temperature_2m,weather_code&daily=temperature_2m_max,temperature_2m_min&temperature_unit=fahrenheit&timezone=America%2FNew_York");
+                var weatherRes = await arcadeFetch("https://api.open-meteo.com/v1/forecast?latitude=35.6127&longitude=-77.3663&current=temperature_2m,weather_code&daily=temperature_2m_max,temperature_2m_min&temperature_unit=fahrenheit&timezone=America%2FNew_York");
                 var weatherData = await weatherRes.json();
                 document.getElementById('local-temp').innerText = Math.round(weatherData.current.temperature_2m) + '°F';
                 document.getElementById('local-highlow').innerText = 'HIGH: ' + Math.round(weatherData.daily.temperature_2m_max[0]) + '° | LOW: ' + Math.round(weatherData.daily.temperature_2m_min[0]) + '°';
@@ -1164,8 +1215,9 @@
 
         function nextSlide() {
             if ((arcadeNav.paused || (gc && gc.open)) && !arcadeNav.forcing) { arcadeNav.pending = true; return; } // paused or a Gamecast is open
-            clearTimeout(slideTimer);
+            clearSlideTimers();
             clearTimeout(triviaRevealTimer);
+            armSlideWatchdog();
             slideGen++;
             var gen = slideGen;
             if (nextSlide._guard > 40) { nextSlide._guard = 0; showSlideEmpty('WAITING ON DATA'); return; }
@@ -1219,10 +1271,11 @@
                 showSlideEmpty('SLIDE ERROR');
             }
             rotationStep++;
+            nextSlide._guard = 0;
+            // Safety net: each slide sets its own slideTimer. If nothing did within 1.5 s, schedule a normal advance.
             setTimeout(function() {
-                nextSlide._guard = 0;
-                if (!slideTimer) slideTimer = setTimeout(nextSlide, 22000);
-            }, 800);
+                if (!slideTimer && !(gc && gc.open) && !(arcadeNav && arcadeNav.paused)) slideTimer = setTimeout(nextSlide, 20000);
+            }, 1500);
         }
 
         function getNetworkLogo(networkStr) {
@@ -1265,10 +1318,20 @@
             for (var i=0; i<configs.length; i++) { 
                 var c = configs[i];
                 if (!settings[c.t]) continue;
+                var d = null, fromCache = false;
                 try { 
-                    var res = await fetch(settings.apiBase + '/site/v2/sports/' + c.s + '/' + c.l + '/scoreboard' + (c.g ? '?groups=' + c.g : ''));
-                    var d = await res.json();
-                    if (!d || !d.events) continue;
+                    var res = await arcadeFetch(settings.apiBase + '/site/v2/sports/' + c.s + '/' + c.l + '/scoreboard' + (c.g ? '?groups=' + c.g : ''));
+                    if (!res.ok) throw new Error('HTTP ' + res.status);
+                    d = await res.json();
+                    if (!d || !d.events) throw new Error('empty');
+                    cacheScoreboard(c.id, d);
+                } catch (fetchErr) {
+                    var cached = readScoreboardCache(c.id);
+                    if (!cached) continue;
+                    d = cached.d; fromCache = true; netState.stale = true;
+                }
+                if (!d || !d.events) continue;
+                try {
                     
                     d.events.forEach(function(ev) { 
                         try {
@@ -1413,6 +1476,8 @@
                     });
                 } catch(e) {} 
             }
+            if (netState.stale) netSet(netState.fails >= 2, true);
+            else { netState.fails = 0; netSet(false, false); }
             
             globalLiveGamesData = newLivePage;
             gcRegisterGames(gcList);
@@ -1510,7 +1575,7 @@
         }
 
         function showTrivia() {
-            if(!currentTrivia) { fetchNextTrivia(); rotationStep++; nextSlide(); return; }
+            if(!currentTrivia) { fetchNextTrivia(); nextSlide(); return; }
             document.getElementById('trivia-screen').style.display = 'flex';
             var mc = document.getElementById('master-clock'); if (mc) mc.style.display = 'none';
             document.getElementById('trivia-q').innerText = currentTrivia.q;
@@ -1522,7 +1587,7 @@
             clearTimeout(triviaRevealTimer);
             triviaRevealTimer = setTimeout(function() {
                 document.querySelectorAll('.trivia-ans').forEach(function(opt) { if (opt.getAttribute('data-correct') === 'true') opt.classList.add('correct'); else opt.classList.add('wrong'); });
-                slideTimer = setTimeout(function() { fetchNextTrivia(); rotationStep++; nextSlide(); }, 5000);
+                slideTimer = setTimeout(function() { fetchNextTrivia(); nextSlide(); }, 5000);
             }, 15000);
         }
 
@@ -1545,7 +1610,7 @@
 
         async function showPGA(gen) {
             try {
-                var res = await fetch(settings.apiBase + '/site/v2/sports/golf/pga/scoreboard'); var d = await res.json();
+                var res = await arcadeFetch(settings.apiBase + '/site/v2/sports/golf/pga/scoreboard'); var d = await res.json();
                 if (!isCurrentSlide(gen)) return;
                 var ev0 = (d.events && d.events[0]) ? d.events[0] : null;
                 var golfers = (ev0 && ev0.competitions && ev0.competitions[0] && ev0.competitions[0].competitors) ? ev0.competitions[0].competitors : [];
@@ -1581,7 +1646,7 @@
 
         async function showUFC(gen) {
             try {
-                var res = await fetch(settings.apiBase + '/site/v2/sports/mma/ufc/scoreboard'); var d = await res.json();
+                var res = await arcadeFetch(settings.apiBase + '/site/v2/sports/mma/ufc/scoreboard'); var d = await res.json();
                 if (!isCurrentSlide(gen)) return;
                 if(!d.events || d.events.length === 0) {
                     document.getElementById('ufc-screen').style.display = 'flex';
@@ -1634,7 +1699,7 @@
             for (var i=0; i<leagues.length; i++) {
                 if(!settings[leagues[i].t]) continue;
                 try {
-                    var res = await fetch(settings.apiBase + '/site/v2/sports/soccer/' + leagues[i].id + '/scoreboard'); var d = await res.json();
+                    var res = await arcadeFetch(settings.apiBase + '/site/v2/sports/soccer/' + leagues[i].id + '/scoreboard'); var d = await res.json();
                     if(!d.events) continue;
                     d.events.forEach(function(ev) {
                         var comp = ev.competitions[0]; var diffHours = (new Date(ev.date).getTime() - nowTime) / (1000 * 60 * 60);
@@ -1678,7 +1743,7 @@
                 var sources = [{ url: 'https://api.rss2json.com/v1/api.json?rss_url=https%3A%2F%2Fsports.yahoo.com%2Frss%2F', name: 'YAHOO SPORTS' }, { url: 'https://api.rss2json.com/v1/api.json?rss_url=https%3A%2F%2Fwww.cbssports.com%2Frss%2Fheadlines%2F', name: 'CBS SPORTS' }];
                 var combinedNews = [];
                 for (var i=0; i<sources.length; i++) {
-                    try { var res = await fetch(sources[i].url); var data = await res.json(); if (data.status === 'ok') { data.items.forEach(function(item) { var title = cleanHeadline(item.title); if (title.length < 8) return; combinedNews.push({ title: title, img: item.thumbnail || (item.enclosure && item.enclosure.link) || '', source: sources[i].name, time: new Date(String(item.pubDate || '').replace(/-/g, '/')).getTime() }); }); } } catch(e) {}
+                    try { var res = await arcadeFetch(sources[i].url); var data = await res.json(); if (data.status === 'ok') { data.items.forEach(function(item) { var title = cleanHeadline(item.title); if (title.length < 8) return; combinedNews.push({ title: title, img: item.thumbnail || (item.enclosure && item.enclosure.link) || '', source: sources[i].name, time: new Date(String(item.pubDate || '').replace(/-/g, '/')).getTime() }); }); } } catch(e) {}
                 }
                 if (combinedNews.length === 0) {
                     document.getElementById('news-screen').style.display = 'flex';
@@ -3446,11 +3511,14 @@
         window.addEventListener('load', async function() { 
             checkMode(); loadSettingsUI(); updateClock(); setInterval(updateClock, 1000);
             renderSkeletons();
+            requestWakeLock(); scheduleSoftReload();
             fetchCommandData(); fetchNextTrivia();
             await updateSportsTicker();
             nextSlide(); 
             setInterval(function(){ updateSportsTicker().catch(function(){}); }, 300000);
             setInterval(fetchCommandData, 900000);
+            window.addEventListener('online', function() { netState.fails = 0; netSet(false, netState.stale); updateSportsTicker().catch(function(){}); });
+            window.addEventListener('offline', function() { netSet(true, true); });
         });
     </script>
 </body>

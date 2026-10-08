@@ -72,6 +72,9 @@ reference finals/upcoming events (NFL, CFB, World Cup, MLB, EPL), screenshots ea
 "never more than one request in flight", the RECONNECTING state during an induced outage (and recovery), auto-close of a
 finished game, and a clean stop on close.
 
+`node tools/test-reliability.mjs [preview.html]` checks hung-fetch abort, trivia no longer skips leaders, the
+rotation watchdog helpers, stale scoreboard cache + offline pill, and soft-reload skipped when `window.ArcadeTV` exists.
+
 `node tools/test-celebrate.mjs [preview.html]` tests score celebrations against mocked ESPN summaries (an NHL game
 NYR @ CAR and a CFB game TEM @ ECU): the per-team ★ toggles (mouse + D-pad) and their localStorage, no fire on first look,
 GOAL!! / TOUCHDOWN!! / FIELD GOAL!!! / CANES WIN!! / HALFTIME!, no repeat after a score correction, the delay (Gamecast
@@ -378,8 +381,8 @@ next slide shows right away.
 |---|---|---|
 | 1 | ✅ *Fixed in PR #2 (no longer called; names come from ESPN core $refs).* **ESPN `/teams?limit=400` sends no `Access-Control-Allow-Origin`** (200 to curl, but browsers block it) | 5 console CORS errors per futures build (once / 24 h on the TV). `loadTeamMap()` falls back to the hard-coded NFL/NBA/MLB/NHL maps. **CFB has no fallback, so "CFB TITLE" never renders.** |
 | 2 | ✅ *Fixed in PR #2.* Futures market matching used `name` and `new Date().getFullYear()` | NBA title also missing (on 2026-10-07 only SUPER BOWL, WORLD SERIES, STANLEY CUP rendered). ESPN files upcoming NBA/NHL seasons under next year. |
-| 3 | **Rotation skips a slide around trivia.** `showTrivia()` increments `rotationStep` itself, then `nextSlide()` increments again | After a normal trivia slide, **leaders** is skipped. When trivia isn't loaded yet, leaders shows but **PGA** is skipped. (The harness saw PGA skipped when OpenTDB returned 429.) |
-| 4 | **The 800 ms fallback timer in `nextSlide()` never fires.** It checks `if (!slideTimer)`, but `slideTimer` still holds a stale id | If an async slide's `fetch` hangs (no timeouts anywhere), rotation freezes on that slide. The initial `await updateSportsTicker()` has the same risk at startup. |
+| 3 | ~~**Rotation skips a slide around trivia.**~~ **FIXED** (PR reliability): `showTrivia()` increments `rotationStep` itself, then `nextSlide()` increments again | After a normal trivia slide, **leaders** is skipped. When trivia isn't loaded yet, leaders shows but **PGA** is skipped. (The harness saw PGA skipped when OpenTDB returned 429.) |
+| 4 | ~~Hung-fetch freezes rotation~~ | **Fixed** in reliability: `arcadeFetch` 9 s AbortController + 90 s slide watchdog |
 | 5 | ✅ *Fixed in PR #2.* Gear click/tap double-toggles (§5) | The gear only works from the keyboard/remote |
 | 6 | ✅ *Fixed in PR #2 (D-pad navigation).* No Back/Escape/arrow handling (§5) | Hard to drive with a D-pad |
 | 7 | `BroadcastChannel` phone remote is same-device only | The QR "remote" doesn't reach the TV |
@@ -430,7 +433,7 @@ Small, incremental steps. Each one keeps every §6 item working and goes through
 2b. ✅ **(PR #4) Gamecast.** Full-screen live game overlay from the Live Action cards, the ticker or the navigator's GAMES
    row. It shows the scoreboard, situation, linescore, win probability, last plays, full team stats and box-score player
    stats, polls every 10 s, and has reconnecting and auto-close behaviour (§5).
-3. **Resilience.** `fetch` timeouts (AbortController ~8 s), a working rotation watchdog (issue 4), `res.ok` checks,
+3. **Resilience.** ~~`fetch` timeouts / watchdog~~ **Shipped** (reliability): 9 s `arcadeFetch`, 90 s watchdog, stale scoreboard cache, offline pill, Wake Lock, 4 AM soft reload (browser only). Remaining:
    last-good-data cache with a small "stale" badge when an API is down.
 4. **Kiosk hardening.** Screen Wake Lock, a nightly soft reload (~4 AM) to clear memory on 24/7 runs, offline indicator +
    auto-recover, favicon.
