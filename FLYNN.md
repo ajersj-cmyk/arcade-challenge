@@ -308,11 +308,14 @@ next slide shows right away.
   marquee (`GOAL!! ★ SEBASTIAN AHO`) plus a headshot card with assists (NHL) or "PASS FROM …" (football). The name comes
   from `participants` (NHL/MLB plays) or the scoring-play text (football). The headshot comes from the feed, the boxscore
   athlete, or `a.espncdn.com/i/headshots/<league>/players/full/<id>.png`. With no player found, only the team logo shows.
-- **Effects level:** **Lite** is the default (Settings → *Full Effects* off). It has one team-colour wash fade, one gentle
-  logo scale-in, ONE scrolling strip (transform only), and the scorer card. There's no strobe, confetti, shake, beams,
-  rings, sweep, blur shadows or filters, and alert banners lose their glow and shine. **Full** is the original flashy
-  version. The TV app (`window.ArcadeTV`) and `prefers-reduced-motion` always use Lite. Headless Chrome (software
-  compositing): Lite holds 60 fps at 1x/4x/6x CPU throttle, Full runs at about 10–15 fps.
+- **Effects level:** **Lite** is the default (Settings → *Full Effects* off), and the TV app (`window.ArcadeTV`) and
+  `prefers-reduced-motion` always use it. It keeps Full's colours: a static team-colour gradient wash with a light
+  vignette, a big white glowing title (GOAL!! / TOUCHDOWN!!), logo scale-in, the scorer card, and ONE scrolling strip with
+  a static glow. Motion is cheap: 3 quick white flashes on one full-screen layer (opacity only) in the first second, then
+  steady, plus one slow sheen pass (transform only). There's no confetti, shake, beams, rings or continuous strobe, and no
+  animated filters, blur or background. **Full** is the original 3-strip strobe/confetti/shake version. Headless Chrome
+  (software compositing, frames from 0.5–3.5 s): Lite goal/TD 60/60 fps at 1x and 60/59 fps at 6x CPU throttle; Full about
+  11–16 fps.
 - **Field goals** are held back 5 s on top of the delay, so a FG never shows before a TD would be known.
 - **Alerts (smaller banners)** for ★ teams use the same delay and the master switch, and each type has its own switch
   in settings (`alertRedzone`, `alertPP`, `alertStart`, `alertLead`, `alertBig`, default ON):
