@@ -3,7 +3,7 @@ plugins {
 }
 
 // Signing: CI and local release builds use the self-signed "arcade" key when these are set
-// (GitHub secrets TVAPP_KEYSTORE_B64 / _PASSWORD / TVAPP_KEY_ALIAS / TVAPP_KEY_PASSWORD; locally
+// (GitHub secrets TVAPP_KEYSTORE_B64 / TVAPP_KEYSTORE_PASSWORD / TVAPP_KEY_PASSWORD, alias "arcade"; locally
 // export TVAPP_KEYSTORE=/path/to/key.jks plus the passwords). A stable key matters: Android refuses
 // to update an installed APK that was signed with a different key. Without them the release build
 // falls back to the debug key so forks / PRs still produce an installable APK.

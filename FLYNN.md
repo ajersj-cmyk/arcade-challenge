@@ -476,8 +476,8 @@ with a different key is on it: uninstall it first. The legacy `android-tv` APK i
   *Run workflow*. It runs `assembleRelease` + `lintRelease`, checks the APK with `aapt2` (leanback entry) and `apksigner`,
   and uploads the **`ahlers-arcade-tv-apk`** artifact (kept 90 days).
 - **Signing:** a self-signed release key (`CN=Ahlers Arcade TV`, RSA 3072, valid 50 years, SHA-256
-  `7D:07:2C:A2:…:DF:3A:43`). It's stored as repo secrets `TVAPP_KEYSTORE_B64`, `TVAPP_KEYSTORE_PASSWORD`,
-  `TVAPP_KEY_ALIAS` and `TVAPP_KEY_PASSWORD`, plus a copy on Flynn's box (`~/android-dev/keys/`, never committed).
+  `7D:07:2C:A2:…:DF:3A:43`). It's stored as repo secrets `TVAPP_KEYSTORE_B64`, `TVAPP_KEYSTORE_PASSWORD` and
+  `TVAPP_KEY_PASSWORD` (key alias `arcade`), plus a copy on Flynn's box (`~/android-dev/keys/`, never committed).
   **Losing the key means the next APK can't update the installed one** (uninstall/reinstall, and the site settings
   reset), so keep a backup. Without the secrets (forks), Gradle falls back to the debug key.
 - **Local:** JDK 17 + Android SDK (`platforms;android-37.0`, `build-tools;37.0.0`), then

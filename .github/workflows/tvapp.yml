@@ -24,9 +24,9 @@ jobs:
       run:
         working-directory: tvapp
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: "17"
@@ -59,7 +59,7 @@ jobs:
       - name: Build + lint
         env:
           TVAPP_KEYSTORE_PASSWORD: ${{ secrets.TVAPP_KEYSTORE_PASSWORD }}
-          TVAPP_KEY_ALIAS: ${{ secrets.TVAPP_KEY_ALIAS }}
+          TVAPP_KEY_ALIAS: arcade
           TVAPP_KEY_PASSWORD: ${{ secrets.TVAPP_KEY_PASSWORD }}
         run: ./gradlew --no-daemon assembleRelease lintRelease
 
@@ -69,7 +69,11 @@ jobs:
           BT="$ANDROID_HOME/build-tools/37.0.0"
           "$BT/aapt2" dump badging "$APK" | grep -E "^(package|sdkVersion|minSdkVersion|targetSdkVersion|leanback-launchable-activity|uses-permission|application:)"
           "$BT/aapt2" dump badging "$APK" | grep -q "^leanback-launchable-activity" || { echo "::error::no LEANBACK_LAUNCHER entry"; exit 1; }
-          "$BT/apksigner" verify --print-certs "$APK" | grep -E "Signer #1 certificate (DN|SHA-256)"
+          CERTS=$("$BT/apksigner" verify --print-certs "$APK")
+          echo "$CERTS" | grep -E "certificate (DN|SHA-256)"
+          if [ -n "${TVAPP_KEYSTORE:-}" ] && echo "$CERTS" | grep -q "Android Debug"; then
+            echo "::error::release key was provided but the APK is debug-signed"; exit 1
+          fi
           SIZE=$(stat -c %s "$APK")
           echo "APK size: $SIZE bytes"
           mkdir -p dist && cp "$APK" dist/ahlers-arcade-tv-$(sed -n 's/.*appVersionName = "\(.*\)".*/\1/p' app/build.gradle.kts).apk
