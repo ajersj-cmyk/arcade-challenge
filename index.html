@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <title>Ahlers Arcade Command Center | TV Optimized Master</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;700;900&family=Barlow+Condensed:ital,wght@0,600;0,700;0,800;1,700;1,800&family=Share+Tech+Mono&display=swap" rel="stylesheet">
     <style>
         /* --- CORE BASE & PERFORMANCE STYLES --- */
         :root { 
@@ -651,6 +651,97 @@
         .gc-cel-d { padding: 0.3vh 1.3vh; font-size: 2.2vh; }
         .gc-celmid > * { flex: none; white-space: nowrap; }
         body.nav-active #gamecast .gc-cel:focus, body.nav-active #gamecast .gc-cel-d:focus { outline: 0.4vh solid #00f0ff; outline-offset: 0.3vh; }
+        /* ===================== BROADCAST LOOK (design system, transitions, stadium photos) =====================
+           One set of tokens for every slide. Motion is transform/opacity only (onn Google TV boxes); nothing blurs. */
+        :root {
+            --ds-display: 'Barlow Condensed', 'Inter', sans-serif;      /* titles, team names, scores, clock */
+            --ds-radius: 1.4vh; --ds-radius-sm: 0.8vh;
+            --ds-card-bg: linear-gradient(180deg, rgba(22, 33, 54, 0.94) 0%, rgba(8, 13, 24, 0.96) 100%);
+            --ds-card-shadow: 0 1.2vh 2.8vh rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+            --ds-fs-title: 7vh; --ds-fs-section: 3.4vh; --ds-fs-label: 2.1vh; --ds-fs-team: 5.4vh; --ds-fs-score: 6.6vh;
+            --ds-ink-dim: rgba(255, 255, 255, 0.66);
+            --bx-ms: 760ms;
+        }
+        body { font-variant-numeric: tabular-nums; }                     /* scores/odds/records never jitter */
+        /* slide titles: white condensed italic, accent glow + accent rule (was neon text + full-width line) */
+        .screen-header, .screen-header.neon-text-cycle { font-family: var(--ds-display); font-style: italic; font-weight: 800; font-size: var(--ds-fs-title);
+            letter-spacing: 0.05em; line-height: 1.05; color: #fff !important; border-bottom: none; position: relative; margin-top: 2.4vh; padding-bottom: 1.2vh;
+            text-shadow: 0 0 2.6vh var(--accent-shadow), 0 0.3vh 0.6vh rgba(0, 0, 0, 0.7); }
+        .screen-header::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 0.45vh; border-radius: 0.3vh;
+            background: linear-gradient(90deg, transparent 0%, var(--accent-color) 18%, var(--accent-color) 82%, transparent 100%); }
+        .screen-header .league-logo { height: 0.82em; margin-top: -0.9vh; }
+        .screen-header::before { content: ''; display: inline-block; width: 1.1vh; height: 0.72em; margin-right: 3.3vh; vertical-align: -0.04em;
+            background: var(--accent-color); transform: skewX(-14deg); box-shadow: 1.7vh 0 0 -0.25vh rgba(255, 255, 255, 0.85); margin-left: -1.7vh; } /* the wipe's slash motif */
+        /* one card surface */
+        .glass-card, .trivia-ans, .golf-row, .rank-row, .tv-row, .news-row, .division-block, .info-card, .ufc-card, .trivia-q-box {
+            background: var(--ds-card-bg); border-radius: var(--ds-radius); box-shadow: var(--ds-card-shadow); }
+        .card-meta { font-size: var(--ds-fs-label); letter-spacing: 0.14em; font-weight: 800; border-bottom-color: rgba(255, 255, 255, 0.12); }
+        .card-footer { font-size: var(--ds-fs-label); letter-spacing: 0.1em; font-weight: 800; border-top-color: rgba(255, 255, 255, 0.12); }
+        .card-team { font-family: var(--ds-display); font-weight: 700; font-size: var(--ds-fs-team); letter-spacing: 0.01em; }
+        .card-val-lg { font-family: var(--ds-display); font-weight: 800; font-size: var(--ds-fs-score); line-height: 1; }
+        .division-header, .fut-card .division-header { font-family: var(--ds-display); font-style: italic; font-weight: 800; letter-spacing: 0.05em; }
+        .division-header { font-size: var(--ds-fs-section); }
+        .rank-num, .golf-pos, .golf-score, .trend-streak { font-family: var(--ds-display); font-weight: 800; }
+        .rank-name, .golf-name, .fighter-name, .tv-prog-title { font-family: var(--ds-display); font-weight: 700; letter-spacing: 0.01em; }
+        .fut-meta { font-size: var(--ds-fs-label); letter-spacing: 0.16em; color: var(--ds-ink-dim) !important; }
+        .ticker-section-head, #sports-ticker .team-score, #sports-ticker .game-status, #sports-ticker .vs-label { font-family: var(--ds-display); font-weight: 800; letter-spacing: 0.02em; }
+        #sports-ticker .ticker-section-head { font-style: italic; }
+        #master-clock { font-family: var(--ds-display); font-weight: 700; font-size: 4.8vh; letter-spacing: 0.03em; padding-left: 1.2vh; border-left: 0.5vh solid var(--accent-color); line-height: 1; }
+
+        /* ---- broadcast transition: a colored slab with angled bars covers the outgoing slide, then wipes off to reveal the next ---- */
+        #bx-wipe { position: absolute; left: 0; top: 0; width: 100%; height: calc(100% - var(--ticker-height)); overflow: hidden; pointer-events: none; z-index: 95; display: none; contain: strict; }
+        #bx-wipe.run { display: block; }
+        .bx-mv { position: absolute; top: 0; bottom: 0; left: 0; width: 150vw; transform: translate3d(-165vw, 0, 0); will-change: transform; }
+        #bx-wipe.run .bx-mv { animation: bxSweep var(--bx-ms) linear both; }
+        @keyframes bxSweep {
+            0%   { transform: translate3d(-165vw, 0, 0); animation-timing-function: cubic-bezier(0.15, 0.7, 0.3, 1); }
+            42%  { transform: translate3d(-25vw, 0, 0); animation-timing-function: linear; }
+            56%  { transform: translate3d(-25vw, 0, 0); animation-timing-function: cubic-bezier(0.65, 0, 0.85, 0.35); }
+            100% { transform: translate3d(118vw, 0, 0); } }
+        .bx-slab { position: absolute; top: -2vh; bottom: -2vh; left: 10vw; right: 10vw; transform: skewX(-14deg);
+            background: linear-gradient(100deg, rgba(0,0,0,0) 0%, rgba(4,7,14,0.5) 38%, rgba(4,7,14,0.72) 62%, rgba(0,0,0,0.1) 100%), var(--bx-c1, #0a3a8a); }
+        .bx-slab::before, .bx-slab::after { content: ''; position: absolute; top: 0; bottom: 0; width: 2.4vw; background: var(--accent-color); }
+        .bx-slab::before { right: -2.4vw; box-shadow: 2.2vw 0 0 -0.7vw #fff, 4.4vw 0 0 -0.95vw var(--bx-c1, #0a3a8a); }
+        .bx-slab::after { left: -2.4vw; box-shadow: -2.2vw 0 0 -0.7vw #fff, -4.4vw 0 0 -0.95vw var(--bx-c1, #0a3a8a); }
+        .bx-stripes { position: absolute; inset: 0; background: repeating-linear-gradient(-76deg, rgba(255,255,255,0.045) 0 1.2vw, transparent 1.2vw 3.6vw); }
+        .bx-brand { position: absolute; left: 75vw; top: 50%; transform: translate(-50%, -50%); display: flex; align-items: center; gap: 2.4vw; white-space: nowrap; }
+        .bx-brand img { height: 12vh; width: 12vh; object-fit: contain; }
+        .bx-brand img[src=""] { display: none; }
+        .bx-t { font-family: var(--ds-display); font-style: italic; font-weight: 800; font-size: 9vh; letter-spacing: 0.04em; color: #fff; line-height: 1; }
+        .bx-t small { display: block; font-size: 2.6vh; letter-spacing: 0.4em; color: var(--accent-color); margin-bottom: 0.8vh; }
+        #bx-wipe.lite .bx-stripes { display: none; }
+        #bx-wipe.lite .bx-slab::before, #bx-wipe.lite .bx-slab::after { box-shadow: none; }
+        #main-wrapper.bx-cover .slide-screen:not(.bx-old) { visibility: hidden; }  /* new slide waits under the slab */
+        .slide-screen.bx-old { z-index: 11; }
+        /* ---- lower third: league bug + slide name + up next, slides in after the wipe, then out ---- */
+        #bx-l3 { position: absolute; left: 3vw; bottom: calc(var(--ticker-height) - 2.7vh); height: 5.4vh; z-index: 120; display: flex; align-items: stretch;
+            pointer-events: none; transform: translate3d(-130%, 0, 0); will-change: transform; filter: drop-shadow(0 0.6vh 0.8vh rgba(0,0,0,0.6)); }
+        #bx-l3.show { animation: bxL3 4300ms linear 600ms both; }
+        @keyframes bxL3 { 0% { transform: translate3d(-130%, 0, 0); animation-timing-function: cubic-bezier(0.2, 0.8, 0.3, 1); }
+            9% { transform: translate3d(0, 0, 0); } 90% { transform: translate3d(0, 0, 0); animation-timing-function: cubic-bezier(0.6, 0, 0.9, 0.4); }
+            100% { transform: translate3d(-130%, 0, 0); } }
+        .bx-l3-bug { display: flex; align-items: center; justify-content: center; padding: 0 1.4vh 0 1.2vh; background: var(--bx-c1, #0a3a8a); border-radius: 0.6vh 0 0 0.6vh; }
+        .bx-l3-bug img { height: 3.4vh; width: 3.4vh; object-fit: contain; }
+        .bx-l3-bug img[src=""] { display: none; }
+        .bx-l3-main { display: flex; align-items: center; gap: 1.4vw; padding: 0 2vw 0 1.4vw; background: rgba(6, 10, 20, 0.96); border-bottom: 0.45vh solid var(--accent-color);
+            border-radius: 0 0.6vh 0.6vh 0; font-family: var(--ds-display); white-space: nowrap; }
+        .bx-l3-main b { font-style: italic; font-weight: 800; font-size: 3.5vh; letter-spacing: 0.05em; color: #fff; }
+        .bx-l3-main i { font-style: normal; font-weight: 700; font-size: 2.1vh; letter-spacing: 0.14em; color: var(--accent-color); }
+        .bx-l3-main i:empty { display: none; }
+        #bx-l3.lite { filter: none; }
+        body.remote-active #bx-wipe, body.remote-active #bx-l3 { display: none; }
+
+        /* ---- stadium photos: faded venue photo behind game cards and the Gamecast header ---- */
+        .glass-card.has-venue { isolation: isolate; }
+        .card-venue { position: absolute; inset: 0; z-index: -1; overflow: hidden; border-radius: inherit; pointer-events: none; }
+        .card-venue img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity 0.6s ease; }
+        .card-venue img.ok { opacity: 0.55; }
+        .card-venue::after { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(8, 13, 24, 0.62) 0%, rgba(8, 13, 24, 0.78) 45%, rgba(8, 13, 24, 0.95) 100%); }
+        #gc-venue { position: absolute; left: 0; right: 0; top: 0; height: 46vh; z-index: -1; overflow: hidden; pointer-events: none; display: none; }
+        #gc-venue.on { display: block; }
+        #gc-venue img { width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity 0.8s ease; }
+        #gc-venue img.ok { opacity: 0.5; }
+        #gc-venue::after { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(5, 8, 15, 0.55) 0%, rgba(5, 8, 15, 0.72) 55%, #05080f 100%); }
     </style>
 </head>
 <body class="theme-cyan">
@@ -778,6 +869,8 @@
         <div id="nhl-screen" class="slide-screen"><div class="screen-header neon-text-cycle"><img src="https://a.espncdn.com/combiner/i?img=/i/teamlogos/leagues/500/nhl.png" class="league-logo" onerror="this.style.display='none'">NHL STANDINGS</div><div class="content-viewport" id="nhl-viewport"><div class="grid-track" style="gap: 2.5vw;" id="nhl-track"></div></div></div>
         <div id="rankings-screen" class="slide-screen"><div class="screen-header neon-text-cycle">COLLEGE RANKINGS</div><div class="content-viewport" id="rankings-viewport"><div class="list-track" id="rankings-list-track"></div></div></div>
 
+        <div id="bx-wipe" aria-hidden="true"><div class="bx-mv"><div class="bx-slab"><div class="bx-stripes"></div></div><div class="bx-brand"><img id="bx-logo" src="" alt=""><div class="bx-t"><small>AHLERS ARCADE</small><span id="bx-title"></span></div></div></div></div>
+        <div id="bx-l3" aria-hidden="true"><span class="bx-l3-bug"><img id="bx-l3-logo" src="" alt=""></span><span class="bx-l3-main"><b id="bx-l3-title"></b><i id="bx-l3-sub"></i></span></div>
         <div id="sports-ticker" class="neon-border-cycle"><div id="ticker-track"></div></div>
     </div>
 
@@ -923,6 +1016,7 @@
         <div class="cel-center"><div class="cel-title" id="cel-title"></div><div class="cel-row"><img class="cel-logo" id="cel-logo" alt=""><div class="cel-player"><img class="cel-head" id="cel-head" alt=""><div class="cel-pname" id="cel-pname"></div><div class="cel-pmore" id="cel-pmore"></div></div></div><div class="cel-sub" id="cel-sub"></div></div></div></div>
     <div id="cel-alert" aria-hidden="true"><div class="al-bar"><div class="al-shine"></div><img class="al-logo" id="al-logo" alt=""><img class="al-head" id="al-head" alt=""><div class="al-txt"><div class="al-title" id="al-title"></div><div class="al-subrow"><span class="al-pname" id="al-pname"></span><div class="al-sub" id="al-sub"></div></div></div><div class="al-tag" id="al-tag"></div></div></div>
     <div id="gamecast" aria-hidden="true">
+        <div id="gc-venue" aria-hidden="true"><img alt="" onload="this.classList.add('ok')" onerror="gcVenueFail(this)"></div>
         <div class="gc-top">
             <span class="gc-brand neon-text-cycle">&#9673; GAMECAST</span>
             <span class="gc-chip neon-text-cycle" id="gc-league"></span>
@@ -1009,6 +1103,86 @@
                 slideTimer = null; nextSlide();
             }, SLIDE_MAX_MS);
         }
+        // ---------- BROADCAST TRANSITIONS (stinger wipe + lower third). Never touches slideTimer: rotation timing is unchanged. ----------
+        var BX_INFO = { // slide -> [slab color, league bug]
+            live: ['#c8102e', ''], hotProps: ['#d4560b', ''], mySquad: ['#4b1869', ''], trivia: ['#5b2bc9', ''], leaders: ['#0b7a55', ''],
+            pga: ['#0b5d3b', 'https://a.espncdn.com/combiner/i?img=/i/teamlogos/leagues/500/pga.png&w=96&h=96'], ufc: ['#b0141c', 'https://a.espncdn.com/combiner/i?img=/i/teamlogos/leagues/500/ufc.png&w=96&h=96'],
+            command: ['#0a4f8a', ''], soccerSlide: ['#3d195b', 'https://a.espncdn.com/combiner/i?img=/i/leaguelogos/soccer/500/23.png&w=96&h=96'], tvGuide: ['#2a3550', ''], news: ['#30343f', ''],
+            odds: ['#0a6b45', ''], futures: ['#8a6a0b', ''], nflFutures: ['#013369', 'nfl'], nflAwards: ['#013369', 'nfl'], fantasy: ['#013369', 'nfl'],
+            cfbFutures: ['#7a1a2a', 'ncaa'], nhlFutures: ['#33415c', 'nhl'], rankings: ['#7a1a2a', 'ncaa'], nfl: ['#013369', 'nfl'], nba: ['#c9082a', 'nba'], nhl: ['#33415c', 'nhl'], mlb: ['#002d72', 'mlb'] };
+        var bxT = { hold: null, off: null, from: null };
+        function bxLogo(v) { return !v ? '' : (v.indexOf('http') === 0 ? v : 'https://a.espncdn.com/combiner/i?img=/i/teamlogos/leagues/500/' + v + '.png&w=96&h=96'); }
+        function bxLite() { // TV app (budget Google TV boxes) and reduced-motion get the Lite wipe (one slab + bar, no stripes/glints/shadows)
+            try { return !!window.ArcadeTV || !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches); } catch (e) { return true; } }
+        function bxFinish() { // end a running hold right away (rapid remote presses, Gamecast)
+            clearTimeout(bxT.hold); bxT.hold = null;
+            var w = document.getElementById('main-wrapper'); if (w) w.classList.remove('bx-cover');
+            if (bxT.from) { bxT.from.classList.remove('bx-old'); if (bxT.from.getAttribute('data-bx-hide') === '1') bxT.from.style.display = 'none'; bxT.from.removeAttribute('data-bx-hide'); bxT.from = null; }
+        }
+        var BX_SCREEN = { live: 'live-game-screen', hotProps: 'hotprops-screen', mySquad: 'mysquad-screen', trivia: 'trivia-screen', leaders: 'leaders-screen', pga: 'pga-screen',
+            ufc: 'ufc-screen', command: 'command-screen', soccerSlide: 'soccer-screen', tvGuide: 'tvguide-screen', news: 'news-screen', odds: 'odds-screen', futures: 'futures-screen',
+            nflFutures: 'nflfut-screen', nflAwards: 'nflawards-screen', fantasy: 'fantasy-screen', cfbFutures: 'cfbfut-screen', nhlFutures: 'nhlfut-screen', rankings: 'rankings-screen',
+            nfl: 'nfl-screen', nba: 'nba-screen', nhl: 'nhl-screen', mlb: 'mlb-screen' };
+        function bxBegin(changing, next) { bxFinish(); if (!changing || document.body.classList.contains('remote-active')) return null;
+            var vis = null; document.querySelectorAll('.slide-screen').forEach(function(el) { if (!vis && el.style.display === 'flex') vis = el; });
+            return (vis && vis.id !== BX_SCREEN[next]) ? vis : null; } // the next slide reuses this screen (e.g. first LIVE after the skeletons): nothing to hold
+        function bxHold(el) {
+            if (!el) return;
+            el.style.display = 'flex'; el.classList.add('bx-old'); el.setAttribute('data-bx-hide', '1'); bxT.from = el;
+            document.getElementById('main-wrapper').classList.add('bx-cover');
+            bxT.hold = setTimeout(bxFinish, 330); // the slab fully covers the screen at ~42% of 760 ms
+        }
+        function bxNextTitle() { // what comes after this slide (same skip rules as nextSlide)
+            var sc = arcadeScreens(); for (var i = 1; i <= sc.length; i++) { var k = sc[(rotationStep + i) % sc.length]; if (slideOn(k) && !smSlideEmpty(k)) return k === arcadeNav.current ? '' : (NAV_TITLES[k] || k).toUpperCase(); } return '';
+        }
+        function bxRun(key) {
+            try {
+                var w = document.getElementById('bx-wipe'), l3 = document.getElementById('bx-l3'); if (!w || !l3) return;
+                if (document.body.classList.contains('remote-active')) return;
+                var info = BX_INFO[key] || ['#0a3a8a', ''], title = (NAV_TITLES[key] || key).toUpperCase(), logo = bxLogo(info[1]), lite = bxLite();
+                if (key === 'live' && smActive()) logo = bxLogo(SPORT_MODES[smActive()].league === 'cfb' || SPORT_MODES[smActive()].league === 'cbb' ? 'ncaa' : SPORT_MODES[smActive()].league);
+                [w, l3].forEach(function(el) { el.style.setProperty('--bx-c1', info[0]); el.classList.toggle('lite', lite); });
+                document.getElementById('bx-title').textContent = title;
+                var bl = document.getElementById('bx-logo'); if (bl.getAttribute('src') !== logo) bl.setAttribute('src', logo);
+                var ll = document.getElementById('bx-l3-logo'); if (ll.getAttribute('src') !== logo) ll.setAttribute('src', logo);
+                document.getElementById('bx-l3-title').textContent = title;
+                var nx = bxNextTitle(); document.getElementById('bx-l3-sub').textContent = nx ? 'UP NEXT \u00b7 ' + nx : '';
+                w.classList.remove('run'); l3.classList.remove('show'); void w.offsetWidth;
+                w.classList.add('run'); l3.classList.add('show');
+                clearTimeout(bxT.off); bxT.off = setTimeout(function() { w.classList.remove('run'); }, 900);
+            } catch (e) {}
+        }
+
+        // ---------- STADIUM PHOTOS (ESPN venue photos via the resizing combiner: 640x360, ~50 KB, browser-cached) ----------
+        var BX_VENUE_LG = { nfl: 'day/interior/', 'college-football': 'day/interior/', nhl: 'day/', mlb: 'day/', nba: 'day/', wnba: 'day/', 'mens-college-basketball': 'day/' };
+        function bxVenueUrl(lg, id, sub) { return 'https://a.espncdn.com/combiner/i?img=/i/venues/' + lg + '/' + sub + id + '.jpg&w=640&h=360&scale=crop&cquality=60'; }
+        function bxVenueImg(lg, id) { return (BX_VENUE_LG[lg] && id) ? bxVenueUrl(lg, id, BX_VENUE_LG[lg]) : ''; }
+        function bxVenueFail(img) { // interior shot missing -> outside shot -> no photo (plain card)
+            var u = img.getAttribute('src') || ''; if (u.indexOf('/day/interior/') > 0) { img.setAttribute('src', u.replace('/day/interior/', '/day/')); return; }
+            var c = img.parentNode && img.parentNode.parentNode; if (c && c.classList) c.classList.remove('has-venue'); if (img.parentNode) img.parentNode.parentNode.removeChild(img.parentNode);
+        }
+        var bxVenueBatch = { n: 0, pending: false };
+        function bxVenueCard(g, html) { // max 6 photos per render so the TV never loads dozens at once
+            if (!bxVenueBatch.pending) { bxVenueBatch.n = 0; bxVenueBatch.pending = true; Promise.resolve().then(function() { bxVenueBatch.pending = false; }); }
+            if (!g || !g.venueImg || bxVenueBatch.n >= 6) return html;
+            bxVenueBatch.n++;
+            var k = html.indexOf('>'); if (k < 0) return html;
+            return html.slice(0, k).replace('class="glass-card', 'class="glass-card has-venue') + '><div class="card-venue"><img alt="" decoding="async" loading="lazy" src="' + g.venueImg + '" onload="this.classList.add(\'ok\')" onerror="bxVenueFail(this)"></div>' + html.slice(k + 1);
+        }
+        function gcVenueFail(img) { var u = img.getAttribute('src') || ''; if (u.indexOf('/day/interior/') > 0) { img.setAttribute('src', u.replace('/day/interior/', '/day/')); return; } document.getElementById('gc-venue').classList.remove('on'); }
+        function gcVenueSet(d) {
+            var box = document.getElementById('gc-venue'); if (!box) return;
+            var v = (d && d.gameInfo && d.gameInfo.venue) || {}, ims = v.images || [], best = null;
+            ims.forEach(function(im) { var r = (im.rel || []).join(' '); if (!best || r.indexOf('interior') >= 0) best = im; });
+            var path = best && best.href ? String(best.href).replace(/^https?:\/\/a\.espncdn\.com/, '') : '';
+            var url = path && path.indexOf('/i/venues/') === 0 ? 'https://a.espncdn.com/combiner/i?img=' + path + '&w=960&h=540&scale=crop&cquality=60' : '';
+            var img = box.querySelector('img');
+            if (!url) { box.classList.remove('on'); return; }
+            if (img.getAttribute('src') !== url) { img.classList.remove('ok'); img.setAttribute('src', url); }
+            box.classList.add('on');
+        }
+        function gcVenueClear() { var box = document.getElementById('gc-venue'); if (!box) return; box.classList.remove('on'); var img = box.querySelector('img'); img.classList.remove('ok'); img.removeAttribute('src'); }
+
         function clearSlideTimers() { clearTimeout(slideTimer); slideTimer = null; clearTimeout(slideWatchdog); slideWatchdog = null; }
         // Every "advance the rotation later" goes through here: it cancels the timer it replaces (never two pending advances)
         // and only fires if the same slide is still up. Before, Trivia's 1.5 s safety-net timer (Trivia has no slide timer
@@ -1365,6 +1539,7 @@
         function showSlideEmpty(title) {
             var live = document.getElementById('live-game-screen');
             if (!live) return;
+            bxFinish(); // this reuses the LIVE screen: end a wipe hold first so the hold can't hide it afterwards
             live.style.display = 'flex';
             var track = document.getElementById('live-grid-track');
             if (track) track.innerHTML = '<div class="neon-text-cycle" style="font-size:4vh; font-weight:900; text-align:center; grid-column: 1 / -1; padding-top: 8vh;">' + title + '</div>';
@@ -1675,8 +1850,10 @@
                 rotationStep++; nextSlide(); return;
             }
             
+            var bxFrom = bxBegin(arcadeNav.current !== current, current); // outgoing slide stays up under the wipe for ~0.3 s
             arcadeNav.current = current;
             document.querySelectorAll('.slide-screen').forEach(function(el) { el.style.display = 'none'; });
+            bxHold(bxFrom); bxRun(current);
             try {
                 if (current === 'live') renderLivePage();
                 else if (current === 'hotProps') showHotProps(gen);
@@ -1844,7 +2021,8 @@
                                 ou: (comp.odds && comp.odds[0] && comp.odds[0].overUnder != null) ? comp.odds[0].overUnder : '--',
                                 mlAway: (comp.odds && comp.odds[0] && comp.odds[0].awayTeamOdds) ? formatMoneyline(comp.odds[0].awayTeamOdds.moneyLine) : '',
                                 mlHome: (comp.odds && comp.odds[0] && comp.odds[0].homeTeamOdds) ? formatMoneyline(comp.odds[0].homeTeamOdds.moneyLine) : '',
-                                time: new Date(ev.date).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})
+                                time: new Date(ev.date).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}),
+                                venueImg: bxVenueImg(c.l, comp.venue && comp.venue.id)
                             };
 
                             if (c.s !== 'tennis') { // Gamecast registry (ESPN summary API supports team sports)
@@ -1977,14 +2155,14 @@
             var smAlt = (globalLiveGamesData.length === 0 && smActive()) ? globalRawGames.filter(function(g) { return g.state === 'pre'; }).concat(globalRawGames.filter(function(g) { return g.state === 'post'; })).slice(0, 8) : [];
             if (smAlt.length) { // sport mode with nothing live: show that sport's next games / latest finals instead of an empty card
                 track.innerHTML = '<div class="neon-text-cycle" style="grid-column: 1 / -1; text-align:center; font-size:3vh; font-weight:900; letter-spacing:0.2vw;">NO LIVE ' + SPORT_MODES[smActive()].label + ' GAMES &middot; ' + (smAlt[0].state === 'pre' ? 'UP NEXT' : 'LATEST FINALS') + '</div>' + smAlt.map(function(g) {
-                    return '<div class="glass-card gc-card"' + gcAttr(g.gcKey) + '><div class="card-meta neon-text-cycle"><span>' + (g.state === 'post' ? 'FINAL' : 'UPCOMING') + '</span><span>' + g.league + '</span><span>' + g.tv + '</span></div><div class="card-row"><div class="card-team"><img src="' + g.aLogo + '" onerror="this.src=\'' + g.aFallback + '\'; this.onerror=null;">' + g.away + '</div><div class="card-val-lg">' + (g.state === 'pre' ? '' : g.aScore) + '</div></div><div class="card-row"><div class="card-team"><img src="' + g.hLogo + '" onerror="this.src=\'' + g.hFallback + '\'; this.onerror=null;">' + g.home + '</div><div class="card-val-lg">' + (g.state === 'pre' ? '' : g.hScore) + '</div></div>' + buildTrendHtml(g.trend) + '<div class="card-footer neon-text-cycle" style="margin-top: 1.5vh;"><span>' + g.clock + '</span>' + (formatCardLines(g) ? '<span>' + formatCardLines(g) + '</span>' : '') + '</div></div>';
+                    return bxVenueCard(g, '<div class="glass-card gc-card"' + gcAttr(g.gcKey) + '><div class="card-meta neon-text-cycle"><span>' + (g.state === 'post' ? 'FINAL' : 'UPCOMING') + '</span><span>' + g.league + '</span><span>' + g.tv + '</span></div><div class="card-row"><div class="card-team"><img src="' + g.aLogo + '" onerror="this.src=\'' + g.aFallback + '\'; this.onerror=null;">' + g.away + '</div><div class="card-val-lg">' + (g.state === 'pre' ? '' : g.aScore) + '</div></div><div class="card-row"><div class="card-team"><img src="' + g.hLogo + '" onerror="this.src=\'' + g.hFallback + '\'; this.onerror=null;">' + g.home + '</div><div class="card-val-lg">' + (g.state === 'pre' ? '' : g.hScore) + '</div></div>' + buildTrendHtml(g.trend) + '<div class="card-footer neon-text-cycle" style="margin-top: 1.5vh;"><span>' + g.clock + '</span>' + (formatCardLines(g) ? '<span>' + formatCardLines(g) + '</span>' : '') + '</div></div>');
                 }).join('');
                 applyScroll('live-viewport', 'live-grid-track', 15000);
             } else if (globalLiveGamesData.length === 0) { track.innerHTML = '<div class="neon-text-cycle" style="font-size:4vh; font-weight:900; text-align:center; grid-column: 1 / -1; padding-top: 10vh;">' + (smActive() ? 'NO ' + SPORT_MODES[smActive()].label + ' GAMES ON THE BOARD<div style="font-size:2.4vh; margin-top:2vh; opacity:0.8;">RANKINGS, ODDS AND HEADLINES ARE UP NEXT</div>' : 'NO LIVE GAMES') + '</div>'; applyScroll('live-viewport', 'live-grid-track', 10000); } 
             else {
                 track.innerHTML = globalLiveGamesData.map(function(g) { 
                     var lines = formatCardLines(g);
-                    return '<div class="glass-card gc-card"' + gcAttr(g.gcKey) + '><div class="card-meta neon-text-cycle"><span>● LIVE</span><span>' + g.league + '</span><span>' + g.status + '</span></div><div class="card-row"><div class="card-team"><img src="' + g.aLogo + '" onerror="this.src=\'' + g.aFallback + '\'; this.onerror=null;">' + g.away + '</div><div class="card-val-lg">' + g.aScore + '</div></div><div class="card-row"><div class="card-team"><img src="' + g.hLogo + '" onerror="this.src=\'' + g.hFallback + '\'; this.onerror=null;">' + g.home + '</div><div class="card-val-lg">' + g.hScore + '</div></div>' + buildTrendHtml(g.trend) + '<div class="card-footer neon-text-cycle" style="margin-top: 1.5vh;"><span>' + g.clock + '</span>' + (lines ? '<span>' + lines + '</span>' : '') + '<span>' + g.tv + '</span></div></div>';
+                    return bxVenueCard(g, '<div class="glass-card gc-card"' + gcAttr(g.gcKey) + '><div class="card-meta neon-text-cycle"><span>● LIVE</span><span>' + g.league + '</span><span>' + g.status + '</span></div><div class="card-row"><div class="card-team"><img src="' + g.aLogo + '" onerror="this.src=\'' + g.aFallback + '\'; this.onerror=null;">' + g.away + '</div><div class="card-val-lg">' + g.aScore + '</div></div><div class="card-row"><div class="card-team"><img src="' + g.hLogo + '" onerror="this.src=\'' + g.hFallback + '\'; this.onerror=null;">' + g.home + '</div><div class="card-val-lg">' + g.hScore + '</div></div>' + buildTrendHtml(g.trend) + '<div class="card-footer neon-text-cycle" style="margin-top: 1.5vh;"><span>' + g.clock + '</span>' + (lines ? '<span>' + lines + '</span>' : '') + '<span>' + g.tv + '</span></div></div>');
                 }).join('');
                 applyScroll('live-viewport', 'live-grid-track', 15000);
             }
@@ -2064,7 +2242,7 @@
             globalRawGames.forEach(function(g) { 
                 for(var i=0; i<teams.length; i++) {
                     if(g.searchString.indexOf(teams[i]) > -1) { 
-                        gamesHtml += '<div class="glass-card squad-game-card gc-card"' + gcAttr(g.gcKey) + '><div class="card-meta neon-text-cycle"><span>' + g.league + '</span><span>' + g.tv + '</span></div><div class="card-row"><div class="card-team"><img src="' + g.aLogo + '" onerror="this.src=\'' + g.aFallback + '\'; this.onerror=null;">' + g.away + '</div><div class="card-val-lg">' + g.aScore + '</div></div><div class="card-row"><div class="card-team"><img src="' + g.hLogo + '" onerror="this.src=\'' + g.hFallback + '\'; this.onerror=null;">' + g.home + '</div><div class="card-val-lg">' + g.hScore + '</div></div>' + buildTrendHtml(g.trend) + '<div class="card-footer neon-text-cycle" style="margin-top:1.5vh; justify-content:center;">' + (g.state === 'in' ? 'LIVE NOW' : (g.state === 'post' ? 'FINAL' : g.status)) + '</div></div>';
+                        gamesHtml += bxVenueCard(g, '<div class="glass-card squad-game-card gc-card"' + gcAttr(g.gcKey) + '><div class="card-meta neon-text-cycle"><span>' + g.league + '</span><span>' + g.tv + '</span></div><div class="card-row"><div class="card-team"><img src="' + g.aLogo + '" onerror="this.src=\'' + g.aFallback + '\'; this.onerror=null;">' + g.away + '</div><div class="card-val-lg">' + g.aScore + '</div></div><div class="card-row"><div class="card-team"><img src="' + g.hLogo + '" onerror="this.src=\'' + g.hFallback + '\'; this.onerror=null;">' + g.home + '</div><div class="card-val-lg">' + g.hScore + '</div></div>' + buildTrendHtml(g.trend) + '<div class="card-footer neon-text-cycle" style="margin-top:1.5vh; justify-content:center;">' + (g.state === 'in' ? 'LIVE NOW' : (g.state === 'post' ? 'FINAL' : g.status)) + '</div></div>');
                         break; 
                     }
                 }
@@ -2160,7 +2338,7 @@
                 var fights = [];
                 d.events[0].competitions.forEach(function(fight) {
                     var f1 = fight.competitors[0], f2 = fight.competitors[1];
-                    fights.push({ weightClass: fight.type ? fight.type.text : "Bout", f1: f1, f2: f2, f1Rec: (f1.records && f1.records[0]) ? f1.records[0].summary : '', f2Rec: (f2.records && f2.records[0]) ? f2.records[0].summary : '', status: fight.status.type, clock: fight.status.displayClock, period: fight.status.period });
+                    fights.push({ weightClass: (fight.type && (fight.type.text || fight.type.abbreviation)) || "Bout", f1: f1, f2: f2, f1Rec: (f1.records && f1.records[0]) ? f1.records[0].summary : '', f2Rec: (f2.records && f2.records[0]) ? f2.records[0].summary : '', status: fight.status.type, clock: fight.status.displayClock, period: fight.status.period });
                 });
                 
                 document.getElementById('ufc-grid-track').innerHTML = fights.map(function(f) {
@@ -2671,7 +2849,7 @@
             document.getElementById('odds-screen').style.display = 'flex';
             document.getElementById('odds-grid-track').innerHTML = oddsGames.map(function(g) { 
                 var lines = formatCardLines(g) || (g.odds + ' (O/U ' + (g.ou||'--') + ')');
-                return '<div class="glass-card"><div class="card-meta neon-text-cycle"><span>' + g.league + '</span><span>' + g.tv + '</span></div><div class="card-row"><div class="card-team"><img src="' + g.aLogo + '" onerror="this.src=\'' + g.aFallback + '\'; this.onerror=null;">' + g.away + '</div></div><div class="card-row"><div class="card-team"><img src="' + g.hLogo + '" onerror="this.src=\'' + g.hFallback + '\'; this.onerror=null;">' + g.home + '</div></div><div class="card-footer neon-text-cycle" style="margin-top:1.5vh;"><span>' + g.clock + '</span><span>' + lines + '</span></div></div>'; 
+                return bxVenueCard(g, '<div class="glass-card"><div class="card-meta neon-text-cycle"><span>' + g.league + '</span><span>' + g.tv + '</span></div><div class="card-row"><div class="card-team"><img src="' + g.aLogo + '" onerror="this.src=\'' + g.aFallback + '\'; this.onerror=null;">' + g.away + '</div></div><div class="card-row"><div class="card-team"><img src="' + g.hLogo + '" onerror="this.src=\'' + g.hFallback + '\'; this.onerror=null;">' + g.home + '</div></div><div class="card-footer neon-text-cycle" style="margin-top:1.5vh;"><span>' + g.clock + '</span><span>' + lines + '</span></div></div>');
             }).join('');
             applyScroll('odds-viewport', 'odds-grid-track', 12000);
         }
@@ -3422,6 +3600,7 @@
         }
         function gcClose() {
             if (!gc.open) return;
+            gcVenueClear();
             gcStop();
             celCancel(gc.key, null, -1); // delayed celebrations for this game die with the Gamecast
             gc.open = false; gc.key = null; gc.meta = null; gc.teams = {};
@@ -3603,6 +3782,7 @@
             var net = bcs.filter(function(v, i) { return bcs.indexOf(v) === i; }).slice(0, 3).join(' / ') || (meta.tv !== 'TBD' && meta.tv !== 'TV' ? meta.tv : '');
             gcSet('gc-league', escHtml(meta.label || ''));
             gcSet('gc-net', net ? '&#128250; ' + escHtml(net) : '');
+            try { gcVenueSet(d); } catch (e) {}
             gcSet('gc-away', gcTeamHtml(A, 'away', meta));
             gcSet('gc-home', gcTeamHtml(H, 'home', meta));
             gcSet('gc-mid', gcMidHtml(meta, d, st, stt, fam, A, H, sit));

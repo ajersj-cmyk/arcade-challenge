@@ -77,6 +77,12 @@ every slide on, and walks the real rotation several times with the page's own ti
 each slide's actual on-screen time and fails if any slide is cut short (< 5 s), if Trivia isn't ~20 s, or if the slide after
 Trivia doesn't get its full time; then repeats in NFL sport mode. ~7 min. (Before the fix it showed `leaders 1.4s` after trivia.)
 
+`node tools/test-broadcast.mjs [preview.html]` checks the broadcast look: transition frames (Full + TV/Lite) at 1280x720,
+transform-only animation, one slide left visible after the wipe, Gamecast/celebrations above it, no wipe on the phone remote page,
+stadium photos (<= 6 per render, fallback to a plain card), and Lite perf under 4x CPU throttle vs. the same slide change with no
+transition. `node tools/shoot-slides.mjs [preview.html] --out=DIR [--tv] [--only=a,b] [--gc=sport/league/id]` screenshots every
+slide (+ a Gamecast) at 1280x720 for design reviews; `python3 tools/sheet.py OUT.png imgs... [--pairs]` makes contact sheets / before-after.
+
 `node tools/test-props.mjs [preview.html]` checks TODAY'S HOT PROPS with the real `props.json` at 1280x720 + 1920x1080
 (cards, row layout, ends above the ticker), LIVE LEADERS gone, sport-mode filtering/skip, league-toggle filtering, the settings
 toggle, the empty state, and the Gamecast WIN PROBABILITY panel (a real ESPN final served as in-progress; hidden with no data).
@@ -219,6 +225,23 @@ Settings changes are broadcast the same way. **BroadcastChannel only reaches tab
 device**, so the QR code's phone remote can't actually control the TV.
 
 ---
+
+### 3b. Broadcast look (PR flynn/broadcast-look)
+- **Design tokens** (one `BROADCAST LOOK` block at the end of `<style>`, overriding the older rules so the diff stays reviewable):
+  `--ds-display` (Barlow Condensed: titles, team names, scores, ticker, clock), `--ds-radius`, `--ds-card-bg`, `--ds-card-shadow`,
+  `--ds-fs-title|section|label|team|score`, `--ds-ink-dim`. Body uses tabular numerals. Slide titles are white condensed italic with
+  the accent "slash" motif + accent rule; every card family (`glass-card`, rows, blocks) shares one surface.
+- **Transitions** (`bxBegin/bxHold/bxRun/bxFinish`, called from `nextSlide()`): a league-colored slab with angled accent/white bars
+  (`#bx-wipe`, 760 ms, transform only) covers the outgoing slide (kept up ~330 ms with `.bx-old`; the new one waits hidden under
+  `#main-wrapper.bx-cover`), then wipes off to reveal the new slide; then a lower third (`#bx-l3`: league bug, slide name,
+  "UP NEXT · …") slides in for ~4 s just above the ticker. Never touches `slideTimer` (rotation timing unchanged, `test-rotation`).
+  Lite (TV app / reduced motion): no stripes, glints or shadows. Off on the phone remote page. Colors/bugs per slide: `BX_INFO`.
+- **Stadium photos**: game objects carry `venueImg` from the scoreboard's `competitions[0].venue.id` →
+  `a.espncdn.com/combiner/i?img=/i/venues/{league}/day[/interior]/{id}.jpg&w=640&h=360&scale=crop&cquality=60` (~50 KB; NFL/CFB use
+  the interior shot). `bxVenueCard()` adds a faded photo + dark gradient behind Live / My Squad / Today's Lines cards, max 6 per render,
+  lazy, fades in on load; a missing photo falls back to the outside shot, then to the plain card. Coverage (Oct 2026): NHL, NFL, CFB,
+  MLB, WNBA nearly all; NBA partial; soccer none. Gamecast: `gcVenueSet(d)` uses the summary's `gameInfo.venue.images` (interior
+  preferred, 960x540) behind the header (`#gc-venue`, z-index -1 inside the Gamecast stacking context); cleared on close.
 
 ## 4. External APIs and assets
 
@@ -500,6 +523,7 @@ next slide shows right away.
 - [ ] Clock top-left (`h:mm AM/PM`, local time), hidden only during trivia
 - [ ] Settings gear top-right with focus outline. `s` / ContextMenu / Menu / Settings keys toggle the modal. Enter on the focused gear works.
 - [ ] Every settings control persists to `localStorage.ahlersArcadeSettings` and takes effect (toggles, favourite teams, marquee, speed)
+- [ ] Broadcast wipe + lower third on every slide change, never over Gamecast/celebrations, no wipe on the phone remote page
 - [ ] Slide rotation order and the skip-if-disabled logic. `live` always shows. No slide cut short (`tools/test-rotation.mjs`).
 - [ ] Every "advance later" uses `slideTimer = slideTimeout(fn, ms)` (cancels the previous timer, gen-guarded), never a raw `setTimeout` into `slideTimer`
 - [ ] Each slide renders its data or its empty-state message ("NO LIVE GAMES", "NO UFC CARD", "… FEED DOWN", etc.) and advances
