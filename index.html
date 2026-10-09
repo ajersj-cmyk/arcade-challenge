@@ -635,11 +635,30 @@
         #cel-alert.pp .al-tag { background: #ffe600; }
         @keyframes al-life { 0% { opacity: 0; } 3% { opacity: 1; } 96% { opacity: 1; } 100% { opacity: 0; } }
         @keyframes al-in { 0% { transform: translateX(-110%) skewX(-12deg); } 100% { transform: none; } }
-        /* Gamecast data clock + SYNC NOW (delay helper) */
-        .gc-sync { display: inline-flex; align-items: center; gap: 0.6vw; margin-left: 0.8vw; padding-left: 1vw; border-left: 2px solid rgba(255,255,255,0.2); }
-        #gc-dclock { font-family: 'Share Tech Mono', monospace; color: #00f0ff; min-width: 15vh; }
-        .gc-cel-d.gc-sync-btn { font-size: 1.8vh; padding: 0.45vh 1.3vh; color: #ffe600; border-color: #ffe600; }
-        .gc-cel-d.gc-sync-btn.arm { background: #ffe600; color: #111; }
+        /* Gamecast SYNC TO TV: one button on the bar; the guided flow lives in #gc-syncov */
+        .gc-cel-d.gc-sync-btn { font-size: 2vh; padding: 0.55vh 1.8vh; color: #ffe600; border-color: #ffe600; }
+        .gc-sync-btn #gc-cel-dval { margin-left: 0.6vw; color: rgba(255,255,255,0.8); font-weight: 700; }
+        #gc-syncov { position: absolute; inset: 0; z-index: 60; display: none; align-items: center; justify-content: center; background: rgba(3,6,12,0.88); }
+        #gc-syncov.open { display: flex; }
+        .gs-card { width: 74vw; max-width: 1400px; padding: 3.4vh 3vw 2.6vh; border-radius: var(--ds-radius, 1.4vh); background: var(--ds-card-bg, #0c1420);
+            box-shadow: var(--ds-card-shadow, none); border: 2px solid rgba(255,230,0,0.55); text-align: center; }
+        .gs-head { font-family: var(--ds-display, 'Inter'); font-style: italic; font-weight: 800; font-size: 3.4vh; letter-spacing: 0.12em; color: #ffe600; }
+        .gs-head span { margin-left: 1vw; font-size: 2.2vh; letter-spacing: 0.08em; color: rgba(255,255,255,0.7); font-style: normal; }
+        .gs-ask { margin-top: 2.4vh; font-size: 2.6vh; font-weight: 800; letter-spacing: 0.08em; color: rgba(255,255,255,0.85); }
+        .gs-big { margin-top: 0.6vh; font-family: var(--ds-display, 'Inter'); font-weight: 800; font-size: 11vh; line-height: 1.05; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .gs-big.txt { font-size: 5.6vh; white-space: normal; max-height: 12.5vh; }
+        .gs-big small { font-size: 0.42em; margin-left: 1.2vw; color: #ffe600; letter-spacing: 0.06em; }
+        .gs-sub { margin-top: 1vh; min-height: 3vh; font-family: 'Share Tech Mono', monospace; font-size: 2.5vh; color: #00f0ff; }
+        .gs-res { margin-top: 1.6vh; font-family: var(--ds-display, 'Inter'); font-weight: 800; font-size: 4.6vh; color: #39ff14; }
+        .gs-res:empty { display: none; }
+        .gs-row { margin-top: 2.2vh; display: flex; flex-wrap: wrap; gap: 1vw; justify-content: center; align-items: center; }
+        .gs-btn { background: rgba(12,20,32,0.9); color: #fff; border: 2px solid rgba(255,255,255,0.35); border-radius: 3vh; padding: 0.8vh 2vh; font-family: 'Inter', sans-serif;
+            font-size: 2.2vh; font-weight: 900; letter-spacing: 0.06em; cursor: pointer; white-space: nowrap; }
+        .gs-btn.big { font-size: 3vh; padding: 1.3vh 4vh; color: #111; background: #ffe600; border-color: #ffe600; }
+        .gs-btn[hidden] { display: none; }
+        #gs-dval { font-size: 2.4vh; font-weight: 900; color: #ffe600; min-width: 16vh; }
+        .gs-hint { margin-top: 1.8vh; font-size: 1.8vh; color: rgba(255,255,255,0.5); }
+        body.nav-active #gc-syncov .gs-btn:focus { outline: 0.5vh solid #00f0ff; outline-offset: 0.3vh; }
         /* Gamecast per-team celebrate toggles + delay control */
         .gc-celcell { display: flex; }
         .gc-celcell.right { justify-content: flex-end; }
@@ -913,7 +932,7 @@
                             <button type="button" onclick="nudgeCelDelay(1)" style="width:6vh;height:6vh;font-size:3vh;font-weight:900;background:rgba(0,0,0,0.5);color:#fff;border:2px solid #ffe600;border-radius:1vh;cursor:pointer;">+</button>
                             <button type="button" id="cel-preview-btn" onclick="arcadeCelebrate('test')" style="height:6vh; padding:0 2vh; font-size:2vh; font-weight:900; background:rgba(0,0,0,0.5); color:#ffe600; border:2px solid #ffe600; border-radius:1vh; cursor:pointer;">&#9733; PREVIEW</button>
                         </div>
-                        <input type="range" id="set-celebrateDelay" min="0" max="30" step="1" tabindex="-1" aria-hidden="true" style="display:none;">
+                        <input type="range" id="set-celebrateDelay" min="0" max="60" step="1" tabindex="-1" aria-hidden="true" style="display:none;">
                     </div>
                     <div style="margin-bottom: 2vh;">
                         <div style="font-size: 1.8vh; color: #ffe600; margin-bottom: 0.5vh; text-transform: uppercase;">Alerts for &#9733; teams (smaller banners, same delay):</div>
@@ -1031,7 +1050,7 @@
             <div class="gc-mid" id="gc-mid"></div>
             <div class="gc-team" id="gc-home"></div>
             <div class="gc-celcell"><button type="button" class="gc-cel" id="gc-cel-away" onclick="celToggle('away')" disabled>&#9733; CELEBRATE <span class="gc-cel-ab"></span><b>OFF</b></button></div>
-            <div class="gc-celmid"><button type="button" class="gc-cel-d" id="gc-cel-dminus" onclick="nudgeCelDelay(-1)">&minus;</button><span id="gc-cel-dval">DELAY 0s</span><button type="button" class="gc-cel-d" id="gc-cel-dplus" onclick="nudgeCelDelay(1)">+</button><span class="gc-sync"><span id="gc-dclock">DATA --</span><button type="button" class="gc-cel-d gc-sync-btn" id="gc-cel-sync" onclick="celSyncPress()">SYNC NOW</button></span></div>
+            <div class="gc-celmid"><button type="button" class="gc-cel-d gc-sync-btn" id="gc-cel-sync" onclick="gsOpen()">&#128250; SYNC TO TV<span id="gc-cel-dval">0s</span></button></div>
             <div class="gc-celcell right"><button type="button" class="gc-cel" id="gc-cel-home" onclick="celToggle('home')" disabled>&#9733; CELEBRATE <span class="gc-cel-ab"></span><b>OFF</b></button></div>
         </div>
         <div class="gc-tabs" id="gc-tabs"><button type="button" class="gc-tab" id="gc-tab-0" onclick="gcSetView(0)"></button><button type="button" class="gc-tab" id="gc-tab-1" onclick="gcSetView(1)"></button><span class="gc-tab-hint" id="gc-tab-hint"></span></div>
@@ -1048,6 +1067,16 @@
             <div class="gc-panel gc-box" id="gc-p-players"><div class="gc-panel-head neon-text-cycle" id="gc-players-head">PLAYER STATS</div><div class="gc-panel-body" id="gc-players-body"></div></div>
         </div>
         </div>
+        <div id="gc-syncov" aria-hidden="true"><div class="gs-card">
+            <div class="gs-head">SYNC TO YOUR TV<span id="gs-chan"></span></div>
+            <div class="gs-ask" id="gs-ask"></div>
+            <div class="gs-big" id="gs-big"></div>
+            <div class="gs-sub" id="gs-sub"></div>
+            <div class="gs-res" id="gs-res"></div>
+            <div class="gs-row"><button type="button" class="gs-btn big" id="gs-ok" onclick="gsMark()">OK</button><button type="button" class="gs-btn" id="gs-mode" onclick="gsMode()">USE A PLAY INSTEAD</button><button type="button" class="gs-btn" id="gs-again" onclick="gsStart()" hidden>SYNC AGAIN</button></div>
+            <div class="gs-row"><button type="button" class="gs-btn" id="gs-minus" onclick="gsNudge(-1)">&minus;1s</button><span id="gs-dval"></span><button type="button" class="gs-btn" id="gs-plus" onclick="gsNudge(1)">+1s</button><button type="button" class="gs-btn" id="gs-test" onclick="gsTest()">TEST</button><button type="button" class="gs-btn" id="gs-src" onclick="gsSrc()">CABLE</button><button type="button" class="gs-btn" id="gs-done" onclick="gsClose()">DONE</button></div>
+            <div class="gs-hint">OK selects &nbsp;&bull;&nbsp; &#9664; &#9650; &#9660; &#9654; move &nbsp;&bull;&nbsp; BACK closes</div>
+        </div></div>
     </div>
     <div id="nav-menu" aria-hidden="true">
         <div class="nav-card">
@@ -3120,7 +3149,7 @@
             if (gc.open) gc.lastInput = Date.now();
         }
         function nudgeCelDelay(dir) {
-            var v = Math.max(0, Math.min(30, (parseInt(settings.celebrateDelay, 10) || 0) + dir));
+            var v = Math.max(0, Math.min(60, (parseInt(settings.celebrateDelay, 10) || 0) + dir));
             var el = document.getElementById('set-celebrateDelay'); if (el) el.value = v;
             settings.celebrateDelay = v;
             updateSettings();
@@ -3128,7 +3157,8 @@
         function celDelayUI() {
             var v = (parseInt(settings.celebrateDelay, 10) || 0) + 's';
             var a = document.getElementById('cel-delay-display'); if (a) a.textContent = v;
-            var b = document.getElementById('gc-cel-dval'); if (b) b.textContent = 'DELAY ' + v;
+            var b = document.getElementById('gc-cel-dval'); if (b) b.textContent = gcDelay() + 's';
+            try { gsDelayUI(); } catch (e) {}
         }
         // Banner from the score delta plus the latest scoring play / play text when the summary has one.
         function celKind(fam, delta, w, side, now, hint) {
@@ -3336,48 +3366,183 @@
             if (main && more) main.more = more;
             return main;
         }
-        // Delay-sync helper: the Gamecast shows the feed's game clock (ticking between polls while it runs). SYNC NOW
-        // locks the clock it shows; press again when the TV shows that clock and the gap becomes the delay (0-30 s).
+        // ===== TV delay: per-channel memory + SYNC TO TV guided flow =====
+        // Celebrations for the open Gamecast wait gcDelay() s: the delay remembered for this broadcast (network + cable/streaming),
+        // else the Settings default (settings.celebrateDelay). SYNC TO TV measures it: the site picks a game-clock value a few
+        // seconds ahead of ESPN's clock, the user presses OK when the TV's clock shows it; delay = OK time - time ESPN's data
+        // reached that value (from the 2 s fast loop). No running clock (baseball, soccer, stoppages): press OK when the play /
+        // pitch / score shown appears on TV.
         function celSecs(v) { var m = /^(\d+):(\d{2})/.exec(String(v || '')); return m ? (+m[1]) * 60 + (+m[2]) : null; }
-        function celClockRec(fam, stt, st, state) {
-            var per = stt.period || 0, disp = stt.displayClock || '', sec = celSecs(disp);
-            if (sec == null && typeof stt.clock === 'number' && fam !== 'baseball') sec = Math.round(stt.clock);
-            if (fam === 'baseball') { sec = null; disp = st.shortDetail || st.detail || ''; }
-            var p = gc.dclk;
-            gc.dclk = { fam: fam, per: per, sec: sec, disp: disp, at: Date.now(), state: state, dir: fam === 'soccer' ? 1 : -1,
-                        run: !!(p && state === 'in' && sec != null && p.sec != null && p.per === per && p.sec !== sec) };
+        var TVD_KEY = 'ahlersArcadeTvDelay', GS_LEAD_S = 8, GS_MAX_S = 60, GS_WAIT_MS = 90000;
+        var tvd = (function() { try { var o = JSON.parse(localStorage.getItem(TVD_KEY) || 'null'); if (o && typeof o === 'object' && o.nets) return o; } catch (e) {} return { src: 'cable', nets: {} }; })();
+        function tvdSave() { try { localStorage.setItem(TVD_KEY, JSON.stringify(tvd)); } catch (e) {} }
+        function gcDelayKey() { return (gc.net || 'TV').toUpperCase() + '|' + (tvd.src === 'stream' ? 'stream' : 'cable'); }
+        function gcDelay() {
+            var v = gc.open ? tvd.nets[gcDelayKey()] : null;
+            if (typeof v !== 'number') v = parseInt(settings.celebrateDelay, 10) || 0;
+            return Math.max(0, Math.min(GS_MAX_S, v));
         }
-        function celClockText(now) {
-            var c = gc.dclk; if (!c || c.state !== 'in') return '--';
-            if (c.sec == null) return c.disp || '--';
-            var s = Math.max(0, Math.round(c.sec + c.dir * (c.run ? Math.min(12, (now - c.at) / 1000) : 0)));
-            if (c.fam === 'soccer') return Math.floor(s / 60) + "'";
-            var pl = c.fam === 'hockey' ? (c.per > 3 ? 'OT' : 'P' + c.per) : (c.per > 4 ? 'OT' : 'Q' + c.per);
-            return pl + ' ' + Math.floor(s / 60) + ':' + ('0' + (s % 60)).slice(-2);
+        function gcDelaySet(v) {
+            v = Math.max(0, Math.min(GS_MAX_S, Math.round(v)));
+            tvd.nets[gcDelayKey()] = v;
+            var ks = Object.keys(tvd.nets); if (ks.length > 40) delete tvd.nets[ks[0]]; // bounded
+            tvdSave(); celDelayUI(); return v;
         }
-        function celClockTick() {
-            var now = Date.now(); if (!gc.open || now - (gc.clkAt || 0) < 400) return; gc.clkAt = now;
-            var t = document.getElementById('gc-dclock'), v = 'DATA ' + celClockText(now); if (t && t.textContent !== v) t.textContent = v;
-            var b = document.getElementById('gc-cel-sync'); if (!b) return;
-            if (gc.sync && now - gc.sync.at > 60000) { gc.sync = null; b.classList.remove('arm'); }
-            if (!gc.sync && now > (gc.syncMsgUntil || 0) && b.textContent !== 'SYNC NOW') b.textContent = 'SYNC NOW';
+        var gs = { open: false };
+        function gsEl(id) { return document.getElementById(id); }
+        function gsTxt(id, t) { var e = gsEl(id); if (e && e.textContent !== t) e.textContent = t; }
+        function gsHtml(id, h) { var e = gsEl(id); if (e && e.innerHTML !== h) e.innerHTML = h; }
+        function gsShow(id, on) { var e = gsEl(id); if (e) e.hidden = !on; }
+        function gsChanName() { return (gc.net || 'THIS CHANNEL') + ' \u00b7 ' + (tvd.src === 'stream' ? 'STREAMING' : 'CABLE / ANTENNA'); }
+        function gsDelayUI() {
+            if (!gs.open) return;
+            var d = gcDelay();
+            gsTxt('gs-dval', 'TV DELAY ' + d + 's');
+            gsTxt('gs-chan', 'saved for ' + gsChanName());
+            gsTxt('gs-src', tvd.src === 'stream' ? 'STREAMING' : 'CABLE');
         }
-        function celSyncPress() {
-            var b = document.getElementById('gc-cel-sync'); if (!b || !gc.open) return;
-            var now = Date.now(), c = gc.dclk; gc.lastInput = now;
-            function msg(t) { b.textContent = t; gc.syncMsgUntil = now + 2500; }
-            if (!gc.sync) {
-                if (!c || c.state !== 'in' || c.sec == null) { msg('NO LIVE CLOCK'); return; }
-                gc.sync = { at: now, txt: celClockText(now) };
-                b.classList.add('arm'); b.textContent = 'PRESS AT TV ' + gc.sync.txt;
-                return;
+        function gsOpen() {
+            if (!gc.open) return;
+            gs = { open: true, t0: Date.now() };
+            var el = gsEl('gc-syncov'); el.classList.add('open'); el.setAttribute('aria-hidden', 'false');
+            gc.lastInput = Date.now();
+            gsStart();
+        }
+        function gsClose() {
+            var el = gsEl('gc-syncov'); if (el) { el.classList.remove('open'); el.setAttribute('aria-hidden', 'true'); }
+            var was = gs.open; gs = { open: false };
+            if (gc.open) gc.pollMs = GC_POLL_MS;
+            if (was && gc.open) { var b = gsEl('gc-cel-sync'); if (b && document.body.classList.contains('nav-active')) b.focus(); }
+        }
+        function gsClockable() { var f = gcFamily(gc.meta || {}); return f === 'hockey' || f === 'football' || f === 'basketball'; }
+        function gsPerLabel(per) {
+            var fam = gcFamily(gc.meta || {}), ord = ['1ST', '2ND', '3RD', '4TH'][per - 1] || '';
+            if (fam === 'hockey') return per > 3 || !ord ? 'OT' : ord + ' PERIOD';
+            if (fam === 'basketball' && /college/.test((gc.meta && gc.meta.league) || '')) return per > 2 || !ord ? 'OT' : ord + ' HALF';
+            return per > 4 || !ord ? 'OT' : ord + ' QTR';
+        }
+        function gsClk(sec) { sec = Math.max(0, Math.round(sec)); return Math.floor(sec / 60) + ':' + ('0' + (sec % 60)).slice(-2); }
+        function gsStart() { // (re)start the measurement; the clock mode when a running game clock is available
+            if (!gs.open) return;
+            var keepMode = gs.mode === 'event' ? 'event' : '';
+            gs = { open: true, t0: Date.now(), mode: keepMode || (gsClockable() ? 'clock' : 'event'), phase: 'wait' };
+            gsShow('gs-again', false); gsShow('gs-ok', true); gsHtml('gs-res', '');
+            gc.pollMs = gs.mode === 'event' ? 5000 : GC_POLL_MS; // event mode: plays come from the summary, so fetch it a bit faster while syncing
+            if (gs.mode === 'clock') gsPick();
+            gsTick(true);
+            var ok = gsEl('gs-ok'); if (ok && document.body.classList.contains('nav-active')) ok.focus();
+        }
+        function gsMode() { if (!gs.open) return; gs.mode = gs.mode === 'event' ? '' : 'event'; if (!gs.mode && !gsClockable()) gs.mode = 'event'; gsStart(); }
+        function gsClockNow(now) { // ESPN's game clock right now, interpolated from the fast loop's last change
+            var c = gc.f && gc.f.clk; if (!c || c.sec == null) return null;
+            return c.run ? c.sec - Math.min(40, (now - c.hit) / 1000) : c.sec;
+        }
+        function gsPick() { // target = a whole second GS_LEAD_S ahead of ESPN's (running) clock
+            var c = gc.f && gc.f.clk, now = Date.now();
+            gs.target = null;
+            if (gc.state !== 'in') { gs.phase = 'notlive'; return; }
+            if (!c || c.sec == null) { gs.phase = 'noclock'; return; }
+            if (!c.run) { gs.phase = 'stopped'; return; }
+            var t = Math.floor(gsClockNow(now)) - GS_LEAD_S;
+            if (t < (gcFamily(gc.meta) === 'basketball' ? 60 : 20)) { gs.phase = 'late'; return; } // sub-minute basketball clocks show tenths on TV
+            gs.target = { sec: t, per: c.per }; gs.phase = 'wait'; gs.reachAt = 0;
+            gsOnClock();
+        }
+        function gsOnClock() { // fast loop saw a clock reading: did ESPN's data reach the target?
+            if (!gs.open || gs.mode !== 'clock') return;
+            var c = gc.f && gc.f.clk; if (!c || c.sec == null) return;
+            if (!gs.target) { if (gs.phase === 'stopped' || gs.phase === 'noclock') { if (c.run) gsPick(); } return; }
+            if (gs.reachAt) return;
+            if (c.per !== gs.target.per) { if (!gs.tvAt) gsPick(); return; }
+            if (c.sec <= gs.target.sec) { gs.reachAt = c.hit - (gs.target.sec - c.sec) * 1000; gsFinish(); }
+        }
+        function gsEvent(at, txt) { // something ESPN just reported (score, play, pitch): the event-mode anchor
+            if (!gc.open || !txt) return;
+            var ev = gc.events || (gc.events = []), last = ev[ev.length - 1];
+            if (last && at - last.at < 4000 && last.score) return; // the summary's copy of a score the fast loop already logged
+            ev.push({ at: at, txt: String(txt).slice(0, 90), score: /SCORES/.test(txt) });
+            if (ev.length > 8) ev.shift();
+            if (gs.open && gs.mode === 'event' && !gs.ev && (!gs.tvAt || at >= gs.tvAt - 15000)) { gs.ev = ev[ev.length - 1]; gsFinish(); }
+        }
+        function gsMark() { // the user's OK: the TV shows it now
+            if (!gs.open) return;
+            var now = Date.now(); gc.lastInput = now;
+            if (gs.phase === 'done' || gs.tvAt) return;
+            if (gs.mode === 'clock' && !gs.target) return;
+            if (gs.mode === 'event' && !gs.ev) { var ev = gc.events || [], l = ev[ev.length - 1]; if (l && now - l.at < 45000) gs.ev = l; }
+            gs.tvAt = now; gsFinish(); gsTick(true);
+        }
+        function gsFinish() { // both sides known -> delay
+            if (!gs.tvAt) { gsTick(true); return; }
+            var espnAt = gs.mode === 'clock' ? gs.reachAt : (gs.ev && gs.ev.at);
+            if (!espnAt) { gsTick(true); return; } // TV first: wait for ESPN to get there
+            var raw = (gs.tvAt - espnAt) / 1000, v = gcDelaySet(raw);
+            gs.phase = 'done'; gs.raw = raw; gs.target = null;
+            gc.pollMs = GC_POLL_MS;
+            var r;
+            if (raw < -0.5) r = 'SYNCED \u00b7 TV is ' + Math.round(-raw) + 's AHEAD of ESPN \u00b7 celebrations show right away';
+            else if (v === 0) r = 'SYNCED \u00b7 TV matches ESPN \u00b7 celebrations show right away';
+            else r = 'SYNCED \u00b7 TV is ' + Math.round(raw) + 's behind \u00b7 celebrations wait ' + v + 's' + (raw > GS_MAX_S + 0.5 ? ' (max)' : '');
+            gsTxt('gs-res', r);
+            gsShow('gs-ok', false); gsShow('gs-again', true);
+            var a = gsEl('gs-again'), ae = document.activeElement; if (document.body.classList.contains('nav-active') && (!ae || ae === gsEl('gs-ok') || ae === document.body)) gsEl('gs-test').focus();
+            gsTick(true);
+        }
+        function gsNudge(dir) { if (!gs.open) return; gcDelaySet(gcDelay() + dir); gc.lastInput = Date.now(); }
+        function gsSrc() { if (!gs.open) return; tvd.src = tvd.src === 'stream' ? 'cable' : 'stream'; tvdSave(); celDelayUI(); gc.lastInput = Date.now(); }
+        function gsTest() { // a preview celebration after the current delay
+            if (!gc.open || !gc.celT) return;
+            var d = gcDelay(), T = gc.celT[1] || gc.celT[0];
+            celQueue({ key: gc.key, side: T.side, score: -1, gc: true, kind: { text: 'SYNC TEST!', mini: true }, T: T, line: 'TV DELAY ' + d + 's' });
+            gs.testAt = Date.now() + d * 1000; gsTick(true);
+        }
+        function gsTick(force) {
+            if (!gs.open) return;
+            var now = Date.now(); if (!force && now - (gs.tk || 0) < 250) return; gs.tk = now;
+            var ask = '', big = '', sub = '', txt = false, okLbl = 'OK';
+            var tb = gsEl('gs-test'); if (tb) { var tl = gs.testAt && now < gs.testAt ? 'TEST IN ' + Math.ceil((gs.testAt - now) / 1000) + 's' : 'TEST'; if (tb.textContent !== tl) tb.textContent = tl; }
+            gsDelayUI();
+            gsTxt('gs-mode', gs.mode === 'event' ? (gsClockable() ? 'USE THE GAME CLOCK' : 'NO GAME CLOCK') : 'USE A PLAY INSTEAD');
+            var mb = gsEl('gs-mode'); if (mb) mb.disabled = gs.mode === 'event' && !gsClockable();
+            if (gs.phase === 'done') {
+                if (gs.mode === 'clock') { ask = 'YOU PRESSED OK AT'; big = gs.tgtTxt || ''; } else { ask = 'YOU MATCHED'; big = gs.ev ? gs.ev.txt : ''; txt = gs.mode === 'event'; }
+                sub = 'Fine-tune with \u22121s / +1s \u00b7 TEST shows a celebration after the delay';
+            } else if (gs.mode === 'clock') {
+                var c = gc.f && gc.f.clk, cn = gsClockNow(now);
+                if (gs.target) {
+                    gs.tgtTxt = gsClk(gs.target.sec) + '<small>' + gsPerLabel(gs.target.per) + '</small>';
+                    ask = 'PRESS OK WHEN YOUR TV CLOCK SHOWS'; big = gs.tgtTxt; okLbl = 'OK \u2014 MY TV SHOWS ' + gsClk(gs.target.sec);
+                    if (gs.tvAt) sub = 'Got it \u2014 waiting for ESPN\u2019s clock to pass ' + gsClk(gs.target.sec) + ' (it updates with each play)\u2026';
+                    else if (gs.reachAt) sub = 'ESPN hit ' + gsClk(gs.target.sec) + ' at ' + gcFmtTime(gs.reachAt) + ' \u00b7 waiting for your TV (' + Math.round((now - gs.reachAt) / 1000) + 's)';
+                    else sub = 'ESPN clock now ' + (cn == null ? '--' : gsClk(Math.ceil(cn))) + (c && !c.run ? ' \u00b7 clock stopped, waiting for it to run' : '');
+                    if (gs.reachAt && now - gs.reachAt > GS_WAIT_MS) { gs.target = null; gs.phase = 'missed'; }
+                } else {
+                    ask = gs.phase === 'notlive' ? 'SYNC WORKS DURING LIVE PLAY' : 'THE GAME CLOCK ISN\u2019T RUNNING';
+                    big = gs.phase === 'late' ? 'END OF PERIOD' : gs.phase === 'missed' ? 'MISSED IT?' : gs.phase === 'notlive' ? (gc.state === 'pre' ? 'NOT STARTED' : 'GAME OVER') : 'CLOCK STOPPED';
+                    sub = gs.phase === 'missed' ? 'Nothing pressed for 90s \u2014 press SYNC AGAIN' : gs.phase === 'notlive' ? 'Your saved delay still applies' : 'Timeout or break \u2014 waiting for it to run, or USE A PLAY INSTEAD';
+                    if (gs.phase === 'late' && c && c.per && (!gs.lateFrom || gs.lateFrom !== c.per)) gs.lateFrom = c.per;
+                    if (gs.phase === 'late' && c && c.per !== gs.lateFrom) gsPick();
+                    if (gs.phase === 'missed') { gsShow('gs-again', true); gsShow('gs-ok', false); }
+                }
+            } else { // event mode
+                txt = true;
+                if (gs.ev) { ask = 'PRESS OK WHEN THIS APPEARS ON YOUR TV'; big = gs.ev.txt; sub = 'ESPN saw it at ' + gcFmtTime(gs.ev.at) + ' (' + Math.round((now - gs.ev.at) / 1000) + 's ago)'; okLbl = 'OK \u2014 IT\u2019S ON MY TV'; }
+                else if (gs.tvAt) { ask = 'GOT IT \u2014 YOUR TV SHOWED IT FIRST'; big = 'WAITING FOR ESPN\u2026'; sub = 'pressed at ' + gcFmtTime(gs.tvAt); }
+                else {
+                    var fam = gcFamily(gc.meta || {});
+                    // anchors come from the 2 s scoreboard check only (scores; pitches; football plays): the summary's play list
+                    // runs ~40-100 s behind live in the NHL (measured), far behind the score feed celebrations use
+                    ask = 'WATCH YOUR TV'; big = 'WAITING FOR THE NEXT ' + (fam === 'baseball' ? 'PITCH' : fam === 'football' ? 'PLAY' : 'SCORE') + '\u2026';
+                    sub = 'It shows here as soon as ESPN has it \u2014 then press OK when your TV shows it';
+                    var ev = gc.events || [], l = ev[ev.length - 1];
+                    if (l && now - l.at < 30000 && l.at >= gs.t0 - 30000) gs.ev = l;
+                }
             }
-            var raw = Math.round((now - gc.sync.at) / 1000), v = Math.max(0, Math.min(30, raw));
-            gc.sync = null; b.classList.remove('arm');
-            settings.celebrateDelay = v; var el = document.getElementById('set-celebrateDelay'); if (el) el.value = v;
-            updateSettings();
-            msg('SYNCED ' + v + 's' + (raw > 30 ? ' (MAX)' : ''));
+            gsTxt('gs-ask', ask); gsHtml('gs-big', big.indexOf('<small>') >= 0 ? big : escHtml(big)); gsTxt('gs-sub', sub); gsTxt('gs-ok', okLbl);
+            var bg = gsEl('gs-big'); if (bg) bg.classList.toggle('txt', txt);
+            var ok = gsEl('gs-ok'); if (ok) ok.disabled = gs.phase !== 'done' && ((gs.mode === 'clock' && !gs.target) || !!gs.tvAt);
         }
+        function celClockTick() { try { gsTick(false); } catch (e) {} }
         function celScanScoreboard(list) { // 5-min refresh: cheap check of games that aren't open in Gamecast
             list.forEach(function(m) {
                 if (gc.open && m.key === gc.key) return;
@@ -3388,7 +3553,12 @@
         }
         // delayed queue: detection is immediate, the effect waits settings.celebrateDelay seconds
         function celQueue(ev) {
-            ev.at = Date.now() + Math.max(0, Math.min(30, parseInt(settings.celebrateDelay, 10) || 0)) * 1000 + ((ev.kind && ev.kind.hold) || 0);
+            var mine = ev.gc && gc.open && ev.key === gc.key, now = Date.now();
+            var d = mine ? gcDelay() : Math.max(0, Math.min(GS_MAX_S, parseInt(settings.celebrateDelay, 10) || 0));
+            // the delay counts from when the 2 s scoreboard check first saw the change (what SYNC TO TV measures against),
+            // not from when the slower summary confirmed it
+            var from = mine && gc.trigAt && now - gc.trigAt < 20000 ? gc.trigAt : now;
+            ev.at = from + d * 1000 + ((ev.kind && ev.kind.hold) || 0);
             cel.pending.push(ev);
             celPump();
         }
@@ -3582,13 +3752,14 @@
             if (arcadeNav.menuOpen) navCloseMenu(true);
             if (navIsSettingsOpen()) toggleSettings();
             gc.open = true; gc.meta = meta; gc.key = meta.key || (meta.cid + ':' + meta.id); gc.state = meta.state || null;
-            gc.fails = 0; gc.polls = 0; gc.lastOk = 0; gc.endedAt = 0; gc.lastInput = Date.now(); gc.html = {}; gc.teams = {}; gc.renderErr = null; gc.celFresh = true; gc.dclk = null; gc.sync = null; gc.syncMsgUntil = 0;
+            gc.fails = 0; gc.polls = 0; gc.lastOk = 0; gc.endedAt = 0; gc.lastInput = Date.now(); gc.html = {}; gc.teams = {}; gc.renderErr = null; gc.celFresh = true; gc.net = ''; gc.events = []; gc.trigAt = 0; gc.again = false; gc.chase = null; gc.sumSig = ''; gc.pollMs = GC_POLL_MS; gc.celT = null;
             var el = document.getElementById('gamecast');
             el.classList.add('open'); el.setAttribute('aria-hidden', 'false');
             document.body.classList.add('gc-open');
             ['gc-plays-body', 'gc-stats-body', 'gc-players-body', 'gc-bxs-body'].forEach(function(id) { var b = document.getElementById(id); if (b) b.scrollTop = 0; });
             gcRenderShell(meta);
             gcPoll();
+            gcFastStart();
             gc.scrollTimer = setInterval(gcAutoScroll, 60);
             return true;
         }
@@ -3596,10 +3767,12 @@
             gc.reqId++;
             clearTimeout(gc.timer); gc.timer = null;
             if (gc.ctrl) { try { gc.ctrl.abort(); } catch (e) {} gc.ctrl = null; }
+            gcFastStop(); gc.f = null;
             clearInterval(gc.scrollTimer); gc.scrollTimer = null;
         }
         function gcClose() {
             if (!gc.open) return;
+            gsClose();
             gcVenueClear();
             gcStop();
             celCancel(gc.key, null, -1); // delayed celebrations for this game die with the Gamecast
@@ -3620,6 +3793,8 @@
         function gcPoll() {
             if (!gc.open) return;
             clearTimeout(gc.timer); gc.timer = null;
+            if (document.hidden) return; // paused; visibilitychange resumes
+            if (gc.f && gc.f.ctrl) { gc.timer = setTimeout(gcPoll, 250); return; } // the 2 s score check is in flight: right after it
             if (gc.ctrl) { try { gc.ctrl.abort(); } catch (e) {} gc.ctrl = null; } // never two requests in flight
             var meta = gc.meta, my = ++gc.reqId, started = Date.now();
             var ctrl = window.AbortController ? new AbortController() : null;
@@ -3643,9 +3818,103 @@
                     if (!gc.open) return;
                     var wait = Math.max(1000, gc.pollMs - (Date.now() - started)); // steady ~10 s cadence, measured start to start
                     if (gc.fails >= 3) wait = Math.min(30000, gc.pollMs * (gc.fails - 1)); // back off gently while reconnecting
+                    if (gc.again) { gc.again = false; wait = 50; } // the fast loop saw a change while this one was in flight
+                    else if (gc.chase) { // the summary lags the scoreboard by a few seconds: re-check every 2 s until it shows the change
+                        if (gc.chase.sig !== gc.sumSig && Date.now() < gc.chase.until) wait = Math.min(wait, 2000); else gc.chase = null;
+                    }
                     gc.timer = setTimeout(gcPoll, wait);
                 });
         }
+        // ===== Fast score loop: ~every 2 s while a live Gamecast is open and visible =====
+        // site.api.espn.com .../scoreboard/{eventId}: one event, ~3-4 KB gzipped, CORS *, max-age=1. Score, period, clock,
+        // state and (football/baseball) situation. A change there triggers the full summary right away, so celebrations /
+        // alerts / plays fire within ~2-3 s of ESPN; otherwise the summary stays on its ~10 s cadence. One request at a time
+        // (fast and summary never overlap), backs off on errors, stops when the page is hidden or the game is final.
+        var GC_FAST_MS = 2000, GC_FAST_TIMEOUT_MS = 4000, GC_CLOCK_STALL_MS = 45000; // ESPN's clock only moves when a play is logged (measured: every ~5-20 s in the NHL)
+        function gcFastStart() { gcFastStop(); gc.f = { timer: null, ctrl: null, fails: 0, downN: 0, celSc: null, last: null, okAt: 0, n: 0, bytes: 0, hits: 0, clk: null }; gc.f.timer = setTimeout(gcFastTick, GC_FAST_MS); }
+        function gcFastStop() { var f = gc.f; if (!f) return; clearTimeout(f.timer); f.timer = null; if (f.ctrl && f.ctrl.abort) { try { f.ctrl.abort(); } catch (e) {} } f.ctrl = null; }
+        function gcFastTick() {
+            var f = gc.f; if (!gc.open || !f) return;
+            clearTimeout(f.timer); f.timer = null;
+            if (document.hidden || f.ctrl) return;
+            if (gc.state === 'post') return; // final: the summary's 10 s cadence (and auto-close) is enough
+            if (gc.ctrl) { f.timer = setTimeout(gcFastTick, 400); return; } // summary in flight: one request at a time
+            var meta = gc.meta, started = Date.now(), ctrl = window.AbortController ? new AbortController() : null;
+            f.ctrl = ctrl || {};
+            var killer = setTimeout(function() { if (ctrl) { try { ctrl.abort(); } catch (e) {} } }, GC_FAST_TIMEOUT_MS), changed = false;
+            fetch(settings.apiBase + '/site/v2/sports/' + meta.sport + '/' + meta.league + '/scoreboard/' + encodeURIComponent(meta.id), ctrl ? { signal: ctrl.signal } : undefined)
+                .then(function(r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.text(); })
+                .then(function(t) {
+                    if (gc.f !== f || !gc.open) return;
+                    f.fails = 0; f.n++; f.bytes += t.length; f.okAt = Date.now();
+                    changed = gcFastApply(meta, f, JSON.parse(t));
+                })
+                .catch(function() { if (gc.f === f) f.fails++; })
+                .then(function() {
+                    clearTimeout(killer);
+                    if (gc.f !== f) return;
+                    f.ctrl = null;
+                    if (!gc.open) return;
+                    if (changed) { f.hits++; gc.trigAt = Date.now(); gc.chase = { until: gc.trigAt + 20000, sig: f.last.sc + '|' + f.last.per + '|' + f.last.state }; gcPoll(); } // a score / play / period change: full summary now
+                    else gcStatus(false);
+                    var wait = f.fails ? Math.min(30000, GC_FAST_MS * Math.pow(2, f.fails)) : Math.max(500, GC_FAST_MS - (Date.now() - started));
+                    if (!document.hidden) f.timer = setTimeout(gcFastTick, wait);
+                });
+        }
+        function gcFastApply(meta, f, j) { // returns true when the full summary should be fetched now
+            var comp = (j.competitions || [])[0]; if (!comp) return false;
+            var stt = comp.status || j.status || {}, st = stt.type || {}, state = st.state || '', now = Date.now(), fam = gcFamily(meta);
+            var cs = comp.competitors || [], a = gcPick(cs, 'away'), h = gcPick(cs, 'home'), sit = comp.situation || {}, lp = sit.lastPlay || {};
+            var ab = function(c) { return (c.team && (c.team.abbreviation || c.team.shortDisplayName)) || ''; };
+            var sc = [a.score, h.score].join('-'), cnt = [sit.balls, sit.strikes, sit.outs].join('-');
+            var cur = { sc: sc, per: stt.period || 0, state: state, lp: lp.id ? String(lp.id) : '', cnt: cnt,
+                        sig: [sc, stt.period, state, lp.id || '', sit.down, sit.distance, sit.possession, cnt, sit.onFirst, sit.onSecond, sit.onThird].join('|') };
+            // game clock (running clocks only): when did ESPN's data reach the value we now see?
+            var sec = celSecs(stt.displayClock); if (sec == null && typeof stt.clock === 'number' && fam === 'basketball') sec = stt.clock;
+            if (fam !== 'hockey' && fam !== 'football' && fam !== 'basketball') sec = null;
+            // ESPN's CDN edges disagree for a few seconds after a change (seen live: in -> pre -> in, 3 s apart). A reply that is
+            // behind what we already saw (state, period, total score, or a countdown clock going back up) is stale: ignore it.
+            var rank = [{ pre: 0, 'in': 1, post: 2 }[state] || 0, cur.per, (parseInt(a.score, 10) || 0) + (parseInt(h.score, 10) || 0), sec == null ? 0 : -sec], b = f.best;
+            if (b) { for (var ri = 0; ri < 4; ri++) { if (rank[ri] > b[ri]) break;
+                if (rank[ri] < b[ri]) { if (ri === 2 && ++f.downN >= 2) break; /* a lower score twice in a row is a real correction */ f.stale = (f.stale || 0) + 1; return false; } } }
+            if (!b || rank[2] >= b[2]) f.downN = 0;
+            f.best = rank;
+            var c = f.clk, per = stt.period || 0;
+            if (!c || c.per !== per || c.sec !== sec) {
+                var gap = c ? now - c.seen : GC_FAST_MS, ran = !!(c && c.per === per && sec != null && c.sec != null && sec < c.sec);
+                f.clk = { per: per, sec: sec, seen: now, hit: now - Math.min(1000, gap / 2), runAt: ran ? now : (c && c.per === per ? c.runAt : 0) };
+            } else c.seen = now;
+            f.clk.run = state === 'in' && !!f.clk.runAt && now - f.clk.runAt < GC_CLOCK_STALL_MS;
+            var seen = f.lpSeen || (f.lpSeen = []); // stale edges also flip the last play back and forth: a play id seen before is not new
+            if (cur.lp && seen.indexOf(cur.lp) >= 0 && f.last && f.last.lp !== cur.lp) cur.lp = f.last.lp;
+            else if (cur.lp && seen.indexOf(cur.lp) < 0) { seen.push(cur.lp); if (seen.length > 30) seen.shift(); }
+            cur.sig = [sc, cur.per, state, cur.lp, sit.down, sit.distance, sit.possession, cnt, sit.onFirst, sit.onSecond, sit.onThird].join('|');
+            var p = f.last; f.last = cur;
+            try { gsOnClock(); } catch (e) {}
+            // Celebrations straight from the 2 s check once a new score is seen twice in a row (the summary header measured
+            // 4-12 s behind this feed on NHL goals; its scoring play ~20 s behind). The summary then sees the same score and
+            // does not fire again; scorer names only appear if the summary had them first.
+            if (f.celSc == null) f.celSc = sc;
+            else if (p && p.sc === sc && sc !== f.celSc && gc.celT && !gc.celFresh) {
+                f.celSc = sc;
+                try { celObserve(gc.key, fam, state, [Object.assign({}, gc.celT[0], { score: a.score }), Object.assign({}, gc.celT[1], { score: h.score })], false, lp.text || '', true, st.name || '', null); } catch (e) {}
+            }
+            if (!p || p.sig === cur.sig) return false;
+            if (p.sc !== sc) {
+                var ps = String(p.sc).split('-'), da = (parseInt(a.score, 10) || 0) - (parseInt(ps[0], 10) || 0), dh = (parseInt(h.score, 10) || 0) - (parseInt(ps[1], 10) || 0), who = dh > da ? h : a;
+                gsEvent(now, ab(who) + ' SCORES \u00b7 ' + ab(a) + ' ' + a.score + '\u2013' + h.score + ' ' + ab(h));
+            } else if (cur.lp && cur.lp !== p.lp && lp.text && (fam === 'football' || fam === 'baseball')) gsEvent(now, lp.text); // NHL lastPlay lags like the play list
+            else if (fam === 'baseball' && cnt !== p.cnt) gsEvent(now, 'COUNT ' + (sit.balls || 0) + '-' + (sit.strikes || 0) + ' \u00b7 ' + (sit.outs || 0) + ' OUT');
+            return p.sc !== sc || p.per !== cur.per || p.state !== state || p.lp !== cur.lp || (fam === 'football' && p.sig !== cur.sig);
+        }
+        document.addEventListener('visibilitychange', function() {
+            if (!gc.open) return;
+            if (document.hidden) { // hidden (screen off / app in background): stop both loops
+                clearTimeout(gc.timer); gc.timer = null;
+                if (gc.ctrl) { gc.reqId++; try { gc.ctrl.abort(); } catch (e) {} gc.ctrl = null; }
+                if (gc.f) { gcFastStop(); }
+            } else { gcPoll(); if (gc.f) { clearTimeout(gc.f.timer); gc.f.timer = setTimeout(gcFastTick, 800); } }
+        });
         function gcCheckAutoClose() {
             var now = Date.now();
             if (gc.state === 'post') {
@@ -3658,7 +3927,10 @@
             var html;
             if (gc.fails > 0) html = '<span class="gc-recon">&#9888; RECONNECTING' + (gc.fails > 1 ? ' (' + gc.fails + ')' : '') + '&hellip;</span>' + (gc.lastOk ? ' LAST UPDATE ' + gcFmtTime(gc.lastOk) : '');
             else if (!gc.lastOk) html = '<span class="gc-dot"></span> LOADING&hellip;';
-            else html = '<span class="gc-dot' + (fetching ? ' on' : '') + '"></span> UPDATED ' + gcFmtTime(gc.lastOk);
+            else {
+                var f = gc.f, fast = !!(f && f.okAt && !f.fails && gc.state === 'in' && Date.now() - f.okAt < 8000);
+                html = '<span class="gc-dot' + (fetching ? ' on' : '') + '"></span> UPDATED ' + gcFmtTime(Math.max(gc.lastOk, fast ? f.okAt : 0)) + (fast ? ' &middot; LIVE 2s' : '');
+            }
             el.classList.toggle('bad', gc.fails > 0);
             var root = document.getElementById('gamecast'); if (root) root.classList.toggle('gc-bad', gc.fails > 0);
             el.innerHTML = html;
@@ -3774,12 +4046,15 @@
                 var lp = (d.plays && d.plays.length) ? d.plays[d.plays.length - 1] : (sit.lastPlay || null);
                 var hint = (sp ? ((sp.type && sp.type.text) || '') + ' ' + (sp.text || '') : '') + ' | ' + (lp ? ((lp.type && lp.type.text) || '') + ' ' + (lp.text || '') : '');
                 var cx = null; try { cx = celExtras(meta, d, fam, A, H, sit); } catch (e2) {}
-                celObserve(gc.key, fam, gc.state, [celT('away', A, meta), celT('home', H, meta)], gc.celFresh, hint, true, st.name || '', cx);
+                gc.celT = [celT('away', A, meta), celT('home', H, meta)];
+                celObserve(gc.key, fam, gc.state, gc.celT, gc.celFresh, hint, true, st.name || '', cx);
             } catch (e) {}
             gc.celFresh = false;
-            try { celClockRec(fam, stt, st, gc.state); } catch (e) {}
             var bcs = (comp.broadcasts || []).concat(d.broadcasts || []).map(function(b) { return (b.media && (b.media.shortName || b.media.name)) || b.station || ''; }).filter(Boolean);
             var net = bcs.filter(function(v, i) { return bcs.indexOf(v) === i; }).slice(0, 3).join(' / ') || (meta.tv !== 'TBD' && meta.tv !== 'TV' ? meta.tv : '');
+            var net1 = bcs[0] || (meta.tv !== 'TBD' && meta.tv !== 'TV' ? meta.tv : '') || '';
+            if (net1 !== (gc.net || '')) { gc.net = net1; celDelayUI(); }
+            gc.sumSig = A.score + '-' + H.score + '|' + (stt.period || 0) + '|' + gc.state;
             gcSet('gc-league', escHtml(meta.label || ''));
             gcSet('gc-net', net ? '&#128250; ' + escHtml(net) : '');
             try { gcVenueSet(d); } catch (e) {}
@@ -4493,7 +4768,7 @@
             navArmHistory();
         }
         function navIdle() {
-            if (navIsSettingsOpen()) { arcadeNav.idleTimer = setTimeout(navIdle, arcadeNav.idleMs); return; }
+            if (navIsSettingsOpen() || gs.open) { arcadeNav.idleTimer = setTimeout(navIdle, arcadeNav.idleMs); return; } // the sync overlay keeps its focus while you watch the TV
             navCloseMenu(true);
             var hud = document.getElementById('nav-hud'); if (hud) hud.classList.remove('show');
             var ae = document.activeElement;
@@ -4630,9 +4905,17 @@
                 if (nk === 'ok' && (!ae || ae === document.body)) { e.preventDefault(); var its = navSettingsItems(); if (its.length) its[0].focus(); }
                 return; // Enter on buttons / Space on checkboxes: native behaviour
             }
+            if (gc.open && gs.open) { // SYNC TO TV overlay: BACK closes it, arrows move, OK presses (focus starts on the big OK)
+                gc.lastInput = Date.now(); e.preventDefault();
+                var gsi = Array.prototype.slice.call(document.querySelectorAll('#gc-syncov .gs-btn')).filter(navVisible);
+                if (nk === 'back') { gsClose(); return; }
+                if (nk === 'up' || nk === 'down' || nk === 'left' || nk === 'right') { navMove(gsi, nk); return; }
+                if (nk === 'ok') { if (e.repeat) return; var gok = document.getElementById('gs-ok'); if (gsi.indexOf(ae) >= 0) ae.click(); else if (gsi.indexOf(gok) >= 0) { gok.focus(); gok.click(); } else if (gsi.length) gsi[0].focus(); } // a bare OK is "my TV shows it"
+                return;
+            }
             if (gc.open) { // Gamecast: BACK closes, LEFT/RIGHT switch game, UP/DOWN scroll stats, OK focuses then presses CLOSE
                 gc.lastInput = Date.now();
-                var ctl = ['gc-cel-away', 'gc-cel-dminus', 'gc-cel-dplus', 'gc-cel-sync', 'gc-cel-home', 'gc-close'].map(function(id) { return document.getElementById(id); }).filter(navVisible), onCtl = ctl.indexOf(ae) >= 0;
+                var ctl = ['gc-cel-away', 'gc-cel-sync', 'gc-cel-home', 'gc-close'].map(function(id) { return document.getElementById(id); }).filter(navVisible), onCtl = ctl.indexOf(ae) >= 0;
                 var tabs = gcTabEls(), onTab = tabs.indexOf(ae) >= 0;
                 if (nk === 'back') { e.preventDefault(); gcClose(); return; }
                 if (tabs.length && (nk === 'play' || (onTab && (nk === 'left' || nk === 'right' || nk === 'ok')))) { // switch FIELD / BOX SCORE (focus follows)

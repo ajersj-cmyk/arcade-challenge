@@ -99,13 +99,22 @@ update (same DOM nodes, new value, scroll kept). Screenshots land in `tools/out/
 
 `node tools/test-celebrate.mjs [preview.html]` tests score celebrations against mocked ESPN summaries (an NHL game
 NYR @ CAR and a CFB game TEM @ ECU): the per-team ★ toggles (mouse + D-pad) and their localStorage, no fire on first look,
-GOAL!! / TOUCHDOWN!! / FIELD GOAL!!! / CANES WIN!! / HALFTIME!, no repeat after a score correction, the delay (Gamecast
-+/− and settings ◀/▶, 0–30 s), queued events cancelled by a correction or by closing, any key dismisses without leaking
+GOAL!! / TOUCHDOWN!! / FIELD GOAL!!! / CANES WIN!! / HALFTIME!, no repeat after a score correction, the delay (sync
+overlay ±1s per channel and settings ◀/▶, 0–60 s), queued events cancelled by a correction or by closing, any key dismisses without leaking
 to the Gamecast, the `arcadeCelebrate('test')` / `?celebrate=td` hooks, and 0 console errors. It also checks the scorer
 card (name + headshot + assists, logo-only fallback), the FG hold-back, every alert banner (red zone once per drive, big
-play, interception, lead change, puck drop, power play once per penalty, per-type off switch) and SYNC NOW. It saves
+play, interception, lead change, puck drop, power play once per penalty, per-type off switch) and SYNC TO TV (clock target
+from a mocked running clock, OK presses for TV behind / TV ahead, stopped clock, play/score fallback, per-channel memory,
+TEST, D-pad + BACK). The 2 s `scoreboard/{id}` check is mocked in that section. It saves
 1920x1080 screenshots of the toggles, a Hurricanes goal with Aho's card, a Canes win, an ECU touchdown, the red-zone and
-power-play banners, the Gamecast sync helper and the settings rows.
+power-play banners, the sync overlay (clock, stopped, play) and the settings rows.
+
+`node tools/test-fastloop.mjs [preview.html]` checks the Gamecast's 2 s score loop against a mocked live NHL game in TV
+emulation (ArcadeTV, 1280x720, 4x CPU): ~2 s cadence, summary stays ~10 s without changes, a score change pulls the summary
+at once, follow-up summaries every 2 s while the summary lags the scoreboard, error backoff + recovery, nothing while the
+page is hidden, never two Gamecast requests in flight, heap stable over ~2 min, stops when final / closed.
+`--live sport/league/id [--secs 180]` opens a real game instead and prints requests/min, KB per request, heap before/after
+and every change the loop saw.
 
 `node tools/test-sportmode.mjs [preview.html]` tests SPORT MODE: the settings row (D-pad ▶▶▶ + OK, mouse), the saved state
 (`ahlersSportMode1`, 12 h expiry, snapshot), that user settings are untouched, the indicator pill, NFL/CFB/CBB rotations (only that
@@ -252,7 +261,8 @@ None of them need an API key, and **no keys or tokens are embedded**. The code a
 |---|---|---|---|
 | ESPN site scoreboard | `https://site.api.espn.com/apis/site/v2/sports/{sport}/{league}/scoreboard` for hockey/nhl, football/nfl, basketball/nba, baseball/mlb, football/college-football `?groups=80`, basketball/mens-college-basketball `?groups=50` (if `cbb50`), baseball/college-baseball, soccer/fifa.world, soccer/eng.1, soccer/uefa.champions, tennis/atp, tennis/wta. Base comes from `settings.apiBase` | on load, then every **5 min** (sequential, each league toggleable) | ticker, live, props, leaders, my squad, TV guide, odds, marquee |
 | ESPN site scoreboard (slide) | `.../golf/pga/scoreboard`, `.../mma/ufc/scoreboard`, `.../soccer/{fifa.world,eng.1,uefa.champions}/scoreboard` | each time the PGA / UFC / soccer slide shows | those slides |
-| ESPN summary (Gamecast) | `https://site.api.espn.com/apis/site/v2/sports/{sport}/{league}/summary?event={id}` (CORS `*`, no key). 0.1–1 MB per response (MLB is the largest) | only while a Gamecast is open: every **10 s**, 8 s timeout, previous request aborted first | Gamecast overlay |
+| ESPN summary (Gamecast) | `https://site.api.espn.com/apis/site/v2/sports/{sport}/{league}/summary?event={id}` (CORS `*`, no key). 0.1–1 MB per response (MLB is the largest) | only while a Gamecast is open: every **10 s**, right away when the 2 s check sees a change (then every 2 s for up to 20 s until the summary shows it), 8 s timeout | Gamecast overlay |
+| ESPN single-event scoreboard (Gamecast fast loop) | `https://site.api.espn.com/apis/site/v2/sports/{sport}/{league}/scoreboard/{id}` (CORS `*`, `max-age=1`). ~16–20 KB raw, ~3–4 KB gzipped | only while a **live** Gamecast is open and the page is visible: every **2 s**, 4 s timeout, never while the summary is in flight, backs off 4/8/16/30 s on errors | change detection + SYNC TO TV |
 | ESPN standings | `https://site.api.espn.com/apis/v2/sports/{football/nfl, basketball/nba, hockey/nhl, baseball/mlb}/standings` | each time the slide shows | standings slides |
 | ESPN CFB standings | `https://site.api.espn.com/apis/v2/sports/football/college-football/standings` | rankings slide, cached 24 h (`ahlersCfbRecords`) | ranking records |
 | ESPN CFB rankings | `https://site.api.espn.com/apis/site/v2/sports/football/college-football/rankings` | each time the rankings slide shows | rankings |
@@ -383,7 +393,7 @@ next slide shows right away.
 | ▲ / ▼ | scroll the visible stats / box-score panels (auto-scroll resumes after 8 s) |
 | ▲ when the panels are at the top (or ▼ from the ★ row) | focus the **view tabs**; then ◀ / ▶ (or OK) switch view, ▼ goes back to scrolling, ▲ goes to the ★ row |
 | Play/Pause (Space / P) | switch view directly (FIELD ⇄ BOX SCORE etc.) |
-| OK | focus the first ★ CELEBRATE toggle (◀/▶ walk the ★ / delay / SYNC / CLOSE row) |
+| OK | focus the first ★ CELEBRATE toggle (◀/▶ walk the ★ / SYNC TO TV / ★ / CLOSE row) |
 
 - **Views (tabs under the ★ row, live/final games only):** football **FIELD | BOX SCORE**; baseball **AT BAT + BOX SCORE |
   PLAYS & STATS**; hockey/basketball **GAME | BOX SCORE**. Pre-game and soccer have no tabs (classic layout). The tab sets a
@@ -416,7 +426,18 @@ next slide shows right away.
 - **Polling:** one summary request every **10 s** (start to start) while open. The previous request is aborted first, so
   requests never overlap, and each one times out after 8 s. After 3 failures in a row the gap backs off to 20 s, then 30 s,
   and the header shows **⚠ RECONNECTING… LAST UPDATE h:mm:ss** while the last good data stays on screen. Otherwise the
-  header shows **UPDATED h:mm:ss**.
+  header shows **UPDATED h:mm:ss** (`· LIVE 2s` while the fast loop below is healthy on a live game).
+- **Fast score loop (live games only):** `gcFastTick` fetches the single-event scoreboard every **2 s** (one request at a
+  time across both loops, 4 s timeout, error backoff 4→8→16→30 s, stops when the page is hidden, the game is final or the
+  Gamecast closes). A change in score, period, state, football situation/last play, or baseball count/outs/bases pulls the
+  summary immediately (`gc.trigAt`), and `gc.chase` re-polls the summary every 2 s for up to 20 s until it shows the same
+  score/period/state. Replies that are *behind* what was already seen (state, period, total score, countdown clock going
+  back up) are ignored: ESPN's CDN edges disagree for a few seconds after a change (seen live: `in → pre → in`, clock
+  17:32 → 17:51 → 17:32).
+- **How fresh ESPN is (measured live, NHL, Oct 9 2026):** the scoreboard publishes on a **~10 s cycle** (the game clock in
+  it jumps every 10 or 20 s; it does not tick), and `site.api` runs **~2–5 s behind** `sports.core.api …/status`. The
+  summary header follows the scoreboard; the summary's **play list runs ~30–100 s behind live** (play `wallclock` vs when
+  it appeared). So the 2 s loop gets a change within ~2 s of ESPN publishing it, but ESPN itself is the limit.
 - **Memory:** only the latest response is parsed. It isn't stored and is released once rendered. The DOM is only rewritten
   when a block's markup changes, and the overlay's DOM is emptied on close. One 60 ms scroll timer runs, and only while open.
 - **Auto-close:** a finished game closes itself after 10 min with no input. An upcoming game closes after 30 min idle.
@@ -428,8 +449,12 @@ next slide shows right away.
 - **Turn it on:** open any NHL / NFL / college football / MLB game in the Gamecast and press OK on **★ CELEBRATE <TEAM>**
   under either team (or both). It turns yellow (ON). The choice is saved per team in `localStorage.ahlersCelebrateTeams1`
   (`"<league>:<ESPN team id>"`). The master switch **Score Celebrations** (settings, default ON) turns everything off.
-- **Delay:** 0–30 s in 1 s steps, default 0 (`settings.celebrateDelay`). Change it with − / + in the Gamecast or ◀ / ▶ on
-  the delay row in settings. A score is detected right away, and the effect is queued until the delay is up. Queued events
+- **Delay:** 0–60 s in 1 s steps. Remembered **per broadcast** in `localStorage.ahlersArcadeTvDelay`
+  (`{ src: 'cable'|'stream', nets: { 'ESPN|cable': 18, ... } }`, key = first broadcast in the Gamecast header + the
+  CABLE/STREAMING choice). `gcDelay()` uses that, else the Settings default (`settings.celebrateDelay`, ◀ / ▶ on the delay
+  row, an advanced option). The Gamecast bar only shows **📺 SYNC TO TV 18s**; fine-tune (−1s / +1s), TEST and the
+  CABLE/STREAMING switch live inside the sync overlay. A score is detected right away and the effect is queued until
+  `gc.trigAt` (when the 2 s loop first saw it) + delay. Queued events
   are dropped if the score is corrected down or the Gamecast is closed (events found by the 5-min scoreboard refresh are
   dropped on a correction).
 - **What fires:** only a score that goes *up* between two polls (never on first load, and never again after a correction
@@ -499,10 +524,17 @@ next slide shows right away.
   (25+ yd pass/run), **DOUBLE! / TRIPLE!** (MLB); turnovers are full-screen now (above). The
   play-by-play alerts only come from an open Gamecast. Start and lead change also come from the 5-min scoreboard refresh.
   A banner waits while a full celebration is showing, then follows it.
-- **Delay sync (SYNC NOW):** the Gamecast shows the feed's clock (`DATA P2 12:22`, ticking between polls while it runs)
-  next to the delay. Press **SYNC NOW**: it locks the clock shown and reads `PRESS AT TV P2 12:22`. Press again when the
-  TV shows that clock. The gap becomes the delay (0–30 s, 1 s steps, saved). The lock expires after 60 s. There's no
-  live clock for MLB, so it shows "NO LIVE CLOCK".
+- **SYNC TO TV (`gsOpen`, overlay `#gc-syncov`):** one guided flow. Hockey / football / basketball with a running clock:
+  it picks a whole second **8 s ahead** of ESPN's (interpolated) clock and shows **PRESS OK WHEN YOUR TV CLOCK SHOWS 8:42
+  2ND PERIOD**. The fast loop finds when ESPN's data reached it (first reading at/below it, extrapolated back), the user's
+  OK gives the TV time, delay = OK − ESPN time (0–60 s, rounded to 1 s, saved for this channel). Result: **SYNCED · TV is
+  18s behind · celebrations wait 18s**. OK before ESPN gets there → it waits for ESPN, then **TV is Ns AHEAD … show right
+  away** (0 s). Clock not running (timeout, intermission; no change for 45 s) → **CLOCK STOPPED**, waits for it to run, or
+  **USE A PLAY INSTEAD**. Baseball / soccer (no running clock) and the fallback use events from the 2 s loop: the next
+  score (hockey/basketball/soccer), football play, or baseball pitch/count appears big with "ESPN saw it at h:mm:ss"; OK
+  when the TV shows it. Summary plays are not used as anchors (they lag ~30–100 s). End of period (< 20 s, < 60 s in
+  basketball) asks to wait. A bare OK in the overlay presses the big OK; the overlay keeps its focus while you watch the TV
+  (no 10 s nav idle); BACK closes only the overlay. The FG hold-back still adds its 5 s.
 - **Preview:** console `arcadeCelebrate('goal' | 'td' | 'fg' | 'run' | 'hr' | 'win' | 'half' | 'period' | 'test')`,
   `arcadeCelebrate('redzone' | 'pp' | 'start' | 'lead' | 'big' | 'alerts')` for the banners, the
   **★ PREVIEW** button in settings, or open the page with `?celebrate=td` (etc.). `test` plays GOAL → TD → WIN.
@@ -537,8 +569,11 @@ next slide shows right away.
 - [ ] `cursor: none`, no scrollbars, layout fills 16:9 at 1920x1080 and 1280x720
 - [ ] `#remote` mode shows the NEXT SLIDE controller and hides the TV view
 - [ ] localStorage migrations (old `mySquadTeams` values, removal of `oddsApiKey` / `ahlersPropsCache`)
-- [ ] Score celebrations: ★ toggles in the Gamecast, master switch + 0–30 s delay in settings, fire only on increases,
-      any key dismisses. Alerts: once per situation, per-type switches. SYNC NOW sets the delay (`tools/test-celebrate.mjs`)
+- [ ] Score celebrations: ★ toggles in the Gamecast, master switch + 0–60 s default delay in settings, fire only on increases,
+      any key dismisses. Alerts: once per situation, per-type switches. SYNC TO TV sets the per-channel delay
+      (`tools/test-celebrate.mjs`)
+- [ ] Gamecast fast loop: 2 s single-event scoreboard only while live + visible, one request at a time, change → summary
+      at once, backoff, stops when hidden/final/closed (`tools/test-fastloop.mjs`)
 - [ ] No API keys or secrets added; every new API is free, no-key and CORS-enabled
 - [ ] NFL FUTURES / NFL AWARDS / CFB FUTURES / NHL FUTURES slides populate, showing the 'UPDATED' time from futures.json, (from futures.json, or the live fallbacks) and can be toggled in settings
 - [ ] Idle kiosk shows **no** nav UI; ◀/▶, OK menu, Back, Play/Pause and auto-hide all work (harness remote checks)
@@ -547,7 +582,7 @@ next slide shows right away.
       to the snapshot, never an empty rotation (`tools/test-sportmode.mjs`)
 - [ ] NFL FANTASY slide: projections + pickups from `fantasy.json` (or ESPN fallback), live PPR only while it shows (`tools/test-fantasy.mjs`)
 - [ ] Gamecast opens from a Live Action card / ticker click and from the navigator GAMES row (D-pad). It pauses rotation,
-      polls every ~10 s with no overlapping requests, shows RECONNECTING on failure, and closes with Back/Esc/✕. Closing
+      polls every ~10 s (plus the 2 s check on live games) with no overlapping requests, shows RECONNECTING on failure, and closes with Back/Esc/✕. Closing
       stops every timer and request and resumes rotation (`tools/test-gamecast.mjs` + harness checks).
 
 ---

@@ -5,7 +5,8 @@
 // HALFTIME! on the right changes, no repeat on a score correction, the 0-30 s delay (fires late; cancelled by a
 // correction or by closing the Gamecast), any key dismisses, settings D-pad delay control, preview hook. Screenshots
 // go to tools/out/<stamp>-celebrate/. Also: scorer name + headshot on the celebration, FG hold-back, the smaller alert
-// banners (red zone, big play/turnover, lead change, game start, power play, per-type off switch) and the SYNC NOW helper.
+// banners (red zone, big play/turnover, lead change, game start, power play, per-type off switch) and SYNC TO TV (guided
+// clock / play sync with OK presses, per-channel memory, fine-tune, TEST). The 2 s scoreboard/{id} check is mocked too.
 import http from 'node:http'; import fs from 'node:fs'; import path from 'node:path'; import { fileURLToPath } from 'node:url';
 import puppeteer from 'puppeteer-core';
 const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -39,7 +40,7 @@ const games = {
   '990001': { away: T.nyr, home: T.car, a: 1, h: 1, state: 'in', name: 'STATUS_IN_PROGRESS', detail: '2nd 12:34', play: 'Faceoff won by CAR' },
   '990002': { away: T.tem, home: T.ecu, a: 21, h: 24, state: 'in', name: 'STATUS_IN_PROGRESS', detail: '2nd 4:10', play: 'Pass complete', scoring: '', box: ECU_BOX },
 };
-const summary = id => { const g = games[id]; return { header: { competitions: [{ status: { period: 2, displayClock: g.clock || '12:34', type: { state: g.state, name: g.name, completed: g.state === 'post', detail: g.detail, shortDetail: g.detail, description: g.detail } },
+const summary = id => { const g = games[id]; return { header: { competitions: [{ status: { period: 2, displayClock: clockOf(g), type: { state: g.state, name: g.name, completed: g.state === 'post', detail: g.detail, shortDetail: g.detail, description: g.detail } },
   competitors: [{ homeAway: 'home', score: String(g.h), team: g.home }, { homeAway: 'away', score: String(g.a), team: g.away }] }] },
   plays: [{ text: g.play, type: { text: '' } }].concat(g.plays || []), scoringPlays: g.scoring ? [{ id: 'sp-' + g.h + '-' + g.a, text: g.scoring, type: { text: g.scoringType || '' }, team: { id: g.scoringTeam || g.home.id } }] : [],
   situation: g.sit, drives: g.drives, boxscore: g.box }; };
@@ -52,7 +53,13 @@ const page = await browser.newPage();
 await page.setUserAgent(ua); await page.emulateTimezone('America/New_York'); await page.setViewport({ width: 1920, height: 1080 });
 const errors = []; page.on('console', m => { if (m.type() === 'error' && !isNoise(m.text() + ' ' + ((m.location() || {}).url || ''))) errors.push(m.text()); }); page.on('pageerror', e => errors.push('PAGE ' + e));
 await page.setRequestInterception(true);
-page.on('request', req => { const m = /summary\?event=(99\d+)/.exec(req.url()); if (m && games[m[1]]) return req.respond({ status: 200, contentType: 'application/json', headers: { 'Access-Control-Allow-Origin': '*' }, body: JSON.stringify(summary(m[1])) }); req.continue(); });
+let fastOn = false; // the 2 s scoreboard/{id} check: unmocked (404, backs off) until the sync section turns it on
+const clockOf = g => { if (!g.run) return g.clock || '12:34'; const s = Math.max(0, Math.floor(g.run.from - (Date.now() - g.run.t0) / 1000)); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); };
+const sb1 = id => { const g = games[id]; return { id, competitions: [{ status: { period: 2, displayClock: clockOf(g), type: { state: g.state, name: g.name } },
+  competitors: [{ homeAway: 'home', score: String(g.h), team: g.home }, { homeAway: 'away', score: String(g.a), team: g.away }] }] }; };
+const fastLog = [];
+page.on('request', req => { const f = /scoreboard\/(99\d+)/.exec(req.url()); if (f && fastOn && games[f[1]]) { fastLog.push(Date.now()); return req.respond({ status: 200, contentType: 'application/json', headers: { 'Access-Control-Allow-Origin': '*' }, body: JSON.stringify(sb1(f[1])) }); }
+  const m = /summary\?event=(99\d+)/.exec(req.url()); if (m && games[m[1]]) return req.respond({ status: 200, contentType: 'application/json', headers: { 'Access-Control-Allow-Origin': '*' }, body: JSON.stringify(summary(m[1])) }); req.continue(); });
 await page.evaluateOnNewDocument(() => { try { localStorage.removeItem('ahlersCelebrateTeams1'); } catch (e) {} });
 await page.goto(base + FILE, { waitUntil: 'load' });
 await page.waitForFunction(() => typeof arcadeNav !== 'undefined' && arcadeNav.current && typeof celObserve === 'function', { timeout: 90000 });
@@ -83,11 +90,11 @@ check('mouse click turns Hurricanes ON and saves it per team (localStorage)', sa
 await page.evaluate(() => { const ae = document.activeElement; if (ae && ae.blur) ae.blur(); });
 await page.keyboard.press('Enter'); await sleep(150);
 const f1 = await page.evaluate(() => document.activeElement && document.activeElement.id);
-for (let i = 0; i < 4; i++) { await page.keyboard.press('ArrowRight'); await sleep(100); }
+for (let i = 0; i < 2; i++) { await page.keyboard.press('ArrowRight'); await sleep(100); }
 const f2 = await page.evaluate(() => document.activeElement && document.activeElement.id);
 await page.keyboard.press('Enter'); await sleep(150); const offNow = await page.evaluate(() => !document.getElementById('gc-cel-home').classList.contains('on'));
 await page.keyboard.press('Enter'); await sleep(150); const onAgain = await page.evaluate(() => document.getElementById('gc-cel-home').classList.contains('on'));
-check('D-pad: OK focuses the away toggle, RIGHT x4 (−, +, SYNC) reaches the home toggle, OK toggles it', f1 === 'gc-cel-away' && f2 === 'gc-cel-home' && offNow && onAgain, `${f1} -> ${f2}, off ${offNow}, on ${onAgain}`);
+check('D-pad: OK focuses the away toggle, RIGHT x2 (SYNC TO TV) reaches the home toggle, OK toggles it', f1 === 'gc-cel-away' && f2 === 'gc-cel-home' && offNow && onAgain, `${f1} -> ${f2}, off ${offNow}, on ${onAgain}`);
 await sleep(1500); await shot('gamecast-celebrate-toggles');
 await page.evaluate(() => { const ae = document.activeElement; if (ae && ae.blur) ae.blur(); });
 s = await st(); check('no celebration on the first look at a game', s.fired === 0 && !s.showing && !s.err, JSON.stringify({ fired: s.fired, err: s.err }));
@@ -123,10 +130,16 @@ check('any key dismisses (and the key is not passed to the Gamecast)', !s.showin
 // 2. correction: 2 -> 1 -> 2 must not repeat
 const fired0 = s.fired; games['990001'].h = 1; await poll(); games['990001'].h = 2; await poll(); await sleep(600); s = await st();
 check('score correction (2 -> 1 -> 2) does not fire again', s.fired === fired0 && !s.showing, `fired ${fired0} -> ${s.fired}`);
-// 3. delay 3 s via the Gamecast +/- control
-for (let i = 0; i < 3; i++) await page.click('#gc-cel-dplus');
-const dl = await page.evaluate(() => ({ v: settings.celebrateDelay, txt: document.getElementById('gc-cel-dval').textContent, ls: JSON.parse(localStorage.getItem('ahlersArcadeSettings') || '{}').celebrateDelay }));
-check('Gamecast +/- sets the delay (3 s, saved)', dl.v === 3 && dl.txt === 'DELAY 3s' && dl.ls === 3, JSON.stringify(dl));
+// 3. delay 3 s via the fine-tune inside the SYNC TO TV overlay (the bar has no ± any more)
+const barCtl = await page.evaluate(() => ({ minus: !!document.getElementById('gc-cel-dminus'), plus: !!document.getElementById('gc-cel-dplus'), sync: document.getElementById('gc-cel-sync').innerText }));
+check('Gamecast bar: one SYNC TO TV button (no DELAY ± / SYNC NOW)', !barCtl.minus && !barCtl.plus && /SYNC TO TV/.test(barCtl.sync), JSON.stringify(barCtl));
+await page.click('#gc-cel-sync'); await sleep(200);
+for (let i = 0; i < 3; i++) await page.click('#gs-plus');
+const dl = await page.evaluate(() => ({ v: gcDelay(), txt: document.getElementById('gc-cel-dval').textContent, dv: document.getElementById('gs-dval').textContent, def: settings.celebrateDelay, ls: JSON.parse(localStorage.getItem('ahlersArcadeTvDelay') || '{}') }));
+check('overlay fine-tune +1s x3 -> 3 s for this channel (saved per channel, Settings default untouched)', dl.v === 3 && dl.txt === '3s' && dl.dv === 'TV DELAY 3s' && dl.def === 0 && dl.ls.nets && dl.ls.nets['TV|cable'] === 3, JSON.stringify(dl));
+await page.keyboard.press('Escape'); await sleep(150);
+const ovc = await page.evaluate(() => ({ ov: document.getElementById('gc-syncov').classList.contains('open'), gc: gc.open }));
+check('BACK closes the sync overlay, not the Gamecast', !ovc.ov && ovc.gc, JSON.stringify(ovc));
 await page.evaluate(() => { cel.watch['test:990001'].at = 0; }); // the 20 s per-game debounce is not under test here
 games['990001'].h = 3; const tDet = Date.now(); await poll(); s = await st();
 const queuedNow = !s.showing && s.pending === 1;
@@ -143,7 +156,7 @@ await page.evaluate(() => { cel.watch['test:990001'].at = 0; });
 games['990001'].h = 4; await poll(); const q3 = (await st()).pending; await page.evaluate(() => gcClose()); const q4 = (await st()).pending;
 await sleep(3800); s = await st();
 check('closing the Gamecast cancels its queued celebration', q3 === 1 && q4 === 0 && !s.showing, `pending ${q3} -> ${q4}, showing ${s.showing}`);
-for (let i = 0; i < 3; i++) await page.evaluate(() => nudgeCelDelay(-1));
+await page.evaluate(() => { tvd.nets = {}; tvdSave(); }); // back to the 0 s default
 // 4. win
 games['990001'].h = 4; games['990001'].a = 2; await open('990001'); // re-open: fresh baseline
 games['990001'].state = 'post'; games['990001'].name = 'STATUS_FINAL'; games['990001'].detail = 'Final'; await poll();
@@ -237,20 +250,85 @@ check('Power Play alerts switched off in settings -> no banner', (await al()).fi
 await page.evaluate(() => { settings.alertPP = true; });
 const alertRows = await page.evaluate(() => ['alertRedzone', 'alertPP', 'alertStart', 'alertLead', 'alertBig', 'alertInt', 'alertFumble', 'alertDowns', 'alertBlock'].map(k => !!document.getElementById('set-' + k) && defaultSettings[k] === true));
 check('settings has a per-type on/off list (5 alert + 4 turnover types, default ON)', alertRows.every(Boolean), JSON.stringify(alertRows));
-// sync helper: data clock ticks between polls; SYNC NOW twice -> delay
-Object.assign(games['990001'], { clock: '12:34', detail: '2nd 12:34' }); await poll(); Object.assign(games['990001'], { clock: '12:24', detail: '2nd 12:24' }); await poll(); await sleep(500);
-const c1 = await page.evaluate(() => document.getElementById('gc-dclock').textContent); await sleep(1600); const c2 = await page.evaluate(() => document.getElementById('gc-dclock').textContent);
-const secs = t => { const m = /(\d+):(\d\d)/.exec(t || ''); return m ? +m[1] * 60 + +m[2] : null; };
-check('Gamecast shows the feed clock next to the delay (P2 12:2x) and it ticks while running', /^DATA P2 12:2\d$/.test(c1) && secs(c2) < secs(c1), `${c1} -> ${c2}`);
-await page.click('#gc-cel-sync'); await sleep(300);
-const arm = await page.evaluate(() => ({ txt: document.getElementById('gc-cel-sync').textContent, arm: document.getElementById('gc-cel-sync').classList.contains('arm') }));
-await shot('gamecast-sync-helper');
-await sleep(2000); await page.click('#gc-cel-sync'); await sleep(200);
-const syn = await page.evaluate(() => ({ v: settings.celebrateDelay, txt: document.getElementById('gc-cel-sync').textContent, dv: document.getElementById('gc-cel-dval').textContent, ls: JSON.parse(localStorage.getItem('ahlersArcadeSettings') || '{}').celebrateDelay }));
-check('SYNC NOW locks the clock, second press when the TV matches sets the delay (~2 s, saved)', arm.arm && /^PRESS AT TV P2 12:\d\d$/.test(arm.txt) && syn.v >= 2 && syn.v <= 3 && /^SYNCED [23]s$/.test(syn.txt) && syn.dv === 'DELAY ' + syn.v + 's' && syn.ls === syn.v, JSON.stringify({ arm, syn }));
-await page.focus('#gc-cel-dplus'); await page.keyboard.press('ArrowRight'); const fsync = await page.evaluate(() => document.activeElement.id);
-check('SYNC NOW is reachable with the D-pad', fsync === 'gc-cel-sync', fsync);
-await page.evaluate(() => { nudgeCelDelay(-30); gcClose(); });
+// SYNC TO TV: running clock -> target a few seconds ahead; OK when the TV shows it; delay = OK - when ESPN's data got there
+fastOn = true; Object.assign(games['990001'], { run: { from: 12 * 60 + 34, t0: Date.now() }, detail: '2nd' });
+await page.evaluate(() => { gcFastStart(); }); await sleep(6500);
+const fastN = fastLog.length;
+await page.evaluate(() => { document.body.classList.add('nav-active'); document.getElementById('gc-cel-sync').focus(); });
+await page.keyboard.press('Enter'); await sleep(300);
+let ov = await page.evaluate(() => ({ open: gs.open, mode: gs.mode, phase: gs.phase, tgt: gs.target, ask: document.getElementById('gs-ask').textContent, big: document.getElementById('gs-big').textContent, focus: document.activeElement.id, ok: document.getElementById('gs-ok').textContent, espn: gsClockNow(Date.now()) }));
+const nowClk = () => clockOf(games['990001']);
+check('OK on SYNC TO TV opens the guided overlay: "PRESS OK WHEN YOUR TV CLOCK SHOWS m:ss 2ND PERIOD", target ~8 s ahead of ESPN, OK focused',
+  ov.open && ov.mode === 'clock' && /PRESS OK WHEN YOUR TV CLOCK SHOWS/.test(ov.ask) && /^\d+:\d\d2ND PERIOD$/.test(ov.big) && ov.tgt && Math.abs((ov.espn - ov.tgt.sec) - 8) <= 1.5 && ov.focus === 'gs-ok' && /MY TV SHOWS/.test(ov.ok),
+  JSON.stringify({ ...ov, mock: nowClk(), fastReqs: fastN }));
+await shot('gamecast-sync-overlay-clock');
+// ESPN's (mock) clock reaches the target, the "TV" is 5 s behind
+const tgtSec = ov.tgt.sec, tReach = games['990001'].run.t0 + (games['990001'].run.from - tgtSec - 1) * 1000; // floor(): m:ss first shows 1 s before the exact instant
+await sleep(Math.max(0, tReach + 5000 - Date.now()));
+const pre = await page.evaluate(() => ({ reach: gs.reachAt, sub: document.getElementById('gs-sub').textContent, cel: cel.showing, al: cel.alShowing, ae: document.activeElement.id, dis: document.getElementById('gs-ok').disabled, phase: gs.phase }));
+await page.keyboard.press('Enter'); await sleep(300);
+let res = await page.evaluate(() => ({ v: gcDelay(), res: document.getElementById('gs-res').textContent, bar: document.getElementById('gc-cel-dval').textContent, ls: JSON.parse(localStorage.getItem('ahlersArcadeTvDelay')).nets['TV|cable'], focus: document.activeElement.id }));
+check('ESPN reached the target (estimate within 1.5 s of the true time) and OK 5 s later (focus kept while watching the TV) -> "SYNCED · TV is 5s behind · celebrations wait 5s" (saved)',
+  pre.reach && pre.ae === 'gs-ok' && Math.abs(pre.reach - tReach) <= 1500 && /^ESPN hit \d+:\d\d at .* waiting for your TV/.test(pre.sub) && res.v >= 4 && res.v <= 6 && res.res === `SYNCED · TV is ${res.v}s behind · celebrations wait ${res.v}s` && res.bar === res.v + 's' && res.ls === res.v,
+  JSON.stringify({ reachErrMs: pre.reach - tReach, pre, ...res }));
+await shot('gamecast-sync-done');
+// TEST: preview celebration after the delay
+const tt0 = Date.now(); await page.click('#gs-test'); await sleep(200);
+const tl = await page.evaluate(() => document.getElementById('gs-test').textContent);
+await page.waitForFunction(() => cel.showing, { timeout: 9000 }).catch(() => {});
+const tFire = Date.now() - tt0, tc = await page.evaluate(() => ({ showing: cel.showing, text: cel.last && cel.last.text }));
+check('TEST counts down and fires a preview celebration after the delay', /^TEST IN \ds$/.test(tl) && tc.showing && tc.text === 'SYNC TEST!' && tFire >= res.v * 1000 - 300 && tFire <= res.v * 1000 + 900, JSON.stringify({ tl, tFire, ...tc }));
+await page.evaluate(() => { celHide && celHide(true); }).catch(() => {}); await page.evaluate(() => { cel.queue = []; cel.pending = []; if (cel.showing) { try { celHide(true); } catch (e) {} } });
+await sleep(300);
+// TV ahead: OK before ESPN gets there -> 0 s
+await page.evaluate(() => gsStart()); await sleep(200);
+const tg2 = await page.evaluate(() => gs.target && gs.target.sec);
+await page.evaluate(() => document.getElementById('gs-ok').click()); await sleep(200);
+const ah1 = await page.evaluate(() => ({ sub: document.getElementById('gs-sub').textContent, dis: document.getElementById('gs-ok').disabled }));
+await page.waitForFunction(() => gs.phase === 'done', { timeout: 15000 }).catch(() => {});
+const ah = await page.evaluate(() => ({ v: gcDelay(), res: document.getElementById('gs-res').textContent }));
+check('TV ahead (OK before ESPN reaches it) -> waits for ESPN, then delay 0 and "TV is Ns AHEAD"', tg2 && /waiting for ESPN’s clock to pass/.test(ah1.sub) && ah.v === 0 && /^SYNCED · TV is \d+s AHEAD of ESPN · celebrations show right away$/.test(ah.res), JSON.stringify({ ah1, ...ah }));
+// per-channel memory: STREAMING has its own value; CABLE keeps its own
+await page.evaluate(() => { gcDelaySet(7); }); await page.click('#gs-src'); await sleep(150);
+const ch = await page.evaluate(() => ({ v: gcDelay(), src: document.getElementById('gs-src').textContent, chan: document.getElementById('gs-chan').textContent }));
+await page.click('#gs-src'); await sleep(150); const ch2 = await page.evaluate(() => gcDelay());
+check('per channel: CABLE 7 s, STREAMING falls back to the default (0 s), back to CABLE -> 7 s', ch.v === 0 && ch.src === 'STREAMING' && /STREAMING/.test(ch.chan) && ch2 === 7, JSON.stringify({ ...ch, ch2 }));
+// stopped clock
+await page.evaluate(() => { GC_CLOCK_STALL_MS = 7000; }); // live NHL data moves every ~5-20 s, so 45 s by default
+games['990001'].clock = nowClk(); games['990001'].run = null; await sleep(9000);
+await page.evaluate(() => gsStart()); await sleep(300);
+const stp = await page.evaluate(() => ({ phase: gs.phase, big: document.getElementById('gs-big').textContent, sub: document.getElementById('gs-sub').textContent, ok: document.getElementById('gs-ok').disabled }));
+check('clock stopped -> "CLOCK STOPPED", offers to wait or USE A PLAY INSTEAD, OK disabled', stp.phase === 'stopped' && stp.big === 'CLOCK STOPPED' && /USE A PLAY INSTEAD/.test(stp.sub) && stp.ok, JSON.stringify(stp));
+await shot('gamecast-sync-stopped');
+// event fallback: USE A PLAY INSTEAD -> next score/play ESPN sees; OK when the TV shows it
+await page.click('#gs-mode'); await sleep(300);
+const ev0 = await page.evaluate(() => ({ mode: gs.mode, big: document.getElementById('gs-big').textContent }));
+const lo0 = await page.evaluate(() => gc.lastOk);
+await page.evaluate(() => { settings.celebrate = false; }); // the goal itself must not celebrate mid-test
+games['990001'].h = 3; const tGoal = Date.now();
+games['990001'].plays = (games['990001'].plays || []).concat([{ id: 'g9', type: { text: 'Goal' }, scoringPlay: true, team: { id: '12' }, text: 'Seth Jarvis Goal (4) Snap Shot' }]);
+await page.waitForFunction(() => gs.ev, { timeout: 6000 }).catch(() => {});
+const ev1 = await page.evaluate(() => ({ big: document.getElementById('gs-big').textContent, sub: document.getElementById('gs-sub').textContent, at: gs.ev && gs.ev.at, trig: gc.trigAt, lastOk: gc.lastOk }));
+await page.waitForFunction(p => gc.lastOk !== p, { timeout: 4000 }, lo0).catch(() => {});
+const sumAt = await page.evaluate(() => gc.lastOk);
+check('play mode (hockey: the next score), then shows what ESPN saw ("CAR SCORES · NYR n–3 CAR", time) within ~2 s; the change pulls the summary at once',
+  ev0.mode === 'event' && /WAITING FOR THE NEXT SCORE/.test(ev0.big) && ev1.big === `CAR SCORES · NYR ${games['990001'].a}–3 CAR` && /^ESPN saw it at \d+:\d\d:\d\d [AP]M/.test(ev1.sub) && ev1.at - tGoal <= 2600 && sumAt - ev1.trig < 1500 && sumAt > lo0,
+  JSON.stringify({ ev0, ...ev1, detectMs: ev1.at - tGoal, summaryAfterMs: sumAt - ev1.trig }));
+await shot('gamecast-sync-overlay-play');
+await sleep(3000); await page.evaluate(() => document.getElementById('gs-ok').click()); await sleep(200);
+const evr = await page.evaluate(() => ({ v: gcDelay(), res: document.getElementById('gs-res').textContent }));
+check('OK 3 s after ESPN saw the goal -> 3 s', evr.v === 3 && /TV is 3s behind · celebrations wait 3s/.test(evr.res), JSON.stringify(evr));
+// D-pad inside the overlay and BACK
+await page.evaluate(() => document.getElementById('gs-test').focus()); await page.keyboard.press('ArrowRight'); await sleep(100);
+const fr = await page.evaluate(() => document.activeElement.id);
+await page.keyboard.press('Escape'); await sleep(150);
+const after = await page.evaluate(() => ({ ov: gs.open, gc: gc.open, focus: document.activeElement.id, bar: document.getElementById('gc-cel-dval').textContent }));
+check('overlay is D-pad navigable (TEST -> source) and BACK returns focus to SYNC TO TV with the new delay on it', fr === 'gs-src' && !after.ov && after.gc && after.focus === 'gc-cel-sync' && after.bar === '3s', JSON.stringify({ fr, ...after }));
+await sleep(400); await shot('gamecast-after-sync');
+const fl = await page.evaluate(() => ({ n: gc.f && gc.f.n, hits: gc.f && gc.f.hits, upd: document.getElementById('gc-updated').textContent }));
+check('UPDATED shows the 2 s loop ("· LIVE 2s")', /UPDATED .* · LIVE 2s/.test(fl.upd), JSON.stringify(fl));
+fastOn = false;
+await page.evaluate(() => { GC_CLOCK_STALL_MS = 45000; settings.celebrate = true; gcDelaySet(0); tvd.nets = {}; tvdSave(); gcClose(); });
 // 6. settings delay with D-pad LEFT/RIGHT
 await page.evaluate(() => { document.body.classList.add('nav-active'); toggleSettings(); }); await sleep(200); // settings auto-focuses its first item
 await page.evaluate(() => { const d = document.getElementById('cel-delay-display'); d.scrollIntoView({ block: 'center' }); d.focus(); }); await sleep(100);
@@ -258,11 +336,11 @@ await page.keyboard.press('ArrowRight'); await page.keyboard.press('ArrowRight')
 const sd = await page.evaluate(() => ({ open: navIsSettingsOpen(), cel: cel.showing, v: settings.celebrateDelay, txt: document.getElementById('cel-delay-display').textContent, focus: document.activeElement.id, master: document.getElementById('set-celebrate').checked }));
 await page.evaluate(() => document.getElementById('set-alertRedzone').scrollIntoView({ block: 'center' })); await sleep(100);
 await shot('settings-celebration');
-for (let i = 0; i < 40; i++) await page.keyboard.press('ArrowRight');
+for (let i = 0; i < 70; i++) await page.keyboard.press('ArrowRight');
 const vmax = await page.evaluate(() => settings.celebrateDelay);
-for (let i = 0; i < 40; i++) await page.keyboard.press('ArrowLeft');
+for (let i = 0; i < 70; i++) await page.keyboard.press('ArrowLeft');
 const vmin = await page.evaluate(() => settings.celebrateDelay);
-check('settings: D-pad ◀/▶ on the delay adjusts 1 s steps within 0-30 s; master toggle defaults ON', sd.v === 1 && sd.txt === '1s' && sd.focus === 'cel-delay-display' && vmax === 30 && vmin === 0 && sd.master, JSON.stringify({ ...sd, vmax, vmin }));
+check('settings: D-pad ◀/▶ on the default delay adjusts 1 s steps within 0-60 s; master toggle defaults ON', sd.v === 1 && sd.txt === '1s' && sd.focus === 'cel-delay-display' && vmax === 60 && vmin === 0 && sd.master, JSON.stringify({ ...sd, vmax, vmin }));
 await page.evaluate(() => toggleSettings());
 // 7. preview hooks
 await page.evaluate(() => arcadeCelebrate('test')); s = await st(); const q = await page.evaluate(() => cel.queue.length);
