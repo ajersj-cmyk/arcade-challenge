@@ -72,6 +72,15 @@ reference finals/upcoming events (NFL, CFB, World Cup, MLB, EPL), screenshots ea
 "never more than one request in flight", the RECONNECTING state during an induced outage (and recovery), auto-close of a
 finished game, and a clean stop on close.
 
+`node tools/test-rotation.mjs [preview.html] [--loops=3] [--speed=8]` emulates the TV app (`window.ArcadeTV`, 1280x720), turns
+every slide on, and walks the real rotation several times with the page's own timers sped up 8x (real network data). It logs
+each slide's actual on-screen time and fails if any slide is cut short (< 5 s), if Trivia isn't ~20 s, or if the slide after
+Trivia doesn't get its full time; then repeats in NFL sport mode. ~7 min. (Before the fix it showed `leaders 1.4s` after trivia.)
+
+`node tools/test-props.mjs [preview.html]` checks TODAY'S HOT PROPS with the real `props.json` at 1280x720 + 1920x1080
+(cards, row layout, ends above the ticker), LIVE LEADERS gone, sport-mode filtering/skip, league-toggle filtering, the settings
+toggle, the empty state, and the Gamecast WIN PROBABILITY panel (a real ESPN final served as in-progress; hidden with no data).
+
 `node tools/test-reliability.mjs [preview.html]` checks hung-fetch abort, trivia no longer skips leaders, the
 rotation watchdog helpers, stale scoreboard cache + offline pill, and soft-reload skipped when `window.ArcadeTV` exists.
 
@@ -129,7 +138,8 @@ It's a single self-contained HTML page (inline CSS + JS, no build step) made for
 1. Draws the background (CSS gradients + a 3-D "cyber grid"), a big clock top-left, and a settings gear top-right.
 2. Shows skeleton placeholders, fetches weather and one trivia question, then **pulls 12 ESPN scoreboards one after
    another** (NHL, NFL, NBA, MLB, CFB, men's CBB, college baseball, World Cup, EPL, UCL, ATP, WTA). From those it
-   builds every live-game list: ticker, live cards, leaders/"props", TV guide, odds, My Squad, and marquee matchups.
+   builds every live-game list: ticker, live cards, leaders, TV guide, odds, My Squad, and marquee matchups. `props.json`
+   (hot props) is preloaded at start and re-read every 20 min.
 3. Starts the **slide rotation**. Each slide shows full-screen above a **bottom ticker** (22vh) that scrolls forever.
    Long slides auto-scroll vertically, then advance.
 4. Refreshes the ESPN scoreboards **every 5 minutes** and the weather **every 15 minutes**. Some slides (PGA, UFC,
@@ -138,15 +148,17 @@ It's a single self-contained HTML page (inline CSS + JS, no build step) made for
 
 ### Slide rotation order (`nextSlide()`)
 
-`live → props → mySquad → trivia → leaders → pga → ufc → command → soccerSlide → tvGuide → news → odds → futures →
+`live → hotProps → mySquad → trivia → leaders → pga → ufc → command → soccerSlide → tvGuide → news → odds → futures →
 nflFutures → nflAwards → fantasy → cfbFutures → nhlFutures → rankings → nfl → nba → nhl → mlb` → (loop). (`fantasy` is spliced in
 right after `nflAwards` on the line below `ARCADE_SCREENS`.) A **sport mode** replaces this list for 12 h (§3a). The order lives in the global
-`ARCADE_SCREENS` array. `live` and `props` always show. The rest can be switched off in settings.
+`ARCADE_SCREENS` array. `live` always shows. The rest (including `hotProps`) can be switched off in settings.
+The old `props` LIVE LEADERS slide (ESPN live stat leaders dressed up as props) was **removed** in PR flynn/props-fixes;
+`leaders` (TOP PERFORMERS) and the fantasy slide's LIVE PPR card are unchanged.
 
 | Slide (DOM id) | Title | Data | Timing |
 |---|---|---|---|
 | `live-game-screen` | LIVE ACTION | in-progress games from the ticker fetch; MLB count/bases/outs, football down & spot, win-prob bar | scroll rule* (base 15 s), "NO LIVE GAMES" ≥16 s |
-| `props-screen` | LIVE LEADERS | top stat leaders (up to 10) from live/final games | scroll rule |
+| `hotprops-screen` | TODAY'S HOT PROPS | `props.json` (§4c): player props for today's games (ET date, started < 4 h ago), HOT (biggest moves since open) first, max 24 cards, 2 columns; headshot, league, matchup + time, line/odds, DK/FD/CZR, move. Ticker league toggles filter it; in a sport mode only that sport (skipped if none) | scroll rule (base 16 s); empty state 6 s |
 | `mysquad-screen` | MY SQUAD DASHBOARD | games matching `mySquadTeams` (default "Carolina Hurricanes, Duke, ECU, East Carolina") | scroll rule |
 | `trivia-screen` | TRIVIA BREAK! | OpenTDB sports question; 15 s countdown bar, then 5 s answer reveal; clock hidden | 20 s |
 | `leaders-screen` | DAILY TOP PERFORMERS | first 8 leaders | scroll rule / 6 s if none |
@@ -175,9 +187,9 @@ Buttons **OFF · COLLEGE FOOTBALL · COLLEGE BASKETBALL · NFL** at the top of t
   soft reload and the TV app. **The user's settings are never changed by a mode**; `snap` is a copy of the slide + league
   toggles (`ARCADE_SCREENS` keys + `show*`) taken when the first mode starts (switching modes keeps it).
 - **Rotation:** `arcadeScreens()` returns the mode's list (`SPORT_MODES` in index.html), ignoring the slide toggles:
-  NFL `live props fantasy odds nflFutures nflAwards news tvGuide nfl`; CFB `live props mySquad odds cfbFutures rankings news tvGuide`;
-  CBB `live props mySquad odds rankings futures news tvGuide`. `slideOn(k)` / `navEnabled` / navigator / HUD / ◀▶ all use it.
-  Data slides with nothing to show (props, odds, TV guide, My Squad) are skipped in a mode (`smSlideEmpty`); `live` always shows,
+  NFL `live hotProps fantasy odds nflFutures nflAwards news tvGuide nfl`; CFB `live hotProps mySquad odds cfbFutures rankings news tvGuide`;
+  CBB `live hotProps mySquad odds rankings futures news tvGuide`. `slideOn(k)` / `navEnabled` / navigator / HUD / ◀▶ all use it.
+  Data slides with nothing to show (hotProps for that sport, odds, TV guide, My Squad) are skipped in a mode (`smSlideEmpty`); `live` always shows,
   so the rotation is never empty.
 - **Data:** all 12 scoreboards are still fetched (the mode's league even if its ticker toggle is off), so ★ celebrations and the
   Gamecast registry keep every league, but ticker, live cards, leaders, TV guide, odds, My Squad and the marquee only get the mode's
@@ -267,7 +279,24 @@ None of them need an API key, and **no keys or tokens are embedded**. The code a
 3. Shape: `{ generatedAt, season, week, scoring, source, pickupSource, teams{proTeamId:abbr}, games{proTeamId:{opp,home,date,eventId}},
    positions{QB,RB,WR,TE,K,DST:[{id,name,first,last,pos,team,opp,kick,eventId,proj,own,chg,inj}]}, pickups[…+adds], errors }`.
 
-Local assets: `index.html` references **no** local files apart from `futures.json` and `fantasy.json`. `background.mp4` (1.3 MB) and `header.PNG` (710 KB) exist
+### 4c. Hot props data pipeline (TODAY'S HOT PROPS)
+1. **Every ~3 h** (`.github/workflows/props.yml`, 9:07 AM / 12:07 / 3:07 / 6:07 / 9:07 PM EDT + manual): `node scripts/fetch-props.mjs props.json`,
+   commits only if changed. Action Network's public web API (no key; the one actionnetwork.com's props pages use). Its CORS only
+   reflects actionnetwork origins and payloads are 0.3–2 MB per market/day, so the TV never calls it directly.
+   - `GET api.actionnetwork.com/web/v2/scoreboard/{nfl|ncaaf|nba|ncaab|nhl|mlb}?period=game&date=YYYYMMDD` (games, teams, colors, logos)
+   - `GET …/web/v2/scoreboard/{lg}/markets?customPickTypes=core_bet_type_{N}_{name}&date=YYYYMMDD&bookIds=15,30,49,68,69`
+     → `{ markets: {bookId: {eventId: {type: [rows]}}}, players: [{id, full_name, position, image, team_id}] }`.
+     Books: 15 consensus, 30 open, 68 DraftKings, 69 FanDuel, 49 Caesars. Market ids: NFL/CFB 62 anytime TD, 9 pass yds, 12 rush yds,
+     16 rec yds; NBA/CBB 27 pts, 23 reb, 26 ast, 21 threes; NHL 313 anytime goal, 31 shots, 280 points; MLB 33 HR, 36 hits, 37 Ks.
+     `/web/v2/games/{id}/props/types` lists a game's markets. Endpoints were found in actionnetwork.com's Next.js bundles (undocumented).
+   - Main line = most common DK/FD/CZR value (alt lines dropped); move = open (book 30) → now (implied-prob or line change);
+     top 5 moves per league are `hot`. "Most bet" isn't available (bet_info is zeros publicly). Today ET + tomorrow, now−4 h … +36 h.
+   - Keeps the last file (exit 1) if every league fails. ~40 KB.
+2. **Browser** (`hpLoad`): `props.json?t=<20-min bucket>` → `ahlersProps1` localStorage fallback. `hpList()` filters/sorts; `showHotProps(gen)`.
+3. Shape: `{ updated, source, leagues: { nfl|ncaaf|nba|ncaab|nhl|mlb: { label, espn, games: [{id, start, status, home/away: {id, abbr, name, logo, color}}],
+   props: [{lg, mk, kind: 'ou'|'yes', game, side, player, short, pos, img, line, odds, books: {DK|FD|CZR: {o, v}}, move, moveTxt, hot?}] } } }`.
+
+Local assets: `index.html` references **no** local files apart from `futures.json`, `fantasy.json` and `props.json`. `background.mp4` (1.3 MB) and `header.PNG` (710 KB) exist
 but aren't used: there's no `<video>` element, and the background is pure CSS.
 
 ---
@@ -352,8 +381,10 @@ next slide shows right away.
   - NBA: FG%
   - soccer: possession
 
-  Below that: a linescore (MLB adds R/H/E), win probability with a sparkline (or the matchup predictor and line before
-  kickoff), **sport trackers** (NFL/CFB horizontal field with end zones/logos, ball, line-to-gain, possession arrow, red-zone
+  Below that: a linescore (MLB adds R/H/E), a **WIN PROBABILITY** panel (redesigned in flynn/props-fixes: headline
+  "CANES 72% CHANCE TO WIN" in the favorite's color, both team logos with big %s, a two-color bar in team colors, and
+  "▲ TEAM +8% LAST 10 PLAYS" trend; pregame it uses ESPN's matchup predictor, labelled ESPN PREGAME; no ESPN win probability →
+  the panel is hidden, pregame line only shows as GAME LINE; the old unlabeled sparkline was dropped), **sport trackers** (NFL/CFB horizontal field with end zones/logos, ball, line-to-gain, possession arrow, red-zone
   shading and drive path; MLB strike-zone box with numbered pitch dots colored ball/strike/in-play, pitch list with type+mph,
   count, outs and base diamond — both update on the 10 s poll, SVG/simple DOM, degrade if fields missing), the last 6 plays,
   every team stat as comparison bars, top performers, and box-score tables (NBA/NFL/NHL/MLB from `boxscore.players`, soccer
@@ -469,7 +500,8 @@ next slide shows right away.
 - [ ] Clock top-left (`h:mm AM/PM`, local time), hidden only during trivia
 - [ ] Settings gear top-right with focus outline. `s` / ContextMenu / Menu / Settings keys toggle the modal. Enter on the focused gear works.
 - [ ] Every settings control persists to `localStorage.ahlersArcadeSettings` and takes effect (toggles, favourite teams, marquee, speed)
-- [ ] Slide rotation order and the skip-if-disabled logic. `live` and `props` always show.
+- [ ] Slide rotation order and the skip-if-disabled logic. `live` always shows. No slide cut short (`tools/test-rotation.mjs`).
+- [ ] Every "advance later" uses `slideTimer = slideTimeout(fn, ms)` (cancels the previous timer, gen-guarded), never a raw `setTimeout` into `slideTimer`
 - [ ] Each slide renders its data or its empty-state message ("NO LIVE GAMES", "NO UFC CARD", "… FEED DOWN", etc.) and advances
 - [ ] Auto vertical scroll of long slides (hold 4 s / 22 px/s / hold 5 s) and the min 16 s dwell
 - [ ] Live cards: MLB count/bases/outs, football down & spot, win-probability bar, records for upcoming games, lines/TV
@@ -503,6 +535,7 @@ next slide shows right away.
 | 1 | ✅ *Fixed in PR #2 (no longer called; names come from ESPN core $refs).* **ESPN `/teams?limit=400` sends no `Access-Control-Allow-Origin`** (200 to curl, but browsers block it) | 5 console CORS errors per futures build (once / 24 h on the TV). `loadTeamMap()` falls back to the hard-coded NFL/NBA/MLB/NHL maps. **CFB has no fallback, so "CFB TITLE" never renders.** |
 | 2 | ✅ *Fixed in PR #2.* Futures market matching used `name` and `new Date().getFullYear()` | NBA title also missing (on 2026-10-07 only SUPER BOWL, WORLD SERIES, STANLEY CUP rendered). ESPN files upcoming NBA/NHL seasons under next year. |
 | 3 | ~~**Rotation skips a slide around trivia.**~~ **FIXED** (PR reliability): `showTrivia()` increments `rotationStep` itself, then `nextSlide()` increments again | After a normal trivia slide, **leaders** is skipped. When trivia isn't loaded yet, leaders shows but **PGA** is skipped. (The harness saw PGA skipped when OpenTDB returned 429.) |
+| 3b | ~~**Slide after Trivia flashes for ~1.5 s (TV, Oct 2026).**~~ **FIXED** in flynn/props-fixes | Trivia sets no slide timer until its 15 s reveal, so `nextSlide()`'s 1.5 s safety net scheduled a 20 s advance; the reveal then *overwrote* `slideTimer` with its 5 s timer without cancelling it. Trivia ended at 20 s, the orphan fired at 21.5 s, cutting the next slide (leaders) to ~1.5 s. Fix: `slideTimeout()` (cancel-then-set + slide-generation guard) for all 27 slide timers, safety net gen-guarded and skipped while trivia's reveal is pending. Regression: `tools/test-rotation.mjs`. |
 | 4 | ~~Hung-fetch freezes rotation~~ | **Fixed** in reliability: `arcadeFetch` 9 s AbortController + 90 s slide watchdog |
 | 5 | ✅ *Fixed in PR #2.* Gear click/tap double-toggles (§5) | The gear only works from the keyboard/remote |
 | 6 | ✅ *Fixed in PR #2 (D-pad navigation).* No Back/Escape/arrow handling (§5) | Hard to drive with a D-pad |

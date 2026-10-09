@@ -85,6 +85,26 @@
         .fut-card.ff-card { padding: 1.1vh 1.6vh 0.4vh; }
         .fut-card.ff-card .division-header { font-size: 2.5vh; line-height: 1.1; margin-bottom: 0.2vh; padding-bottom: 0.5vh; }
         #fantasy-viewport { height: 59vh; } /* ends at the ticker's top edge (78vh) */
+        #hotprops-viewport { height: 59vh; width: 95%; }
+        .hp-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.4vh 1.2vw; width: 100%; }
+        .hp-card.glass-card { display: flex; flex-direction: row; align-items: center; gap: 1.4vw; padding: 1.2vh 1.2vw; border-left: 0.7vh solid var(--accent-color); min-width: 0; }
+        .hp-card.glass-card.hot { box-shadow: 0 0 1.6vh rgba(255, 120, 0, 0.55); }
+        .hp-img { width: 11vh; height: 11vh; border-radius: 50%; object-fit: cover; object-position: top; background: rgba(255,255,255,0.08); flex-shrink: 0; }
+        .hp-body { flex: 1; min-width: 0; }
+        .hp-top { display: flex; align-items: center; gap: 0.8vw; font-size: 1.8vh; font-weight: 800; color: rgba(255,255,255,0.75); white-space: nowrap; overflow: hidden; }
+        .hp-lg { background: var(--accent-color); color: #000; font-weight: 900; padding: 0 0.6vw; border-radius: 0.5vh; }
+        .hp-hot { margin-left: auto; color: #ff9a1f; font-weight: 900; }
+        .hp-name { font-size: 3vh; font-weight: 900; color: #fff; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.25; }
+        .hp-pos { font-size: 1.8vh; color: rgba(255,255,255,0.6); font-weight: 800; }
+        .hp-line { display: flex; align-items: baseline; justify-content: space-between; gap: 1vw; }
+        .hp-mkt { font-size: 2.6vh; font-weight: 900; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .hp-odds { font-size: 3.2vh; font-weight: 900; color: #fff; flex-shrink: 0; }
+        .hp-books { display: flex; flex-wrap: wrap; gap: 0.3vh 0.7vw; font-size: 1.7vh; color: rgba(255,255,255,0.85); margin-top: 0.3vh; }
+        .hp-book b { color: var(--accent-color); }
+        .hp-move { color: #ff9a1f; font-weight: 800; margin-left: auto; white-space: nowrap; }
+        .hp-move i { font-style: normal; opacity: 0.6; font-size: 1.4vh; }
+        .hp-empty { grid-column: 1 / -1; text-align: center; font-size: 4vh; font-weight: 900; padding-top: 12vh; color: #fff; }
+        .hp-empty small { display: block; font-size: 2.2vh; opacity: 0.7; margin-top: 2vh; }
         .ff-row { height: 5.4vh; padding: 0; box-sizing: border-box; }
         .ff-row .fut-name { line-height: 1.05; }
         .ff-pts small { line-height: 1.1; }
@@ -182,14 +202,6 @@
         .trend-streak { font-size: 3vh; font-weight: 900; letter-spacing: 0.2vw; }
 
         /* RESTORED MODULE STYLES */
-        .prop-card { padding: 3vh; display: flex; align-items: center; gap: 3vh; }
-        .prop-headshot { width: 14vh; height: 14vh; border-radius: 50%; object-fit: cover; object-position: top; background: rgba(0,0,0,0.5); flex-shrink: 0; }
-        .prop-details { flex: 1; display: flex; flex-direction: column; justify-content: center; }
-        .prop-name { font-size: 4.5vh; font-weight: 900; text-transform: uppercase; margin-bottom: 0.5vh; line-height: 1; }
-        .prop-game { font-size: 2.5vh; font-weight: 900; text-transform: uppercase; letter-spacing: 0.1vw; }
-        .prop-line-container { display: flex; justify-content: space-between; align-items: center; background: rgba(0, 0, 0, 0.5); padding: 1.5vh 2.5vh; border-radius: 1vh; border: 1px solid rgba(255, 255, 255, 0.15); margin-top: 1.5vh; }
-        .prop-line { font-size: 3vh; font-weight: 900; line-height: 1.2; flex: 1; padding-right: 2vh; word-wrap: break-word; }
-        .prop-odds { font-size: 3.5vh; font-weight: 900; flex-shrink: 0; }
 
         .rank-row { display: flex; align-items: center; padding: 2vh 2.5vh; }
         .rank-num { font-size: 6.8vh; font-weight: 900; width: 12vh; text-align: center; }
@@ -357,8 +369,17 @@
         .gc-ls-logo { width: 3vh; height: 3vh; object-fit: contain; vertical-align: middle; margin-right: 0.6vw; }
         .gc-panel-title, .gc-sub-title { font-size: 2vh; font-weight: 900; letter-spacing: 0.2vw; color: var(--accent-color); margin-bottom: 0.6vh; }
         .gc-sub-title { margin: 1vh 0 0.6vh; border-bottom: 1px dashed rgba(255,255,255,0.2); padding-bottom: 0.4vh; }
-        .gc-wp-row { display: flex; justify-content: space-between; font-size: 2.3vh; font-weight: 900; }
-        .gc-wp-bar { display: flex; height: 1.6vh; border-radius: 1vh; overflow: hidden; margin: 0.5vh 0; background: #222; }
+        .gc-wp-head { font-size: 2.3vh; font-weight: 900; color: #fff; margin-bottom: 0.6vh; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .gc-wp-teams { display: flex; justify-content: space-between; align-items: center; }
+        .gc-wp-side { display: flex; align-items: center; gap: 0.6vw; }
+        .gc-wp-side.h { flex-direction: row-reverse; text-align: right; }
+        .gc-wp-side img { width: 4.6vh; height: 4.6vh; object-fit: contain; }
+        .gc-wp-pct { font-size: 3.8vh; font-weight: 900; line-height: 1; }
+        .gc-wp-nm { font-size: 1.6vh; font-weight: 900; color: rgba(255,255,255,0.8); letter-spacing: 0.1vw; }
+        .gc-wp-trend { font-size: 1.8vh; font-weight: 900; margin-top: 0.3vh; }
+        .gc-wp-trend span { color: rgba(255,255,255,0.55); font-weight: 800; }
+        #gc-wp:empty { display: none; }
+        .gc-wp-bar { display: flex; height: 2.2vh; border-radius: 1.1vh; overflow: hidden; margin: 0.6vh 0 0.3vh; background: #222; border: 1px solid rgba(255,255,255,0.25); }
         .gc-wp-bar > div { height: 100%; transition: width 0.8s ease; }
         .gc-spark { width: 100%; height: 5.5vh; display: block; }
         .gc-spark-legend { display: flex; justify-content: space-between; font-size: 1.5vh; color: rgba(255,255,255,0.5); }
@@ -656,10 +677,7 @@
             <div class="content-viewport" id="live-viewport"><div class="grid-track" id="live-grid-track"></div></div>
         </div>
 
-        <div id="props-screen" class="slide-screen">
-            <div class="screen-header neon-text-cycle">LIVE LEADERS</div>
-            <div class="content-viewport" id="props-viewport"><div class="grid-track" id="props-grid-track"></div></div>
-        </div>
+        <div id="hotprops-screen" class="slide-screen"><div class="screen-header neon-text-cycle">&#128293; TODAY'S HOT PROPS</div><div class="fut-meta neon-text-cycle" id="hotprops-meta"></div><div class="content-viewport fut-viewport" id="hotprops-viewport"><div class="hp-grid" id="hotprops-track"></div></div></div>
 
         <div id="mysquad-screen" class="slide-screen">
             <div class="screen-header neon-text-cycle">MY SQUAD DASHBOARD</div>
@@ -828,9 +846,10 @@
                         <input type="text" id="set-marqueeMessage" style="width: 100%; padding: 1vh; border-radius: 0.5vh; background: rgba(0,0,0,0.5); color: white; border: 1px solid #ff007f; font-family: 'Inter', sans-serif;" onchange="updateSettings()">
                     </div>
                     <div style="margin-bottom: 2vh;">
-                        <div style="font-size: 1.8vh; color: #39ff14; margin-bottom: 0.5vh; text-transform: uppercase;">Props slide uses ESPN live leaders (no book key)</div>
+                        <div style="font-size: 1.8vh; color: #39ff14; margin-bottom: 0.5vh; text-transform: uppercase;">Hot Props: Action Network odds (DK / FD / CZR), refreshed every few hours</div>
                     </div>
                     
+                    <div class="toggle-row"><span>Today's Hot Props</span> <input type="checkbox" id="set-hotProps" onchange="updateSettings()"></div>
                     <div class="toggle-row"><span>My Squad Slide</span> <input type="checkbox" id="set-mySquad" onchange="updateSettings()"></div>
                     <div class="toggle-row"><span>Live Trivia Game</span> <input type="checkbox" id="set-trivia" onchange="updateSettings()"></div>
                     <div class="toggle-row"><span>Top Stats Leaders</span> <input type="checkbox" id="set-leaders" onchange="updateSettings()"></div>
@@ -991,6 +1010,13 @@
             }, SLIDE_MAX_MS);
         }
         function clearSlideTimers() { clearTimeout(slideTimer); slideTimer = null; clearTimeout(slideWatchdog); slideWatchdog = null; }
+        // Every "advance the rotation later" goes through here: it cancels the timer it replaces (never two pending advances)
+        // and only fires if the same slide is still up. Before, Trivia's 1.5 s safety-net timer (Trivia has no slide timer
+        // until its 15 s reveal) was overwritten, not cancelled, by the reveal's 5 s timer, so it fired 1.5 s into the NEXT slide.
+        function slideTimeout(fn, ms) {
+            clearTimeout(slideTimer); var g = slideGen, id = setTimeout(function() { if (slideTimer === id) slideTimer = null; if (g !== slideGen) return; fn(); }, ms);
+            return id;
+        }
         var wakeLock = null;
         async function requestWakeLock() {
             try { if (!navigator.wakeLock || !navigator.wakeLock.request) return; wakeLock = await navigator.wakeLock.request('screen'); wakeLock.addEventListener('release', function() { wakeLock = null; }); }
@@ -1003,7 +1029,7 @@
             setTimeout(function tick() { if (gc && gc.open) { setTimeout(tick, 60000); return; } location.reload(); }, msUntil4());
         }
 
-        var globalLiveGamesData = [], globalRawGames = [], globalPropsData = [];
+        var globalLiveGamesData = [], globalRawGames = [];
         var globalTVGuideData = [], globalLeadersData = [], newMarqueeGames = [];
         var currentTrivia = null;
 
@@ -1011,7 +1037,7 @@
         var currentThemeIndex = 0;
 
         var defaultSettings = { 
-            nfl:true, nba:true, nhl:true, mlb:true, rankings:true, odds:true, futures:true, nflFutures:true, nflAwards:true, fantasy:true, cfbFutures:true, nhlFutures:true, tvGuide:true, news:true, mySquad:true, ufc:true, command:true, leaders:true, pga:true, soccerSlide:true, trivia:true,
+            nfl:true, nba:true, nhl:true, mlb:true, rankings:true, odds:true, futures:true, nflFutures:true, nflAwards:true, fantasy:true, cfbFutures:true, nhlFutures:true, tvGuide:true, news:true, mySquad:true, ufc:true, command:true, leaders:true, pga:true, soccerSlide:true, trivia:true, hotProps:true,
             showWorldCup:true, showEPL:true, showUCL:true, showATP:true, showWTA:true, showNFL:true, showNBA:true, showNHL:true, showMLB:true, showCFB:true, showCBB:true, showCLB:true,
             cbb50:true, cfb75:true, clb50:true, apiBase:"https://site.api.espn.com/apis",
             mySquadTeams: "Carolina Hurricanes, Duke, ECU, East Carolina",
@@ -1031,7 +1057,7 @@
                 delete settings.oddsApiKey;
                 try { localStorage.setItem('ahlersArcadeSettings', JSON.stringify(settings)); } catch(e2) {}
             }
-            try { localStorage.removeItem('ahlersPropsCache'); } catch(e3) {}
+            try { localStorage.removeItem('ahlersPropsCache'); } catch(e3) {} // old (pre-2026) props cache key
             try { localStorage.removeItem('ahlersFutures3'); } catch(e4) {}
         } catch(e) {}
 
@@ -1279,21 +1305,6 @@
             return parts.join('   ');
         }
 
-        function buildPropsFromLeaders(espnLeaders) {
-            var list = espnLeaders || [];
-            globalPropsData = list.slice(0, 10).map(function(l) {
-                return {
-                    name: l.name || 'PLAYER',
-                    statDesc: (l.statDesc || 'STAT').toUpperCase(),
-                    line: l.value || '',
-                    odds: '',
-                    game: ((l.teamCode || '') + (l.oppCode ? ' vs ' + l.oppCode : '') + (l.league ? '  •  ' + l.league : '')).trim(),
-                    headshot: l.headshot || '',
-                    teamLogo: l.teamLogo || 'https://a.espncdn.com/combiner/i?img=/i/teamlogos/default-team-logo-500.png'
-                };
-            });
-        }
-
         function applyScroll(viewportId, trackId, baseDelay) {
             baseDelay = baseDelay || 18000;
             clearTimeout(slideTimer);
@@ -1301,7 +1312,7 @@
                 var vp = document.getElementById(viewportId);
                 var track = document.getElementById(trackId);
                 if (!track || !vp) {
-                    slideTimer = setTimeout(nextSlide, baseDelay);
+                    slideTimer = slideTimeout(nextSlide, baseDelay);
                     return;
                 }
                 var vH = vp.clientHeight;
@@ -1322,9 +1333,9 @@
                     track.style.setProperty('--scroll-end', '-' + sD + 'px');
                     void track.offsetWidth;
                     track.style.animation = 'scrollVerticalOnePass ' + duration + 's linear ' + (holdTop / 1000) + 's forwards';
-                    slideTimer = setTimeout(nextSlide, holdTop + (duration * 1000) + holdBot);
+                    slideTimer = slideTimeout(nextSlide, holdTop + (duration * 1000) + holdBot);
                 } else {
-                    slideTimer = setTimeout(nextSlide, Math.max(baseDelay, 16000));
+                    slideTimer = slideTimeout(nextSlide, Math.max(baseDelay, 16000));
                 }
             }
             setTimeout(function() { measureAndRun(0); }, 200);
@@ -1347,7 +1358,6 @@
         function renderSkeletons() {
             var skeletonCard = '<div class="glass-card"><div class="card-meta"><div class="skeleton skel-text" style="width:20%"></div><div class="skeleton skel-text" style="width:30%"></div></div><div class="skel-row"><div class="skeleton skel-img"></div><div class="skeleton skel-text" style="width:60%; height:4vh;"></div></div><div class="skel-row"><div class="skeleton skel-img"></div><div class="skeleton skel-text" style="width:60%; height:4vh;"></div></div><div class="card-footer"><div class="skeleton skel-text" style="width:100%"></div></div></div>';
             document.getElementById('live-grid-track').innerHTML = skeletonCard.repeat(4);
-            document.getElementById('props-grid-track').innerHTML = skeletonCard.repeat(4);
             document.getElementById('ticker-track').innerHTML = '<span class="score-item"><div class="skeleton skel-text" style="width:50vw; height:8vh; margin-top:2vh;"></div></span>';
             document.getElementById('live-game-screen').style.display = 'flex';
         }
@@ -1358,14 +1368,14 @@
             live.style.display = 'flex';
             var track = document.getElementById('live-grid-track');
             if (track) track.innerHTML = '<div class="neon-text-cycle" style="font-size:4vh; font-weight:900; text-align:center; grid-column: 1 / -1; padding-top: 8vh;">' + title + '</div>';
-            slideTimer = setTimeout(nextSlide, 6000);
+            slideTimer = slideTimeout(nextSlide, 6000);
         }
 
         var slideGen = 0;
         function isCurrentSlide(gen) { return gen === slideGen; }
 
         var ARCADE_SCREENS = [
-            'live', 'props', 'mySquad', 'trivia', 'leaders', 'pga', 'ufc', 'command',
+            'live', 'hotProps', 'mySquad', 'trivia', 'leaders', 'pga', 'ufc', 'command',
             'soccerSlide', 'tvGuide', 'news', 'odds', 'futures', 'nflFutures', 'nflAwards', 'cfbFutures', 'nhlFutures',
             'rankings', 'nfl', 'nba', 'nhl', 'mlb'
         ];
@@ -1376,9 +1386,9 @@
         // runs; a snapshot of the slide + league toggles is still taken at the start and restored when the mode ends.
         var SM_KEY = 'ahlersSportMode1', SM_MS = 12 * 3600000;
         var SPORT_MODES = {
-            nfl: { label: 'NFL', short: 'NFL', title: 'NFL MODE', league: 'nfl', news: 'football/nfl', screens: ['live', 'props', 'fantasy', 'odds', 'nflFutures', 'nflAwards', 'news', 'tvGuide', 'nfl'] },
-            cfb: { label: 'COLLEGE FOOTBALL', short: 'CFB', title: 'CFB MODE', league: 'cfb', news: 'football/college-football', screens: ['live', 'props', 'mySquad', 'odds', 'cfbFutures', 'rankings', 'news', 'tvGuide'] },
-            cbb: { label: 'COLLEGE BASKETBALL', short: 'HOOPS', title: 'HOOPS MODE', league: 'cbb', news: 'basketball/mens-college-basketball', screens: ['live', 'props', 'mySquad', 'odds', 'rankings', 'futures', 'news', 'tvGuide'] }
+            nfl: { label: 'NFL', short: 'NFL', title: 'NFL MODE', league: 'nfl', news: 'football/nfl', screens: ['live', 'hotProps', 'fantasy', 'odds', 'nflFutures', 'nflAwards', 'news', 'tvGuide', 'nfl'] },
+            cfb: { label: 'COLLEGE FOOTBALL', short: 'CFB', title: 'CFB MODE', league: 'cfb', news: 'football/college-football', screens: ['live', 'hotProps', 'mySquad', 'odds', 'cfbFutures', 'rankings', 'news', 'tvGuide'] },
+            cbb: { label: 'COLLEGE BASKETBALL', short: 'HOOPS', title: 'HOOPS MODE', league: 'cbb', news: 'basketball/mens-college-basketball', screens: ['live', 'hotProps', 'mySquad', 'odds', 'rankings', 'futures', 'news', 'tvGuide'] }
         };
         var CBB_FUT_SPECS = [
             { title: 'NATIONAL TITLE', sport: 'basketball', league: 'mens-college-basketball', want: ['ncaa(b) - winner', 'national championship'] },
@@ -1393,14 +1403,14 @@
         function smActive() { return (sportMode && SPORT_MODES[sportMode.mode] && Date.now() < sportMode.until) ? sportMode.mode : ''; }
         function smLeague() { var m = smActive(); return m ? SPORT_MODES[m].league : ''; }
         function arcadeScreens() { var m = smActive(); return m ? SPORT_MODES[m].screens : ARCADE_SCREENS; }
-        function slideOn(k) { if (smActive()) return arcadeScreens().indexOf(k) >= 0; return k === 'live' || k === 'props' || !!settings[k]; }
+        function slideOn(k) { if (smActive()) return arcadeScreens().indexOf(k) >= 0; return k === 'live' || !!settings[k]; }
         function smSquadGames() {
             var teams = String(settings.mySquadTeams || '').split(',').map(function(t) { return t.trim().toLowerCase(); }).filter(function(t) { return t; });
             return globalRawGames.filter(function(g) { return teams.some(function(t) { return g.searchString.indexOf(t) > -1; }); });
         }
         function smSlideEmpty(k) { // in a sport mode, skip data slides with nothing to show instead of flashing an empty card
             if (!smActive()) return false;
-            if (k === 'props') return !globalPropsData.length;
+            if (k === 'hotProps') return !hpList().length;
             if (k === 'odds') return !globalRawGames.some(function(g) { return g.state === 'pre' && g.odds !== 'EVEN'; });
             if (k === 'tvGuide') return !globalTVGuideData.length;
             if (k === 'mySquad') return !smSquadGames().length;
@@ -1630,7 +1640,7 @@
                 screen.style.display = 'flex';
                 meta.innerHTML = '';
                 track.innerHTML = '<div class="neon-text-cycle" style="font-size:4vh; font-weight:900; text-align:center; padding-top:8vh; grid-column: 1 / -1;">FANTASY FEED DOWN</div>';
-                slideTimer = setTimeout(nextSlide, 6000);
+                slideTimer = slideTimeout(nextSlide, 6000);
             }
         }
 
@@ -1669,7 +1679,7 @@
             document.querySelectorAll('.slide-screen').forEach(function(el) { el.style.display = 'none'; });
             try {
                 if (current === 'live') renderLivePage();
-                else if (current === 'props') showProps();
+                else if (current === 'hotProps') showHotProps(gen);
                 else if (current === 'mySquad') showMySquad();
                 else if (current === 'trivia') showTrivia();
                 else if (current === 'leaders') showLeaders();
@@ -1698,7 +1708,9 @@
             nextSlide._guard = 0;
             // Safety net: each slide sets its own slideTimer. If nothing did within 1.5 s, schedule a normal advance.
             setTimeout(function() {
-                if (!slideTimer && !(gc && gc.open) && !(arcadeNav && arcadeNav.paused)) slideTimer = setTimeout(nextSlide, 20000);
+                if (gen !== slideGen) return; // that slide is already gone
+                if (current === 'trivia' && triviaRevealTimer) return; // Trivia runs on its own 15 s + 5 s clock
+                if (!slideTimer && !(gc && gc.open) && !(arcadeNav && arcadeNav.paused)) slideTimer = slideTimeout(nextSlide, 20000);
             }, 1500);
         }
 
@@ -1912,7 +1924,6 @@
             globalTVGuideData = newTVGuide;
             globalLeadersData = newLeaders.slice();
 
-            buildPropsFromLeaders(newLeaders);
             
             newMarqueeGames.sort(function(a,b) { return b.weight - a.weight; });
             var marqueeHtml = newMarqueeGames.slice(0, 2).map(function(g) {
@@ -1979,20 +1990,73 @@
             }
         }
 
-        function showProps() {
-            document.getElementById('props-screen').style.display = 'flex';
-            var track = document.getElementById('props-grid-track');
-            if (globalPropsData.length === 0) { 
-                track.innerHTML = '<div class="neon-text-cycle" style="font-size:4vh; font-weight:900; text-align:center; grid-column: 1 / -1; padding-top: 10vh;">NO LIVE LEADERS RIGHT NOW</div>'; 
-                applyScroll('props-viewport', 'props-grid-track', 10000); 
-            } else {
-                track.innerHTML = globalPropsData.map(function(p) {
-                    return '<div class="prop-card"><img src="' + p.headshot + '" onerror="this.src=\'' + p.teamLogo + '\'; this.onerror=null;" class="prop-headshot"><div class="prop-details"><div class="prop-name">' + p.name + '</div><div class="prop-game neon-text-cycle">' + p.game + '</div><div class="prop-line-container"><div class="prop-line neon-text-cycle">' + p.statDesc + ': ' + p.line + '</div><span class="prop-odds neon-text-cycle">' + p.odds + '</span></div></div></div>';
-                }).join('');
-                applyScroll('props-viewport', 'props-grid-track', 15000);
-            }
+        // ---------- TODAY'S HOT PROPS: props.json (GitHub Action, scripts/fetch-props.mjs, Action Network public odds) ----------
+        var hp = { data: null, at: 0 };
+        var HP_LEAGUES = [ // [props.json key, ticker toggle]
+            ['nfl', 'showNFL'], ['ncaaf', 'showCFB'], ['nba', 'showNBA'], ['ncaab', 'showCBB'], ['nhl', 'showNHL'], ['mlb', 'showMLB'] ];
+        var HP_MODE = { nfl: 'nfl', cfb: 'ncaaf', cbb: 'ncaab' };
+        async function hpLoad(force) {
+            if (hp.data && !force && Date.now() - hp.at < 1200000) return hp.data;
+            try {
+                var r = await arcadeFetch('props.json?t=' + Math.floor(Date.now() / 1200000));
+                if (r.ok) { var d = await r.json(); if (d && d.leagues) { hp.data = d; hp.at = Date.now(); try { localStorage.setItem('ahlersProps1', JSON.stringify(d)); } catch (e1) {} return d; } }
+            } catch (e) {}
+            if (!hp.data) { try { var c = JSON.parse(localStorage.getItem('ahlersProps1') || 'null'); if (c && c.leagues) { hp.data = c; hp.at = Date.now() - 900000; } } catch (e2) {} }
+            return hp.data;
         }
-
+        function hpDayKey(t) { var d = new Date(t); return d.getFullYear() + '-' + d.getMonth() + '-' + d.getDate(); }
+        function hpList() { // today's props for the leagues in play (sport mode -> that sport only), HOT first
+            var d = hp.data; if (!d || !d.leagues) return [];
+            var m = smActive(), now = Date.now(), today = hpDayKey(now), out = [];
+            HP_LEAGUES.forEach(function(L) {
+                var lg = d.leagues[L[0]]; if (!lg || !lg.props || !lg.props.length) return;
+                if (m ? HP_MODE[m] !== L[0] : settings[L[1]] === false) return;
+                var games = {}; (lg.games || []).forEach(function(g) { games[g.id] = g; });
+                lg.props.forEach(function(p) {
+                    var g = games[p.game]; if (!g) return;
+                    var t = new Date(g.start).getTime();
+                    if (isNaN(t) || t < now - 4 * 3600000 || hpDayKey(t) !== today) return; // today's games, not long over
+                    out.push({ p: p, g: g, lg: lg, t: t });
+                });
+            });
+            out.sort(function(a, b) { return ((b.p.hot ? 1 : 0) - (a.p.hot ? 1 : 0)) || (Math.abs(b.p.move || 0) - Math.abs(a.p.move || 0)) || (a.t - b.t); });
+            return out.slice(0, 24);
+        }
+        function hpOdds(o) { return o == null || o === '' ? '' : (Number(o) > 0 ? '+' + o : String(o)); }
+        function hpTime(t) { var d = new Date(t); if (t <= Date.now()) return 'LIVE / STARTED'; var h = d.getHours(), mi = d.getMinutes(); return (h % 12 || 12) + ':' + (mi < 10 ? '0' : '') + mi + (h < 12 ? ' AM' : ' PM'); }
+        function hpCard(x) {
+            var p = x.p, g = x.g, mine = p.side === 'home' ? g.home : g.away, col = mine && mine.color ? '#' + String(mine.color).replace('#', '') : '';
+            var logo = (mine && mine.logo) || '';
+            var mkt = p.kind === 'ou' ? 'OVER ' + p.line + ' ' + p.mk : p.mk;
+            var books = ['DK', 'FD', 'CZR'].filter(function(b) { return p.books && p.books[b]; }).map(function(b) {
+                var v = p.books[b]; return '<span class="hp-book"><b>' + b + '</b> ' + (p.kind === 'ou' && v.v != null && v.v !== p.line ? escHtml(String(v.v)) + ' ' : '') + hpOdds(v.o) + '</span>';
+            }).join('');
+            return '<div class="hp-card glass-card' + (p.hot ? ' hot' : '') + '"' + (col ? ' style="border-left-color:' + col + '"' : '') + '>' +
+                '<img class="hp-img" src="' + escHtml(p.img || logo) + '"' + (logo ? ' onerror="this.onerror=null; this.src=\'' + escHtml(logo) + '\'"' : ' onerror="this.style.visibility=\'hidden\'"') + '>' +
+                '<div class="hp-body">' +
+                  '<div class="hp-top"><span class="hp-lg">' + escHtml(x.lg.label || p.lg.toUpperCase()) + '</span><span>' + escHtml(g.away.abbr) + ' @ ' + escHtml(g.home.abbr) + ' &bull; ' + hpTime(x.t) + '</span>' + (p.hot ? '<span class="hp-hot">&#128293; HOT</span>' : '') + '</div>' +
+                  '<div class="hp-name">' + escHtml(p.player) + ' <span class="hp-pos">' + escHtml((p.pos ? p.pos + ' \u00b7 ' : '') + (mine ? mine.abbr : '')) + '</span></div>' +
+                  '<div class="hp-line"><span class="hp-mkt neon-text-cycle">' + escHtml(mkt) + '</span><span class="hp-odds">' + hpOdds(p.odds) + '</span></div>' +
+                  '<div class="hp-books">' + books + (p.moveTxt ? '<span class="hp-move">' + escHtml(p.moveTxt) + ' <i>SINCE OPEN</i></span>' : '') + '</div>' +
+                '</div></div>';
+        }
+        async function showHotProps(gen) {
+            var screen = document.getElementById('hotprops-screen'), track = document.getElementById('hotprops-track'), meta = document.getElementById('hotprops-meta');
+            screen.style.display = 'flex';
+            if (!hp.data) { track.innerHTML = '<div class="hp-empty">LOADING PROPS&hellip;</div>'; meta.textContent = ''; try { await hpLoad(); } catch (e) {} if (!isCurrentSlide(gen)) return; }
+            var list = hpList(), d = hp.data;
+            if (!list.length) {
+                meta.textContent = '';
+                if (d && d.updated) { var u = new Date(d.updated); meta.textContent = 'ACTION NETWORK \u2022 CHECKED ' + ((u.getHours() % 12) || 12) + ':' + (u.getMinutes() < 10 ? '0' : '') + u.getMinutes() + (u.getHours() < 12 ? ' AM' : ' PM'); }
+                track.innerHTML = '<div class="hp-empty">NO PLAYER PROPS POSTED FOR TODAY\'S GAMES YET<small>Books usually post props the morning of game day</small></div>';
+                slideTimer = slideTimeout(nextSlide, 6000); return;
+            }
+            var lgs = []; list.forEach(function(x) { var l = x.lg.label || x.p.lg; if (lgs.indexOf(l) < 0) lgs.push(l); });
+            var u2 = new Date(d.updated), hot = list.filter(function(x) { return x.p.hot; }).length;
+            meta.textContent = lgs.join(' \u2022 ') + ' \u2022 ' + list.length + ' PROPS' + (hot ? ' \u2022 ' + hot + ' HOT (BIGGEST MOVES)' : '') + ' \u2022 ODDS UPDATED ' + ((u2.getHours() % 12) || 12) + ':' + (u2.getMinutes() < 10 ? '0' : '') + u2.getMinutes() + (u2.getHours() < 12 ? ' AM' : ' PM');
+            track.innerHTML = list.map(hpCard).join('');
+            applyScroll('hotprops-viewport', 'hotprops-track', 16000);
+        }
         function showMySquad() {
             document.getElementById('mysquad-screen').style.display = 'flex';
             var gamesHtml = "";
@@ -2021,8 +2085,9 @@
             tBar.style.animation = 'none'; void tBar.offsetWidth; tBar.style.animation = 'shrinkTimer 15s linear forwards';
             clearTimeout(triviaRevealTimer);
             triviaRevealTimer = setTimeout(function() {
+                triviaRevealTimer = null;
                 document.querySelectorAll('.trivia-ans').forEach(function(opt) { if (opt.getAttribute('data-correct') === 'true') opt.classList.add('correct'); else opt.classList.add('wrong'); });
-                slideTimer = setTimeout(function() { fetchNextTrivia(); nextSlide(); }, 5000);
+                slideTimer = slideTimeout(function() { fetchNextTrivia(); nextSlide(); }, 5000);
             }, 15000);
         }
 
@@ -2030,7 +2095,7 @@
             if(globalLeadersData.length === 0) {
                 document.getElementById('leaders-screen').style.display = 'flex';
                 document.getElementById('leaders-grid-track').innerHTML = '<div class="neon-text-cycle" style="font-size:4vh; font-weight:900; text-align:center; padding-top:8vh;">NO LIVE LEADERS</div>';
-                slideTimer = setTimeout(nextSlide, 6000);
+                slideTimer = slideTimeout(nextSlide, 6000);
                 return;
             }
             document.getElementById('leaders-screen').style.display = 'flex';
@@ -2041,7 +2106,7 @@
             applyScroll('leaders-viewport', 'leaders-grid-track', 12000);
         }
 
-        async function showCommand() { document.getElementById('command-screen').style.display = 'flex'; slideTimer = setTimeout(nextSlide, 15000); }
+        async function showCommand() { document.getElementById('command-screen').style.display = 'flex'; slideTimer = slideTimeout(nextSlide, 15000); }
 
         async function showPGA(gen) {
             try {
@@ -2053,7 +2118,7 @@
                     document.getElementById('pga-screen').style.display = 'flex';
                     document.getElementById('pga-title').innerText = ev0 && ev0.name ? ev0.name.replace('PGA TOUR', '').trim().toUpperCase() : 'PGA TOUR';
                     document.getElementById('pga-track').innerHTML = '<div class="neon-text-cycle" style="font-size:4vh; font-weight:900; text-align:center; padding-top:8vh;">NO EVENT THIS WEEK</div>';
-                    slideTimer = setTimeout(nextSlide, 6000);
+                    slideTimer = slideTimeout(nextSlide, 6000);
                     return;
                 }
                 document.getElementById('pga-title').innerHTML = ev0.name.replace('PGA TOUR', '').trim().toUpperCase();
@@ -2075,7 +2140,7 @@
             } catch (e) {
                 document.getElementById('pga-screen').style.display = 'flex';
                 document.getElementById('pga-track').innerHTML = '<div class="neon-text-cycle" style="font-size:4vh; font-weight:900; text-align:center; padding-top:8vh;">PGA FEED DOWN</div>';
-                slideTimer = setTimeout(nextSlide, 6000);
+                slideTimer = slideTimeout(nextSlide, 6000);
             }
         }
 
@@ -2086,7 +2151,7 @@
                 if(!d.events || d.events.length === 0) {
                     document.getElementById('ufc-screen').style.display = 'flex';
                     document.getElementById('ufc-grid-track').innerHTML = '<div class="neon-text-cycle" style="font-size:4vh; font-weight:900; text-align:center; padding-top:8vh;">NO UFC CARD</div>';
-                    slideTimer = setTimeout(nextSlide, 6000);
+                    slideTimer = slideTimeout(nextSlide, 6000);
                     return;
                 }
                 document.getElementById('ufc-title').innerHTML = 'UFC: ' + (d.events[0].name ? d.events[0].name.replace('UFC Fight Night:', '').trim() : "FIGHT NIGHT").toUpperCase();
@@ -2124,7 +2189,7 @@
             } catch(e) {
                 document.getElementById('ufc-screen').style.display = 'flex';
                 document.getElementById('ufc-grid-track').innerHTML = '<div class="neon-text-cycle" style="font-size:4vh; font-weight:900; text-align:center; padding-top:8vh;">UFC FEED DOWN</div>';
-                slideTimer = setTimeout(nextSlide, 6000);
+                slideTimer = slideTimeout(nextSlide, 6000);
             }
         }
 
@@ -2149,7 +2214,7 @@
             if(games.length === 0) {
                 document.getElementById('soccer-screen').style.display = 'flex';
                 document.getElementById('soccer-grid-track').innerHTML = '<div class="neon-text-cycle" style="font-size:4vh; font-weight:900; text-align:center; padding-top:8vh;">NO SOCCER MATCHES</div>';
-                slideTimer = setTimeout(nextSlide, 6000);
+                slideTimer = slideTimeout(nextSlide, 6000);
                 return;
             }
             document.getElementById('soccer-screen').style.display = 'flex';
@@ -2163,7 +2228,7 @@
             if(globalTVGuideData.length === 0) {
                 document.getElementById('tvguide-screen').style.display = 'flex';
                 document.getElementById('tvguide-track').innerHTML = '<div class="neon-text-cycle" style="font-size:4vh; font-weight:900; text-align:center; padding-top:8vh;">NOTHING ON THE GUIDE</div>';
-                slideTimer = setTimeout(nextSlide, 6000);
+                slideTimer = slideTimeout(nextSlide, 6000);
                 return;
             }
             document.getElementById('tvguide-screen').style.display = 'flex';
@@ -2185,7 +2250,7 @@
                 if (combinedNews.length === 0) {
                     document.getElementById('news-screen').style.display = 'flex';
                     document.getElementById('news-list-track').innerHTML = '<div class="neon-text-cycle" style="font-size:4vh; font-weight:900; text-align:center; padding-top:8vh;">NO HEADLINES</div>';
-                    slideTimer = setTimeout(nextSlide, 6000);
+                    slideTimer = slideTimeout(nextSlide, 6000);
                     return;
                 }
                 if (!isCurrentSlide(gen)) return;
@@ -2198,7 +2263,7 @@
             } catch(e) {
                 document.getElementById('news-screen').style.display = 'flex';
                 document.getElementById('news-list-track').innerHTML = '<div class="neon-text-cycle" style="font-size:4vh; font-weight:900; text-align:center; padding-top:8vh;">NEWS FEED DOWN</div>';
-                slideTimer = setTimeout(nextSlide, 6000);
+                slideTimer = slideTimeout(nextSlide, 6000);
             }
         }
 
@@ -2366,7 +2431,7 @@
                 document.getElementById('futures-screen').style.display = 'flex';
                 if (!data.sections || !data.sections.length) {
                     document.getElementById('futures-track').innerHTML = '<div class="neon-text-cycle" style="font-size:4vh; font-weight:900; text-align:center; padding-top:8vh;">NO FUTURES POSTED</div>';
-                    slideTimer = setTimeout(nextSlide, 8000);
+                    slideTimer = slideTimeout(nextSlide, 8000);
                     return;
                 }
                 document.getElementById('futures-track').innerHTML = data.sections.map(function(sec) {
@@ -2381,7 +2446,7 @@
                 if (!isCurrentSlide(gen)) return;
                 document.getElementById('futures-screen').style.display = 'flex';
                 document.getElementById('futures-track').innerHTML = '<div class="neon-text-cycle" style="font-size:4vh; font-weight:900; text-align:center; padding-top:8vh;">FUTURES FEED DOWN</div>';
-                slideTimer = setTimeout(nextSlide, 8000);
+                slideTimer = slideTimeout(nextSlide, 8000);
             }
         }
 
@@ -2579,7 +2644,7 @@
                 if (!cards.length) {
                     meta.innerText = '';
                     track.innerHTML = '<div class="neon-text-cycle" style="font-size:4vh; font-weight:900; text-align:center; padding-top:8vh; grid-column: 1 / -1;">NO ODDS POSTED</div>';
-                    slideTimer = setTimeout(nextSlide, 6000);
+                    slideTimer = slideTimeout(nextSlide, 6000);
                     return;
                 }
                 var when = res.data.generatedAt ? new Date(res.data.generatedAt) : null;
@@ -2591,7 +2656,7 @@
                 if (!isCurrentSlide(gen)) return;
                 screen.style.display = 'flex';
                 track.innerHTML = '<div class="neon-text-cycle" style="font-size:4vh; font-weight:900; text-align:center; padding-top:8vh; grid-column: 1 / -1;">ODDS FEED DOWN</div>';
-                slideTimer = setTimeout(nextSlide, 6000);
+                slideTimer = slideTimeout(nextSlide, 6000);
             }
         }
 
@@ -2600,7 +2665,7 @@
             if (oddsGames.length === 0) {
                 document.getElementById('odds-screen').style.display = 'flex';
                 document.getElementById('odds-grid-track').innerHTML = '<div class="neon-text-cycle" style="font-size:4vh; font-weight:900; text-align:center; padding-top:8vh;">NO LINES BOARDED</div>';
-                slideTimer = setTimeout(nextSlide, 6000);
+                slideTimer = slideTimeout(nextSlide, 6000);
                 return;
             }
             document.getElementById('odds-screen').style.display = 'flex';
@@ -2670,7 +2735,7 @@
                     return '<div class="rank-row glass-card" style="flex-direction:row;"><span class="rank-num neon-text-cycle">' + r.current + '</span><img class="rank-logo" style="width:8vh; margin:0 3vh;" src="' + r.team.logo + '" onerror="this.src=\'https://a.espncdn.com/combiner/i?img=/i/teamlogos/default-team-logo-500.png\'; this.onerror=null;"><span><span class="rank-name">' + r.team.nickname + '</span></span><span class="neon-text-cycle" style="margin-left:auto; font-size:4vh; font-weight:900;">' + rec + '</span></div>';
                 }).join('');
                 applyScroll('rankings-viewport', 'rankings-list-track', 15000);
-            } catch(e) { slideTimer = setTimeout(nextSlide, 5000); }
+            } catch(e) { slideTimer = slideTimeout(nextSlide, 5000); }
         }
 
         function standingsSeed(t) {
@@ -2771,7 +2836,7 @@
         async function showStandings(league, sport, gen) {
             var screen = document.getElementById(league + '-screen');
             var track = document.getElementById(league + '-track');
-            if (!screen || !track) { slideTimer = setTimeout(nextSlide, 4000); return; }
+            if (!screen || !track) { slideTimer = slideTimeout(nextSlide, 4000); return; }
             screen.style.display = 'flex';
             try {
                 var res = await fetch('https://site.api.espn.com/apis/v2/sports/' + sport + '/' + league + '/standings');
@@ -2787,7 +2852,7 @@
                 }
                 if (!groups.length) {
                     track.innerHTML = '<div class="neon-text-cycle" style="font-size:4vh; font-weight:900; text-align:center; padding-top:8vh;">NO STANDINGS</div>';
-                    slideTimer = setTimeout(nextSlide, 6000);
+                    slideTimer = slideTimeout(nextSlide, 6000);
                     return;
                 }
                 track.innerHTML = groups.map(function(group) {
@@ -2802,7 +2867,7 @@
                 applyScroll(league + '-viewport', league + '-track', 15000);
             } catch(e) {
                 track.innerHTML = '<div class="neon-text-cycle" style="font-size:4vh; font-weight:900; text-align:center; padding-top:8vh;">STANDINGS FEED DOWN</div>';
-                slideTimer = setTimeout(nextSlide, 6000);
+                slideTimer = slideTimeout(nextSlide, 6000);
             }
         }
 
@@ -3916,19 +3981,22 @@
             }
             return '<table class="gc-ls">' + head + row(A) + row(H) + '</table>';
         }
+        function gcWpName(T) { var n = celShort(T); return n.length > 10 ? String(T.abbr || n).toUpperCase() : n; } // 'CANES', 'DUKE', 'ECU'
         function gcWinProbHtml(d, A, H, st) {
-            var wp = d.winprobability, h = null, title = 'WIN PROBABILITY', spark = '';
+            // Instantly readable: who is favored + by how much, a two-color bar in team colors, and the recent swing.
+            var wp = d.winprobability, h = null, tie = 0, title = 'WIN PROBABILITY', trend = '', src = 'ESPN LIVE';
             if (wp && wp.length) {
-                var last = wp[wp.length - 1]; h = Number(last.homeWinPercentage);
-                var pts = [], step = Math.max(1, Math.ceil(wp.length / 120));
-                for (var i = 0; i < wp.length; i += step) pts.push(Number(wp[i].homeWinPercentage));
-                if (pts[pts.length - 1] !== h) pts.push(h);
-                var W = 100, Hh = 30;
-                var poly = pts.map(function(p, j) { return (pts.length > 1 ? (j / (pts.length - 1)) * W : 0).toFixed(1) + ',' + ((1 - p) * Hh).toFixed(1); }).join(' ');
-                spark = '<svg class="gc-spark" viewBox="0 0 100 30" preserveAspectRatio="none"><line x1="0" y1="15" x2="100" y2="15" stroke="rgba(255,255,255,0.25)" stroke-dasharray="2,2" stroke-width="0.4"/><polyline points="' + poly + '" fill="none" stroke="' + H.color + '" stroke-width="1.2" vector-effect="non-scaling-stroke"/></svg>' +
-                        '<div class="gc-spark-legend"><span>&#9650; ' + escHtml(H.abbr) + '</span><span>' + escHtml(A.abbr) + ' &#9660;</span></div>';
+                var last = wp[wp.length - 1]; h = Number(last.homeWinPercentage); tie = Number(last.tiePercentage || 0);
+                var back = wp[Math.max(0, wp.length - 11)], hb = Number(back.homeWinPercentage); // swing over the last 10 plays
+                if (wp.length > 3 && !isNaN(hb) && !isNaN(h)) {
+                    var dl = Math.round((h - hb) * 100), T = dl >= 0 ? H : A;
+                    if (Math.abs(dl) >= 1) trend = '<div class="gc-wp-trend" style="color:' + T.color + '">' + '&#9650; ' + escHtml(gcWpName(T)) + ' +' + Math.abs(dl) + '% <span>LAST ' + (wp.length - 1 - wp.indexOf(back)) + ' PLAYS</span></div>';
+                    else trend = '<div class="gc-wp-trend gc-dim">STEADY &bull; NO BIG SWING LAST 10 PLAYS</div>';
+                }
             } else if (d.predictor && d.predictor.homeTeam && d.predictor.homeTeam.gameProjection != null) {
-                h = Number(d.predictor.homeTeam.gameProjection) / 100; title = 'MATCHUP PREDICTOR';
+                h = Number(d.predictor.homeTeam.gameProjection) / 100; title = 'WIN PROBABILITY'; src = 'ESPN PREGAME';
+                var at = d.predictor.awayTeam && d.predictor.awayTeam.gameProjection != null ? Number(d.predictor.awayTeam.gameProjection) / 100 : null;
+                if (at != null && !isNaN(at)) tie = Math.max(0, 1 - h - at);
             }
             var odds = '';
             var pc = (d.pickcenter && d.pickcenter[0]) || null;
@@ -3936,11 +4004,18 @@
                 var ml = (pc.awayTeamOdds && pc.awayTeamOdds.moneyLine != null && pc.homeTeamOdds && pc.homeTeamOdds.moneyLine != null) ? ' &bull; ML ' + formatMoneyline(pc.awayTeamOdds.moneyLine) + ' / ' + formatMoneyline(pc.homeTeamOdds.moneyLine) : '';
                 odds = '<div class="gc-odds">' + (pc.details ? 'LINE <b>' + escHtml(pc.details) + '</b>' : '') + (pc.overUnder != null ? ' &bull; O/U <b>' + escHtml(String(pc.overUnder)) + '</b>' : '') + ml + (pc.provider && pc.provider.name ? ' <span class="gc-dim">(' + escHtml(pc.provider.name) + ')</span>' : '') + '</div>';
             }
-            if (h == null || isNaN(h)) return odds ? '<div class="gc-panel-title">GAME LINE</div>' + odds : '';
-            var hp = Math.max(0, Math.min(100, h * 100)), tie = wp && wp.length ? Number(wp[wp.length - 1].tiePercentage || 0) * 100 : 0, ap = Math.max(0, 100 - hp - tie);
-            return '<div class="gc-panel-title">' + title + '</div>' +
-                   '<div class="gc-wp-row"><span style="color:' + A.color + '">' + escHtml(A.abbr) + ' ' + ap.toFixed(1) + '%</span><span style="color:' + H.color + '">' + hp.toFixed(1) + '% ' + escHtml(H.abbr) + '</span></div>' +
-                   '<div class="gc-wp-bar"><div style="width:' + ap + '%; background:' + A.color + '"></div>' + (tie > 0 ? '<div style="width:' + tie + '%; background:#666"></div>' : '') + '<div style="width:' + hp + '%; background:' + H.color + '"></div></div>' + spark + odds;
+            if (h == null || isNaN(h)) return odds ? '<div class="gc-panel-title">GAME LINE</div>' + odds : ''; // no ESPN win probability -> no panel
+            var hp = Math.round(Math.max(0, Math.min(100, h * 100))), tp = Math.round(Math.max(0, tie * 100)), ap = Math.max(0, 100 - hp - tp);
+            var fav = hp >= ap ? H : A, fp = Math.max(hp, ap);
+            function side(T, p, cls) {
+                return '<div class="gc-wp-side ' + cls + '"' + (T === fav ? '' : ' style="opacity:0.7"') + '>' + (T.logo ? '<img src="' + escHtml(T.logo) + '" onerror="this.style.display=\'none\'">' : '') +
+                       '<div><div class="gc-wp-pct" style="color:' + T.color + '">' + p + '%</div><div class="gc-wp-nm">' + escHtml(gcWpName(T)) + '</div></div></div>';
+            }
+            var head = st.state === 'post' ? '' : '<div class="gc-wp-head"><b style="color:' + fav.color + '">' + escHtml(gcWpName(fav)) + ' ' + fp + '%</b> CHANCE TO WIN' + (tp >= 1 ? ' <span class="gc-dim">&bull; DRAW ' + tp + '%</span>' : '') + '</div>';
+            return '<div class="gc-panel-title">' + title + ' <span class="gc-dim">(' + src + ')</span></div>' + head +
+                   '<div class="gc-wp-teams">' + side(A, ap, 'a') + side(H, hp, 'h') + '</div>' +
+                   '<div class="gc-wp-bar"><div style="width:' + ap + '%; background:' + A.color + '"></div>' + (tp > 0 ? '<div style="width:' + tp + '%; background:#666"></div>' : '') + '<div style="width:' + hp + '%; background:' + H.color + '"></div></div>' +
+                   trend + odds;
         }
 
         function gcPlaysHtml(meta, d, fam) {
@@ -4183,7 +4258,7 @@
         var arcadeNav = { paused: false, pending: false, forcing: false, menuOpen: false, current: null,
                           idleMs: 10000, settingsIdleMs: 90000, pauseMaxMs: 600000,
                           idleTimer: null, settingsTimer: null, pauseTimer: null, hudTimer: null, historyArmed: false };
-        var NAV_TITLES = { live: 'LIVE ACTION', props: 'LIVE LEADERS', mySquad: 'MY SQUAD', trivia: 'TRIVIA', leaders: 'TOP PERFORMERS', pga: 'PGA TOUR',
+        var NAV_TITLES = { live: 'LIVE ACTION', hotProps: 'HOT PROPS', mySquad: 'MY SQUAD', trivia: 'TRIVIA', leaders: 'TOP PERFORMERS', pga: 'PGA TOUR',
             ufc: 'UFC', command: 'COMMAND CENTER', soccerSlide: 'SOCCER', tvGuide: 'TV GUIDE', news: 'HEADLINES', odds: "TODAY'S LINES", futures: 'FUTURES',
             nflFutures: 'NFL FUTURES', nflAwards: 'NFL AWARDS', fantasy: 'NFL FANTASY', cfbFutures: 'CFB FUTURES', nhlFutures: 'NHL FUTURES', rankings: 'CFB RANKINGS', nfl: 'NFL STANDINGS', nba: 'NBA STANDINGS',
             nhl: 'NHL STANDINGS', mlb: 'MLB STANDINGS' };
@@ -4417,11 +4492,12 @@
             checkMode(); loadSettingsUI(); updateClock(); setInterval(updateClock, 1000);
             renderSkeletons();
             requestWakeLock(); scheduleSoftReload();
-            fetchCommandData(); fetchNextTrivia();
+            fetchCommandData(); fetchNextTrivia(); hpLoad().catch(function(){});
             await updateSportsTicker();
             nextSlide(); smApply.ready = true; smUI(); smPill();
             setInterval(function(){ updateSportsTicker().catch(function(){}); }, 300000);
             setInterval(fetchCommandData, 900000);
+            setInterval(function(){ hpLoad(true).catch(function(){}); }, 1200000);
             window.addEventListener('online', function() { netState.fails = 0; netSet(false, netState.stale); updateSportsTicker().catch(function(){}); });
             window.addEventListener('offline', function() { netSet(true, true); });
         });

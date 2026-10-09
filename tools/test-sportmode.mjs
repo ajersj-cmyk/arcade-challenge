@@ -226,10 +226,10 @@ await page.close();
 // ===== 8. empty sport (no CBB games at all): still a rotation, empty data slides skipped
 const p2 = await browser.newPage(); await setupPage(p2, { emptyCbb: true }); await load(p2);
 await p2.evaluate(() => smSet('cbb')); await sleep(4500);
-const emp = await p2.evaluate(() => ({ n: globalRawGames.length, props: smSlideEmpty('props'), odds: smSlideEmpty('odds'), tv: smSlideEmpty('tvGuide') }));
+const emp = await p2.evaluate(() => ({ n: globalRawGames.length, props: smSlideEmpty('hotProps'), odds: smSlideEmpty('odds'), tv: smSlideEmpty('tvGuide') }));
 check('empty CBB: no games, data slides flagged empty', emp.n === 0 && emp.props && emp.odds && emp.tv, JSON.stringify(emp));
 const es = await cycle(p2, 8);
-check('empty CBB: rotation keeps going (live + rankings + futures + news)', es.every(s => s.vis === 1) && ['live', 'rankings', 'news'].every(k => es.some(s => s.k === k)) && !es.some(s => ['props', 'odds', 'tvGuide'].includes(s.k)), es.map(s => s.k).join(' > '));
+check('empty CBB: rotation keeps going (live + rankings + futures + news)', es.every(s => s.vis === 1) && ['live', 'rankings', 'news'].every(k => es.some(s => s.k === k)) && !es.some(s => ['hotProps', 'odds', 'tvGuide'].includes(s.k)), es.map(s => s.k).join(' > '));
 await goSlide(p2, 'live');
 const et = await p2.evaluate(() => document.getElementById('live-grid-track').textContent.trim());
 check('empty CBB: live slide says NO COLLEGE BASKETBALL GAMES ON THE BOARD', /NO COLLEGE BASKETBALL GAMES ON THE BOARD/.test(et), et);
