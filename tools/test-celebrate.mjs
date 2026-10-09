@@ -103,13 +103,15 @@ const lite = await page.evaluate(() => {
   return { lite: document.getElementById('celebrate').classList.contains('lite'),
     conf: cs(conf).display, confAnim: i0 ? cs(i0).animationName : '',
     strobe: cs(document.querySelector('#celebrate .cel-wash.w2')).animationName,
+    strobeIt: +cs(document.querySelector('#celebrate .cel-wash.w2')).animationIterationCount, strobeDur: parseFloat(cs(document.querySelector('#celebrate .cel-wash.w2')).animationDuration) * 1000,
+    ms: CEL_MS,
     rows: rows.length, m1: rows.some(e => e.classList.contains('m1')), m3: rows.some(e => e.classList.contains('m3')),
     shake: cs(document.querySelector('#celebrate .cel-shake')).animationName,
     title: cs(document.getElementById('cel-title')).display,
     beam: cs(document.querySelector('#celebrate .cel-beam')).display,
     def: defaultSettings.celFull };
 });
-check('effects default to LITE: Full layout frozen (top+bottom strips, no shake/beams/falling confetti, 3-flash intro)', lite.lite && lite.rows === 3 && lite.m1 && lite.m3 && lite.shake === 'none' && lite.beam === 'none' && lite.conf === 'block' && lite.confAnim === 'none' && lite.strobe === 'cel-lite-flash' && lite.title === 'none' && lite.def === false, JSON.stringify(lite));
+check('effects default to LITE: Full layout frozen (top+bottom strips, no shake/beams/falling confetti, soft flash looping 3x over the show)', lite.lite && lite.rows === 3 && lite.m1 && lite.m3 && lite.shake === 'none' && lite.beam === 'none' && lite.conf === 'block' && lite.confAnim === 'none' && lite.strobe === 'cel-lite-flash' && lite.strobeIt === 3 && lite.strobeDur === 2000 && lite.ms === 6000 && lite.title === 'none' && lite.def === false, JSON.stringify(lite));
 await celShot('celebrate-goal-hurricanes-lite');
 await dismiss(); s = await st();
 const ae1 = await page.evaluate(() => document.activeElement && document.activeElement.id);

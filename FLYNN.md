@@ -385,7 +385,7 @@ next slide shows right away.
   Smaller, shorter moments for **HALFTIME!**, **END OF PERIOD** / **END OF QUARTER** and **FINAL** (a toggled team that
   didn't win). Basketball doesn't fire on baskets.
 - **Look:** team-colour wash and strobe, swinging light beams, a light sweep, three huge scrolling marquee rows of the
-  banner text, shake + zoom-punch logo, pulse rings, CSS confetti. CSS transform/opacity only, 4–8 s, no sound. Any remote
+  banner text, shake + zoom-punch logo, pulse rings, CSS confetti. CSS transform/opacity only, no sound. Any remote
   key or a click dismisses it (the key isn't passed on). Back closes it first.
 - **Scorer:** scoring celebrations show the player when the summary has a *new* scoring play for that team: name in the
   marquee (`GOAL!! ★ SEBASTIAN AHO`) plus a headshot card with assists (NHL) or "PASS FROM …" (football). The name comes
@@ -394,10 +394,20 @@ next slide shows right away.
 - **Effects level:** **Lite** is the default (Settings → *Full Effects* off), and the TV app (`window.ArcadeTV`) and
   `prefers-reduced-motion` always use it. It keeps Full's colours: the Full layout frozen as a static frame: top + bottom glowing 'GOAL!! ★ PLAYER' strips (transform scroll), huge outlined
   name behind the center, logo + headshot card + score bar, ring + star outline, red wash, small static shard/dot accents.
-  Motion is cheap: strip scroll, one logo scale-in, and 2–3 white flashes at the start. No strobe, falling confetti, shake,
-  beams, sweep, continuous beat, or animated filters. **Full** is the original 3-strip strobe/confetti/shake version. Headless Chrome
+  Motion is cheap and loops 3x over the show: strip scroll, logo scale-in then a slow beat, a soft white flash + glow
+  and a ring pulse each loop. No strobe, falling confetti, shake, beams, sweep, or animated filters. **Full** is the original 3-strip strobe/confetti/shake version. Headless Chrome
   (software compositing, frames from 0.5–3.5 s): Lite goal/TD 60/60 fps at 1x and 60/59 fps at 6x CPU throttle; Full about
   11–16 fps.
+- **Timing (Oct 2026, after Jordan's onn-box test said they looked ~1 s and sped up):** total on screen ~**6 s** for
+  scores/wins (`CEL_MS` = `CEL_BIG_MS` = 6000), ~**5 s** for HALFTIME / END OF PERIOD / FINAL (`CEL_MINI_MS`) and every alert
+  banner (`CEL_ALERT_MS`). Every pulse loops `CEL_LOOPS` = 3 times in that span: celShow sets `--cel-ms`, `--cel-loop`
+  (ms/3) and `--cel-half`. Alerts get `--al-ms` / `--al-loop`. Lite: flash/glow, ring pulse and logo beat run 3 × 2 s.
+  Full: the strobe is 3 × 2 s flash+glow cycles (was 0.36 s × 8), with 1 s beam swings, 2 s rings/sweep and a 1 s beat.
+  Banners: the shine sweep and logo beat run 3 × 1.67 s (Lite now animates too). The strips scroll at a fixed calm speed
+  whatever the text length: duration = text length × 220 ms (outline row 650 ms), about 0.3 screen-widths a second. Before,
+  it was up to ~1 screen a second with a player name. Queue gaps are unchanged (0.35 s between celebrations, 0.3 s between
+  banners), so GOAL → TD → WIN plays about 6.35 s apart. `node tools/test-celebrate-timing.mjs [preview.html]` checks all
+  of this with the TV bridge emulated at 720p and saves frames at 0.5 / 3 / 5.5 s.
 - **Field goals** are held back 5 s on top of the delay, so a FG never shows before a TD would be known.
 - **Alerts (smaller banners)** for ★ teams use the same delay and the master switch, and each type has its own switch
   in settings (`alertRedzone`, `alertPP`, `alertStart`, `alertLead`, `alertBig`, default ON):
