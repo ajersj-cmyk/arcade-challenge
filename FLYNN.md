@@ -398,23 +398,51 @@ next slide shows right away.
   and a ring pulse each loop. No strobe, falling confetti, shake, beams, sweep, or animated filters. **Full** is the original 3-strip strobe/confetti/shake version. Headless Chrome
   (software compositing, frames from 0.5–3.5 s): Lite goal/TD 60/60 fps at 1x and 60/59 fps at 6x CPU throttle; Full about
   11–16 fps.
-- **Timing (Oct 2026, after Jordan's onn-box test said they looked ~1 s and sped up):** total on screen ~**6 s** for
-  scores/wins (`CEL_MS` = `CEL_BIG_MS` = 6000), ~**5 s** for HALFTIME / END OF PERIOD / FINAL (`CEL_MINI_MS`) and every alert
-  banner (`CEL_ALERT_MS`). Every pulse loops `CEL_LOOPS` = 3 times in that span: celShow sets `--cel-ms`, `--cel-loop`
-  (ms/3) and `--cel-half`. Alerts get `--al-ms` / `--al-loop`. Lite: flash/glow, ring pulse and logo beat run 3 × 2 s.
-  Full: the strobe is 3 × 2 s flash+glow cycles (was 0.36 s × 8), with 1 s beam swings, 2 s rings/sweep and a 1 s beat.
-  Banners: the shine sweep and logo beat run 3 × 1.67 s (Lite now animates too). The strips scroll at a fixed calm speed
-  whatever the text length: duration = text length × 220 ms (outline row 650 ms), about 0.3 screen-widths a second. Before,
-  it was up to ~1 screen a second with a player name. Queue gaps are unchanged (0.35 s between celebrations, 0.3 s between
-  banners), so GOAL → TD → WIN plays about 6.35 s apart. `node tools/test-celebrate-timing.mjs [preview.html]` checks all
-  of this with the TV bridge emulated at 720p and saves frames at 0.5 / 3 / 5.5 s.
+- **Timing (Oct 2026, Jordan's onn-box feedback):** every celebration AND every alert banner stays on screen **9 s**
+  (`CEL_MS` = `CEL_BIG_MS` = `CEL_MINI_MS` = `CEL_ALERT_MS` = 9000). Every pulse loops `CEL_LOOPS` = 3 times in that
+  span: celShow sets `--cel-ms`, `--cel-loop` (ms/3 = 3 s) and `--cel-half`, and alerts get `--al-ms` / `--al-loop`.
+  - **Lite:** the flash/glow, ring pulse and logo beat each run 3 × 3 s.
+  - **Full:** 3 × 3 s flash+glow cycles, with 1.5 s beam swings, 3 s rings/sweep and a 1.5 s beat.
+  - **Banners:** the shine sweep and logo beat run 3 × 3 s.
+  - **Fades:** each fades in over the first 2–3 % of its time and out over the last 4 %, so it is still fully visible at 8.5 s.
+  - **Strips:** they scroll at a fixed calm speed whatever the text length (text length × 220 ms, outline row × 650 ms).
+  - **Queueing:**
+    - Up to `CEL_Q_MAX` = 3 celebrations and 4 banners wait their turn, with 0.35 s / 0.3 s gaps. GOAL → TD → WIN plays about 9.35 s apart.
+    - A banner waits while a celebration shows.
+    - A banner cut off in its first half by a celebration is replayed afterwards.
+    - Anything still queued after `CEL_STALE_MS` (60 s) is dropped.
+  - **Test:** `node tools/test-celebrate-timing.mjs [preview.html]` emulates the TV bridge at 720p and checks all of this, plus player photos. It saves frames at 0.5 / 4.5 / 8.5 s.
+- **Turnovers (football, full-screen):**
+  - **What fires:**
+    - **INTERCEPTION!!** and **FUMBLE!!** come from drive plays with `isTurnover: true`. The team that gains the ball is the play's `end.team`; failing that, the defence.
+    - **TURNOVER ON DOWNS!** comes from a drive with `result: "DOWNS"`, once per drive, for the defence.
+    - **BLOCKED PUNT!! / BLOCKED FG!!** come from the play type or text "blocked". They count for the defence even when the kicking team recovers.
+    - Pick-sixes and scoop-and-scores are scoring plays, so they show as the touchdown, retitled **PICK SIX!!** / **SCOOP & SCORE!!**.
+    - Safeties were already a score celebration (**SAFETY!**).
+  - **Who sees it:** only a ★ team that *gains* the ball, so losing a fumble shows nothing.
+  - **Settings:** each type has a switch (`alertInt`, `alertFumble`, `alertDowns`, `alertBlock`, default ON). They use the same delay and master switch, and each play id fires once.
+  - **Coverage:** like the other play-by-play alerts, turnovers only come from an open Gamecast.
+  - **Removed:** the old small INTERCEPTION! / FUMBLE RECOVERED! banners under Big Plays are gone.
+- **Player photos everywhere a player is involved:**
+  - **Celebrations** use the approved Aho card (headshot + name tag + detail line):
+    - goal scorer / TD scorer / FG kicker / HR hitter, from the scoring play (as before)
+    - interceptor ("PICKS OFF <QB>")
+    - fumble recoverer ("FORCED BY …")
+    - punt/FG blocker
+  - **Banners** get a round headshot + name chip:
+    - big-play receiver/rusher
+    - MLB double/triple batter
+    - the player who drew the power play
+    - the go-ahead scorer on a lead change
+  - **Name matching:** names come from the play text (NFL `RECOVERED by SEA-D.Hall`, CFB `intercepted by #0 T.Cooley`, full names) via `celTxName`. They are matched to that team's `boxscore.players` athletes: full name, or initial + last name, unique matches only. The headshot is the athlete's `headshot.href`, or `a.espncdn.com/i/headshots/<league>/players/full/<id>.png`.
+  - **Fallbacks:** with no match, the name shows without a photo next to the team logo. A missing image hides itself. WIN / HALFTIME / red zone / game start keep the team-logo layout.
 - **Field goals** are held back 5 s on top of the delay, so a FG never shows before a TD would be known.
 - **Alerts (smaller banners)** for ★ teams use the same delay and the master switch, and each type has its own switch
   in settings (`alertRedzone`, `alertPP`, `alertStart`, `alertLead`, `alertBig`, default ON):
   **RED ZONE!** (football, once per drive, from the drive's yards-to-endzone), **POWER PLAY!** (NHL, for the team
   whose opponent took a minor/major penalty, once per penalty play), **PUCK DROP! / KICKOFF! / FIRST PITCH! / TIP-OFF!**
   (pre → in), **<TEAM> TAKE THE LEAD!** (from the high-water scores, so corrections can't re-fire it), **BIG PLAY! N YDS**
-  (25+ yd pass/run), **INTERCEPTION! / FUMBLE RECOVERED!** (for the defence), **DOUBLE! / TRIPLE!** (MLB). The
+  (25+ yd pass/run), **DOUBLE! / TRIPLE!** (MLB); turnovers are full-screen now (above). The
   play-by-play alerts only come from an open Gamecast. Start and lead change also come from the 5-min scoreboard refresh.
   A banner waits while a full celebration is showing, then follows it.
 - **Delay sync (SYNC NOW):** the Gamecast shows the feed's clock (`DATA P2 12:22`, ticking between polls while it runs)

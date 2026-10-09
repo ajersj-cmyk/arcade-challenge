@@ -31,14 +31,18 @@ const T = {
   ecu: team('151', 'East Carolina Pirates', 'Pirates', 'ECU', '4b1869', 'fdc82f', 'https://a.espncdn.com/i/teamlogos/ncaa/500/151.png'),
   tem: team('218', 'Temple Owls', 'Owls', 'TEM', '9e1b34', 'ffffff', 'https://a.espncdn.com/i/teamlogos/ncaa/500/218.png'),
 };
+const ath = (id, first, last) => ({ id, firstName: first, lastName: last, displayName: first + ' ' + last, headshot: { href: `https://a.espncdn.com/i/headshots/college-football/players/full/${id}.png` } });
+const ECU_BOX = { players: [{ team: { id: '151' }, statistics: [{ name: 'rushing', athletes: [{ athlete: ath('5079419', 'Rahjai', 'Harris') }] }, { name: 'receiving', athletes: [{ athlete: ath('5148837', 'Dillon', 'Lorick') }] },
+  { name: 'interceptions', athletes: [{ athlete: ath('5213304', 'Angelo', 'Ross') }] }, { name: 'defensive', athletes: [{ athlete: ath('5160078', 'DJ', 'Johnson Jr.') }] }] },
+  { team: { id: '218' }, statistics: [{ name: 'passing', athletes: [{ athlete: { id: '1', firstName: 'Evan', lastName: 'Simmons', displayName: 'Evan Simmons' } }] }] }] };
 const games = {
   '990001': { away: T.nyr, home: T.car, a: 1, h: 1, state: 'in', name: 'STATUS_IN_PROGRESS', detail: '2nd 12:34', play: 'Faceoff won by CAR' },
-  '990002': { away: T.tem, home: T.ecu, a: 21, h: 24, state: 'in', name: 'STATUS_IN_PROGRESS', detail: '2nd 4:10', play: 'Pass complete', scoring: '' },
+  '990002': { away: T.tem, home: T.ecu, a: 21, h: 24, state: 'in', name: 'STATUS_IN_PROGRESS', detail: '2nd 4:10', play: 'Pass complete', scoring: '', box: ECU_BOX },
 };
 const summary = id => { const g = games[id]; return { header: { competitions: [{ status: { period: 2, displayClock: g.clock || '12:34', type: { state: g.state, name: g.name, completed: g.state === 'post', detail: g.detail, shortDetail: g.detail, description: g.detail } },
   competitors: [{ homeAway: 'home', score: String(g.h), team: g.home }, { homeAway: 'away', score: String(g.a), team: g.away }] }] },
   plays: [{ text: g.play, type: { text: '' } }].concat(g.plays || []), scoringPlays: g.scoring ? [{ id: 'sp-' + g.h + '-' + g.a, text: g.scoring, type: { text: g.scoringType || '' }, team: { id: g.scoringTeam || g.home.id } }] : [],
-  situation: g.sit, drives: g.drives }; };
+  situation: g.sit, drives: g.drives, boxscore: g.box }; };
 const META = {
   '990001': { key: 'test:990001', sport: 'hockey', league: 'nhl', cid: 'nhl', id: '990001', label: 'NHL', away: 'Rangers', home: 'Hurricanes', awayAbbr: 'NYR', homeAbbr: 'CAR', state: 'in' },
   '990002': { key: 'test:990002', sport: 'football', league: 'college-football', cid: 'cfb', id: '990002', label: 'CFB', away: 'Temple', home: 'East Carolina', awayAbbr: 'TEM', homeAbbr: 'ECU', state: 'in' },
@@ -111,7 +115,7 @@ const lite = await page.evaluate(() => {
     beam: cs(document.querySelector('#celebrate .cel-beam')).display,
     def: defaultSettings.celFull };
 });
-check('effects default to LITE: Full layout frozen (top+bottom strips, no shake/beams/falling confetti, soft flash looping 3x over the show)', lite.lite && lite.rows === 3 && lite.m1 && lite.m3 && lite.shake === 'none' && lite.beam === 'none' && lite.conf === 'block' && lite.confAnim === 'none' && lite.strobe === 'cel-lite-flash' && lite.strobeIt === 3 && lite.strobeDur === 2000 && lite.ms === 6000 && lite.title === 'none' && lite.def === false, JSON.stringify(lite));
+check('effects default to LITE: Full layout frozen (top+bottom strips, no shake/beams/falling confetti, soft flash looping 3x over the show)', lite.lite && lite.rows === 3 && lite.m1 && lite.m3 && lite.shake === 'none' && lite.beam === 'none' && lite.conf === 'block' && lite.confAnim === 'none' && lite.strobe === 'cel-lite-flash' && lite.strobeIt === 3 && lite.strobeDur === 3000 && lite.ms === 9000 && lite.title === 'none' && lite.def === false, JSON.stringify(lite));
 await celShot('celebrate-goal-hurricanes-lite');
 await dismiss(); s = await st();
 const ae1 = await page.evaluate(() => document.activeElement && document.activeElement.id);
@@ -151,7 +155,8 @@ await page.evaluate(() => gcClose());
 await open('990002'); await page.click('#gc-cel-home'); await sleep(100);
 Object.assign(games['990002'], { h: 30, scoring: 'Rahjai Harris 12 Yd Run (Andrew Conrad Kick)', scoringType: 'Rushing Touchdown', scoringTeam: '151' }); await poll();
 shown = await waitShow(); s = await st();
-check('ECU +6 with a touchdown scoring play -> TOUCHDOWN!! + scorer from the play text (name card, no headshot id)', shown && s.last && s.last.text === 'TOUCHDOWN!!' && s.last.player === 'Rahjai Harris' && /RAHJAI HARRIS/.test(s.mq), JSON.stringify(s.last));
+const tdHead = await page.evaluate(() => ({ has: document.getElementById('celebrate').classList.contains('has-player'), src: document.getElementById('cel-head').getAttribute('src') || '', more: document.getElementById('cel-pmore').textContent }));
+check('ECU +6 with a touchdown scoring play -> TOUCHDOWN!! + scorer from the play text, headshot via the boxscore name', shown && s.last && s.last.text === 'TOUCHDOWN!!' && s.last.player === 'Rahjai Harris' && /RAHJAI HARRIS/.test(s.mq) && tdHead.has && /\/5079419\.png$/.test(tdHead.src), JSON.stringify(s.last) + ' ' + JSON.stringify(tdHead));
 await celShot('celebrate-touchdown-ecu-lite'); await dismiss();
 const f3 = (await st()).fired; Object.assign(games['990002'], { h: 31, scoring: 'Extra point good', scoringType: 'Extra Point' }); await poll(); await sleep(500);
 check('extra point after the TD does not fire', (await st()).fired === f3);
@@ -175,13 +180,35 @@ await sleep(900); await shot('alert-redzone-ecu');
 let af = a.fired; await poll(); await sleep(300); a = await al();
 check('the same red-zone trip does not re-fire on the next poll', a.fired === af, `fired ${af} -> ${a.fired}`);
 await alClear();
-games['990002'].drives.current.plays.push({ id: 'p41', type: { text: 'Pass Reception' }, statYardage: 34, text: 'Houser pass complete to Smith for 34 yds' }); await poll();
+games['990002'].drives.current.plays.push({ id: 'p41', type: { text: 'Pass Reception' }, statYardage: 34, text: '(9:12) Shotgun #10 R.Houser pass complete short right to #9 D.Lorick caught at TEM45, for 34 yards to the TEM20' }); await poll();
 ok = await waitAl(); a = await al();
-check('34-yard completion -> BIG PLAY! 34 YDS', ok && a.last && a.last.text === 'BIG PLAY! 34 YDS', JSON.stringify(a.last));
+const bpc = await page.evaluate(() => ({ has: document.getElementById('cel-alert').classList.contains('has-player'), name: document.getElementById('al-pname').textContent, src: document.getElementById('al-head').getAttribute('src') || '', vis: getComputedStyle(document.getElementById('al-head')).display }));
+check('34-yard completion -> BIG PLAY! 34 YDS banner with the receiver\'s headshot + name chip (D.Lorick -> Dillon Lorick)', ok && a.last && a.last.text === 'BIG PLAY! 34 YDS' && bpc.has && bpc.name === 'DILLON LORICK' && /\/5148837\.png$/.test(bpc.src) && bpc.vis === 'block', JSON.stringify(a.last) + ' ' + JSON.stringify(bpc));
+await sleep(900); await shot('alert-bigplay-ecu-player-chip');
 await alClear();
-games['990002'].drives.previous = [{ id: 'd6', team: { id: '218' }, plays: [{ id: 'p30', type: { text: 'Pass Interception Return' }, statYardage: 0, text: 'Temple pass intercepted by ECU' }] }]; await poll();
-ok = await waitAl(); a = await al();
-check('opponent interception -> INTERCEPTION! for the toggled defence', ok && a.last && a.last.text === 'INTERCEPTION!' && /East Carolina/.test(a.last.team), JSON.stringify(a.last));
+// turnovers: full-screen moments for the toggled team when it GAINS the ball
+const intPlay = { id: 'p30', type: { text: 'Pass Interception Return' }, isTurnover: true, statYardage: 21, end: { team: { id: '151' } }, text: '(12:38) Shotgun #4 E.Simmons pass intercepted by #0 A.Ross at ECU30 #0 A.Ross return 21 yards to the ECU49' };
+games['990002'].drives.previous = [{ id: 'd6', team: { id: '218' }, plays: [intPlay] }]; await poll();
+shown = await waitShow(); s = await st();
+const ip = await page.evaluate(() => ({ head: document.getElementById('cel-head').getAttribute('src') || '', name: document.getElementById('cel-pname').textContent, more: document.getElementById('cel-pmore').textContent, sub: document.getElementById('cel-sub').textContent, has: document.getElementById('celebrate').classList.contains('has-player') }));
+check('opponent interception -> full-screen INTERCEPTION!! for the toggled defence, interceptor photo + "PICKS OFF E. SIMMONS"', shown && s.last && s.last.text === 'INTERCEPTION!!' && s.last.player === 'Angelo Ross' && ip.has && /\/5213304\.png$/.test(ip.head) && ip.more === 'PICKS OFF E. SIMMONS' && /TURNOVER!/.test(ip.sub), JSON.stringify(s.last) + ' ' + JSON.stringify(ip));
+await celShot('celebrate-interception-ecu-player'); await dismiss();
+let f4 = (await st()).fired;
+games['990002'].drives.previous.push({ id: 'd8', team: { id: '151' }, plays: [{ id: 'p50', type: { text: 'Fumble Recovery (Opponent)' }, isTurnover: true, end: { team: { id: '218' } }, text: 'R.Harris rush for 2 yards fumbled by #2 R.Harris forced by #9 K.Lee recovered by TEM #31 J.Doe at ECU27' }] }); await poll(); await sleep(500);
+check('ECU loses a fumble (Temple gains it) -> nothing for the ECU fan', (await st()).fired === f4 && !(await st()).showing);
+games['990002'].drives.previous.push({ id: 'd9', team: { id: '218' }, result: 'DOWNS', plays: [{ id: 'p60', type: { text: 'Pass Incompletion' }, isTurnover: false, end: { team: { id: '218' } }, text: '4th down pass incomplete' }] }); await poll();
+shown = await waitShow(); s = await st();
+check('Temple stopped on 4th down -> TURNOVER ON DOWNS! (team-logo layout, no player)', shown && s.last && s.last.text === 'TURNOVER ON DOWNS!' && !s.last.player, JSON.stringify(s.last)); await dismiss();
+await page.evaluate(() => { settings.alertFumble = false; }); f4 = (await st()).fired;
+games['990002'].drives.previous.push({ id: 'd10', team: { id: '218' }, plays: [{ id: 'p70', type: { text: 'Fumble Recovery (Opponent)' }, isTurnover: true, end: { team: { id: '151' } }, text: 'E.Simmons sacked fumbled by #4 E.Simmons forced by #5 D.Johnson recovered by ECU #5 D.Johnson at TEM20' }] }); await poll(); await sleep(500);
+check('Fumbles switched off in settings -> no FUMBLE!! moment', (await st()).fired === f4);
+await page.evaluate(() => { settings.alertFumble = true; });
+games['990002'].drives.previous.push({ id: 'd11', team: { id: '218' }, plays: [{ id: 'p80', type: { text: 'Fumble Recovery (Opponent)' }, isTurnover: true, end: { team: { id: '151' } }, text: 'E.Simmons sacked fumbled by #4 E.Simmons forced by #5 D.Johnson recovered by ECU #5 D.Johnson at TEM18' }] }); await poll();
+shown = await waitShow(); s = await st();
+check('ECU recovers a Temple fumble -> FUMBLE!! with recoverer "DJ Johnson Jr." + FORCED BY', shown && s.last && s.last.text === 'FUMBLE!!' && s.last.player === 'DJ Johnson Jr.' && /FORCED BY D\. JOHNSON/.test(s.last.more), JSON.stringify(s.last)); await dismiss();
+games['990002'].drives.previous = [{ id: 'd12', team: { id: '218' }, plays: [{ id: 'p90', type: { text: 'Blocked Punt' }, isTurnover: false, end: { team: { id: '218' } }, text: '#30 T.Kick punt blocked by #0 A.Ross, recovered by TEM #3 B.Back at TEM20' }] }]; await poll();
+shown = await waitShow(); s = await st();
+check('blocked Temple punt -> BLOCKED PUNT!! for ECU (blocker photo) even when Temple recovers', shown && s.last && s.last.text === 'BLOCKED PUNT!!' && s.last.player === 'Angelo Ross', JSON.stringify(s.last)); await dismiss();
 await alClear(); af = (await al()).fired;
 games['990002'].a = 35; await poll(); await sleep(400);
 check('lead change to the team that is not toggled: no alert', (await al()).fired === af);
@@ -199,7 +226,8 @@ check('pre -> in for a toggled team -> PUCK DROP! banner', ok && a.last && a.las
 await alClear();
 games['990001'].plays = [{ id: 'pen1', type: { text: 'Hooking', penaltyMinutes: '2', penaltyType: 'Minor' }, team: { id: '13' }, text: 'Mika Zibanejad Hooking against Sebastian Aho' }]; await poll();
 ok = await waitAl(); a = await al();
-check('Rangers penalty -> POWER PLAY! banner for the Hurricanes', ok && a.last && a.last.type === 'pp' && /Hurricanes/.test(a.last.team) && /2 MIN/.test(a.last.sub), JSON.stringify(a.last));
+const ppn = await page.evaluate(() => document.getElementById('al-pname').textContent);
+check('Rangers penalty -> POWER PLAY! banner for the Hurricanes (name chip: the player who drew it)', ok && a.last && a.last.type === 'pp' && /Hurricanes/.test(a.last.team) && /2 MIN/.test(a.last.sub) && ppn === 'SEBASTIAN AHO', JSON.stringify(a.last) + ' ' + ppn);
 await sleep(900); await shot('alert-powerplay-canes');
 af = a.fired; await poll(); await sleep(300);
 check('the same penalty does not re-fire', (await al()).fired === af);
@@ -207,8 +235,8 @@ await alClear(); await page.evaluate(() => { settings.alertPP = false; });
 games['990001'].plays.push({ id: 'pen2', type: { text: 'Tripping', penaltyMinutes: '2', penaltyType: 'Minor' }, team: { id: '13' }, text: 'Adam Fox Tripping against Seth Jarvis' }); await poll(); await sleep(400);
 check('Power Play alerts switched off in settings -> no banner', (await al()).fired === af);
 await page.evaluate(() => { settings.alertPP = true; });
-const alertRows = await page.evaluate(() => ['alertRedzone', 'alertPP', 'alertStart', 'alertLead', 'alertBig'].map(k => !!document.getElementById('set-' + k) && defaultSettings[k] === true));
-check('settings has a per-alert-type on/off list (5 types, default ON)', alertRows.every(Boolean), JSON.stringify(alertRows));
+const alertRows = await page.evaluate(() => ['alertRedzone', 'alertPP', 'alertStart', 'alertLead', 'alertBig', 'alertInt', 'alertFumble', 'alertDowns', 'alertBlock'].map(k => !!document.getElementById('set-' + k) && defaultSettings[k] === true));
+check('settings has a per-type on/off list (5 alert + 4 turnover types, default ON)', alertRows.every(Boolean), JSON.stringify(alertRows));
 // sync helper: data clock ticks between polls; SYNC NOW twice -> delay
 Object.assign(games['990001'], { clock: '12:34', detail: '2nd 12:34' }); await poll(); Object.assign(games['990001'], { clock: '12:24', detail: '2nd 12:24' }); await poll(); await sleep(500);
 const c1 = await page.evaluate(() => document.getElementById('gc-dclock').textContent); await sleep(1600); const c2 = await page.evaluate(() => document.getElementById('gc-dclock').textContent);
@@ -250,7 +278,7 @@ const fx = await p2.evaluate(() => { const c = () => document.getElementById('ce
 check('Full effects setting (D-pad checkbox) turns Lite off; the TV app (window.ArcadeTV) always gets Lite', fx.full && fx.tv && fx.row, JSON.stringify(fx));
 await p2.evaluate(() => arcadeCelebrate('alerts'));
 const demo = await p2.evaluate(() => ({ show: cel.alShowing, t: cel.alLast && cel.alLast.text, q: cel.aq.length }));
-check('arcadeCelebrate("alerts") previews the banners (red zone first, others queued)', demo.show && demo.t === 'RED ZONE!' && demo.q === 3, JSON.stringify(demo));
+check('arcadeCelebrate("alerts") previews the banners (red zone first, others queued)', demo.show && demo.t === 'RED ZONE!' && demo.q === 4, JSON.stringify(demo));
 await p2.close();
 
 check('no console errors / page errors', errors.length === 0, errors.slice(0, 5).join(' | '));
