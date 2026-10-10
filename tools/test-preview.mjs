@@ -83,6 +83,8 @@ const API_RULES = [
     label: () => 'Open-Meteo weather (Greenville NC)', validate: j => (j && j.current && j.current.temperature_2m != null) ? null : 'no current.temperature_2m' },
   { id: 'opentdb', kind: 'api', re: /^https:\/\/opentdb\.com\/api\.php/,
     label: () => 'Open Trivia DB (sports)', validate: j => (j && j.response_code === 0) ? null : `response_code=${j && j.response_code}` },
+  { id: 'espn-news', kind: 'api', re: /^https:\/\/site\.api\.espn\.com\/apis\/site\/v2\/sports\/([^/]+)\/([^/?]+)\/news/, // Headlines slide (photos)
+    label: m => `ESPN news ${m[1]}/${m[2]}`, validate: j => Array.isArray(j && j.articles) ? null : 'no articles[] in body' },
   { id: 'rss2json', kind: 'api', re: /^https:\/\/api\.rss2json\.com\/v1\/api\.json\?rss_url=([^&]+)/,
     label: m => `rss2json ${decodeURIComponent(m[1]).replace(/^https?:\/\//, '')}`, validate: j => (j && j.status === 'ok') ? null : `status=${j && j.status} ${j && j.message ? j.message : ''}` },
   { id: 'qrserver', kind: 'infra', re: /^https:\/\/api\.qrserver\.com\/v1\/create-qr-code/, label: () => 'QR Server (remote QR image)' },
@@ -520,7 +522,7 @@ async function runOne(opts, file, outDir, label) {
                        'ESPN standings basketball/nba', 'ESPN standings hockey/nhl', 'ESPN standings baseball/mlb']) {
       if (!seenLabels.has(req)) missing.push(req);
     }
-    if (![...seenLabels].some(l => l.startsWith('rss2json'))) missing.push('rss2json (news)');
+    if (![...seenLabels].some(l => l.startsWith('ESPN news '))) missing.push('ESPN news (headlines)');
   }
   result.missingApis = missing;
 
