@@ -207,7 +207,7 @@ async function runOne(opts, file, outDir, label) {
       // 429 = upstream quota exhausted for THIS machine's IP (e.g. shared box egress). Reported, but only fails with --strict.
       if (status === 429) { entry.rateLimited = true; try { entry.error = 'HTTP 429 rate-limited: ' + (await res.text()).slice(0, 120); } catch (e) {} }
       if (entry.ok && c.rule.validate && ['fetch', 'xhr'].includes(res.request().resourceType())) {
-        try { const j = JSON.parse(await res.text()); const v = c.rule.validate(j); if (v) { entry.ok = false; entry.error = v; } }
+        try { const body = await res.text(), j = c.rule.text ? body.split('\n').filter(Boolean).map(l => JSON.parse(l)) : JSON.parse(body); const v = c.rule.validate(j); /* text rules = NDJSON (ntfy poll) */ if (v) { entry.ok = false; entry.error = v; } }
         catch (e) {
           // Chrome drops a response body once the page is done with it (e.g. a Gamecast closed right after the reply
           // arrived); the request itself succeeded, so only flag real parse failures.

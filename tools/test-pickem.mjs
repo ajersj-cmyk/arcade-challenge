@@ -33,12 +33,15 @@ const BUF = T(2, 'BUF', 'Bills', 0, '4-1'), KC = T(12, 'KC', 'Chiefs', 0, '5-0')
 const LAL = T(13, 'LAL', 'Lakers', 0, '1-0', 'nba'), BOS = T(2001, 'BOS', 'Celtics', 0, '1-0', 'nba'), CAR = T(7, 'CAR', 'Hurricanes', 0, '2-0', 'nhl'), NYR = T(13001, 'NYR', 'Rangers', 0, '1-1', 'nhl'),
   NYY = T(10, 'NYY', 'Yankees', 0, '94-68', 'mlb'), BSX = T(2002, 'BOS', 'Red Sox', 0, '90-72', 'mlb'), SJ = T(18, 'SJ', 'Sharks', 0, '0-2', 'nhl'), ANA = T(25, 'ANA', 'Ducks', 0, '1-1', 'nhl');
 const G2_START = NOW + 45000;
+// upcoming fixtures must stay on today's ET date even when the test runs just before midnight ET
+let END0 = NOW; while (P.etDate(END0) === D0) END0 += 60000;
+const up = min => NOW + Math.min(min * 60000, Math.max(150000, (END0 - NOW - 240000) * min / 50));
 const TODAY = {
-  'football/nfl': [ev(401001, 'nfl', NOW + 40 * 60000, 'pre', BUF, KC, { net: 'CBS', spread: 2.5, line: 'KC -2.5' })],
+  'football/nfl': [ev(401001, 'nfl', up(40), 'pre', BUF, KC, { net: 'CBS', spread: 2.5, line: 'KC -2.5' })],
   'football/college-football': [ev(401002, 'cfb', G2_START, 'pre', UGA, ALA, { net: 'ABC', spread: 1.5, line: 'UGA -1.5' })],
   'basketball/nba': [ev(401003, 'nba', NOW - 60 * 60000, 'in', LAL, BOS, { net: 'TNT', as: 50, hs: 48 })],
-  'hockey/nhl': [ev(401004, 'nhl', NOW - 150 * 60000, 'post', CAR, NYR, { net: 'ESPN', as: 4, hs: 2, aw: true, hw: false }), ev(401006, 'nhl', NOW + 45 * 60000, 'pre', SJ, ANA, {})],
-  'baseball/mlb': [ev(401005, 'mlb', NOW + 50 * 60000, 'pre', NYY, BSX, { net: 'TBS', post: true, spread: 1.5 })],
+  'hockey/nhl': [ev(401004, 'nhl', NOW - 150 * 60000, 'post', CAR, NYR, { net: 'ESPN', as: 4, hs: 2, aw: true, hw: false }), ev(401006, 'nhl', up(45), 'pre', SJ, ANA, {})],
+  'baseball/mlb': [ev(401005, 'mlb', up(50), 'pre', NYY, BSX, { net: 'TBS', post: true, spread: 1.5 })],
 };
 const TOMORROW = { 'football/nfl': [ev(402001, 'nfl', Date.parse(D1.slice(0, 4) + '-' + D1.slice(4, 6) + '-' + D1.slice(6) + 'T17:00:00Z'), 'pre', KC, BUF, { net: 'FOX' })] };
 let allDone = false;

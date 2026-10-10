@@ -151,8 +151,12 @@
     P.slateMsg = function (sl) { return { v: 1, t: 'slate', date: sl.date, ids: sl.games.map(function (g) { return g.id; }) }; };
     // publish the freeze for any slate this device ranked first (no-op when the room already has one)
     P.freezeNew = function (slates, fetchFn) {
-        return Promise.all([slates.today, slates.tomorrow].filter(function (s) { return s && s.fresh && s.games.length; }).map(function (s) { s.fresh = false; return P.publish(P.ROOM + '-p', P.slateMsg(s), fetchFn).catch(function () {}); }));
+        return Promise.all([slates.today, slates.tomorrow].filter(function (s) { return s && s.fresh && s.games.length; }).map(function (s) {
+            s.fresh = false; var m = P.slateMsg(s);
+            return P.publish(P.ROOM + '-p', m, fetchFn).then(function (r) { m._t = r.time * 1000; m._id = r.id; return m; }, function () { return null; });
+        })).then(function (l) { return l.filter(Boolean); }); // resolves with the published messages (ntfy's poll can lag a few seconds)
     };
+    P.mergeMsgs = function (msgs, extra) { var have = {}; (msgs || []).forEach(function (m) { have[m._id] = 1; }); return (msgs || []).concat((extra || []).filter(function (m) { return m && !have[m._id]; })); };
     P.result = function (g) { // 'pre' | 'in' | final winner team id | 'tie'
         if (!g) return '';
         if (g.state !== 'post' && !g.done) return g.state || 'pre';

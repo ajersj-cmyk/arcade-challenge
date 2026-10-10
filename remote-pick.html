@@ -164,7 +164,7 @@ function tab(t) {
     if (t === 'remote') listenAcks(); else if (S.es) { S.es.close(); S.es = null; }
 }
 function slateGames() { var s = S.slates; if (!s) return []; return s.today.games.concat(s.tomorrow ? s.tomorrow.games : []); }
-function readMsgs() { return P.readNtfy(P.ROOM + '-p', 'all').then(function (m) { S.msgs = m; }, function () {}); }
+function readMsgs() { var own = S.msgs.filter(function (m) { return m.t === 'slate'; }); return P.readNtfy(P.ROOM + '-p', 'all').then(function (m) { S.msgs = P.mergeMsgs(m, own); }, function () {}); }
 function refresh(full) {
     if (S.busy) return; S.busy = true;
     var now = Date.now(), room = P.ROOM;
@@ -176,7 +176,7 @@ function refresh(full) {
         P.applyFrozen(S.slates, frozen);
     }).then(function () {
         if (!S.slates || !(S.slates.today.fresh || (S.slates.tomorrow && S.slates.tomorrow.fresh))) return;
-        return P.freezeNew(S.slates).then(readMsgs).then(function () { P.applyFrozen(S.slates, P.frozen(S.file, S.msgs)); }); // first device today: freeze the TOP 5
+        return P.freezeNew(S.slates).then(function (mine) { return readMsgs().then(function () { S.msgs = P.mergeMsgs(S.msgs, mine); P.applyFrozen(S.slates, P.frozen(S.file, S.msgs)); }); }); // first device today: freeze the TOP 5
     }).then(function () { return merge(); }).then(function () { S.busy = false; render(); }, function () { S.busy = false; render(); });
 }
 function merge() {

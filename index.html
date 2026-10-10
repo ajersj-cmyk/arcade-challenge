@@ -2641,7 +2641,7 @@
         function pkRoom() { // apply the room from Settings; a new room drops the cached picks
             var P = window.Pickem; if (!P) return '';
             var r = P.setRoom(settings.pickemRoom || P.DEFAULT_ROOM);
-            if (r !== pk.room) { pk.room = r; pk.file = null; pk.fileAt = 0; pk.msgs = []; pk.slates = null; }
+            if (r !== pk.room) { pk.room = r; pk.file = null; pk.fileAt = 0; pk.msgs = []; pk.own = []; pk.slates = null; }
             return r;
         }
         function pkRoomApply() {
@@ -2659,15 +2659,16 @@
         async function pkLoad() {
             var P = window.Pickem, now = Date.now(), jobs = [], room = pkRoom();
             if (!pk.file || now - pk.fileAt > 300000) jobs.push(P.fetchJSON(P.dataUrl() + '?t=' + Math.floor(now / 120000), 9000, arcadeFetch).then(function(d) { if (d && d.room === room) { pk.file = d; pk.fileAt = now; } }, function() {}));
-            jobs.push(P.readNtfy(room + '-p', 'all', arcadeFetch).then(function(m) { pk.msgs = m; }, function() {}));
+            jobs.push(P.readNtfy(room + '-p', 'all', arcadeFetch).then(function(m) { pk.msgs = P.mergeMsgs(m, pk.own); }, function() {})); /* own freeze kept until ntfy's poll shows it */
             await Promise.all(jobs);
             var frozen = P.frozen(pk.file, pk.msgs);
             if (!pk.slates || now - pk.slates.now > 180000) { try { pk.slates = await P.loadSlates(now, arcadeFetch, frozen); } catch (e) {} }
             else P.applyFrozen(pk.slates, frozen);
             var sl = pk.slates;
             if (sl && (sl.today.fresh || (sl.tomorrow && sl.tomorrow.fresh))) { // first device in this room today: freeze the TOP 5
-                await P.freezeNew(sl);
-                try { pk.msgs = await P.readNtfy(room + '-p', 'all', arcadeFetch); P.applyFrozen(sl, P.frozen(pk.file, pk.msgs)); } catch (e) {}
+                var mine = await P.freezeNew(sl);
+                try { pk.msgs = P.mergeMsgs(await P.readNtfy(room + '-p', 'all', arcadeFetch), mine); P.applyFrozen(sl, P.frozen(pk.file, pk.msgs)); } catch (e) {}
+                pk.own = (pk.own || []).concat(mine);
                 P.announce(window.localStorage);
             }
             var d = JSON.parse(JSON.stringify(pk.file || P.emptyData())), starts = {}, games = sl ? sl.today.games.concat(sl.tomorrow ? sl.tomorrow.games : []) : [];
