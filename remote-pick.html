@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#05070d">
+<title>Ahlers Arcade · Pick'em + Remote</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&family=Barlow+Condensed:ital,wght@0,600;0,700;0,800;1,800&display=swap" rel="stylesheet">
+<style>
+:root { --cy: #00f0ff; --pk: #ff2bd6; --gr: #39ff14; --yl: #ffe600; --bg: #05070d; --card: #0e1524; --line: rgba(255,255,255,0.09); --disp: 'Barlow Condensed', 'Inter', sans-serif; }
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { margin: 0; background: var(--bg); color: #fff; font-family: 'Inter', system-ui, sans-serif; }
+body { min-height: 100vh; padding-bottom: calc(76px + env(safe-area-inset-bottom)); background: radial-gradient(120% 60% at 50% -10%, #12234a 0%, var(--bg) 60%) fixed; }
+header { position: sticky; top: 0; z-index: 5; display: flex; align-items: center; gap: 10px; padding: 12px 16px 10px; background: rgba(5,7,13,0.92); border-bottom: 1px solid var(--line); backdrop-filter: blur(6px); }
+header h1 { margin: 0; font-family: var(--disp); font-style: italic; font-weight: 800; font-size: 26px; letter-spacing: 0.02em; text-transform: uppercase; color: #fff; text-shadow: 0 0 12px rgba(0,240,255,0.6); flex: 1; }
+header h1 b { color: var(--cy); }
+#me { font-family: var(--disp); font-weight: 800; font-size: 15px; letter-spacing: 0.08em; padding: 6px 10px; border: 1px solid var(--cy); color: var(--cy); border-radius: 999px; background: none; text-transform: uppercase; }
+main { padding: 12px 14px; max-width: 560px; margin: 0 auto; }
+.tab { display: none; } .tab.on { display: block; }
+.sub { font-family: var(--disp); font-weight: 800; font-size: 15px; letter-spacing: 0.16em; color: var(--gr); margin: 6px 2px 10px; text-transform: uppercase; display: flex; justify-content: space-between; }
+.sub span { color: rgba(255,255,255,0.55); letter-spacing: 0.08em; }
+.game { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 12px; margin-bottom: 12px; box-shadow: 0 6px 18px rgba(0,0,0,0.35); }
+.g-top { display: flex; align-items: center; gap: 8px; font-family: var(--disp); font-weight: 800; font-size: 14px; letter-spacing: 0.1em; color: rgba(255,255,255,0.75); text-transform: uppercase; }
+.g-top .lg { color: #000; background: var(--cy); border-radius: 4px; padding: 2px 6px; }
+.g-top .rk { color: var(--yl); }
+.g-top .st { margin-left: auto; color: #fff; }
+.g-top .st.live { color: #ff3b5c; } .g-top .st.lock { color: rgba(255,255,255,0.55); }
+.why { display: flex; flex-wrap: wrap; gap: 5px; margin: 8px 0 10px; }
+.why i { font-style: normal; font-family: var(--disp); font-weight: 700; font-size: 12px; letter-spacing: 0.08em; padding: 2px 7px; border-radius: 999px; border: 1px solid rgba(255,230,0,0.4); color: var(--yl); }
+.teams { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.tm { position: relative; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 12px 6px 10px; border-radius: 12px; border: 2px solid rgba(255,255,255,0.12); background: rgba(255,255,255,0.04); color: #fff; font: inherit; cursor: pointer; min-height: 132px; }
+.tm img { width: 54px; height: 54px; object-fit: contain; }
+.tm .nm { font-family: var(--disp); font-weight: 800; font-size: 21px; line-height: 1; text-transform: uppercase; text-align: center; }
+.tm .rc { font-size: 12px; color: rgba(255,255,255,0.6); }
+.tm .sc { position: absolute; top: 8px; right: 10px; font-family: var(--disp); font-weight: 800; font-size: 24px; }
+.tm .rkb { position: absolute; top: 8px; left: 10px; font-family: var(--disp); font-weight: 800; font-size: 15px; color: var(--yl); }
+.tm.mine { border-color: var(--gr); background: rgba(57,255,20,0.12); box-shadow: 0 0 16px rgba(57,255,20,0.35) inset; }
+.tm.mine::after { content: 'YOUR PICK'; position: absolute; bottom: -9px; font-family: var(--disp); font-weight: 800; font-size: 11px; letter-spacing: 0.12em; background: var(--gr); color: #000; padding: 1px 7px; border-radius: 999px; }
+.tm:disabled { cursor: default; opacity: 0.88; }
+.tm.won { border-color: var(--yl); }
+.who { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px; }
+.who div { display: flex; flex-wrap: wrap; gap: 4px; justify-content: center; min-height: 10px; }
+.chip { font-family: var(--disp); font-weight: 700; font-size: 13px; letter-spacing: 0.05em; padding: 2px 8px; border-radius: 999px; background: rgba(255,255,255,0.1); text-transform: uppercase; }
+.chip.ok { background: rgba(57,255,20,0.2); color: var(--gr); } .chip.no { background: rgba(255,59,92,0.18); color: #ff6b84; text-decoration: line-through; }
+.lockline { margin-top: 8px; font-size: 12px; color: rgba(255,255,255,0.55); text-align: center; letter-spacing: 0.04em; }
+table { width: 100%; border-collapse: collapse; background: var(--card); border-radius: 16px; overflow: hidden; }
+th, td { padding: 11px 8px; text-align: center; font-family: var(--disp); font-weight: 700; font-size: 18px; border-bottom: 1px solid var(--line); }
+th { font-size: 13px; letter-spacing: 0.12em; color: rgba(255,255,255,0.55); }
+td.n { text-align: left; font-weight: 800; text-transform: uppercase; }
+tr.me td { color: var(--gr); }
+.stk.W { color: var(--gr); } .stk.L { color: #ff6b84; }
+.rm { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.rb { font-family: var(--disp); font-weight: 800; font-size: 24px; letter-spacing: 0.06em; text-transform: uppercase; padding: 22px 8px; border-radius: 16px; border: 2px solid var(--cy); background: rgba(0,240,255,0.08); color: #fff; cursor: pointer; }
+.rb:active { transform: scale(0.97); background: rgba(0,240,255,0.25); }
+.rb.wide { grid-column: span 2; } .rb.pk { border-color: var(--pk); background: rgba(255,43,214,0.08); } .rb.yl { border-color: var(--yl); background: rgba(255,230,0,0.07); } .rb.gr { border-color: var(--gr); background: rgba(57,255,20,0.07); }
+.gcl { display: flex; flex-direction: column; gap: 8px; margin-top: 4px; }
+.gcb { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 12px; border: 1px solid var(--line); background: var(--card); color: #fff; font: inherit; text-align: left; cursor: pointer; }
+.gcb img { width: 28px; height: 28px; object-fit: contain; }
+.gcb .t { flex: 1; font-family: var(--disp); font-weight: 800; font-size: 19px; text-transform: uppercase; }
+.gcb .s { font-family: var(--disp); font-weight: 700; font-size: 14px; color: rgba(255,255,255,0.65); text-align: right; }
+.gcb .s.live { color: #ff3b5c; }
+#rstat { margin: 12px 2px 4px; min-height: 22px; font-family: var(--disp); font-weight: 800; letter-spacing: 0.08em; font-size: 16px; text-transform: uppercase; color: rgba(255,255,255,0.6); }
+#rstat.ok { color: var(--gr); } #rstat.bad { color: #ff6b84; }
+nav { position: fixed; left: 0; right: 0; bottom: 0; z-index: 6; display: grid; grid-template-columns: repeat(3, 1fr); background: rgba(5,7,13,0.96); border-top: 1px solid var(--line); padding-bottom: env(safe-area-inset-bottom); }
+nav button { background: none; border: 0; color: rgba(255,255,255,0.55); font-family: var(--disp); font-weight: 800; font-size: 17px; letter-spacing: 0.12em; padding: 14px 0 16px; cursor: pointer; }
+nav button.on { color: var(--cy); box-shadow: 0 -3px 0 var(--cy) inset; }
+#sheet { position: fixed; inset: 0; z-index: 10; background: rgba(0,0,0,0.8); display: none; align-items: flex-end; }
+#sheet.on { display: flex; }
+#sheet .box { width: 100%; background: #0c1222; border-top: 2px solid var(--cy); border-radius: 20px 20px 0 0; padding: 22px 18px calc(22px + env(safe-area-inset-bottom)); }
+#sheet h2 { margin: 0 0 6px; font-family: var(--disp); font-style: italic; font-weight: 800; font-size: 30px; text-transform: uppercase; }
+#sheet p { margin: 0 0 14px; color: rgba(255,255,255,0.65); font-size: 14px; }
+#sheet input { width: 100%; font-size: 22px; padding: 14px; border-radius: 12px; border: 2px solid rgba(255,255,255,0.2); background: #050810; color: #fff; font-family: var(--disp); font-weight: 700; text-transform: uppercase; }
+#sheet .err { color: #ff6b84; min-height: 20px; font-size: 13px; margin: 6px 2px; }
+#sheet button { width: 100%; margin-top: 6px; font-family: var(--disp); font-weight: 800; font-size: 22px; letter-spacing: 0.1em; padding: 14px; border: 0; border-radius: 12px; background: var(--cy); color: #000; }
+#toast { position: fixed; left: 50%; bottom: 92px; transform: translateX(-50%) translateY(20px); opacity: 0; transition: transform 0.2s, opacity 0.2s; z-index: 11; background: #111a2e; border: 1px solid var(--gr); color: var(--gr); font-family: var(--disp); font-weight: 800; letter-spacing: 0.08em; padding: 10px 16px; border-radius: 999px; pointer-events: none; text-transform: uppercase; white-space: nowrap; }
+#toast.on { opacity: 1; transform: translateX(-50%); } #toast.bad { border-color: #ff6b84; color: #ff6b84; }
+.empty { text-align: center; padding: 30px 10px; color: rgba(255,255,255,0.6); font-family: var(--disp); font-weight: 700; font-size: 18px; letter-spacing: 0.06em; }
+.note { margin: 14px 4px; font-size: 12px; color: rgba(255,255,255,0.45); line-height: 1.5; }
+</style>
+</head>
+<body>
+<header><h1>Ahlers <b>Pick'em</b></h1><button id="me" onclick="askName()">SET NAME</button></header>
+<main>
+  <section class="tab on" id="t-picks"><div id="picks"><div class="empty">LOADING TODAY'S BIG GAMES…</div></div></section>
+  <section class="tab" id="t-board"><div class="sub">SEASON STANDINGS <span id="b-upd"></span></div><div id="board"></div>
+    <p class="note">One point per correct pick. Picks lock when each game starts (server time). Ties/draws don't count. Results come from ESPN final scores.</p></section>
+  <section class="tab" id="t-remote">
+    <div class="sub">TV REMOTE <span>ARCADE SCOREBOARD</span></div>
+    <div class="rm">
+      <button class="rb" onclick="cmd('prev')">&#9664; PREV</button><button class="rb" onclick="cmd('next')">NEXT &#9654;</button>
+      <button class="rb gr wide" onclick="cmd('board')">SHOW PICK'EM BOARD</button>
+      <button class="rb pk" onclick="cmd('close')">&#10005; CLOSE</button><button class="rb yl" onclick="cmd('cel')">&#9733; CELEBRATE</button>
+    </div>
+    <div id="rstat"></div>
+    <div class="sub" style="margin-top:16px">OPEN GAMECAST <span>LIVE + TODAY</span></div>
+    <div class="gcl" id="gcl"><div class="empty">LOADING…</div></div>
+    <p class="note">Works while the scoreboard is open on the TV. CELEBRATE plays the silent test celebration.</p>
+  </section>
+</main>
+<nav><button class="on" data-t="picks" onclick="tab('picks')">PICKS</button><button data-t="board" onclick="tab('board')">STANDINGS</button><button data-t="remote" onclick="tab('remote')">REMOTE</button></nav>
+<div id="sheet"><div class="box"><h2>Who's picking?</h2><p>Your name shows on the TV leaderboard. It's saved on this phone.</p>
+  <input id="nm" maxlength="14" autocomplete="given-name" placeholder="NAME" onkeydown="if(event.key==='Enter')saveName()"><div class="err" id="nm-err"></div><button onclick="saveName()">LET'S GO</button></div></div>
+<div id="toast"></div>
+<script src="pickem-core.js"></script>
+<script>
+var P = window.Pickem, S = { name: '', pin: '', slates: null, data: null, msgs: [], tab: 'picks', pend: {}, es: null, busy: false };
+(function init() {
+    var h = new URLSearchParams(location.hash.slice(1));
+    try {
+        if (h.get('room') && /^[a-z0-9-]{8,64}$/.test(h.get('room'))) localStorage.setItem('arcadePickRoom', h.get('room'));
+        if (h.get('pin') != null) localStorage.setItem('arcadePickPin', h.get('pin'));
+        var r = localStorage.getItem('arcadePickRoom'); if (r) P.ROOM = r;
+        S.pin = localStorage.getItem('arcadePickPin') || ''; S.name = P.cleanName(localStorage.getItem('arcadePickName') || '');
+    } catch (e) {}
+    showMe(); if (!S.name) askName();
+    refresh(true);
+    setInterval(function () { if (!document.hidden) refresh(false); }, 30000);
+    document.addEventListener('visibilitychange', function () { if (!document.hidden) refresh(false); });
+})();
+function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+function toast(t, bad) { var el = document.getElementById('toast'); el.textContent = t; el.className = 'on' + (bad ? ' bad' : ''); clearTimeout(toast.t); toast.t = setTimeout(function () { el.className = ''; }, 2200); }
+function showMe() { document.getElementById('me').textContent = S.name || 'SET NAME'; }
+function askName() { var s = document.getElementById('sheet'); s.classList.add('on'); var i = document.getElementById('nm'); i.value = S.name; setTimeout(function () { i.focus(); }, 50); }
+function saveName() {
+    var n = P.cleanName(document.getElementById('nm').value);
+    if (!n) { document.getElementById('nm-err').textContent = '1-14 letters, numbers or spaces.'; return; }
+    var known = S.data && S.data.names, k = n.toLowerCase();
+    if (known && !known[k] && Object.keys(known).length >= P.MAX_PLAYERS) { document.getElementById('nm-err').textContent = 'This room is full (' + P.MAX_PLAYERS + ' players).'; return; }
+    S.name = n; try { localStorage.setItem('arcadePickName', n); } catch (e) {}
+    document.getElementById('sheet').classList.remove('on'); document.getElementById('nm-err').textContent = ''; showMe(); render();
+}
+function tab(t) {
+    S.tab = t; document.querySelectorAll('.tab').forEach(function (x) { x.classList.toggle('on', x.id === 't-' + t); });
+    document.querySelectorAll('nav button').forEach(function (b) { b.classList.toggle('on', b.getAttribute('data-t') === t); });
+    if (t === 'remote') listenAcks(); else if (S.es) { S.es.close(); S.es = null; }
+}
+function slateGames() { var s = S.slates; if (!s) return []; return s.today.games.concat(s.tomorrow ? s.tomorrow.games : []); }
+function refresh(full) {
+    if (S.busy) return; S.busy = true;
+    var now = Date.now(), jobs = [
+        full || !S.slates || now - S.slates.now > 120000 ? P.loadSlates(now).then(function (s) { S.slates = s; }, function () {}) : Promise.resolve(),
+        full || !S.file ? P.fetchJSON(P.DATA_URL + '?t=' + Math.floor(now / 120000), 9000).then(function (d) { if (d && d.room === P.ROOM) S.file = d; }, function () {}) : Promise.resolve(),
+        P.readNtfy(P.ROOM + '-p', 'all').then(function (m) { S.msgs = m; }, function () {})];
+    Promise.all(jobs).then(function () { return merge(); }).then(function () { S.busy = false; render(); }, function () { S.busy = false; render(); });
+}
+function merge() {
+    var d = JSON.parse(JSON.stringify(S.file || P.emptyData())), starts = {};
+    slateGames().forEach(function (g) { starts[g.id] = g.start; if (!d.events[g.id]) d.events[g.id] = P.eventMeta(g); });
+    P.overlayGames(d, slateGames());
+    P.applyPicks(d, S.msgs.concat(Object.keys(S.pend).filter(function (k) { return typeof S.pend[k] === 'object'; }).map(function (k) { return S.pend[k]; })), starts, S.pin);
+    S.data = d;
+    return P.gradeMissing(d, Date.now(), 4);
+}
+function locked(g) { return g.state !== 'pre' || Date.now() >= Date.parse(g.start); }
+function ago(ms) { var m = Math.round(ms / 60000); if (m < 60) return m + 'M'; var h = Math.floor(m / 60); return h < 24 ? h + 'H ' + (m % 60) + 'M' : Math.floor(h / 24) + 'D'; }
+function gameCard(g) {
+    var d = S.data, picks = (d && d.picks[g.id]) || {}, me = S.name.toLowerCase(), mine = picks[me] && picks[me].tm, lk = locked(g), r = P.result(g);
+    var final = r === g.a.id || r === g.h.id || r === 'tie';
+    var st = g.state === 'in' ? '<span class="st live">&#9679; ' + esc(g.detail) + '</span>' : g.state === 'post' ? '<span class="st">' + esc(g.detail || 'FINAL') + '</span>' : '<span class="st">' + esc(P.fmtTime(g.start)) + '</span>';
+    function side(t, s) {
+        var cls = 'tm' + (mine === t.id ? ' mine' : '') + (final && r === t.id ? ' won' : '');
+        return '<button class="' + cls + '" ' + (lk ? 'disabled' : '') + ' onclick="pick(\'' + g.id + '\',\'' + t.id + '\')">' + (t.rank ? '<span class="rkb">#' + t.rank + '</span>' : '') +
+            (g.state !== 'pre' && t.score !== '' ? '<span class="sc">' + esc(t.score) + '</span>' : '') + '<img alt="" src="' + esc(P.logo(t.logo, 120)) + '" onerror="this.style.visibility=\'hidden\'">' +
+            '<span class="nm">' + esc(t.name || t.ab) + '</span><span class="rc">' + esc(t.rec) + (s === 'h' ? ' · HOME' : '') + '</span></button>';
+    }
+    function who(t) { return Object.keys(picks).filter(function (k) { return picks[k].tm === t.id; }).map(function (k) { return '<span class="chip' + (final && r !== 'tie' ? (r === t.id ? ' ok' : ' no') : '') + '">' + esc(d.names[k] || k) + '</span>'; }).join(''); }
+    var lockTxt = lk ? (final ? 'FINAL · ' + (mine ? (r === mine ? 'YOU GOT IT ✓' : r === 'tie' ? 'TIE · NO POINT' : 'MISSED IT') : 'NO PICK') : 'LOCKED · GAME STARTED') : (mine ? 'TAP THE OTHER TEAM TO CHANGE · ' : 'TAP A TEAM · ') + 'LOCKS IN ' + ago(Date.parse(g.start) - Date.now());
+    return '<div class="game" id="g-' + g.id + '"><div class="g-top"><span class="lg">' + esc(g.lg) + '</span>' + (g.nets[0] ? '<span>' + esc(g.nets[0]) + '</span>' : '') + (g.line ? '<span>' + esc(g.line) + '</span>' : '') + st + '</div>' +
+        '<div class="why">' + g.why.slice(0, 4).map(function (w) { return '<i>' + esc(w) + '</i>'; }).join('') + '</div>' +
+        '<div class="teams">' + side(g.a, 'a') + side(g.h, 'h') + '</div><div class="who"><div>' + who(g.a) + '</div><div>' + who(g.h) + '</div></div><div class="lockline">' + esc(lockTxt) + '</div></div>';
+}
+function render() {
+    var s = S.slates, el = document.getElementById('picks');
+    if (!s) { el.innerHTML = '<div class="empty">COULDN\'T REACH ESPN. PULL TO RETRY.</div>'; }
+    else {
+        var h = '', first = s.tomorrow || s.today, label = s.tomorrow ? 'TOMORROW' : 'TODAY';
+        h += '<div class="sub">' + label + "'S TOP " + first.games.length + ' <span>' + P.fmtDay(first.date) + '</span></div>';
+        h += first.games.length ? first.games.map(gameCard).join('') : '<div class="empty">NO GAMES ON THE SCHEDULE</div>';
+        if (s.tomorrow && s.today.games.length) h += '<div class="sub" style="margin-top:18px">TODAY\'S RESULTS <span>' + P.fmtDay(s.today.date) + '</span></div>' + s.today.games.map(gameCard).join('');
+        el.innerHTML = h;
+    }
+    var st = S.data ? P.standings(S.data) : [], me = S.name.toLowerCase();
+    document.getElementById('board').innerHTML = st.length ? '<table><tr><th>#</th><th style="text-align:left">NAME</th><th>W-L</th><th>PCT</th><th>STRK</th></tr>' + st.map(function (x, i) {
+        return '<tr class="' + (x.key === me ? 'me' : '') + '"><td>' + (i + 1) + '</td><td class="n">' + esc(x.name) + '</td><td>' + x.w + '-' + x.l + '</td><td>' + P.fmtPct(x.pct, x) + '</td><td class="stk ' + x.streak.charAt(0) + '">' + esc(x.streak) + '</td></tr>';
+    }).join('') + '</table>' : '<div class="empty">NO PICKS YET. BE THE FIRST!</div>';
+    document.getElementById('b-upd').textContent = S.file && S.file.updated ? 'SYNCED ' + new Date(S.file.updated).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) : '';
+    var all = s ? s.all.slice() : [], rank = {}; slateGames().forEach(function (g, i) { rank[g.id] = i; });
+    all.sort(function (x, y) { var o = { in: 0, pre: 1, post: 2 }; return (o[x.state] - o[y.state]) || ((rank[x.id] == null ? 99 : rank[x.id]) - (rank[y.id] == null ? 99 : rank[y.id])) || (Date.parse(x.start) - Date.parse(y.start)); });
+    document.getElementById('gcl').innerHTML = all.length ? all.slice(0, 14).map(function (g) {
+        return '<button class="gcb" onclick="openGc(\'' + g.id + '\')"><img alt="" src="' + esc(P.logo(g.a.logo, 60)) + '"><img alt="" src="' + esc(P.logo(g.h.logo, 60)) + '"><span class="t">' + esc(g.a.ab + ' @ ' + g.h.ab) +
+            '</span><span class="s' + (g.state === 'in' ? ' live' : '') + '">' + esc(g.lg) + '<br>' + esc(g.state === 'pre' ? P.fmtTime(g.start) : g.detail) + '</span></button>';
+    }).join('') : '<div class="empty">NO GAMES TODAY</div>';
+}
+function pick(e, tm) {
+    if (!S.name) { askName(); return; }
+    var g = slateGames().filter(function (x) { return x.id === e; })[0]; if (!g) return;
+    if (locked(g)) { toast('LOCKED · GAME STARTED', 1); return; }
+    var msg = { v: 1, t: 'pick', n: S.name, e: g.id, k: g.k, lg: g.lg, tm: tm, d: g.start, a: { id: g.a.id, ab: g.a.ab, logo: g.a.logo }, h: { id: g.h.id, ab: g.h.ab, logo: g.h.logo }, g: P.pinTag(S.pin) };
+    var local = Object.assign({ _t: Date.now(), _id: 'local' }, msg); S.pend[e] = local; merge(); render();
+    P.publish(P.ROOM + '-p', msg).then(function (r) {
+        local._t = r.time * 1000; toast('PICK SAVED ✓ ' + (tm === g.a.id ? g.a.ab : g.h.ab));
+        setTimeout(function () { P.readNtfy(P.ROOM + '-p', 'all').then(function (m) { S.msgs = m; delete S.pend[e]; merge(); render(); }, function () {}); }, 1200);
+    }, function () { delete S.pend[e]; merge(); render(); toast('NOT SAVED · CHECK CONNECTION', 1); });
+}
+// ---- remote: commands on "<room>-c"; the TV answers with an ack on the same topic
+function listenAcks() {
+    if (S.es || !window.EventSource) return;
+    try { S.es = new EventSource(P.NTFY + '/' + P.ROOM + '-c/sse'); S.es.onmessage = function (ev) { try { var m = JSON.parse(JSON.parse(ev.data).message); if (m.t === 'ack' && S.pend['c' + m.r]) { clearTimeout(S.pend['c' + m.r]); delete S.pend['c' + m.r]; rstat('TV ✓ ' + (m.s || 'DONE'), 'ok'); } } catch (e) {} }; } catch (e) {}
+}
+function rstat(t, c) { var el = document.getElementById('rstat'); el.textContent = t; el.className = c || ''; }
+function cmd(c, extra) {
+    var id = Math.random().toString(36).slice(2, 10), msg = Object.assign({ v: 1, t: 'cmd', c: c, id: id, n: S.name, g: P.pinTag(S.pin) }, extra || {});
+    rstat('SENDING…'); listenAcks();
+    P.publish(P.ROOM + '-c', msg).then(function () {
+        rstat('SENT · WAITING FOR TV…');
+        S.pend['c' + id] = setTimeout(function () { delete S.pend['c' + id]; rstat('NO ANSWER FROM THE TV · IS THE SCOREBOARD OPEN?', 'bad'); }, 8000);
+    }, function () { rstat('NOT SENT · CHECK CONNECTION', 'bad'); });
+}
+var CID = { 'football/nfl': 'nfl', 'football/college-football': 'cfb', 'basketball/nba': 'nba', 'baseball/mlb': 'mlb', 'hockey/nhl': 'nhl', 'basketball/mens-college-basketball': 'cbb', 'soccer/eng.1': 'epl', 'soccer/uefa.champions': 'ucl' };
+function openGc(id) {
+    var g = (S.slates ? S.slates.all : []).concat(slateGames()).filter(function (x) { return x.id === id; })[0]; if (!g) return;
+    var k = g.k.split('/');
+    cmd('gc', { ev: { sport: k[0], league: k[1], cid: CID[g.k] || k[1], id: g.id, label: g.lg, away: g.a.name, home: g.h.name, awayAbbr: g.a.ab, homeAbbr: g.h.ab, aLogo: g.a.logo, hLogo: g.h.logo,
+        aId: g.a.id, hId: g.h.id, aFull: g.a.full, hFull: g.h.full, aScore: g.a.score, hScore: g.h.score, state: g.state, status: g.detail, tv: g.nets[0] || '', date: g.start } });
+}
+</script>
+</body>
+</html>

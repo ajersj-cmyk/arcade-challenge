@@ -1,0 +1,42 @@
+name: Family pick'em sync
+# Every ~10 min: copy pick'em picks from ntfy.sh (which only caches them 12 h) into picks.json on the "pickem-data" branch
+# and grade finished games from ESPN (scripts/pickem-sync.mjs). Commits only when something changed, never to main.
+# Optional household PIN: add a repository secret PICKEM_PIN (same PIN as Settings -> Pick'em PIN on the TV).
+on:
+  schedule:
+    - cron: '*/10 * * * *'   # GitHub may delay or skip scheduled runs at busy times
+  workflow_dispatch: {}
+permissions:
+  contents: write
+concurrency:
+  group: pickem
+  cancel-in-progress: false
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Check out the data branch
+        run: |
+          git config user.name  "pickem-bot"
+          git config user.email "pickem-bot@users.noreply.github.com"
+          if git fetch --depth 1 origin pickem-data; then
+            git worktree add data FETCH_HEAD
+          else
+            git worktree add --detach data && (cd data && git checkout --orphan pickem-data && git rm -rfq . )
+          fi
+      - name: Sync picks + grade finals
+        env:
+          PICKEM_PIN: ${{ secrets.PICKEM_PIN }}
+        run: node scripts/pickem-sync.mjs data/picks.json
+      - name: Commit if changed
+        working-directory: data
+        run: |
+          git add picks.json
+          if git diff --cached --quiet; then echo "No change"; exit 0; fi
+          git commit -qm "pickem: sync picks + results [skip ci]"
+          git push origin HEAD:pickem-data
