@@ -184,7 +184,7 @@ The old `props` LIVE LEADERS slide (ESPN live stat leaders dressed up as props) 
 | `command-screen` | AHLERS COMMAND CENTER | Greenville NC weather (Open-Meteo) + top-2 "marquee" games by weight | 15 s |
 | `soccer-screen` | GLOBAL SOCCER MATCHES | World Cup/EPL/UCL scoreboards, fetched again | scroll rule / 6 s |
 | `tvguide-screen` | LIVE ON TV | live games with a broadcast; network favicons via Google s2 | scroll rule / 6 s |
-| `news-screen` | TODAY'S HEADLINES | Yahoo + CBS RSS via rss2json, newest 10 | scroll rule / 6 s |
+| `news-screen` | TODAY'S HEADLINES | ESPN league news with photos (see §3c); rss2json Yahoo/CBS only if every ESPN feed fails | 5 hero stories × 7 s (= 35 s) / 6 s |
 | `odds-screen` | TODAY'S LINES | upcoming games with ESPN spread/O-U/ML | scroll rule / 6 s |
 | `futures-screen` | FUTURES | ESPN core futures: Super Bowl, CFB title, NBA title, World Series, Stanley Cup (top 8 each), cached 24 h (`ahlersFutures4`) | scroll rule (18 s) / 8 s |
 | `nflfut-screen` | NFL FUTURES | Super Bowl (8), AFC/NFC champion (6), 8 divisions (4), from `futures.json` (§4a) | scroll rule / 6 s "NO ODDS POSTED" |
@@ -212,7 +212,7 @@ Buttons **OFF · COLLEGE FOOTBALL · COLLEGE BASKETBALL · NFL** at the top of t
   Gamecast registry keep every league, but ticker, live cards, leaders, TV guide, odds, My Squad and the marquee only get the mode's
   league. The mode league looks ahead 45 days for upcoming games (CBB in October shows the Nov 1 exhibitions as UP NEXT). With
   nothing live, LIVE ACTION shows that sport's next games / latest finals. Ticker head reads `NFL MODE · LIVE NOW` etc.
-  News = ESPN `/{sport}/news` for the sport (`NFL / CFB / HOOPS HEADLINES`); rankings = CBB AP poll in hoops mode
+  News = ESPN `/{sport}/news` (limit 20) for the sport only (`NFL / CFB / HOOPS HEADLINES`); rankings = CBB AP poll in hoops mode
   (`COLLEGE HOOPS TOP 25`, poll points when there's no record); futures = ESPN core CBB markets in hoops mode
   (national title, Final Four, ACC/SEC/Big Ten; cached 24 h as `ahlersFuturesCBB1`).
 - **Indicator:** pill under the clock, `NFL MODE · 11:42 LEFT` (updated by the 1 s clock tick). Settings shows the end time.
@@ -254,6 +254,28 @@ device**, so the QR code's phone remote can't actually control the TV.
   MLB, WNBA nearly all; NBA partial; soccer none. Gamecast: `gcVenueSet(d)` uses the summary's `gameInfo.venue.images` (interior
   preferred, 960x540) behind the header (`#gc-venue`, z-index -1 inside the Gamecast stacking context); cleared on close.
 
+### 3c. Headlines slide (PR flynn/headlines)
+
+A broadcast-style news segment instead of the old scrolling list. Code: `showNews` / `nwLoad` / `nwBuild` / `nwHero` in index.html.
+- **Data:** ESPN site news per enabled league (NFL, CFB, NHL, NBA, MLB; CBB only in hoops mode) in parallel, plus team news
+  (`&team=id`) for up to 2 favourite teams (Settings → favourite teams) that are in today's scoreboards. A sport mode fetches only
+  its sport. Fields used: `headline` (or `shortLinkText` when it is shorter), `description` (keywords only), `published`, `type`,
+  `images[]` (16:9 `header` image preferred), `categories[]` (team id/name/short name, athlete id). Cached 5 min.
+- **Picking:** fantasy / betting / picks / schedule / "where to watch" / live-blog items are dropped; dedupe; score = recency +
+  type (HeadlineNews +3, Media/Preview −2) + favourite +8 + photo +2 + breaking +2 + trending +1; max 2 per league in the 5.
+- **Copy:** ESPN's own headline, never rewritten: entities cleaned, "Sources:" prefix and trailing "- ESPN" etc. removed, trimmed
+  to ~90 chars at a word boundary; CSS uppercases it.
+- **Tags (deterministic):** BREAKING (< 60 min old, not video/preview, or "breaking" in the headline), ★ TEAM (favourite),
+  TRENDING (same team/athlete in 2+ stories), kicker from keywords in the headline first, then the description: TRADE ALERT,
+  INJURY UPDATE, SIGNING, RETIREMENT, COACHING CHANGE, RETURN WATCH, SUSPENSION, BIG WIN; else FINAL (Recap), GAME PREVIEW,
+  WATCH (Media), REPORT. Relative time "23 MIN AGO".
+- **Layout:** hero 16:9 photo (left, `min(110vh, 63vw)` wide) with chips, kicker, 3-line condensed headline, team logo +
+  athlete headshot, progress bar; right rail "UP NEXT" with 4 photo cards. Stage height `100vh - ticker - 15.5vh` (fits above
+  the ticker at 720p/1080p). Hero changes every 7 s (`NW_STORY_MS`, own `nwState.timer` with a slide-gen guard), slide = stories × 7 s.
+- **TV-light:** crossfade by opacity; Ken Burns zoom only when `!bxLite()` (none in the TV app / reduced motion); at most one
+  960x540 hero kept decoded (+ the next one preloaded); thumbs `loading=lazy` at 320x180; no photo → team logo art.
+- Test: `node tools/test-news.mjs [file]` (mocked feeds). Screenshots: `node tools/shoot-news.mjs [file] --modes=,nfl,cfb --frames=2 [--tv]`.
+
 ## 4. External APIs and assets
 
 None of them need an API key, and **no keys or tokens are embedded**. The code actively deletes a legacy
@@ -273,13 +295,14 @@ None of them need an API key, and **no keys or tokens are embedded**. The code a
 | ESPN core $ref | `https://sports.core.api.espn.com/v2/sports/.../teams/{id}` (and `/athletes/{id}` for the ESPN fallback) | resolves team names missing from the built-in maps (e.g. CFB) | futures slides |
 | futures.json (same origin) | `futures.json?t=<30-min bucket>`, written daily by `.github/workflows/futures.yml` | each football futures slide, re-checked every 30 min | NFL/CFB futures + awards (§4a) |
 | Action Network | `https://api.actionnetwork.com/web/v1/leagues/{1=NFL,2=NCAAF,3=NHL}/futures/available` and `.../futures/{type}?bookIds=15,68,69,75,123`. CORS echoes the page origin, no key. | **browser fallback only** (file missing or > ~2 days old), cached 3 h (`ahlersFootballFutures2`) | NFL/CFB/NHL futures |
-| ESPN news (sport mode) | `https://site.api.espn.com/apis/site/v2/sports/{football/nfl, football/college-football, basketball/mens-college-basketball}/news?limit=15` (CORS `*`) | news slide, only in a sport mode | headlines |
+| ESPN news | `https://site.api.espn.com/apis/site/v2/sports/{football/nfl, football/college-football, hockey/nhl, basketball/nba, baseball/mlb, basketball/mens-college-basketball}/news?limit=8` (+ `&team={id}` for up to 2 favourite teams playing today; limit 20 in a sport mode). CORS `*`, ~10 KB gz each | news slide; cached 5 min in memory | Headlines (§3c) |
+| ESPN image combiner | `https://a.espncdn.com/combiner/i?img=/photo/...jpg&w=960&h=540&scale=crop&cquality=70` (hero), `w=320&h=180` (cards), team logos `img=/i/teamlogos/{nfl,nhl,nba,mlb,ncaa}/500/{id}.png&w=120&h=120`, headshots `img=/i/headshots/{league}/players/full/{id}.png&w=120&h=88` | Headlines slide | resized photos (16 KB instead of 30-200 KB) |
 | ESPN CBB rankings | `.../basketball/mens-college-basketball/rankings` (CORS `*`, ~290 KB) | rankings slide in hoops mode | AP top 25 |
 | fantasy.json (same origin) | `fantasy.json?t=<30-min bucket>`, written daily by the futures workflow (§4b) | fantasy slide | projections + pickups |
 | ESPN Fantasy | `https://lm-api-reads.fantasy.espn.com/apis/v3/games/ffl/seasons/{yr}/segments/0/leaguedefaults/3?scoringPeriodId={wk}&view=kona_playercard` + `X-Fantasy-Filter` header (CORS echoes the origin and allows that header; no key). ~5 KB/player with the rank filters | live PPR: 2 requests per refresh, only after the week's first kickoff and only while the slide shows (60 s while an NFL game is live, else 15 min cache). Projection fallback (~9 requests) only if `fantasy.json` is missing/> 2.5 days old, cached 12 h (`ahlersFantasy1`) | fantasy slide |
 | Open-Meteo | `https://api.open-meteo.com/v1/forecast?latitude=35.6127&longitude=-77.3663&current=temperature_2m,weather_code&daily=temperature_2m_max,temperature_2m_min&temperature_unit=fahrenheit&timezone=America/New_York` | on load, then every **15 min** (only if Command Center is on) | Command Center weather |
 | Open Trivia DB | `https://opentdb.com/api.php?amount=1&category=21&type=multiple` | on load and after each trivia slide | trivia (rate limit 1 req / 5 s / IP) |
-| rss2json | `https://api.rss2json.com/v1/api.json?rss_url=` + Yahoo Sports RSS / CBS Sports headlines RSS | each time the news slide shows | headlines (free tier, rate-limited) |
+| rss2json | `https://api.rss2json.com/v1/api.json?rss_url=` + Yahoo Sports RSS / CBS Sports headlines RSS | **fallback only**: news slide when every ESPN news feed fails | headlines (free tier, rate-limited) |
 | QR Server | `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=<page>#remote...` | when the settings UI loads | QR `<img>` |
 | Google s2 favicons | `https://www.google.com/s2/favicons?domain=<network>&sz=128` | TV guide | network logos |
 | ESPN CDN images | `https://a.espncdn.com/...` team logos, headshots, league logos, default fallbacks | throughout | images (`onerror` fallbacks) |
@@ -557,6 +580,7 @@ next slide shows right away.
 - [ ] Settings gear top-right with focus outline. `s` / ContextMenu / Menu / Settings keys toggle the modal. Enter on the focused gear works.
 - [ ] Every settings control persists to `localStorage.ahlersArcadeSettings` and takes effect (toggles, favourite teams, marquee, speed)
 - [ ] Broadcast wipe + lower third on every slide change, never over Gamecast/celebrations, no wipe on the phone remote page
+- [ ] Headlines: photo hero rotates, fits above the ticker, no Ken Burns in the TV app (`tools/test-news.mjs`)
 - [ ] Slide rotation order and the skip-if-disabled logic. `live` always shows. No slide cut short (`tools/test-rotation.mjs`).
 - [ ] Every "advance later" uses `slideTimer = slideTimeout(fn, ms)` (cancels the previous timer, gen-guarded), never a raw `setTimeout` into `slideTimer`
 - [ ] Each slide renders its data or its empty-state message ("NO LIVE GAMES", "NO UFC CARD", "… FEED DOWN", etc.) and advances
@@ -660,7 +684,7 @@ Small, incremental steps. Each one keeps every §6 item working and goes through
    Confirm pixel parity with `--compare`.
 7. **Visual polish.** Cross-fade slide transitions, a score-change flash, a thin slide-progress bar, and a live-game count badge
    in the ticker head.
-8. **Better free data.** Swap rss2json (a rate-limited third-party proxy) for ESPN's no-key news JSON. Improve the weather
+8. **Better free data.** (Done in flynn/headlines: news now comes from ESPN's no-key news JSON.) Improve the weather
    mapping (issue 8) and add a 3-day forecast from the Open-Meteo call the page already makes.
 9. **Fix the rotation skip** (issue 3) so leaders and PGA show every cycle. This changes visible behaviour, so it needs Jordan's OK.
 10. **Phone remote that actually works** (issue 7). It needs a relay (e.g. a tiny free worker), so it comes later and is optional.
