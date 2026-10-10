@@ -16,6 +16,8 @@ This is the working guide for the arcade's live scoreboard site. Read it before 
    `march 11 working`, `oldworkingplayer`, `original main combo`, `Working GAME ONLY`,
    `WOrking Movie poster and challenge thing`). **Don't edit, delete, rename or refactor them.**
    `background.mp4` and `header.PNG` sit in the root but `index.html` doesn't reference them (see §4).
+   The **new** Android TV app lives in `tvapp/` (+ `.github/workflows/tvapp.yml`), see §9. It is a separate, maintained
+   project; the legacy `android-tv/` folder is not.
 2. **Test in a preview copy first.** Copy `index.html` to `preview.html` (gitignored), make the change there, and run
    the test script until it passes. Only then copy the change into `index.html`.
 3. **Branch + PR only.** Never push to `main`. Use branches named `flynn/<topic>`, open a PR, and **Jordan merges.**
@@ -72,6 +74,21 @@ reference finals/upcoming events (NFL, CFB, World Cup, MLB, EPL), screenshots ea
 "never more than one request in flight", the RECONNECTING state during an induced outage (and recovery), auto-close of a
 finished game, and a clean stop on close.
 
+`node tools/test-rotation.mjs [preview.html] [--loops=3] [--speed=8]` emulates the TV app (`window.ArcadeTV`, 1280x720), turns
+every slide on, and walks the real rotation several times with the page's own timers sped up 8x (real network data). It logs
+each slide's actual on-screen time and fails if any slide is cut short (< 5 s), if Trivia isn't ~20 s, or if the slide after
+Trivia doesn't get its full time; then repeats in NFL sport mode. ~7 min. (Before the fix it showed `leaders 1.4s` after trivia.)
+
+`node tools/test-broadcast.mjs [preview.html]` checks the broadcast look: transition frames (Full + TV/Lite) at 1280x720,
+transform-only animation, one slide left visible after the wipe, Gamecast/celebrations above it, no wipe on the phone remote page,
+stadium photos (<= 6 per render, fallback to a plain card), and Lite perf under 4x CPU throttle vs. the same slide change with no
+transition. `node tools/shoot-slides.mjs [preview.html] --out=DIR [--tv] [--only=a,b] [--gc=sport/league/id]` screenshots every
+slide (+ a Gamecast) at 1280x720 for design reviews; `python3 tools/sheet.py OUT.png imgs... [--pairs]` makes contact sheets / before-after.
+
+`node tools/test-props.mjs [preview.html]` checks TODAY'S HOT PROPS with the real `props.json` at 1280x720 + 1920x1080
+(cards, row layout, ends above the ticker), LIVE LEADERS gone, sport-mode filtering/skip, league-toggle filtering, the settings
+toggle, the empty state, and the Gamecast WIN PROBABILITY panel (a real ESPN final served as in-progress; hidden with no data).
+
 `node tools/test-reliability.mjs [preview.html]` checks hung-fetch abort, trivia no longer skips leaders, the
 rotation watchdog helpers, stale scoreboard cache + offline pill, and soft-reload skipped when `window.ArcadeTV` exists.
 
@@ -84,13 +101,22 @@ update (same DOM nodes, new value, scroll kept). Screenshots land in `tools/out/
 
 `node tools/test-celebrate.mjs [preview.html]` tests score celebrations against mocked ESPN summaries (an NHL game
 NYR @ CAR and a CFB game TEM @ ECU): the per-team ★ toggles (mouse + D-pad) and their localStorage, no fire on first look,
-GOAL!! / TOUCHDOWN!! / FIELD GOAL!!! / CANES WIN!! / HALFTIME!, no repeat after a score correction, the delay (Gamecast
-+/− and settings ◀/▶, 0–30 s), queued events cancelled by a correction or by closing, any key dismisses without leaking
+GOAL!! / TOUCHDOWN!! / FIELD GOAL!!! / CANES WIN!! / HALFTIME!, no repeat after a score correction, the delay (sync
+overlay ±1s per channel and settings ◀/▶, 0–60 s), queued events cancelled by a correction or by closing, any key dismisses without leaking
 to the Gamecast, the `arcadeCelebrate('test')` / `?celebrate=td` hooks, and 0 console errors. It also checks the scorer
 card (name + headshot + assists, logo-only fallback), the FG hold-back, every alert banner (red zone once per drive, big
-play, interception, lead change, puck drop, power play once per penalty, per-type off switch) and SYNC NOW. It saves
+play, interception, lead change, puck drop, power play once per penalty, per-type off switch) and SYNC TO TV (clock target
+from a mocked running clock, OK presses for TV behind / TV ahead, stopped clock, play/score fallback, per-channel memory,
+TEST, D-pad + BACK). The 2 s `scoreboard/{id}` check is mocked in that section. It saves
 1920x1080 screenshots of the toggles, a Hurricanes goal with Aho's card, a Canes win, an ECU touchdown, the red-zone and
-power-play banners, the Gamecast sync helper and the settings rows.
+power-play banners, the sync overlay (clock, stopped, play) and the settings rows.
+
+`node tools/test-fastloop.mjs [preview.html]` checks the Gamecast's 2 s score loop against a mocked live NHL game in TV
+emulation (ArcadeTV, 1280x720, 4x CPU): ~2 s cadence, summary stays ~10 s without changes, a score change pulls the summary
+at once, follow-up summaries every 2 s while the summary lags the scoreboard, error backoff + recovery, nothing while the
+page is hidden, never two Gamecast requests in flight, heap stable over ~2 min, stops when final / closed.
+`--live sport/league/id [--secs 180]` opens a real game instead and prints requests/min, KB per request, heap before/after
+and every change the loop saw.
 
 `node tools/test-sportmode.mjs [preview.html]` tests SPORT MODE: the settings row (D-pad ▶▶▶ + OK, mouse), the saved state
 (`ahlersSportMode1`, 12 h expiry, snapshot), that user settings are untouched, the indicator pill, NFL/CFB/CBB rotations (only that
@@ -129,7 +155,8 @@ It's a single self-contained HTML page (inline CSS + JS, no build step) made for
 1. Draws the background (CSS gradients + a 3-D "cyber grid"), a big clock top-left, and a settings gear top-right.
 2. Shows skeleton placeholders, fetches weather and one trivia question, then **pulls 12 ESPN scoreboards one after
    another** (NHL, NFL, NBA, MLB, CFB, men's CBB, college baseball, World Cup, EPL, UCL, ATP, WTA). From those it
-   builds every live-game list: ticker, live cards, leaders/"props", TV guide, odds, My Squad, and marquee matchups.
+   builds every live-game list: ticker, live cards, leaders, TV guide, odds, My Squad, and marquee matchups. `props.json`
+   (hot props) is preloaded at start and re-read every 20 min.
 3. Starts the **slide rotation**. Each slide shows full-screen above a **bottom ticker** (22vh) that scrolls forever.
    Long slides auto-scroll vertically, then advance.
 4. Refreshes the ESPN scoreboards **every 5 minutes** and the weather **every 15 minutes**. Some slides (PGA, UFC,
@@ -138,15 +165,17 @@ It's a single self-contained HTML page (inline CSS + JS, no build step) made for
 
 ### Slide rotation order (`nextSlide()`)
 
-`live → props → mySquad → trivia → leaders → pga → ufc → command → soccerSlide → tvGuide → news → odds → futures →
+`live → hotProps → mySquad → trivia → leaders → pga → ufc → command → soccerSlide → tvGuide → news → odds → futures →
 nflFutures → nflAwards → fantasy → cfbFutures → nhlFutures → rankings → nfl → nba → nhl → mlb` → (loop). (`fantasy` is spliced in
 right after `nflAwards` on the line below `ARCADE_SCREENS`.) A **sport mode** replaces this list for 12 h (§3a). The order lives in the global
-`ARCADE_SCREENS` array. `live` and `props` always show. The rest can be switched off in settings.
+`ARCADE_SCREENS` array. `live` always shows. The rest (including `hotProps`) can be switched off in settings.
+The old `props` LIVE LEADERS slide (ESPN live stat leaders dressed up as props) was **removed** in PR flynn/props-fixes;
+`leaders` (TOP PERFORMERS) and the fantasy slide's LIVE PPR card are unchanged.
 
 | Slide (DOM id) | Title | Data | Timing |
 |---|---|---|---|
 | `live-game-screen` | LIVE ACTION | in-progress games from the ticker fetch; MLB count/bases/outs, football down & spot, win-prob bar | scroll rule* (base 15 s), "NO LIVE GAMES" ≥16 s |
-| `props-screen` | LIVE LEADERS | top stat leaders (up to 10) from live/final games | scroll rule |
+| `hotprops-screen` | TODAY'S HOT PROPS | `props.json` (§4c): player props for today's games (ET date, started < 4 h ago), HOT (biggest moves since open) first, max 24 cards, 2 columns; headshot, league, matchup + time, line/odds, DK/FD/CZR, move. Ticker league toggles filter it; in a sport mode only that sport (skipped if none) | scroll rule (base 16 s); empty state 6 s |
 | `mysquad-screen` | MY SQUAD DASHBOARD | games matching `mySquadTeams` (default "Carolina Hurricanes, Duke, ECU, East Carolina") | scroll rule |
 | `trivia-screen` | TRIVIA BREAK! | OpenTDB sports question; 15 s countdown bar, then 5 s answer reveal; clock hidden | 20 s |
 | `leaders-screen` | DAILY TOP PERFORMERS | first 8 leaders | scroll rule / 6 s if none |
@@ -175,9 +204,9 @@ Buttons **OFF · COLLEGE FOOTBALL · COLLEGE BASKETBALL · NFL** at the top of t
   soft reload and the TV app. **The user's settings are never changed by a mode**; `snap` is a copy of the slide + league
   toggles (`ARCADE_SCREENS` keys + `show*`) taken when the first mode starts (switching modes keeps it).
 - **Rotation:** `arcadeScreens()` returns the mode's list (`SPORT_MODES` in index.html), ignoring the slide toggles:
-  NFL `live props fantasy odds nflFutures nflAwards news tvGuide nfl`; CFB `live props mySquad odds cfbFutures rankings news tvGuide`;
-  CBB `live props mySquad odds rankings futures news tvGuide`. `slideOn(k)` / `navEnabled` / navigator / HUD / ◀▶ all use it.
-  Data slides with nothing to show (props, odds, TV guide, My Squad) are skipped in a mode (`smSlideEmpty`); `live` always shows,
+  NFL `live hotProps fantasy odds nflFutures nflAwards news tvGuide nfl`; CFB `live hotProps mySquad odds cfbFutures rankings news tvGuide`;
+  CBB `live hotProps mySquad odds rankings futures news tvGuide`. `slideOn(k)` / `navEnabled` / navigator / HUD / ◀▶ all use it.
+  Data slides with nothing to show (hotProps for that sport, odds, TV guide, My Squad) are skipped in a mode (`smSlideEmpty`); `live` always shows,
   so the rotation is never empty.
 - **Data:** all 12 scoreboards are still fetched (the mode's league even if its ticker toggle is off), so ★ celebrations and the
   Gamecast registry keep every league, but ticker, live cards, leaders, TV guide, odds, My Squad and the marquee only get the mode's
@@ -208,6 +237,23 @@ device**, so the QR code's phone remote can't actually control the TV.
 
 ---
 
+### 3b. Broadcast look (PR flynn/broadcast-look)
+- **Design tokens** (one `BROADCAST LOOK` block at the end of `<style>`, overriding the older rules so the diff stays reviewable):
+  `--ds-display` (Barlow Condensed: titles, team names, scores, ticker, clock), `--ds-radius`, `--ds-card-bg`, `--ds-card-shadow`,
+  `--ds-fs-title|section|label|team|score`, `--ds-ink-dim`. Body uses tabular numerals. Slide titles are white condensed italic with
+  the accent "slash" motif + accent rule; every card family (`glass-card`, rows, blocks) shares one surface.
+- **Transitions** (`bxBegin/bxHold/bxRun/bxFinish`, called from `nextSlide()`): a league-colored slab with angled accent/white bars
+  (`#bx-wipe`, 760 ms, transform only) covers the outgoing slide (kept up ~330 ms with `.bx-old`; the new one waits hidden under
+  `#main-wrapper.bx-cover`), then wipes off to reveal the new slide; then a lower third (`#bx-l3`: league bug, slide name,
+  "UP NEXT · …") slides in for ~4 s just above the ticker. Never touches `slideTimer` (rotation timing unchanged, `test-rotation`).
+  Lite (TV app / reduced motion): no stripes, glints or shadows. Off on the phone remote page. Colors/bugs per slide: `BX_INFO`.
+- **Stadium photos**: game objects carry `venueImg` from the scoreboard's `competitions[0].venue.id` →
+  `a.espncdn.com/combiner/i?img=/i/venues/{league}/day[/interior]/{id}.jpg&w=640&h=360&scale=crop&cquality=60` (~50 KB; NFL/CFB use
+  the interior shot). `bxVenueCard()` adds a faded photo + dark gradient behind Live / My Squad / Today's Lines cards, max 6 per render,
+  lazy, fades in on load; a missing photo falls back to the outside shot, then to the plain card. Coverage (Oct 2026): NHL, NFL, CFB,
+  MLB, WNBA nearly all; NBA partial; soccer none. Gamecast: `gcVenueSet(d)` uses the summary's `gameInfo.venue.images` (interior
+  preferred, 960x540) behind the header (`#gc-venue`, z-index -1 inside the Gamecast stacking context); cleared on close.
+
 ## 4. External APIs and assets
 
 None of them need an API key, and **no keys or tokens are embedded**. The code actively deletes a legacy
@@ -217,7 +263,8 @@ None of them need an API key, and **no keys or tokens are embedded**. The code a
 |---|---|---|---|
 | ESPN site scoreboard | `https://site.api.espn.com/apis/site/v2/sports/{sport}/{league}/scoreboard` for hockey/nhl, football/nfl, basketball/nba, baseball/mlb, football/college-football `?groups=80`, basketball/mens-college-basketball `?groups=50` (if `cbb50`), baseball/college-baseball, soccer/fifa.world, soccer/eng.1, soccer/uefa.champions, tennis/atp, tennis/wta. Base comes from `settings.apiBase` | on load, then every **5 min** (sequential, each league toggleable) | ticker, live, props, leaders, my squad, TV guide, odds, marquee |
 | ESPN site scoreboard (slide) | `.../golf/pga/scoreboard`, `.../mma/ufc/scoreboard`, `.../soccer/{fifa.world,eng.1,uefa.champions}/scoreboard` | each time the PGA / UFC / soccer slide shows | those slides |
-| ESPN summary (Gamecast) | `https://site.api.espn.com/apis/site/v2/sports/{sport}/{league}/summary?event={id}` (CORS `*`, no key). 0.1–1 MB per response (MLB is the largest) | only while a Gamecast is open: every **10 s**, 8 s timeout, previous request aborted first | Gamecast overlay |
+| ESPN summary (Gamecast) | `https://site.api.espn.com/apis/site/v2/sports/{sport}/{league}/summary?event={id}` (CORS `*`, no key). 0.1–1 MB per response (MLB is the largest) | only while a Gamecast is open: every **10 s**, right away when the 2 s check sees a change (then every 2 s for up to 20 s until the summary shows it), 8 s timeout | Gamecast overlay |
+| ESPN single-event scoreboard (Gamecast fast loop) | `https://site.api.espn.com/apis/site/v2/sports/{sport}/{league}/scoreboard/{id}` (CORS `*`, `max-age=1`). ~16–20 KB raw, ~3–4 KB gzipped | only while a **live** Gamecast is open and the page is visible: every **2 s**, 4 s timeout, never while the summary is in flight, backs off 4/8/16/30 s on errors | change detection + SYNC TO TV |
 | ESPN standings | `https://site.api.espn.com/apis/v2/sports/{football/nfl, basketball/nba, hockey/nhl, baseball/mlb}/standings` | each time the slide shows | standings slides |
 | ESPN CFB standings | `https://site.api.espn.com/apis/v2/sports/football/college-football/standings` | rankings slide, cached 24 h (`ahlersCfbRecords`) | ranking records |
 | ESPN CFB rankings | `https://site.api.espn.com/apis/site/v2/sports/football/college-football/rankings` | each time the rankings slide shows | rankings |
@@ -267,7 +314,24 @@ None of them need an API key, and **no keys or tokens are embedded**. The code a
 3. Shape: `{ generatedAt, season, week, scoring, source, pickupSource, teams{proTeamId:abbr}, games{proTeamId:{opp,home,date,eventId}},
    positions{QB,RB,WR,TE,K,DST:[{id,name,first,last,pos,team,opp,kick,eventId,proj,own,chg,inj}]}, pickups[…+adds], errors }`.
 
-Local assets: `index.html` references **no** local files apart from `futures.json` and `fantasy.json`. `background.mp4` (1.3 MB) and `header.PNG` (710 KB) exist
+### 4c. Hot props data pipeline (TODAY'S HOT PROPS)
+1. **Every ~3 h** (`.github/workflows/props.yml`, 9:07 AM / 12:07 / 3:07 / 6:07 / 9:07 PM EDT + manual): `node scripts/fetch-props.mjs props.json`,
+   commits only if changed. Action Network's public web API (no key; the one actionnetwork.com's props pages use). Its CORS only
+   reflects actionnetwork origins and payloads are 0.3–2 MB per market/day, so the TV never calls it directly.
+   - `GET api.actionnetwork.com/web/v2/scoreboard/{nfl|ncaaf|nba|ncaab|nhl|mlb}?period=game&date=YYYYMMDD` (games, teams, colors, logos)
+   - `GET …/web/v2/scoreboard/{lg}/markets?customPickTypes=core_bet_type_{N}_{name}&date=YYYYMMDD&bookIds=15,30,49,68,69`
+     → `{ markets: {bookId: {eventId: {type: [rows]}}}, players: [{id, full_name, position, image, team_id}] }`.
+     Books: 15 consensus, 30 open, 68 DraftKings, 69 FanDuel, 49 Caesars. Market ids: NFL/CFB 62 anytime TD, 9 pass yds, 12 rush yds,
+     16 rec yds; NBA/CBB 27 pts, 23 reb, 26 ast, 21 threes; NHL 313 anytime goal, 31 shots, 280 points; MLB 33 HR, 36 hits, 37 Ks.
+     `/web/v2/games/{id}/props/types` lists a game's markets. Endpoints were found in actionnetwork.com's Next.js bundles (undocumented).
+   - Main line = most common DK/FD/CZR value (alt lines dropped); move = open (book 30) → now (implied-prob or line change);
+     top 5 moves per league are `hot`. "Most bet" isn't available (bet_info is zeros publicly). Today ET + tomorrow, now−4 h … +36 h.
+   - Keeps the last file (exit 1) if every league fails. ~40 KB.
+2. **Browser** (`hpLoad`): `props.json?t=<20-min bucket>` → `ahlersProps1` localStorage fallback. `hpList()` filters/sorts; `showHotProps(gen)`.
+3. Shape: `{ updated, source, leagues: { nfl|ncaaf|nba|ncaab|nhl|mlb: { label, espn, games: [{id, start, status, home/away: {id, abbr, name, logo, color}}],
+   props: [{lg, mk, kind: 'ou'|'yes', game, side, player, short, pos, img, line, odds, books: {DK|FD|CZR: {o, v}}, move, moveTxt, hot?}] } } }`.
+
+Local assets: `index.html` references **no** local files apart from `futures.json`, `fantasy.json` and `props.json`. `background.mp4` (1.3 MB) and `header.PNG` (710 KB) exist
 but aren't used: there's no `<video>` element, and the background is pure CSS.
 
 ---
@@ -331,7 +395,7 @@ next slide shows right away.
 | ▲ / ▼ | scroll the visible stats / box-score panels (auto-scroll resumes after 8 s) |
 | ▲ when the panels are at the top (or ▼ from the ★ row) | focus the **view tabs**; then ◀ / ▶ (or OK) switch view, ▼ goes back to scrolling, ▲ goes to the ★ row |
 | Play/Pause (Space / P) | switch view directly (FIELD ⇄ BOX SCORE etc.) |
-| OK | focus the first ★ CELEBRATE toggle (◀/▶ walk the ★ / delay / SYNC / CLOSE row) |
+| OK | focus the first ★ CELEBRATE toggle (◀/▶ walk the ★ / SYNC TO TV / ★ / CLOSE row) |
 
 - **Views (tabs under the ★ row, live/final games only):** football **FIELD | BOX SCORE**; baseball **AT BAT + BOX SCORE |
   PLAYS & STATS**; hockey/basketball **GAME | BOX SCORE**. Pre-game and soccer have no tabs (classic layout). The tab sets a
@@ -352,8 +416,10 @@ next slide shows right away.
   - NBA: FG%
   - soccer: possession
 
-  Below that: a linescore (MLB adds R/H/E), win probability with a sparkline (or the matchup predictor and line before
-  kickoff), **sport trackers** (NFL/CFB horizontal field with end zones/logos, ball, line-to-gain, possession arrow, red-zone
+  Below that: a linescore (MLB adds R/H/E), a **WIN PROBABILITY** panel (redesigned in flynn/props-fixes: headline
+  "CANES 72% CHANCE TO WIN" in the favorite's color, both team logos with big %s, a two-color bar in team colors, and
+  "▲ TEAM +8% LAST 10 PLAYS" trend; pregame it uses ESPN's matchup predictor, labelled ESPN PREGAME; no ESPN win probability →
+  the panel is hidden, pregame line only shows as GAME LINE; the old unlabeled sparkline was dropped), **sport trackers** (NFL/CFB horizontal field with end zones/logos, ball, line-to-gain, possession arrow, red-zone
   shading and drive path; MLB strike-zone box with numbered pitch dots colored ball/strike/in-play, pitch list with type+mph,
   count, outs and base diamond — both update on the 10 s poll, SVG/simple DOM, degrade if fields missing), the last 6 plays,
   every team stat as comparison bars, top performers, and box-score tables (NBA/NFL/NHL/MLB from `boxscore.players`, soccer
@@ -362,7 +428,18 @@ next slide shows right away.
 - **Polling:** one summary request every **10 s** (start to start) while open. The previous request is aborted first, so
   requests never overlap, and each one times out after 8 s. After 3 failures in a row the gap backs off to 20 s, then 30 s,
   and the header shows **⚠ RECONNECTING… LAST UPDATE h:mm:ss** while the last good data stays on screen. Otherwise the
-  header shows **UPDATED h:mm:ss**.
+  header shows **UPDATED h:mm:ss** (`· LIVE 2s` while the fast loop below is healthy on a live game).
+- **Fast score loop (live games only):** `gcFastTick` fetches the single-event scoreboard every **2 s** (one request at a
+  time across both loops, 4 s timeout, error backoff 4→8→16→30 s, stops when the page is hidden, the game is final or the
+  Gamecast closes). A change in score, period, state, football situation/last play, or baseball count/outs/bases pulls the
+  summary immediately (`gc.trigAt`), and `gc.chase` re-polls the summary every 2 s for up to 20 s until it shows the same
+  score/period/state. Replies that are *behind* what was already seen (state, period, total score, countdown clock going
+  back up) are ignored: ESPN's CDN edges disagree for a few seconds after a change (seen live: `in → pre → in`, clock
+  17:32 → 17:51 → 17:32).
+- **How fresh ESPN is (measured live, NHL, Oct 9 2026):** the scoreboard publishes on a **~10 s cycle** (the game clock in
+  it jumps every 10 or 20 s; it does not tick), and `site.api` runs **~2–5 s behind** `sports.core.api …/status`. The
+  summary header follows the scoreboard; the summary's **play list runs ~30–100 s behind live** (play `wallclock` vs when
+  it appeared). So the 2 s loop gets a change within ~2 s of ESPN publishing it, but ESPN itself is the limit.
 - **Memory:** only the latest response is parsed. It isn't stored and is released once rendered. The DOM is only rewritten
   when a block's markup changes, and the overlay's DOM is emptied on close. One 60 ms scroll timer runs, and only while open.
 - **Auto-close:** a finished game closes itself after 10 min with no input. An upcoming game closes after 30 min idle.
@@ -374,8 +451,12 @@ next slide shows right away.
 - **Turn it on:** open any NHL / NFL / college football / MLB game in the Gamecast and press OK on **★ CELEBRATE <TEAM>**
   under either team (or both). It turns yellow (ON). The choice is saved per team in `localStorage.ahlersCelebrateTeams1`
   (`"<league>:<ESPN team id>"`). The master switch **Score Celebrations** (settings, default ON) turns everything off.
-- **Delay:** 0–30 s in 1 s steps, default 0 (`settings.celebrateDelay`). Change it with − / + in the Gamecast or ◀ / ▶ on
-  the delay row in settings. A score is detected right away, and the effect is queued until the delay is up. Queued events
+- **Delay:** 0–60 s in 1 s steps. Remembered **per broadcast** in `localStorage.ahlersArcadeTvDelay`
+  (`{ src: 'cable'|'stream', nets: { 'ESPN|cable': 18, ... } }`, key = first broadcast in the Gamecast header + the
+  CABLE/STREAMING choice). `gcDelay()` uses that, else the Settings default (`settings.celebrateDelay`, ◀ / ▶ on the delay
+  row, an advanced option). The Gamecast bar only shows **📺 SYNC TO TV 18s**; fine-tune (−1s / +1s), TEST and the
+  CABLE/STREAMING switch live inside the sync overlay. A score is detected right away and the effect is queued until
+  `gc.trigAt` (when the 2 s loop first saw it) + delay. Queued events
   are dropped if the score is corrected down or the Gamecast is closed (events found by the 5-min scoreboard refresh are
   dropped on a correction).
 - **What fires:** only a score that goes *up* between two polls (never on first load, and never again after a correction
@@ -385,7 +466,7 @@ next slide shows right away.
   Smaller, shorter moments for **HALFTIME!**, **END OF PERIOD** / **END OF QUARTER** and **FINAL** (a toggled team that
   didn't win). Basketball doesn't fire on baskets.
 - **Look:** team-colour wash and strobe, swinging light beams, a light sweep, three huge scrolling marquee rows of the
-  banner text, shake + zoom-punch logo, pulse rings, CSS confetti. CSS transform/opacity only, 4–8 s, no sound. Any remote
+  banner text, shake + zoom-punch logo, pulse rings, CSS confetti. CSS transform/opacity only, no sound. Any remote
   key or a click dismisses it (the key isn't passed on). Back closes it first.
 - **Scorer:** scoring celebrations show the player when the summary has a *new* scoring play for that team: name in the
   marquee (`GOAL!! ★ SEBASTIAN AHO`) plus a headshot card with assists (NHL) or "PASS FROM …" (football). The name comes
@@ -394,32 +475,76 @@ next slide shows right away.
 - **Effects level:** **Lite** is the default (Settings → *Full Effects* off), and the TV app (`window.ArcadeTV`) and
   `prefers-reduced-motion` always use it. It keeps Full's colours: the Full layout frozen as a static frame: top + bottom glowing 'GOAL!! ★ PLAYER' strips (transform scroll), huge outlined
   name behind the center, logo + headshot card + score bar, ring + star outline, red wash, small static shard/dot accents.
-  Motion is cheap: strip scroll, one logo scale-in, and 2–3 white flashes at the start. No strobe, falling confetti, shake,
-  beams, sweep, continuous beat, or animated filters. **Full** is the original 3-strip strobe/confetti/shake version. Headless Chrome
+  Motion is cheap and loops 3x over the show: strip scroll, logo scale-in then a slow beat, a soft white flash + glow
+  and a ring pulse each loop. No strobe, falling confetti, shake, beams, sweep, or animated filters. **Full** is the original 3-strip strobe/confetti/shake version. Headless Chrome
   (software compositing, frames from 0.5–3.5 s): Lite goal/TD 60/60 fps at 1x and 60/59 fps at 6x CPU throttle; Full about
   11–16 fps.
+- **Timing (Oct 2026, Jordan's onn-box feedback):** every celebration AND every alert banner stays on screen **9 s**
+  (`CEL_MS` = `CEL_BIG_MS` = `CEL_MINI_MS` = `CEL_ALERT_MS` = 9000). Every pulse loops `CEL_LOOPS` = 3 times in that
+  span: celShow sets `--cel-ms`, `--cel-loop` (ms/3 = 3 s) and `--cel-half`, and alerts get `--al-ms` / `--al-loop`.
+  - **Lite:** the flash/glow, ring pulse and logo beat each run 3 × 3 s.
+  - **Full:** 3 × 3 s flash+glow cycles, with 1.5 s beam swings, 3 s rings/sweep and a 1.5 s beat.
+  - **Banners:** the shine sweep and logo beat run 3 × 3 s.
+  - **Fades:** each fades in over the first 2–3 % of its time and out over the last 4 %, so it is still fully visible at 8.5 s.
+  - **Strips:** they scroll at a fixed calm speed whatever the text length (text length × 220 ms, outline row × 650 ms).
+  - **Queueing:**
+    - Up to `CEL_Q_MAX` = 3 celebrations and 4 banners wait their turn, with 0.35 s / 0.3 s gaps. GOAL → TD → WIN plays about 9.35 s apart.
+    - A banner waits while a celebration shows.
+    - A banner cut off in its first half by a celebration is replayed afterwards.
+    - Anything still queued after `CEL_STALE_MS` (60 s) is dropped.
+  - **Test:** `node tools/test-celebrate-timing.mjs [preview.html]` emulates the TV bridge at 720p and checks all of this, plus player photos. It saves frames at 0.5 / 4.5 / 8.5 s.
+- **Turnovers (football, full-screen):**
+  - **What fires:**
+    - **INTERCEPTION!!** and **FUMBLE!!** come from drive plays with `isTurnover: true`. The team that gains the ball is the play's `end.team`; failing that, the defence.
+    - **TURNOVER ON DOWNS!** comes from a drive with `result: "DOWNS"`, once per drive, for the defence.
+    - **BLOCKED PUNT!! / BLOCKED FG!!** come from the play type or text "blocked". They count for the defence even when the kicking team recovers.
+    - Pick-sixes and scoop-and-scores are scoring plays, so they show as the touchdown, retitled **PICK SIX!!** / **SCOOP & SCORE!!**.
+    - Safeties were already a score celebration (**SAFETY!**).
+  - **Who sees it:** only a ★ team that *gains* the ball, so losing a fumble shows nothing.
+  - **Settings:** each type has a switch (`alertInt`, `alertFumble`, `alertDowns`, `alertBlock`, default ON). They use the same delay and master switch, and each play id fires once.
+  - **Coverage:** like the other play-by-play alerts, turnovers only come from an open Gamecast.
+  - **Removed:** the old small INTERCEPTION! / FUMBLE RECOVERED! banners under Big Plays are gone.
+- **Player photos everywhere a player is involved:**
+  - **Celebrations** use the approved Aho card (headshot + name tag + detail line):
+    - goal scorer / TD scorer / FG kicker / HR hitter, from the scoring play (as before)
+    - interceptor ("PICKS OFF <QB>")
+    - fumble recoverer ("FORCED BY …")
+    - punt/FG blocker
+  - **Banners** get a round headshot + name chip:
+    - big-play receiver/rusher
+    - MLB double/triple batter
+    - the player who drew the power play
+    - the go-ahead scorer on a lead change
+  - **Name matching:** names come from the play text (NFL `RECOVERED by SEA-D.Hall`, CFB `intercepted by #0 T.Cooley`, full names) via `celTxName`. They are matched to that team's `boxscore.players` athletes: full name, or initial + last name, unique matches only. The headshot is the athlete's `headshot.href`, or `a.espncdn.com/i/headshots/<league>/players/full/<id>.png`.
+  - **Fallbacks:** with no match, the name shows without a photo next to the team logo. A missing image hides itself. WIN / HALFTIME / red zone / game start keep the team-logo layout.
 - **Field goals** are held back 5 s on top of the delay, so a FG never shows before a TD would be known.
 - **Alerts (smaller banners)** for ★ teams use the same delay and the master switch, and each type has its own switch
   in settings (`alertRedzone`, `alertPP`, `alertStart`, `alertLead`, `alertBig`, default ON):
   **RED ZONE!** (football, once per drive, from the drive's yards-to-endzone), **POWER PLAY!** (NHL, for the team
   whose opponent took a minor/major penalty, once per penalty play), **PUCK DROP! / KICKOFF! / FIRST PITCH! / TIP-OFF!**
   (pre → in), **<TEAM> TAKE THE LEAD!** (from the high-water scores, so corrections can't re-fire it), **BIG PLAY! N YDS**
-  (25+ yd pass/run), **INTERCEPTION! / FUMBLE RECOVERED!** (for the defence), **DOUBLE! / TRIPLE!** (MLB). The
+  (25+ yd pass/run), **DOUBLE! / TRIPLE!** (MLB); turnovers are full-screen now (above). The
   play-by-play alerts only come from an open Gamecast. Start and lead change also come from the 5-min scoreboard refresh.
   A banner waits while a full celebration is showing, then follows it.
-- **Delay sync (SYNC NOW):** the Gamecast shows the feed's clock (`DATA P2 12:22`, ticking between polls while it runs)
-  next to the delay. Press **SYNC NOW**: it locks the clock shown and reads `PRESS AT TV P2 12:22`. Press again when the
-  TV shows that clock. The gap becomes the delay (0–30 s, 1 s steps, saved). The lock expires after 60 s. There's no
-  live clock for MLB, so it shows "NO LIVE CLOCK".
+- **SYNC TO TV (`gsOpen`, overlay `#gc-syncov`):** one guided flow. Hockey / football / basketball with a running clock:
+  it picks a whole second **8 s ahead** of ESPN's (interpolated) clock and shows **PRESS OK WHEN YOUR TV CLOCK SHOWS 8:42
+  2ND PERIOD**. The fast loop finds when ESPN's data reached it (first reading at/below it, extrapolated back), the user's
+  OK gives the TV time, delay = OK − ESPN time (0–60 s, rounded to 1 s, saved for this channel). Result: **SYNCED · TV is
+  18s behind · celebrations wait 18s**. OK before ESPN gets there → it waits for ESPN, then **TV is Ns AHEAD … show right
+  away** (0 s). Clock not running (timeout, intermission; no change for 45 s) → **CLOCK STOPPED**, waits for it to run, or
+  **USE A PLAY INSTEAD**. Baseball / soccer (no running clock) and the fallback use events from the 2 s loop: the next
+  score (hockey/basketball/soccer), football play, or baseball pitch/count appears big with "ESPN saw it at h:mm:ss"; OK
+  when the TV shows it. Summary plays are not used as anchors (they lag ~30–100 s). End of period (< 20 s, < 60 s in
+  basketball) asks to wait. A bare OK in the overlay presses the big OK; the overlay keeps its focus while you watch the TV
+  (no 10 s nav idle); BACK closes only the overlay. The FG hold-back still adds its 5 s.
 - **Preview:** console `arcadeCelebrate('goal' | 'td' | 'fg' | 'run' | 'hr' | 'win' | 'half' | 'period' | 'test')`,
   `arcadeCelebrate('redzone' | 'pp' | 'start' | 'lead' | 'big' | 'alerts')` for the banners, the
   **★ PREVIEW** button in settings, or open the page with `?celebrate=td` (etc.). `test` plays GOAL → TD → WIN.
 - Performance note: marquee strips are only just over a screen wide. Long strips with glow text dropped software rendering
   to about 4 fps.
 
-- *App shell?* Stay in the browser for now. A **TWA** needs Chrome on the TV (rare on Android TV). A **thin WebView
-  wrapper** is only worth it if the TV browser swallows Back/Menu, sleeps the screen, or can't auto-launch on boot. The
-  JS already accepts raw Android key codes for that case.
+- *App shell?* Done: the thin WebView app in `tvapp/` (§9) loads this same live page, keeps the screen on and routes
+  BACK / MENU / Play-Pause into `arcadeNav`. The page still works the same in a plain browser.
 
 ---
 
@@ -431,7 +556,9 @@ next slide shows right away.
 - [ ] Clock top-left (`h:mm AM/PM`, local time), hidden only during trivia
 - [ ] Settings gear top-right with focus outline. `s` / ContextMenu / Menu / Settings keys toggle the modal. Enter on the focused gear works.
 - [ ] Every settings control persists to `localStorage.ahlersArcadeSettings` and takes effect (toggles, favourite teams, marquee, speed)
-- [ ] Slide rotation order and the skip-if-disabled logic. `live` and `props` always show.
+- [ ] Broadcast wipe + lower third on every slide change, never over Gamecast/celebrations, no wipe on the phone remote page
+- [ ] Slide rotation order and the skip-if-disabled logic. `live` always shows. No slide cut short (`tools/test-rotation.mjs`).
+- [ ] Every "advance later" uses `slideTimer = slideTimeout(fn, ms)` (cancels the previous timer, gen-guarded), never a raw `setTimeout` into `slideTimer`
 - [ ] Each slide renders its data or its empty-state message ("NO LIVE GAMES", "NO UFC CARD", "… FEED DOWN", etc.) and advances
 - [ ] Auto vertical scroll of long slides (hold 4 s / 22 px/s / hold 5 s) and the min 16 s dwell
 - [ ] Live cards: MLB count/bases/outs, football down & spot, win-probability bar, records for upcoming games, lines/TV
@@ -443,8 +570,11 @@ next slide shows right away.
 - [ ] `cursor: none`, no scrollbars, layout fills 16:9 at 1920x1080 and 1280x720
 - [ ] `#remote` mode shows the NEXT SLIDE controller and hides the TV view
 - [ ] localStorage migrations (old `mySquadTeams` values, removal of `oddsApiKey` / `ahlersPropsCache`)
-- [ ] Score celebrations: ★ toggles in the Gamecast, master switch + 0–30 s delay in settings, fire only on increases,
-      any key dismisses. Alerts: once per situation, per-type switches. SYNC NOW sets the delay (`tools/test-celebrate.mjs`)
+- [ ] Score celebrations: ★ toggles in the Gamecast, master switch + 0–60 s default delay in settings, fire only on increases,
+      any key dismisses. Alerts: once per situation, per-type switches. SYNC TO TV sets the per-channel delay
+      (`tools/test-celebrate.mjs`)
+- [ ] Gamecast fast loop: 2 s single-event scoreboard only while live + visible, one request at a time, change → summary
+      at once, backoff, stops when hidden/final/closed (`tools/test-fastloop.mjs`)
 - [ ] No API keys or secrets added; every new API is free, no-key and CORS-enabled
 - [ ] NFL FUTURES / NFL AWARDS / CFB FUTURES / NHL FUTURES slides populate, showing the 'UPDATED' time from futures.json, (from futures.json, or the live fallbacks) and can be toggled in settings
 - [ ] Idle kiosk shows **no** nav UI; ◀/▶, OK menu, Back, Play/Pause and auto-hide all work (harness remote checks)
@@ -453,7 +583,7 @@ next slide shows right away.
       to the snapshot, never an empty rotation (`tools/test-sportmode.mjs`)
 - [ ] NFL FANTASY slide: projections + pickups from `fantasy.json` (or ESPN fallback), live PPR only while it shows (`tools/test-fantasy.mjs`)
 - [ ] Gamecast opens from a Live Action card / ticker click and from the navigator GAMES row (D-pad). It pauses rotation,
-      polls every ~10 s with no overlapping requests, shows RECONNECTING on failure, and closes with Back/Esc/✕. Closing
+      polls every ~10 s (plus the 2 s check on live games) with no overlapping requests, shows RECONNECTING on failure, and closes with Back/Esc/✕. Closing
       stops every timer and request and resumes rotation (`tools/test-gamecast.mjs` + harness checks).
 
 ---
@@ -465,6 +595,7 @@ next slide shows right away.
 | 1 | ✅ *Fixed in PR #2 (no longer called; names come from ESPN core $refs).* **ESPN `/teams?limit=400` sends no `Access-Control-Allow-Origin`** (200 to curl, but browsers block it) | 5 console CORS errors per futures build (once / 24 h on the TV). `loadTeamMap()` falls back to the hard-coded NFL/NBA/MLB/NHL maps. **CFB has no fallback, so "CFB TITLE" never renders.** |
 | 2 | ✅ *Fixed in PR #2.* Futures market matching used `name` and `new Date().getFullYear()` | NBA title also missing (on 2026-10-07 only SUPER BOWL, WORLD SERIES, STANLEY CUP rendered). ESPN files upcoming NBA/NHL seasons under next year. |
 | 3 | ~~**Rotation skips a slide around trivia.**~~ **FIXED** (PR reliability): `showTrivia()` increments `rotationStep` itself, then `nextSlide()` increments again | After a normal trivia slide, **leaders** is skipped. When trivia isn't loaded yet, leaders shows but **PGA** is skipped. (The harness saw PGA skipped when OpenTDB returned 429.) |
+| 3b | ~~**Slide after Trivia flashes for ~1.5 s (TV, Oct 2026).**~~ **FIXED** in flynn/props-fixes | Trivia sets no slide timer until its 15 s reveal, so `nextSlide()`'s 1.5 s safety net scheduled a 20 s advance; the reveal then *overwrote* `slideTimer` with its 5 s timer without cancelling it. Trivia ended at 20 s, the orphan fired at 21.5 s, cutting the next slide (leaders) to ~1.5 s. Fix: `slideTimeout()` (cancel-then-set + slide-generation guard) for all 27 slide timers, safety net gen-guarded and skipped while trivia's reveal is pending. Regression: `tools/test-rotation.mjs`. |
 | 4 | ~~Hung-fetch freezes rotation~~ | **Fixed** in reliability: `arcadeFetch` 9 s AbortController + 90 s slide watchdog |
 | 5 | ✅ *Fixed in PR #2.* Gear click/tap double-toggles (§5) | The gear only works from the keyboard/remote |
 | 6 | ✅ *Fixed in PR #2 (D-pad navigation).* No Back/Escape/arrow handling (§5) | Hard to drive with a D-pad |
@@ -501,6 +632,9 @@ Small, incremental steps. Each one keeps every §6 item working and goes through
 > Pages. Keep the page light for low-RAM TV boxes: Gamecast keeps no response history, polls one request at a time and
 > frees its DOM on close. Dropping the Tailwind CDN (item 6) and the nightly reload (item 4) help here too. (The old
 > `android-tv/` folder stays untouched; the new shell should be its own fresh folder/PR.)
+>
+> ✅ **Step 1 shipped (PR #5, `tvapp/`, pre-release `tvapp-v0.1.0`):** see §9 for what v0.1.0 does, how to install it,
+> and the next increments.
 
 1. ✅ **(PR #2) D-pad remote navigation (Android TV).** Visible focus ring. ←/→ = previous/next slide. OK/Enter (or Menu) opens an
    on-screen menu to jump to a section and pause/resume rotation. Back/Escape closes the menu or modal. The menu auto-hides
@@ -530,3 +664,160 @@ Small, incremental steps. Each one keeps every §6 item working and goes through
    mapping (issue 8) and add a 3-day forecast from the Open-Meteo call the page already makes.
 9. **Fix the rotation skip** (issue 3) so leaders and PGA show every cycle. This changes visible behaviour, so it needs Jordan's OK.
 10. **Phone remote that actually works** (issue 7). It needs a relay (e.g. a tiny free worker), so it comes later and is optional.
+
+---
+
+## 9. Android TV app (`tvapp/`)
+
+A thin, memory-light Android TV wrapper around the **live** site. It loads
+<https://ajersj-cmyk.github.io/arcade-challenge/>, so every change merged to `main` shows up on the TV on the next
+load. **You never need to reinstall for site changes.** Reinstall only when the app itself changes (new `tvapp-v*` release).
+
+### Install / update on the TV (sideload)
+
+Latest APK (v0.2.0 "Arcade Scoreboard", about 140 KB):
+<https://github.com/ajersj-cmyk/arcade-challenge/releases/download/tvapp-v0.2.0/ahlers-arcade-tv-0.2.0.apk>
+(release page: <https://github.com/ajersj-cmyk/arcade-challenge/releases/tag/tvapp-v0.2.0>; previous:
+[v0.1.0](https://github.com/ajersj-cmyk/arcade-challenge/releases/tag/tvapp-v0.1.0)). Same package and signing key, so
+v0.2.0 installs straight over v0.1.0.
+
+**Option A: the Downloader app (no computer needed)**
+1. On the TV, install **Downloader** (by AFTVnews) from the Play Store / Amazon Appstore.
+2. Allow it to install apps: *Settings → Apps → Security & restrictions → Unknown sources → Downloader → On*
+   (Google TV: *Settings → System → Developer options / Apps → Install unknown apps*; Fire TV: *My Fire TV → Developer
+   options → Install unknown apps*).
+3. Open Downloader, type the APK link above into the URL box, press **Go**, then **Install** → **Done**.
+   (Tip: make a short link to that URL first, e.g. with any URL shortener or an AFTVnews short code, so there's less
+   to type with the remote.)
+4. Open **Arcade Scoreboard** from the apps row (neon ARCADE / LED SCOREBOARD banner; it was called *Ahlers Arcade* in
+   v0.1.0). Long-press it to move it to favourites.
+
+**Option B: ADB from a computer on the same Wi-Fi**
+1. TV: *Settings → Device Preferences → About → Build*, press OK 7 times to enable Developer options. Then turn on
+   *Developer options → USB debugging / Network debugging*. Note the TV's IP (*Settings → Network*).
+2. Computer: `adb connect <tv-ip>:5555`, accept the prompt on the TV, then
+   `adb install -r ahlers-arcade-tv-0.2.0.apk`.
+
+**Updating:** install the newer APK the same way. Every build is signed with the same key, so it installs over the
+old one and keeps the site's settings (localStorage). If the TV says "App not installed", an older build signed
+with a different key is on it: uninstall it first. The legacy `android-tv` APK is a different app
+(`com.ahlersarcade.tv`) and can stay or be uninstalled. The new one is `com.ahlersarcade.tvapp`.
+
+### Using it
+
+| Remote key | What it does |
+|---|---|
+| D-pad / OK | goes straight to the page (`arcadeNav`: ◀/▶ slides, OK menu, GAMES row, Gamecast…) |
+| **BACK** | closes whatever is open on the site first (Gamecast → navigator menu → settings). If nothing is open, a small dialog appears: **press BACK again to exit**, or pick *Keep watching / Exit / Reload scoreboard / Launch on boot ON-OFF*. The dialog closes itself after 15 s. |
+| Play/Pause (and Play, Pause) | pause / resume slide rotation (same as the site's Play key) |
+| ⏩ / ⏭  and  ⏪ / ⏮ | next / previous slide (or next / previous game inside Gamecast) |
+| MENU (if the remote has one) | opens the site's settings |
+
+- **Offline:** if the page can't load, a neon **SIGNAL LOST** screen shows the reason and retries automatically
+  (5 s, 10 s, 20 s, 30 s, then every 60 s). It also retries as soon as the network comes back. OK = retry now.
+  Once the page has loaded, API outages are handled by the page itself (feed-down states, Gamecast RECONNECTING).
+- **Launch on boot (optional, off by default):** BACK → *Launch on boot: ON*. On Android 10+ the system only lets an
+  app start itself at boot if it may *display over other apps*. The toggle opens that settings screen when the TV has
+  one. If it doesn't (common on Google TV), grant it once from a computer:
+  `adb shell appops set com.ahlersarcade.tvapp SYSTEM_ALERT_WINDOW allow`.
+  Android 7-9 boxes and most Fire TVs need nothing extra.
+
+### What's new in v0.2.0 (Arcade Scoreboard look)
+
+- App label is now **Arcade Scoreboard** (package `com.ahlersarcade.tvapp` and the signing key are unchanged, so it
+  updates in place and keeps the site settings). versionName 0.2.0, versionCode 2. The WebView UA token stays
+  `AhlersArcadeTV/<version>` so any site-side detection keeps working.
+- New neon art, all generated from SVG by `tvapp/art/build.mjs` (sources in `tvapp/art/svg/`; design code in
+  `tvapp/art/design.mjs`). It replaces the old `tvapp/tools/make_art.py`:
+  - Leanback banner `drawable-xhdpi/tv_banner.png` (320×180): pink neon-tube **ARCADE** (Russo One outline with a
+    white-hot core), amber 5×7 LED dot-matrix **SCOREBOARD** panel, cyan tube frame with marquee bulbs, synthwave floor.
+  - Launcher icons `mipmap-{mdpi…xxxhdpi}/ic_launcher.png` (48–192 px): the banner in miniature (neon "A", bulbs, cyan frame).
+  - Adaptive icon for API 26+ (`mipmap-anydpi-v26/ic_launcher.xml` + `ic_launcher_round.xml`): foreground
+    `mipmap-xxxhdpi/ic_launcher_foreground.png` (cyan ring + "A" inside the 66 dp safe zone, so circle, squircle and
+    square masks all look right; also used as the monochrome layer), background `ic_launcher_background.webp`.
+    `android:roundIcon` points at it too.
+  - Wordmark `drawable-xhdpi/logo_wordmark.webp` (600×250 px = 300×125 dp, opaque on the splash colour `#06041A`).
+- Start-up: the starting window (`drawable/splash_window.xml`, Android 7–11) shows the wordmark instead of black;
+  Android 12+ shows the system splash with the adaptive icon on `#06041A` (`values-v31/themes.xml`).
+- A freshly created WebView (cold start, return from background after the low-RAM teardown, renderer-crash rebuild)
+  shows a **LOADING SCOREBOARD…** screen with the logo until the page first paints (`onPageCommitVisible`, or
+  `onPageFinished`, or the offline screen, or a 25 s safety timeout). It is never focusable, so remote keys still reach
+  the page. Plain reloads (nightly 4 AM, *Reload scoreboard*) don't show it: the old page stays on screen until the new one paints.
+- The SIGNAL LOST screen uses the logo as its header (was the text "AHLERS ARCADE"); exit dialog says *Exit Arcade Scoreboard*.
+- Images are palette-compressed (pngquant) / WebP, so the APK only grew ~10 KB (≈ 140 KB).
+- Re-generating the art: `node tvapp/art/build.mjs` from the repo root (needs headless Chrome, `puppeteer-core`
+  (`PUPPETEER_FROM=<a package.json whose node_modules has it>`, defaults to the site's `tools/`), Pillow, the Russo One
+  font, and optionally `pngquant`).
+
+### What v0.1.0 does (technical)
+
+- Plain Java, framework APIs only (no AndroidX, no Kotlin, no libraries). Release APK ≈ 130 KB after R8.
+  `minSdk 24` (Android 7), `targetSdk/compileSdk 37`. AGP 9.4.1, Gradle 9.8.1 wrapper, JDK 17.
+- Leanback launcher entry + 320×180 banner, plus a normal launcher entry so it also works on Fire TV and phones. (v0.1.0
+  art came from `tvapp/tools/make_art.py`; since v0.2.0 it's `tvapp/art/build.mjs`, see above.)
+- One `Activity`, one `WebView` (built in code, no layouts). Landscape, immersive fullscreen, `FLAG_KEEP_SCREEN_ON`,
+  hardware acceleration. `singleTask`, and handles every config change itself, so HDMI/resolution changes don't reload the page.
+- WebView: JavaScript, DOM storage (settings persist), media autoplay without a gesture, `LOAD_DEFAULT` HTTP caching,
+  mixed content `COMPATIBILITY_MODE` (cleartext traffic off), text zoom pinned at 100 % (the layout is vh-based),
+  file/content access off, no zoom, metrics opt-out, a blank default video poster (no grey play icon). The user agent is
+  the stock WebView UA + ` AhlersArcadeTV/0.1.0`. WebView debugging (chrome://inspect) is on in **debug** builds only.
+- Navigation is locked to `ajersj-cmyk.github.io`. Other links open in the app that owns them (e.g. YouTube), or are ignored.
+- BACK: `OnBackInvokedCallback` on Android 13+ (apps targeting 16+ no longer get `KEYCODE_BACK`), and the key path on
+  older versions. Both call the page's `navBack()` (which returns true when it closed something) via `evaluateJavascript`.
+  If the page doesn't answer within 700 ms, the exit dialog shows anyway, so a hung page can't trap you.
+  Media keys and MENU are sent as synthetic `keydown` events (`MediaPlayPause`/179, `ArrowLeft/Right`, `ContextMenu`).
+- JS bridge `window.ArcadeTV`: `isTvApp()`, `version()`, `getLaunchOnBoot()`, `setLaunchOnBoot(bool)`, `exitApp()`.
+  The site doesn't use it yet. It's there so a later site change can show the boot toggle in its own settings.
+- Low RAM: `onStop` pauses the WebView and its JS timers (no polling while another app is in front). `onTrimMemory`
+  drops the in-memory cache while visible (and fires a `arcade-lowmem` window event the page can listen for). Once the
+  app is in the background it **destroys the WebView entirely** and rebuilds it on return. The renderer is marked
+  "waived when not visible". A renderer crash or OOM kill (`onRenderProcessGone`) rebuilds the WebView instead of
+  crashing the app, and after 3 crashes within a minute it shows the offline screen. A nightly reload around 4 AM
+  (if the page has been up 6 h+) clears slow leaks on 24/7 runs.
+- Boot: `BootReceiver` is **disabled in the manifest** and only enabled when the toggle is on, so it costs nothing when off.
+
+### Build
+
+- **CI:** `.github/workflows/tvapp.yml` runs on pushes to `main` / `flynn/tv-app` / `flynn/tvapp-*` that touch `tvapp/**`, and on
+  *Run workflow*. It runs `assembleRelease` + `lintRelease`, checks the APK with `aapt2` (leanback entry) and `apksigner`,
+  and uploads the **`ahlers-arcade-tv-apk`** artifact (kept 90 days).
+- **Signing:** a self-signed release key (`CN=Ahlers Arcade TV`, RSA 3072, valid 50 years, SHA-256
+  `7D:07:2C:A2:…:DF:3A:43`). It's stored as repo secrets `TVAPP_KEYSTORE_B64`, `TVAPP_KEYSTORE_PASSWORD` and
+  `TVAPP_KEY_PASSWORD` (key alias `arcade`), plus a copy on Flynn's box (`~/android-dev/keys/`, never committed).
+  **Losing the key means the next APK can't update the installed one** (uninstall/reinstall, and the site settings
+  reset), so keep a backup. Without the secrets (forks), Gradle falls back to the debug key.
+- **Local:** JDK 17 + Android SDK (`platforms;android-37.0`, `build-tools;37.0.0`), then
+  `cd tvapp && ./gradlew assembleRelease` (export `TVAPP_KEYSTORE`, `TVAPP_KEYSTORE_PASSWORD`, … to sign with the
+  release key). Output: `tvapp/app/build/outputs/apk/release/ahlers-arcade-tv-<version>-release.apk`.
+- **Releasing a new version:** bump `appVersionName` / `appVersionCode` in `tvapp/app/build.gradle.kts`, merge, let the
+  workflow build it, then attach the artifact APK to a new pre-release tagged `tvapp-v<version>`. (v0.2.0 was built on
+  Flynn's box with the same release key, verified with `aapt2`/`apksigner`, and attached as
+  `ahlers-arcade-tv-0.2.0.apk`; the tag points at the `flynn/tvapp-logo` commit it was built from.)
+
+### The legacy `android-tv/` app (read-only notes; don't edit it)
+
+It's a Kotlin WebView + ExoPlayer app (`com.ahlersarcade.tv`, appcompat + media3 + constraintlayout). It loads the
+same URL, sends `.mp4`/`.m3u8` links to a native player screen and YouTube links to the YouTube app, and exposes
+`ArcadeTV.playVideo()`. Its workflow did build successfully (one run, 2026-09-07, on `main`). Why it wasn't a good
+kiosk app:
+- **BACK:** it called `webView.goBack()` whenever history existed. Since PR #2 the site pushes a history entry, so BACK
+  ran the page's popstate handler and the app could never be exited with BACK. Before PR #2, BACK just quit the app.
+- **No keep-screen-on, no immersive mode, no offline/error screen, no renderer-crash handling**, and no Play/Pause or
+  MENU forwarding.
+- The banner/icon was a plain cyan-outlined rectangle (an empty box in the launcher).
+- **Every CI build was signed with that runner's throwaway debug key**, so a new APK could never update an installed
+  one ("App not installed"). It also depended on whatever `gradle` the runner had installed (`gradle wrapper` at build time).
+- `MIXED_CONTENT_ALWAYS_ALLOW` + cleartext traffic on. A few MB of libraries for a page shell. Fixed `versionCode 1`.
+  Missing `uiMode`/`screenLayout` in `configChanges`, so some HDMI/display events recreate the activity and reload the page.
+- The artifact expired after 90 days, and there was no release link to sideload from.
+
+### Next increments (proposed)
+
+1. Site side: when `window.ArcadeTV` exists, show *Launch on boot* and *Exit app* in the settings modal, and hide the
+   desktop-only bits (mouse cursor reveal).
+2. Last-good snapshot: keep a small offline copy of the last loaded page (or bundle `index.html` in the APK), so a cold
+   boot without internet shows the board with a stale badge instead of SIGNAL LOST.
+3. In-app update check: compare `version()` with the latest `tvapp-v*` release and show "Update available" (still a
+   manual install, no extra permissions).
+4. Screensaver/Daydream entry so the TV's idle screensaver can be the scoreboard.
+5. Watchdog: if the page stops rotating (no `nextSlide` heartbeat via the bridge for N minutes), reload it.

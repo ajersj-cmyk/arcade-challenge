@@ -59,6 +59,8 @@ const SCOREBOARDS_ON_LOAD = [
   'soccer/eng.1', 'soccer/uefa.champions', 'tennis/atp', 'tennis/wta'
 ];
 const API_RULES = [
+  { id: 'espn-gc-fast', kind: 'api', re: /^https:\/\/site\.api\.espn\.com\/apis\/site\/v2\/sports\/([^/]+)\/([^/?]+)\/scoreboard\/(\d+)/, // Gamecast 2 s check: one event
+    label: m => `ESPN event scoreboard ${m[1]}/${m[2]}`, validate: j => Array.isArray(j && j.competitions) ? null : 'no competitions[] in body' },
   { id: 'espn-scoreboard', kind: 'api', re: /^https:\/\/site\.api\.espn\.com\/apis\/site\/v2\/sports\/([^/]+)\/([^/?]+)\/scoreboard/,
     label: m => `ESPN scoreboard ${m[1]}/${m[2]}`, validate: j => Array.isArray(j && j.events) ? null : 'no events[] in body' },
   { id: 'espn-teams', kind: 'api', re: /^https:\/\/site\.api\.espn\.com\/apis\/site\/v2\/sports\/([^/]+)\/([^/?]+)\/teams/,
@@ -439,12 +441,13 @@ async function runOne(opts, file, outDir, label) {
           check('gamecast: rotation paused while open', (await visible()) === slideBefore && pendingOk, `${slideBefore} / pending=${pendingOk}`);
           await shot('gamecast-click');
           // poll cadence: wait for 3 more requests and measure start-to-start gaps
-          const t0 = Date.now();
+          const t0 = Date.now(), h0 = await page.evaluate(() => (gc.f && gc.f.hits) || 0);
           while (summaryReqs.length < n0 + 4 && Date.now() - t0 < 36000) await sleep(250);
           const ts = summaryReqs.slice(n0).map(r => r[0]);
           const gaps = ts.slice(1).map((t, i) => t - ts[i]);
-          const okGaps = gaps.length >= 3 && gaps.every(x => x >= 8500 && x <= 12000);
-          check('gamecast: polls every ~10 s (start-to-start gaps)', okGaps, gaps.map(x => (x / 1000).toFixed(1) + 's').join(', ') || 'no repeat polls');
+          const hits = (await page.evaluate(() => (gc.f && gc.f.hits) || 0)) - h0; // live game: the 2 s check pulls the summary early on a change
+          const okGaps = gaps.length >= 3 && gaps.every(x => x <= 12000) && gaps.filter(x => x < 8500).length <= hits * 4;
+          check('gamecast: polls every ~10 s (start-to-start gaps; early only after a 2 s-check change)', okGaps, (gaps.map(x => (x / 1000).toFixed(1) + 's').join(', ') || 'no repeat polls') + ` | changes ${hits}`);
           result.gamecastPollGaps = gaps;
           g = await gcState();
           check('gamecast: one request at a time, still healthy after polling', !g.renderErr && g.fails === 0 && g.polls >= 4, JSON.stringify({ polls: g.polls, fails: g.fails }));

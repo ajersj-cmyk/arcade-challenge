@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Arcade Scoreboard</string>
+    <!-- Live site: updates flow in without reinstalling the APK. -->
+    <string name="site_url" translatable="false">https://ajersj-cmyk.github.io/arcade-challenge/</string>
+    <string name="loading" translatable="false">LOADING SCOREBOARD…</string>
+</resources>

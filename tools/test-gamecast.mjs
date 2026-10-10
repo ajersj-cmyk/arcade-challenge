@@ -3,7 +3,7 @@
 //   node tools/test-gamecast.mjs [preview.html] [--events sport/league/id/LABEL,...]
 // 1. Opens a Gamecast for every live game in the page's own game registry (one per league) plus a set of
 //    final / upcoming reference events, checks each one populates, and saves a 1920x1080 screenshot.
-// 2. Poll cadence: ~10 s start-to-start, never more than one summary request in flight.
+// 2. Poll cadence: ~10 s start-to-start, never more than one Gamecast request (summary or the 2 s scoreboard/{id} check) in flight.
 // 3. Reconnecting state while ESPN is unreachable, then recovery.
 // 4. Auto-close of a finished game after the idle window, and a clean stop (no timers, no requests) on close.
 import http from 'node:http'; import fs from 'node:fs'; import path from 'node:path'; import { fileURLToPath } from 'node:url';
@@ -36,6 +36,7 @@ let blockSummary = false; const reqLog = []; let inFlight = 0, maxInFlight = 0;
 await page.setRequestInterception(true);
 page.on('request', req => {
   const u = req.url();
+  if (/\/scoreboard\/\d+(\?|$)/.test(u)) { inFlight++; maxInFlight = Math.max(maxInFlight, inFlight); }
   if (/\/summary\?event=/.test(u)) {
     reqLog.push(Date.now());
     if (blockSummary) return req.abort('internetdisconnected');
@@ -43,7 +44,7 @@ page.on('request', req => {
   }
   req.continue();
 });
-const done = req => { if (/\/summary\?event=/.test(req.url()) && !blockSummary) inFlight = Math.max(0, inFlight - 1); };
+const done = req => { if ((/\/summary\?event=/.test(req.url()) && !blockSummary) || /\/scoreboard\/\d+(\?|$)/.test(req.url())) inFlight = Math.max(0, inFlight - 1); };
 page.on('requestfinished', done); page.on('requestfailed', done);
 await page.goto(base + FILE, { waitUntil: 'load' });
 await page.waitForFunction(() => typeof arcadeNav !== 'undefined' && arcadeNav.current && typeof gcOpenEvent === 'function', { timeout: 90000 });
@@ -72,11 +73,13 @@ for (const t of todo) {
 // 2. cadence on the first live game (or the first reference event)
 const cad = (live[0] || REF[0]);
 await page.evaluate(m => gcOpenEvent(m), cad);
-const n0 = reqLog.length; maxInFlight = 0;
+const n0 = reqLog.length; maxInFlight = 0; const h0 = await page.evaluate(() => (gc.f && gc.f.hits) || 0);
 const t0 = Date.now(); while (reqLog.length < n0 + 4 && Date.now() - t0 < 40000) await sleep(200);
 const ts = reqLog.slice(n0); const gaps = ts.slice(1).map((x, i) => x - ts[i]);
-check('poll interval ~10 s (start to start)', gaps.length >= 3 && gaps.every(g => g >= 8500 && g <= 12000), gaps.map(g => (g / 1000).toFixed(1) + 's').join(', '));
-check('never more than one summary request in flight', maxInFlight <= 1, `max in flight ${maxInFlight}`);
+const hits = (await page.evaluate(() => (gc.f && gc.f.hits) || 0)) - h0; // live game: a change seen by the 2 s check pulls the summary early (by design)
+check('poll interval ~10 s (start to start; early only when the 2 s check saw a change)', gaps.length >= 3 && gaps.every(g => g <= 12000) && gaps.filter(g => g < 8500).length <= hits * 4,
+  gaps.map(g => (g / 1000).toFixed(1) + 's').join(', ') + ` | fast-loop changes ${hits}`);
+check('never more than one Gamecast request in flight (summary + 2 s check)', maxInFlight <= 1, `max in flight ${maxInFlight}`);
 // 3. reconnecting
 blockSummary = true;
 await page.waitForFunction(() => gc.fails > 0, { timeout: 15000 }).catch(() => {});
