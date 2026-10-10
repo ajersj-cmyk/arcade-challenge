@@ -200,6 +200,16 @@
         .win-prob-track { flex: 1; height: 1.5vh; background: rgba(255,255,255,0.2); border-radius: 0.75vh; overflow: hidden; display: flex; margin: 0 2vh; }
         .win-prob-away { height: 100%; background: #00ffff; }
         .win-prob-home { height: 100%; background: #ff007f; }
+        /* LIVE ACTION cards: live spread / puck line / run line from ESPN core odds (replaces the unlabeled win-probability bar) */
+        .lv-line { display: flex; align-items: center; gap: 1.4vh; margin-top: 1.2vh; padding: 0.9vh 1.4vh; min-height: 6vh; box-sizing: border-box; background: rgba(0,0,0,0.5); border-radius: 1vh;
+            border: 1px solid rgba(255,255,255,0.15); font-family: var(--ds-display, 'Inter'); font-weight: 800; text-transform: uppercase; position: relative; z-index: 2; white-space: nowrap; }
+        .lv-line.none { visibility: hidden; }
+        .lv-tag { font-size: 1.9vh; letter-spacing: 0.12em; padding: 0.3vh 0.9vh; border-radius: 0.5vh; background: #e8112d; color: #fff; }
+        .lv-tag.pre { background: rgba(255,255,255,0.16); color: rgba(255,255,255,0.85); }
+        .lv-kind { font-size: 2vh; letter-spacing: 0.12em; color: rgba(255,255,255,0.6); }
+        .lv-fav { display: flex; align-items: center; gap: 0.8vh; font-size: 3.4vh; color: #fff; }
+        .lv-fav img { width: 3.6vh; height: 3.6vh; object-fit: contain; }
+        .lv-ou { margin-left: auto; font-size: 2.8vh; color: rgba(255,255,255,0.85); }
         .trend-streak { font-size: 3vh; font-weight: 900; letter-spacing: 0.2vw; }
 
         /* RESTORED MODULE STYLES */
@@ -2284,6 +2294,48 @@
             return '';
         }
 
+        // ---------- LIVE ACTION lines: ESPN core odds per live game (the scoreboard drops odds once a game starts) ----------
+        // sports.core.api.espn.com/v2/sports/{s}/leagues/{l}/events/{id}/competitions/{id}/odds (CORS *, ~12 KB): a provider named
+        // "... Live Odds" = in-game line (tag LIVE); otherwise the pregame book's closing line (tag PREGAME). No line = row hidden.
+        var lvOdds = {}, LV_TTL = 120000;
+        function lvCached(g) { var c = g && g.gcKey && lvOdds[g.gcKey]; return c ? c.v : null; }
+        function lvParse(d, cid) {
+            var items = (d && d.items) || [], live = items.filter(function(it) { return it.provider && /live/i.test(it.provider.name || ''); })[0];
+            var it = live || items.filter(function(x) { return x.provider && String(x.provider.id) === '100'; })[0] || items.filter(function(x) { return !(x.provider && /live/i.test(x.provider.name || '')); })[0];
+            if (!it) return null;
+            function pts(t) { t = t || {}; var o = live ? (t.current || t.close || t.open) : (t.close || t.current || t.open); return o && o.pointSpread ? String(o.pointSpread.american || o.pointSpread.alternateDisplayValue || '') : ''; }
+            var pa = pts(it.awayTeamOdds), ph = pts(it.homeTeamOdds), side = '', p = '';
+            if (/^-/.test(pa)) { side = 'a'; p = pa; } else if (/^-/.test(ph)) { side = 'h'; p = ph; }
+            else if (it.spread != null && !isNaN(+it.spread) && +it.spread !== 0 && it.awayTeamOdds && it.homeTeamOdds && (it.awayTeamOdds.favorite || it.homeTeamOdds.favorite)) { side = it.awayTeamOdds.favorite ? 'a' : 'h'; p = '-' + Math.abs(+it.spread); }
+            else if ((pa && /^\+?0$|^pk|^even/i.test(pa)) || (it.spread != null && +it.spread === 0)) p = 'PK';
+            var ou = it.current && it.current.total ? String(it.current.total.american || '').replace(/^[ou]/i, '') : '';
+            if (!ou && it.overUnder != null) ou = String(it.overUnder);
+            if (!p && !ou) return null;
+            return { live: !!live, kind: cid === 'nhl' ? 'PUCK LINE' : (cid === 'mlb' || cid === 'clb') ? 'RUN LINE' : /soccer/.test(cid) || ['worldcup', 'epl', 'ucl'].indexOf(cid) >= 0 ? 'GOAL LINE' : 'SPREAD', side: side, pts: p, ou: ou };
+        }
+        function lvLineHtml(g, v) {
+            if (!v) return '';
+            var m = gcRegistry[g.gcKey] || {}, ab = v.side === 'a' ? (m.awayAbbr || g.away) : v.side === 'h' ? (m.homeAbbr || g.home) : '', logo = v.side === 'a' ? g.aLogo : v.side === 'h' ? g.hLogo : '';
+            return '<span class="lv-tag' + (v.live ? '' : ' pre') + '">' + (v.live ? 'LIVE' : 'PREGAME') + '</span><span class="lv-kind">' + v.kind + '</span>' +
+                (v.side ? '<span class="lv-fav">' + (logo ? '<img alt="" src="' + escHtml(logo) + '" onerror="this.remove()">' : '') + escHtml(ab + ' ' + v.pts) + '</span>' : v.pts === 'PK' ? '<span class="lv-fav">PICK&#39;EM</span>' : '') +
+                (v.ou ? '<span class="lv-ou">O/U ' + escHtml(v.ou) + '</span>' : '');
+        }
+        function lvRefresh(list) {
+            var now = Date.now(), n = 0;
+            (list || []).forEach(function(g) {
+                var key = g.gcKey, m = key && gcRegistry[key]; if (!m || m.sport === 'tennis' || n >= 12) return;
+                var c = lvOdds[key]; if (c && (c.busy || now - c.at < LV_TTL)) return;
+                n++; lvOdds[key] = { at: now, v: c ? c.v : null, busy: true };
+                arcadeFetch('https://sports.core.api.espn.com/v2/sports/' + m.sport + '/leagues/' + m.league + '/events/' + m.id + '/competitions/' + m.id + '/odds')
+                    .then(function(r) { return r.ok ? r.json() : null; }).then(function(d) { return lvParse(d, m.cid); }, function() { return c ? c.v : null; })
+                    .then(function(v) {
+                        lvOdds[key] = { at: Date.now(), v: v, busy: false };
+                        document.querySelectorAll('#live-grid-track .lv-line').forEach(function(el) {
+                            if (el.getAttribute('data-lv') !== key) return; var h = lvLineHtml(g, v); el.innerHTML = h; el.classList.toggle('none', !h); });
+                    });
+            });
+        }
+
         function renderLivePage() {
             document.getElementById('live-game-screen').style.display = 'flex';
             var track = document.getElementById('live-grid-track');
@@ -2296,9 +2348,10 @@
             } else if (globalLiveGamesData.length === 0) { track.innerHTML = '<div class="neon-text-cycle" style="font-size:4vh; font-weight:900; text-align:center; grid-column: 1 / -1; padding-top: 10vh;">' + (smActive() ? 'NO ' + SPORT_MODES[smActive()].label + ' GAMES ON THE BOARD<div style="font-size:2.4vh; margin-top:2vh; opacity:0.8;">RANKINGS, ODDS AND HEADLINES ARE UP NEXT</div>' : 'NO LIVE GAMES') + '</div>'; applyScroll('live-viewport', 'live-grid-track', 10000); } 
             else {
                 track.innerHTML = globalLiveGamesData.map(function(g) { 
-                    var lines = formatCardLines(g);
-                    return bxVenueCard(g, '<div class="glass-card gc-card"' + gcAttr(g.gcKey) + '><div class="card-meta neon-text-cycle"><span>● LIVE</span><span>' + g.league + '</span><span>' + g.status + '</span></div><div class="card-row"><div class="card-team"><img src="' + g.aLogo + '" onerror="this.src=\'' + g.aFallback + '\'; this.onerror=null;">' + g.away + '</div><div class="card-val-lg">' + g.aScore + '</div></div><div class="card-row"><div class="card-team"><img src="' + g.hLogo + '" onerror="this.src=\'' + g.hFallback + '\'; this.onerror=null;">' + g.home + '</div><div class="card-val-lg">' + g.hScore + '</div></div>' + buildTrendHtml(g.trend) + '<div class="card-footer neon-text-cycle" style="margin-top: 1.5vh;"><span>' + g.clock + '</span>' + (lines ? '<span>' + lines + '</span>' : '') + '<span>' + g.tv + '</span></div></div>');
+                    var lvv = lvCached(g), lvh = lvLineHtml(g, lvv); // live line replaces the win-prob bar (pregame lines in the footer are stale once a game is live)
+                    return bxVenueCard(g, '<div class="glass-card gc-card"' + gcAttr(g.gcKey) + '><div class="card-meta neon-text-cycle"><span>● LIVE</span><span>' + g.league + '</span><span>' + g.status + '</span></div><div class="card-row"><div class="card-team"><img src="' + g.aLogo + '" onerror="this.src=\'' + g.aFallback + '\'; this.onerror=null;">' + g.away + '</div><div class="card-val-lg">' + g.aScore + '</div></div><div class="card-row"><div class="card-team"><img src="' + g.hLogo + '" onerror="this.src=\'' + g.hFallback + '\'; this.onerror=null;">' + g.home + '</div><div class="card-val-lg">' + g.hScore + '</div></div>' + buildTrendHtml(g.trend && g.trend.type === 'winprob' ? null : g.trend) + '<div class="lv-line' + (lvh ? '' : ' none') + '" data-lv="' + escHtml(g.gcKey || '') + '">' + lvh + '</div><div class="card-footer neon-text-cycle" style="margin-top: 1.5vh;"><span>' + g.clock + '</span><span>' + g.tv + '</span></div></div>');
                 }).join('');
+                lvRefresh(globalLiveGamesData);
                 applyScroll('live-viewport', 'live-grid-track', 15000);
             }
         }
