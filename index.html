@@ -670,6 +670,60 @@
         .gc-cel-d { padding: 0.3vh 1.3vh; font-size: 2.2vh; }
         .gc-celmid > * { flex: none; white-space: nowrap; }
         body.nav-active #gamecast .gc-cel:focus, body.nav-active #gamecast .gc-cel-d:focus { outline: 0.4vh solid #00f0ff; outline-offset: 0.3vh; }
+        /* ===================== HEADLINES: broadcast news feature (hero story + up-next rail) =====================
+           One hero photo (16:9, resized by ESPN's image combiner) that rotates through 5 stories, 4 photo cards on the right.
+           Motion is transform/opacity only; the slow Ken Burns zoom runs only in Full (bxLite() = TV app gets a still photo). */
+        #news-screen .nw-stage { width: 95%; height: calc(100vh - var(--ticker-height) - 15.5vh); display: flex; gap: 2vh; position: relative; z-index: 20; }
+        .nw-hero { position: relative; flex: none; width: min(110vh, 63vw); height: 100%; border-radius: var(--ds-radius, 1.4vh); overflow: hidden; background: #0b1220;
+            box-shadow: var(--ds-card-shadow, none); contain: strict; }
+        .nw-ph { position: absolute; inset: 0; opacity: 0; transition: opacity 0.6s ease; }
+        .nw-ph.on { opacity: 1; }
+        .nw-ph img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 28%; display: block; transform-origin: 55% 30%; }
+        .nw-ph.kb.on img { animation: nw-kb 9s linear forwards; }
+        @keyframes nw-kb { from { transform: scale(1); } to { transform: scale(1.09) translate(-1%, 0.6%); } }
+        .nw-ph .nw-art { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: radial-gradient(circle at 50% 40%, #24324d 0%, #0b1220 70%); }
+        .nw-ph .nw-art img { width: 46%; height: auto; max-height: 70%; object-fit: contain; opacity: 0.9; }
+        .nw-shade { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0,0,0,0.45) 0%, rgba(0,0,0,0) 22%, rgba(0,0,0,0) 38%, rgba(3,6,12,0.9) 72%, rgba(3,6,12,0.97) 100%); pointer-events: none; }
+        .nw-chips { position: absolute; left: 2.4vh; top: 2.2vh; display: flex; gap: 1vh; }
+        .nw-chip { font-family: var(--ds-display, 'Inter'); font-weight: 800; font-style: italic; font-size: 2.8vh; letter-spacing: 0.08em; line-height: 1; padding: 0.9vh 1.6vh 0.8vh;
+            color: #111; background: #fff; border-radius: 0.5vh; text-transform: uppercase; white-space: nowrap; box-shadow: 0 0.4vh 1.2vh rgba(0,0,0,0.45); }
+        .nw-chip.brk { background: #e8112d; color: #fff; }
+        .nw-chip.brk::before { content: ''; display: inline-block; width: 1.1vh; height: 1.1vh; border-radius: 50%; background: #fff; margin-right: 0.9vh; vertical-align: 0.25vh; animation: pulsePink 1.2s ease-in-out infinite; }
+        .nw-chip.fav { background: #ffd400; }
+        .nw-chip.hot { background: #ff7a00; color: #fff; }
+        .nw-count { position: absolute; right: 2.4vh; top: 2.2vh; font-family: var(--ds-display, 'Inter'); font-weight: 800; font-size: 2.6vh; color: rgba(255,255,255,0.9);
+            background: rgba(0,0,0,0.55); padding: 0.7vh 1.4vh; border-radius: 0.5vh; letter-spacing: 0.08em; }
+        .nw-copy { position: absolute; left: 3vh; right: 3vh; bottom: 3.2vh; }
+        .nw-copy.in { animation: nw-in 0.55s ease-out both; }
+        body.bx-lite-news .nw-copy.in { animation: nw-fade 0.4s ease-out both; }
+        @keyframes nw-in { from { opacity: 0; transform: translateY(2.4vh); } to { opacity: 1; transform: none; } }
+        @keyframes nw-fade { from { opacity: 0; } to { opacity: 1; } }
+        .nw-kick { font-family: var(--ds-display, 'Inter'); font-weight: 800; font-size: 3vh; letter-spacing: 0.14em; color: var(--nw-k, #ffe600); text-transform: uppercase;
+            display: flex; align-items: center; gap: 1.2vh; white-space: nowrap; overflow: hidden; }
+        .nw-kick::before { content: ''; width: 4vh; height: 0.6vh; background: var(--nw-k, #ffe600); flex: none; }
+        .nw-title { margin-top: 0.8vh; font-family: var(--ds-display, 'Inter'); font-weight: 800; font-style: italic; font-size: 6.6vh; line-height: 0.98; color: #fff; text-transform: uppercase;
+            letter-spacing: 0.01em; text-shadow: 0 0.4vh 1.6vh rgba(0,0,0,0.7); display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+        .nw-meta { margin-top: 1.6vh; display: flex; align-items: center; gap: 1.2vh; font-weight: 900; font-size: 2.4vh; letter-spacing: 0.1em; color: rgba(255,255,255,0.82); text-transform: uppercase; }
+        .nw-meta .nw-lg { width: 5vh; height: 5vh; border-radius: 50%; background: rgba(255,255,255,0.92); padding: 0.5vh; object-fit: contain; flex: none; }
+        .nw-meta .nw-hs { width: 5vh; height: 5vh; border-radius: 50%; background: #1d2a40; object-fit: cover; object-position: 50% 0; flex: none; border: 2px solid rgba(255,255,255,0.7); }
+        .nw-meta .nw-ago { color: #fff; }
+        .nw-meta .nw-dot { width: 0.7vh; height: 0.7vh; border-radius: 50%; background: rgba(255,255,255,0.6); }
+        .nw-prog { position: absolute; left: 0; right: 0; bottom: 0; height: 0.7vh; background: rgba(255,255,255,0.12); }
+        .nw-prog i { position: absolute; inset: 0; background: var(--nw-k, #ffe600); transform-origin: 0 50%; transform: scaleX(0); }
+        .nw-prog i.run { animation: nw-prog var(--nw-ms, 7000ms) linear forwards; }
+        @keyframes nw-prog { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+        .nw-rail { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1.2vh; }
+        .nw-rail-h { font-family: var(--ds-display, 'Inter'); font-weight: 800; font-style: italic; font-size: 2.8vh; letter-spacing: 0.16em; color: var(--accent-color, #39ff14); height: 3.4vh; line-height: 3.4vh; }
+        .nw-row { flex: 1; min-height: 0; display: flex; gap: 1.4vh; align-items: stretch; background: var(--ds-card-bg, #0c1420); border-radius: var(--ds-radius-sm, 0.8vh); overflow: hidden;
+            box-shadow: var(--ds-card-shadow, none); border-left: 0.6vh solid var(--nw-k, #ffe600); }
+        .nw-th { flex: none; height: 100%; aspect-ratio: 16 / 9; background: #0b1220; position: relative; overflow: hidden; }
+        .nw-th img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 28%; display: block; }
+        .nw-th img.logo { object-fit: contain; padding: 14%; box-sizing: border-box; }
+        .nw-rt { flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: center; padding: 0.6vh 1.2vh 0.6vh 0; }
+        .nw-rk { font-family: var(--ds-display, 'Inter'); font-weight: 800; font-size: 2vh; letter-spacing: 0.12em; color: var(--nw-k, #ffe600); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .nw-rh { margin-top: 0.3vh; font-family: var(--ds-display, 'Inter'); font-weight: 700; font-size: 2.75vh; line-height: 1.05; color: #fff; text-transform: uppercase;
+            display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+        .nw-empty { margin: auto; font-family: var(--ds-display, 'Inter'); font-weight: 800; font-size: 4.4vh; letter-spacing: 0.1em; color: rgba(255,255,255,0.75); }
         /* ===================== BROADCAST LOOK (design system, transitions, stadium photos) =====================
            One set of tokens for every slide. Motion is transform/opacity only (onn Google TV boxes); nothing blurs. */
         :root {
@@ -863,7 +917,7 @@
 
         <div id="news-screen" class="slide-screen">
             <div class="screen-header neon-text-cycle">TODAY'S HEADLINES</div>
-            <div class="content-viewport" id="news-viewport"><div class="list-track" id="news-list-track"></div></div>
+            <div class="nw-stage" id="news-stage"></div>
         </div>
 
         <div id="futures-screen" class="slide-screen">
@@ -2445,33 +2499,182 @@
             applyScroll('tvguide-viewport', 'tvguide-track', 12000);
         }
 
-        async function showNews(gen) {
-            try {
-                var sources = [{ url: 'https://api.rss2json.com/v1/api.json?rss_url=https%3A%2F%2Fsports.yahoo.com%2Frss%2F', name: 'YAHOO SPORTS' }, { url: 'https://api.rss2json.com/v1/api.json?rss_url=https%3A%2F%2Fwww.cbssports.com%2Frss%2Fheadlines%2F', name: 'CBS SPORTS' }];
-                var combinedNews = [], smm = smActive(), newsHead = document.querySelector('#news-screen .screen-header');
-                if (newsHead) newsHead.textContent = smm ? SPORT_MODES[smm].short + ' HEADLINES' : "TODAY'S HEADLINES";
-                if (smm) { sources = []; try { var nres = await arcadeFetch(settings.apiBase + '/site/v2/sports/' + SPORT_MODES[smm].news + '/news?limit=15'); var nd = await nres.json(); (nd.articles || []).forEach(function(a) { var title = cleanHeadline(a.headline); if (title.length < 8) return; combinedNews.push({ title: title, img: (a.images && a.images[0] && a.images[0].url) || '', source: 'ESPN ' + SPORT_MODES[smm].label, time: new Date(a.published || 0).getTime() }); }); } catch (eN) {} }
-                for (var i=0; i<sources.length; i++) {
-                    try { var res = await arcadeFetch(sources[i].url); var data = await res.json(); if (data.status === 'ok') { data.items.forEach(function(item) { var title = cleanHeadline(item.title); if (title.length < 8) return; combinedNews.push({ title: title, img: item.thumbnail || (item.enclosure && item.enclosure.link) || '', source: sources[i].name, time: new Date(String(item.pubDate || '').replace(/-/g, '/')).getTime() }); }); } } catch(e) {}
-                }
-                if (combinedNews.length === 0) {
-                    document.getElementById('news-screen').style.display = 'flex';
-                    document.getElementById('news-list-track').innerHTML = '<div class="neon-text-cycle" style="font-size:4vh; font-weight:900; text-align:center; padding-top:8vh;">NO HEADLINES</div>';
-                    slideTimer = slideTimeout(nextSlide, 6000);
-                    return;
-                }
-                if (!isCurrentSlide(gen)) return;
-                document.getElementById('news-screen').style.display = 'flex';
-                document.getElementById('news-list-track').innerHTML = combinedNews.sort((a,b)=>b.time-a.time).slice(0, 10).map(function(item) {
-                    var imgHtml = item.img ? '<img class="news-thumb" src="' + item.img + '">' : '<div class="news-thumb neon-text-cycle" style="display:flex;align-items:center;justify-content:center;font-weight:900;font-size:3vh;">NEWS</div>';
-                    return '<div class="news-row glass-card">' + imgHtml + '<div class="news-content"><div class="news-title">' + item.title + '</div><div class="news-source neon-text-cycle">' + item.source + '</div></div></div>';
-                }).join('');
-                applyScroll('news-viewport', 'news-list-track', 12000);
-            } catch(e) {
-                document.getElementById('news-screen').style.display = 'flex';
-                document.getElementById('news-list-track').innerHTML = '<div class="neon-text-cycle" style="font-size:4vh; font-weight:900; text-align:center; padding-top:8vh;">NEWS FEED DOWN</div>';
-                slideTimer = slideTimeout(nextSlide, 6000);
+        // ===== HEADLINES: ESPN news with photos, one hero story at a time =====
+        // Sources: ESPN site news API per league (site.api.espn.com/apis/site/v2/sports/{sport}/{league}/news, CORS *):
+        // articles[] { headline, shortLinkText?, description, published, type, images[], categories[] (league/team/athlete) }.
+        // Normal rotation: the leagues switched on in settings (NFL, CFB, NHL, NBA, MLB) + news for favourite teams playing
+        // today (?team=id); a sport mode: only that sport. Copy is ESPN's own headline, cleaned (no rewriting); the kicker /
+        // chips are derived from the article's categories, type, age and keywords only.
+        var NW_STORY_MS = 7000, NW_HEROES = 5, NW_CACHE_MS = 300000, nwState = { items: [], timer: null, gen: -1, i: 0, layer: 0 }, nwCache = { key: '', at: 0, items: [] };
+        var NW_LEAGUES = [ // [settings toggle, api path, logo path, headshot path, label]
+            ['showNFL', 'football/nfl', 'nfl', 'nfl', 'NFL'], ['showCFB', 'football/college-football', 'ncaa', 'college-football', 'CFB'],
+            ['showNHL', 'hockey/nhl', 'nhl', 'nhl', 'NHL'], ['showNBA', 'basketball/nba', 'nba', 'nba', 'NBA'], ['showMLB', 'baseball/mlb', 'mlb', 'mlb', 'MLB'],
+            ['showCBB', 'basketball/mens-college-basketball', 'ncaa', 'mens-college-basketball', 'CBB']];
+        var NW_TOPICS = [ // first match wins: [label, colour, regex on headline + description]
+            ['TRADE ALERT', '#00e5ff', /\b(trade[sd]?|trading|acquires?|acquired|deal sends)\b/i],
+            ['INJURY UPDATE', '#ff9f1a', /\b(injur\w*|ruled out|out for|questionable|doubtful|injured reserve|on IR|torn|sprain\w*|fractur\w*|concussion|surgery|day-to-day|week-to-week|timeline for)\b|\((ankle|knee|finger|hamstring|foot|shoulder|back|groin|hip|calf|wrist|hand|illness|concussion)[^)]*\)/i],
+            ['SIGNING', '#39ff14', /\b(signs?|signed|signing|agree[sd]? to|extension|re-signs?)\b/i],
+            ['RETIREMENT', '#c58cff', /\bretir(e|es|ed|ing|ement)\b/i],
+            ['COACHING CHANGE', '#ff5ea0', /\b(fired|fires|hires?|hired|parts ways|named (head )?coach|interim (head )?coach|playcalling)\b/i],
+            ['RETURN WATCH', '#7fd4ff', /\b(return\w*|activated|cleared|season debut|make (his )?debut|plans to play|expected to play|expect\w* .* to play)\b/i],
+            ['SUSPENSION', '#ff3b3b', /\bsuspen(d|ded|sion)\b/i],
+            ['BIG WIN', '#ffe600', /\b(beat|beats|rout|routs|stuns?|upset\w*|hat trick|walk-off|clinch\w*|sweep\w*)\b/i]];
+        var NW_SKIP = /\b(fantasy|cheat sheet|inactives|schedule|where to watch|live analysis|live updates|tracker|mock draft|best bets|picks|prediction|projected scores|betting|odds)\b/i;
+        function nwClean(t) { // ESPN copy, tidied: no "Sources:" prefix, no trailing site names, crisp length at a word boundary
+            t = cleanHeadline(t).replace(/^(sources?|report)\s*:\s*/i, '').replace(/\s*[-|\u2013\u2014]\s*(ESPN|ESPN\.com|CBS Sports|Yahoo Sports)\s*$/i, '').replace(/\s*\((ESPN|AP)\)\s*$/i, '').trim();
+            if (t.length > 92) { t = t.slice(0, 90); t = t.slice(0, t.lastIndexOf(' ') > 50 ? t.lastIndexOf(' ') : 90).replace(/[,;:\-\u2013\u2014]+$/, '') + '\u2026'; }
+            return t;
+        }
+        function nwAgo(ms, short) {
+            var m = Math.floor((Date.now() - ms) / 60000);
+            if (!(m >= 0)) return '';
+            if (m < 1) return short ? 'NOW' : 'JUST NOW'; if (m < 60) return m + (short ? 'M' : ' MIN AGO');
+            var h = Math.floor(m / 60); if (h < 24) return h + (short ? 'H' : ' HR AGO');
+            return h < 48 ? 'YESTERDAY' : new Date(ms).toLocaleDateString([], { month: 'short', day: 'numeric' }).toUpperCase();
+        }
+        function nwImg(url, w, h) { // ESPN photos through the image combiner: a 16:9 crop at the size we draw (keeps TV memory small)
+            var m = /^https?:\/\/a\.espncdn\.com(\/photo\/[^?#]+)/.exec(url || '');
+            return m ? 'https://a.espncdn.com/combiner/i?img=' + m[1] + '&w=' + w + '&h=' + h + '&scale=crop&cquality=70' : (url || '');
+        }
+        function nwPickImg(a) {
+            var im = (a.images || []).filter(function(i) { return i && i.url && !/\.gif($|\?)/i.test(i.url); }), r = function(i) { return i.width && i.height ? i.width / i.height : 0; };
+            var best = im.filter(function(i) { return /16-9/.test(i.url) || (r(i) > 1.6 && r(i) < 1.9); })[0] || im.filter(function(i) { return i.type === 'header'; })[0] || im[0];
+            return best ? best.url : '';
+        }
+        function nwFavs() { return String(settings.mySquadTeams || '').split(',').map(function(t) { return t.trim().toLowerCase(); }).filter(function(t) { return t.length >= 3; }); }
+        function nwBuild(a, L, favs) {
+            var head = a.shortLinkText && a.shortLinkText.length >= 24 && a.shortLinkText.length < String(a.headline || '').length ? a.shortLinkText : a.headline;
+            var title = nwClean(head); if (title.length < 12 || NW_SKIP.test(title)) return null;
+            var raw = cleanHeadline(head), desc = cleanHeadline(a.description || ''), text = raw + ' \u00b7 ' + desc;
+            var cats = a.categories || [], teams = cats.filter(function(c) { return c.type === 'team' && c.teamId; }), aths = cats.filter(function(c) { return c.type === 'athlete' && c.athleteId; });
+            var focus = teams.length && teams.length <= 4 ? teams[0] : null, ath = aths.length && aths.length <= 3 ? aths[0] : null;
+            var time = new Date(a.published || a.lastModified || 0).getTime() || 0, fav = '';
+            favs.forEach(function(f) {
+                if (fav) return;
+                var t = teams.filter(function(c) { return String(c.description || '').toLowerCase().indexOf(f) >= 0; })[0];
+                if (t && teams.length <= 4) fav = (t.team && t.team.shortDisplayName) || f;
+                else if (new RegExp('\\b' + f.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\b', 'i').test(raw)) fav = f;
+            });
+            var topic = null; [raw, desc].forEach(function(tx) { for (var i = 0; !topic && tx && i < NW_TOPICS.length; i++) if (NW_TOPICS[i][2].test(tx)) topic = NW_TOPICS[i]; }); // headline wins over description
+            if (!topic && a.type === 'Recap') topic = ['FINAL', '#ffe600'];
+            if (!topic && a.type === 'Preview') topic = ['GAME PREVIEW', '#9ad0ff'];
+            if (!topic && a.type === 'Media') topic = ['WATCH', '#ffffff'];
+            if (!topic && /^(sources?|report)\s*:/i.test(raw)) topic = ['REPORT', '#d6dde8'];
+            var ageMin = (Date.now() - time) / 60000, img = nwPickImg(a);
+            return { id: String(a.id || a.headline), title: title, time: time, type: a.type || '', L: L, fav: fav ? String(fav).toUpperCase() : '',
+                breaking: (ageMin >= 0 && ageMin < 60 && a.type !== 'Media' && a.type !== 'Preview') || /\bbreaking\b/i.test(raw),
+                topic: topic, img: img, teamId: focus ? String(focus.teamId) : '', team: focus ? (focus.description || '') : '', athId: ath ? String(ath.athleteId) : '',
+                ent: ath ? 'a' + ath.athleteId : focus ? 't' + focus.teamId : '' };
+        }
+        async function nwFetch(path, L, q, team) {
+            var res = await arcadeFetch(settings.apiBase + '/site/v2/sports/' + path + '/news?limit=' + (q || 8) + (team ? '&team=' + team : ''));
+            var d = await res.json(); return (d.articles || []).map(function(a) { return [a, L]; });
+        }
+        async function nwLoad(smm) {
+            var key = (smm || 'all') + '|' + settings.mySquadTeams + '|' + NW_LEAGUES.map(function(L) { return settings[L[0]] === false ? 0 : 1; }).join('');
+            if (nwCache.key === key && Date.now() - nwCache.at < NW_CACHE_MS && nwCache.items.length) return nwCache.items;
+            var favs = nwFavs(), jobs = [], leagues;
+            if (smm) leagues = NW_LEAGUES.filter(function(L) { return L[1] === SPORT_MODES[smm].news; });
+            else leagues = NW_LEAGUES.filter(function(L) { return L[0] !== 'showCBB' && settings[L[0]] !== false; });
+            leagues.forEach(function(L) { jobs.push(nwFetch(L[1], L, smm ? 20 : 8)); });
+            // favourite teams with a game in today's feed: their own team news too (at most 2)
+            var seen = {};
+            Object.keys(gcRegistry || {}).forEach(function(k) {
+                var m = gcRegistry[k]; if (!m || jobs.length >= leagues.length + 2) return;
+                var L = NW_LEAGUES.filter(function(x) { return x[1] === m.sport + '/' + m.league && (!smm || x[1] === SPORT_MODES[smm].news); })[0]; if (!L) return;
+                [[m.aFull, m.aId], [m.hFull, m.hId]].forEach(function(t) {
+                    var n = String(t[0] || '').toLowerCase(); if (!t[1] || seen[L[1] + t[1]] || jobs.length >= leagues.length + 2) return;
+                    if (favs.some(function(f) { return n.indexOf(f) >= 0; })) { seen[L[1] + t[1]] = 1; jobs.push(nwFetch(L[1], L, 5, t[1]).catch(function() { return []; })); }
+                });
+            });
+            var lists = await Promise.all(jobs.map(function(p) { return p.catch(function() { return []; }); }));
+            if (!smm && lists.every(function(l) { return !l.length; })) lists = [await nwRssFallback()]; // ESPN down: old Yahoo / CBS feeds (no photos)
+            var all = [], byId = {}, ent = {};
+            lists.forEach(function(l) { l.forEach(function(x) { var it = nwBuild(x[0], x[1], favs); if (!it || byId[it.id] || byId[it.title]) return; byId[it.id] = byId[it.title] = 1; all.push(it); if (it.ent) ent[it.ent] = (ent[it.ent] || 0) + 1; }); });
+            all.forEach(function(it) {
+                it.trending = !!(it.ent && ent[it.ent] >= 2);
+                var hrs = Math.max(0, (Date.now() - it.time) / 3600000);
+                it.score = -hrs + (it.type === 'HeadlineNews' ? 3 : it.type === 'Media' || it.type === 'Preview' ? -2 : 0) + (it.fav ? 8 : 0) + (it.img ? 2 : -3) + (it.breaking ? 2 : 0) + (it.trending ? 1 : 0);
+            });
+            all.sort(function(a, b) { return b.score - a.score; });
+            var pick = [], per = {}; // top stories, at most 2 per league in the normal rotation (favourites always make it)
+            all.forEach(function(it) { if (pick.length >= NW_HEROES) return; if (!smm && !it.fav && (per[it.L[4]] || 0) >= 2) return; per[it.L[4]] = (per[it.L[4]] || 0) + 1; pick.push(it); });
+            all.forEach(function(it) { if (pick.length < NW_HEROES && pick.indexOf(it) < 0) pick.push(it); });
+            nwCache = { key: key, at: Date.now(), items: pick };
+            return pick;
+        }
+        async function nwRssFallback() {
+            var out = [], L = ['', '', 'nfl', 'nfl', 'SPORTS'];
+            var urls = ['https%3A%2F%2Fsports.yahoo.com%2Frss%2F', 'https%3A%2F%2Fwww.cbssports.com%2Frss%2Fheadlines%2F'];
+            for (var i = 0; i < urls.length; i++) { try { var r = await arcadeFetch('https://api.rss2json.com/v1/api.json?rss_url=' + urls[i]); var d = await r.json();
+                (d.items || []).forEach(function(x) { out.push([{ id: x.guid || x.link, headline: x.title, description: '', published: String(x.pubDate || '').replace(' ', 'T') + 'Z', type: 'Story',
+                    images: x.thumbnail || (x.enclosure && x.enclosure.link) ? [{ url: x.thumbnail || x.enclosure.link }] : [] }, L]); }); } catch (e) {} }
+            return out;
+        }
+        function nwLogo(it, w) { return it.teamId ? 'https://a.espncdn.com/combiner/i?img=/i/teamlogos/' + it.L[2] + '/500/' + it.teamId + '.png&w=' + w + '&h=' + w : ''; }
+        function nwChips(it, n) {
+            var c = [];
+            if (it.breaking) c.push('<span class="nw-chip brk">BREAKING</span>');
+            if (it.fav) c.push('<span class="nw-chip fav">&#9733; ' + escHtml(it.fav) + '</span>');
+            else if (it.trending && c.length < 2) c.push('<span class="nw-chip hot">TRENDING</span>');
+            if (!c.length) c.push('<span class="nw-chip">' + (n === 0 ? 'TOP STORY' : escHtml(it.L[4]) + ' NEWS') + '</span>');
+            return c.join('');
+        }
+        function nwKick(it) { var k = it.topic ? it.topic[0] : it.L[4] + ' NEWS'; return k + (it.team ? ' \u00b7 ' + it.team : ''); }
+        function nwArt(it) { var lg = nwLogo(it, 500) || 'https://a.espncdn.com/combiner/i?img=/i/teamlogos/leagues/500/' + it.L[2] + '.png&w=500&h=500'; return '<div class="nw-art"><img alt="" src="' + escHtml(lg) + '" onerror="this.style.display=\'none\'"></div>'; }
+        function nwHero(gen, i) {
+            if (!isCurrentSlide(gen) || nwState.gen !== gen) return;
+            var items = nwState.items, n = items.length, it = items[i % n], lite = bxLite(); nwState.i = i % n;
+            var hero = document.getElementById('nw-hero'); if (!hero) return;
+            var col = it.topic ? it.topic[1] : (it.breaking ? '#ff2d48' : '#ffe600');
+            hero.style.setProperty('--nw-k', col); hero.style.setProperty('--nw-ms', NW_STORY_MS + 'ms');
+            nwState.layer = 1 - nwState.layer;
+            var ph = document.getElementById('nw-ph' + nwState.layer), old = document.getElementById('nw-ph' + (1 - nwState.layer));
+            ph.classList.toggle('kb', !lite);
+            ph.innerHTML = it.img ? '<img alt="" src="' + escHtml(nwImg(it.img, 960, 540)) + '" onerror="nwImgFail(this)" data-i="' + nwState.i + '">' : nwArt(it);
+            ph.classList.add('on'); if (old) old.classList.remove('on');
+            setTimeout(function() { if (old && !old.classList.contains('on')) old.innerHTML = ''; }, 800); // keep at most one decoded hero photo around
+            document.getElementById('nw-chips').innerHTML = nwChips(it, nwState.i);
+            document.getElementById('nw-count').textContent = (nwState.i + 1) + ' / ' + n;
+            var lg = nwLogo(it, 120), hs = it.athId ? 'https://a.espncdn.com/combiner/i?img=/i/headshots/' + it.L[3] + '/players/full/' + it.athId + '.png&w=120&h=88' : '';
+            var copy = document.getElementById('nw-copy');
+            copy.innerHTML = '<div class="nw-kick">' + escHtml(nwKick(it)) + '</div><div class="nw-title">' + escHtml(it.title) + '</div><div class="nw-meta">' +
+                (lg ? '<img class="nw-lg" alt="" src="' + escHtml(lg) + '" onerror="this.remove()">' : '') + (hs ? '<img class="nw-hs" alt="" src="' + escHtml(hs) + '" onerror="this.remove()">' : '') +
+                '<span>' + escHtml(it.L[4]) + '</span><span class="nw-dot"></span><span class="nw-ago">' + escHtml(nwAgo(it.time)) + '</span></div>';
+            copy.classList.remove('in'); void copy.offsetWidth; copy.classList.add('in');
+            var pg = document.getElementById('nw-prog'); pg.classList.remove('run'); void pg.offsetWidth; pg.classList.add('run');
+            // up next: the other stories in order after the current one
+            var rows = []; for (var k = 1; k < Math.min(n, 5); k++) { var r = items[(nwState.i + k) % n];
+                var th = r.img ? '<img alt="" loading="lazy" src="' + escHtml(nwImg(r.img, 320, 180)) + '" onerror="this.className=\'logo\'; this.onerror=null; this.src=\'' + escHtml(nwLogo(r, 160) || '') + '\'">' : (nwLogo(r, 160) ? '<img class="logo" alt="" src="' + escHtml(nwLogo(r, 160)) + '">' : '');
+                rows.push('<div class="nw-row" style="--nw-k:' + (r.fav ? '#ffd400' : r.topic ? r.topic[1] : r.breaking ? '#ff2d48' : '#ffe600') + '"><div class="nw-th">' + th + '</div><div class="nw-rt"><div class="nw-rk">' +
+                    escHtml((r.fav ? '\u2605 ' + r.fav : r.topic ? r.topic[0] : r.breaking ? 'BREAKING' : r.L[4]) + ' \u00b7 ' + nwAgo(r.time, 1)) + '</div><div class="nw-rh">' + escHtml(r.title) + '</div></div></div>'); }
+            document.getElementById('nw-rail').innerHTML = '<div class="nw-rail-h">UP NEXT</div>' + rows.join('');
+            if (n > 1) { // preload the next hero photo so the swap never shows a blank frame
+                var nx = items[(nwState.i + 1) % n]; if (nx.img) { var pre = new Image(); pre.src = nwImg(nx.img, 960, 540); }
+                clearTimeout(nwState.timer); nwState.timer = setTimeout(function() { nwHero(gen, i + 1); }, NW_STORY_MS);
             }
+        }
+        function nwImgFail(img) { var it = nwState.items[+img.getAttribute('data-i')]; var p = img.parentNode; if (p && it) p.innerHTML = nwArt(it); }
+        async function showNews(gen) {
+            clearTimeout(nwState.timer); nwState.timer = null;
+            var screen = document.getElementById('news-screen'), stage = document.getElementById('news-stage'), smm = smActive(), newsHead = screen.querySelector('.screen-header');
+            if (newsHead) newsHead.textContent = smm ? SPORT_MODES[smm].short + ' HEADLINES' : "TODAY'S HEADLINES";
+            document.body.classList.toggle('bx-lite-news', bxLite());
+            var items = [];
+            try { items = await nwLoad(smm); } catch (e) { items = []; }
+            if (!isCurrentSlide(gen)) return;
+            screen.style.display = 'flex';
+            if (!items.length) {
+                stage.innerHTML = '<div class="nw-empty">NO HEADLINES RIGHT NOW</div>';
+                slideTimer = slideTimeout(nextSlide, 6000);
+                return;
+            }
+            nwState.items = items; nwState.gen = gen; nwState.layer = 0;
+            stage.innerHTML = '<div class="nw-hero" id="nw-hero"><div class="nw-ph" id="nw-ph0"></div><div class="nw-ph" id="nw-ph1"></div><div class="nw-shade"></div>' +
+                '<div class="nw-chips" id="nw-chips"></div><div class="nw-count" id="nw-count"></div><div class="nw-copy" id="nw-copy"></div><div class="nw-prog"><i id="nw-prog"></i></div></div>' +
+                '<div class="nw-rail" id="nw-rail"></div>';
+            nwHero(gen, 0);
+            slideTimer = slideTimeout(function() { clearTimeout(nwState.timer); nextSlide(); }, Math.max(1, items.length) * NW_STORY_MS);
         }
 
         function parseAmerican(v) {

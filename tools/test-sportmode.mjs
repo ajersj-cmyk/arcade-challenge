@@ -116,7 +116,7 @@ check('NFL rotation: a slide is always visible', seen.every(s => s.vis === 1));
 await goSlide(page, 'live');
 await page.screenshot({ path: path.join(OUT, 'nfl-mode-live.png') });
 await goSlide(page, 'news');
-const nfln = await page.evaluate(() => ({ h: document.querySelector('#news-screen .screen-header').textContent, n: document.querySelectorAll('#news-list-track .news-row').length }));
+const nfln = await page.evaluate(() => ({ h: document.querySelector('#news-screen .screen-header').textContent, n: (window.nwState && nwState.items.length) || 0 }));
 check('NFL news from ESPN NFL feed', nfln.h === 'NFL HEADLINES' && nfln.n >= 5, JSON.stringify(nfln));
 await page.screenshot({ path: path.join(OUT, 'nfl-mode-news.png') });
 await goSlide(page, 'nflFutures');
@@ -182,7 +182,7 @@ const cbbf = await page.evaluate(() => ({ h: document.querySelector('#futures-sc
 check('CBB futures (national title etc.)', cbbf.h === 'COLLEGE HOOPS FUTURES' && cbbf.secs.includes('NATIONAL TITLE'), JSON.stringify(cbbf));
 await page.screenshot({ path: path.join(OUT, 'cbb-mode-futures.png') });
 await goSlide(page, 'news');
-const cbbn = await page.evaluate(() => ({ h: document.querySelector('#news-screen .screen-header').textContent, n: document.querySelectorAll('#news-list-track .news-row').length }));
+const cbbn = await page.evaluate(() => ({ h: document.querySelector('#news-screen .screen-header').textContent, n: (window.nwState && nwState.items.length) || 0 }));
 check('CBB news (ESPN men\'s college hoops)', cbbn.h === 'HOOPS HEADLINES' && cbbn.n >= 5, JSON.stringify(cbbn));
 await page.screenshot({ path: path.join(OUT, 'cbb-mode-news.png') });
 seen = await cycle(page, 10);
