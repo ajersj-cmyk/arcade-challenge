@@ -1,7 +1,7 @@
 name: Family pick'em sync
-# Every ~10 min: copy pick'em picks from ntfy.sh (which only caches them 12 h) into picks.json on the "pickem-data" branch
+# Every ~10 min: copy pick'em picks of every room from ntfy.sh (which only caches them 12 h) into rooms/<room>.json on the "pickem-data" branch
 # and grade finished games from ESPN (scripts/pickem-sync.mjs). Commits only when something changed, never to main.
-# Optional household PIN: add a repository secret PICKEM_PIN (same PIN as Settings -> Pick'em PIN on the TV).
+# Optional PIN for the default (Ahlers) room: add a repository secret PICKEM_PIN (same PIN as Settings -> Pick'em PIN on the TV).
 on:
   schedule:
     - cron: '*/10 * * * *'   # GitHub may delay or skip scheduled runs at busy times
@@ -32,11 +32,11 @@ jobs:
       - name: Sync picks + grade finals
         env:
           PICKEM_PIN: ${{ secrets.PICKEM_PIN }}
-        run: node scripts/pickem-sync.mjs data/picks.json
+        run: node scripts/pickem-sync.mjs data
       - name: Commit if changed
         working-directory: data
         run: |
-          git add picks.json
+          git add -A .
           if git diff --cached --quiet; then echo "No change"; exit 0; fi
           git commit -qm "pickem: sync picks + results [skip ci]"
           git push origin HEAD:pickem-data

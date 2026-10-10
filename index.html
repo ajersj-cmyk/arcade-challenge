@@ -689,45 +689,53 @@
         .gc-cel-d { padding: 0.3vh 1.3vh; font-size: 2.2vh; }
         .gc-celmid > * { flex: none; white-space: nowrap; }
         body.nav-active #gamecast .gc-cel:focus, body.nav-active #gamecast .gc-cel-d:focus { outline: 0.4vh solid #00f0ff; outline-offset: 0.3vh; }
-        /* ===================== FAMILY PICK'EM leaderboard slide (pickem-core.js; phone page remote-pick.html) ===================== */
+        /* ===================== FAMILY PICK'EM leaderboard slide (pickem-core.js; phone page remote-pick.html) =====================
+           Left: season standings (total running record W-L / PCT / streak) with each player's 5 picks for the day. Right: the day's TOP 5 + the QR code. */
         #pickem-screen .pk-stage { width: 95%; height: calc(100vh - var(--ticker-height) - 15.5vh); display: flex; gap: 2vh; position: relative; z-index: 20; }
-        .pk-left { flex: none; width: min(56vh, 34vw); display: flex; flex-direction: column; gap: 1.6vh; min-height: 0; }
         .pk-card { background: var(--ds-card-bg, #0c1420); border-radius: var(--ds-radius, 1.4vh); box-shadow: var(--ds-card-shadow, none); border: 1px solid rgba(255,255,255,0.08); overflow: hidden; }
-        .pk-h { font-family: var(--ds-display, 'Inter'); font-weight: 800; font-style: italic; font-size: 2.7vh; letter-spacing: 0.14em; color: var(--accent-color, #39ff14); padding: 1.2vh 1.8vh 0.6vh; display: flex; justify-content: space-between; align-items: baseline; text-transform: uppercase; }
-        .pk-h span { font-style: normal; font-size: 2vh; letter-spacing: 0.1em; color: rgba(255,255,255,0.55); }
-        .pk-st { flex: 1; min-height: 0; display: flex; flex-direction: column; }
-        .pk-row { display: grid; grid-template-columns: 4vh 1fr 8vh 8vh 6.5vh; align-items: center; gap: 0.8vh; padding: 0 1.8vh; height: 5.1vh; font-family: var(--ds-display, 'Inter'); font-weight: 700; font-size: 2.9vh; color: #fff; border-top: 1px solid rgba(255,255,255,0.06); }
-        .pk-row.hd { height: 3.4vh; font-size: 1.7vh; letter-spacing: 0.14em; color: rgba(255,255,255,0.5); border-top: 0; }
-        .pk-row .nm { font-weight: 800; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .pk-row .r { text-align: right; } .pk-row .rk { color: rgba(255,255,255,0.55); }
-        .pk-row.lead .rk, .pk-row.lead .nm { color: #ffe600; text-shadow: 0 0 1.2vh rgba(255,230,0,0.45); }
-        .pk-row .W { color: #39ff14; } .pk-row .L { color: #ff5a7a; }
+        .pk-h { font-family: var(--ds-display, 'Inter'); font-weight: 800; font-style: italic; font-size: 2.7vh; letter-spacing: 0.14em; color: var(--accent-color, #39ff14); padding: 1.2vh 1.8vh 0.6vh; display: flex; justify-content: space-between; align-items: baseline; text-transform: uppercase; white-space: nowrap; }
+        .pk-h span { font-style: normal; font-size: 1.9vh; letter-spacing: 0.1em; color: rgba(255,255,255,0.55); overflow: hidden; text-overflow: ellipsis; margin-left: 1.5vh; }
+        .pk-main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+        .pk-row { display: grid; grid-template-columns: 4.2vh minmax(0, 1fr) 13vh 10vh 7vh 45vh; align-items: center; gap: 0.8vh; padding: 0 1.8vh; height: 6.7vh; flex: none; font-family: var(--ds-display, 'Inter'); font-weight: 700; color: #fff; border-top: 1px solid rgba(255,255,255,0.06); }
+        .pk-row.hd { height: 3.2vh; font-size: 1.6vh; letter-spacing: 0.14em; color: rgba(255,255,255,0.5); border-top: 0; font-weight: 800; }
+        .pk-row .rk { font-size: 2.6vh; color: rgba(255,255,255,0.5); }
+        .pk-row .nm { font-size: 3.1vh; font-weight: 800; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .pk-row .wl { font-size: 4.4vh; font-weight: 900; text-align: right; letter-spacing: 0.02em; line-height: 1; }
+        .pk-row .pc { font-size: 3vh; text-align: right; color: rgba(255,255,255,0.8); }
+        .pk-row .sk { font-size: 2.5vh; text-align: right; } .pk-row .W { color: #39ff14; } .pk-row .L { color: #ff5a7a; }
+        .pk-row.hd .wl, .pk-row.hd .pc, .pk-row.hd .sk { font-size: 1.6vh; font-weight: 800; color: rgba(255,255,255,0.5); letter-spacing: 0.14em; }
+        .pk-row.lead .rk, .pk-row.lead .nm, .pk-row.lead .wl { color: #ffe600; text-shadow: 0 0 1.2vh rgba(255,230,0,0.45); }
+        .pk-more { padding: 0.6vh 1.8vh; font-family: var(--ds-display, 'Inter'); font-weight: 800; font-size: 1.8vh; letter-spacing: 0.1em; color: rgba(255,255,255,0.5); }
+        .pk-ps { display: flex; gap: 0.6vh; }
+        .pk-p { flex: none; width: 8.4vh; height: 4.6vh; border-radius: 0.8vh; display: flex; align-items: center; justify-content: center; gap: 0.4vh; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12); font-family: var(--ds-display, 'Inter'); font-weight: 800; font-size: 1.9vh; color: #fff; overflow: hidden; }
+        .pk-p img { width: 2.8vh; height: 2.8vh; object-fit: contain; flex: none; }
+        .pk-p.ok { background: rgba(57,255,20,0.2); border-color: rgba(57,255,20,0.7); color: #39ff14; }
+        .pk-p.no { background: rgba(255,59,92,0.12); border-color: rgba(255,59,92,0.5); color: #ff6b84; opacity: 0.75; }
+        .pk-p.live-up { border-color: rgba(0,240,255,0.8); color: #6ff6ff; } .pk-p.live-down { border-color: rgba(255,140,0,0.7); color: #ffae4d; }
+        .pk-p.empty { background: none; border: 1px dashed rgba(255,255,255,0.18); color: rgba(255,255,255,0.25); }
         .pk-empty { margin: auto; padding: 2vh; text-align: center; font-family: var(--ds-display, 'Inter'); font-weight: 800; font-size: 2.8vh; letter-spacing: 0.08em; color: rgba(255,255,255,0.7); }
-        .pk-qr { flex: none; display: flex; align-items: center; gap: 2vh; padding: 1.4vh 1.8vh; }
-        .pk-qr img { width: 15vh; height: 15vh; border-radius: 1vh; background: #fff; padding: 0.6vh; flex: none; }
-        .pk-qr b { display: block; font-family: var(--ds-display, 'Inter'); font-weight: 800; font-style: italic; font-size: 3.6vh; line-height: 1; color: #fff; letter-spacing: 0.04em; }
-        .pk-qr i { display: block; font-style: normal; margin-top: 0.8vh; font-size: 1.9vh; line-height: 1.3; color: rgba(255,255,255,0.7); font-weight: 700; letter-spacing: 0.04em; }
-        .pk-games { flex: 1; min-width: 0; display: flex; flex-direction: column; }
-        .pk-gl { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 1vh; padding: 0.4vh 1.4vh 1.4vh; }
-        .pk-g { flex: 1; min-height: 0; max-height: 12vh; display: grid; grid-template-columns: 15vh 1fr 3vh 1fr; align-items: center; gap: 1vh; padding: 0 1.4vh; border-radius: 1vh; background: rgba(255,255,255,0.035); border-left: 0.6vh solid rgba(255,255,255,0.15); }
+        .pk-right { flex: none; width: min(60vh, 36vw); display: flex; flex-direction: column; gap: 1.6vh; min-height: 0; }
+        .pk-games { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+        .pk-gl { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 0.8vh; padding: 0.4vh 1.2vh 1.2vh; }
+        .pk-g { flex: 1; min-height: 0; max-height: 9.5vh; display: grid; grid-template-columns: 12vh minmax(0, 1fr) minmax(0, 1fr); align-items: center; gap: 1vh; padding: 0 1.2vh; border-radius: 1vh; background: rgba(255,255,255,0.035); border-left: 0.6vh solid rgba(255,255,255,0.15); }
         .pk-g.live { border-left-color: #ff2d48; } .pk-g.fin { border-left-color: #ffe600; }
-        .pk-gm { display: flex; flex-direction: column; gap: 0.3vh; font-family: var(--ds-display, 'Inter'); font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; }
-        .pk-gm .lg { font-size: 1.9vh; color: #000; background: var(--accent-color, #00f0ff); border-radius: 0.4vh; padding: 0.1vh 0.8vh; align-self: flex-start; }
-        .pk-gm .tm { font-size: 2.3vh; color: #fff; white-space: nowrap; } .pk-g.live .pk-gm .tm { color: #ff4d64; }
-        .pk-gm .nt { font-size: 1.7vh; color: rgba(255,255,255,0.55); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .pk-at { text-align: center; font-family: var(--ds-display, 'Inter'); font-weight: 800; font-size: 2.4vh; color: rgba(255,255,255,0.4); }
-        .pk-side { min-width: 0; display: grid; grid-template-columns: 5vh 1fr auto; grid-template-rows: auto auto; column-gap: 1vh; align-items: center; }
-        .pk-side img { grid-column: 1; grid-row: 1 / span 2; width: 5vh; height: 5vh; object-fit: contain; }
-        .pk-side .ab { grid-column: 2; grid-row: 1; font-family: var(--ds-display, 'Inter'); font-weight: 800; font-size: 3vh; line-height: 1; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .pk-side .ab small { font-size: 2vh; color: #ffe600; margin-right: 0.5vh; }
-        .pk-side .sc { grid-column: 3; grid-row: 1 / span 2; font-family: var(--ds-display, 'Inter'); font-weight: 800; font-size: 4.2vh; color: #fff; min-width: 4vh; text-align: right; }
+        .pk-gm { display: flex; flex-direction: column; gap: 0.3vh; font-family: var(--ds-display, 'Inter'); font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase; min-width: 0; }
+        .pk-gm .lg { font-size: 1.7vh; color: #000; background: var(--accent-color, #00f0ff); border-radius: 0.4vh; padding: 0.1vh 0.7vh; align-self: flex-start; }
+        .pk-gm .tm { font-size: 1.75vh; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .pk-g.live .pk-gm .tm { color: #ff4d64; }
+        .pk-side { min-width: 0; display: grid; grid-template-columns: 4.4vh minmax(0, 1fr) auto; grid-template-rows: auto auto; column-gap: 0.8vh; align-items: center; }
+        .pk-side img { grid-column: 1; grid-row: 1 / span 2; width: 4.4vh; height: 4.4vh; object-fit: contain; }
+        .pk-side .ab { grid-column: 2; grid-row: 1; font-family: var(--ds-display, 'Inter'); font-weight: 800; font-size: 2.6vh; line-height: 1; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .pk-side .ab small { font-size: 1.7vh; color: #ffe600; margin-right: 0.4vh; }
+        .pk-side .n { grid-column: 2; grid-row: 2; font-family: var(--ds-display, 'Inter'); font-weight: 700; font-size: 1.6vh; letter-spacing: 0.08em; color: rgba(255,255,255,0.5); white-space: nowrap; margin-top: 0.3vh; }
+        .pk-side .sc { grid-column: 3; grid-row: 1 / span 2; font-family: var(--ds-display, 'Inter'); font-weight: 800; font-size: 3.6vh; color: #fff; min-width: 3vh; text-align: right; }
         .pk-side.win .ab, .pk-side.win .sc { color: #ffe600; }
         .pk-side.lose .ab, .pk-side.lose .sc { color: rgba(255,255,255,0.45); }
-        .pk-who { grid-column: 2; grid-row: 2; display: flex; gap: 0.5vh; overflow: hidden; margin-top: 0.5vh; height: 2.7vh; }
-        .pk-c { flex: none; font-family: var(--ds-display, 'Inter'); font-weight: 700; font-size: 1.85vh; letter-spacing: 0.04em; line-height: 2.7vh; padding: 0 0.9vh; border-radius: 1.4vh; background: rgba(255,255,255,0.12); color: #fff; text-transform: uppercase; }
-        .pk-c.ok { background: rgba(57,255,20,0.22); color: #39ff14; } .pk-c.no { background: rgba(255,59,92,0.16); color: #ff6b84; text-decoration: line-through; }
-        .pk-c.up { background: rgba(0,240,255,0.2); color: #6ff6ff; }
-        .pk-none { font-size: 1.8vh; color: rgba(255,255,255,0.35); font-weight: 700; letter-spacing: 0.08em; line-height: 2.7vh; }
+        .pk-qr { flex: none; display: flex; align-items: center; gap: 1.8vh; padding: 1.2vh 1.6vh; }
+        .pk-qr img { width: 13vh; height: 13vh; border-radius: 1vh; background: #fff; padding: 0.5vh; flex: none; }
+        .pk-qr b { display: block; font-family: var(--ds-display, 'Inter'); font-weight: 800; font-style: italic; font-size: 3.2vh; line-height: 1; color: #fff; letter-spacing: 0.04em; }
+        .pk-qr i { display: block; font-style: normal; margin-top: 0.7vh; font-size: 1.75vh; line-height: 1.3; color: rgba(255,255,255,0.7); font-weight: 700; letter-spacing: 0.04em; }
+        .pk-qr i em { font-style: normal; color: #ffe600; }
+
         /* ===================== HEADLINES: broadcast news feature (hero story + up-next rail) =====================
            One hero photo (16:9, resized by ESPN's image combiner) that rotates through 5 stories, 4 photo cards on the right.
            Motion is transform/opacity only; the slow Ken Burns zoom runs only in Full (bxLite() = TV app gets a still photo). */
@@ -1121,7 +1129,11 @@
                     <div class="toggle-row"><span>Phone Remote (QR)</span> <input type="checkbox" id="set-phoneRemote" onchange="updateSettings(); pkRemoteStart()"></div>
                     <div style="margin: 1vh 0;">
                         <div style="font-size: 1.8vh; color: var(--accent-color); margin-bottom: 0.5vh; text-transform: uppercase;">Pick'em / remote PIN (optional, goes in the QR):</div>
-                        <input type="text" id="set-pickemPin" maxlength="8" style="width: 100%; padding: 1vh; border-radius: 0.5vh; background: rgba(0,0,0,0.5); color: white; border: 1px solid var(--accent-color); font-family: 'Inter', sans-serif;" onchange="updateSettings()">
+                        <input type="text" id="set-pickemPin" maxlength="8" style="width: 100%; padding: 1vh; border-radius: 0.5vh; background: rgba(0,0,0,0.5); color: white; border: 1px solid var(--accent-color); font-family: 'Inter', sans-serif;" onchange="updateSettings(); pkRoomApply()">
+                    </div>
+                    <div style="margin: 1vh 0;">
+                        <div style="font-size: 1.8vh; color: var(--accent-color); margin-bottom: 0.5vh; text-transform: uppercase;">Pick'em room code (share it so friends can join):</div>
+                        <div style="display: flex; gap: 1vh;"><input type="text" id="set-pickemRoom" maxlength="40" placeholder="ahlers-arcade-07r1ln1b6e" style="flex: 1; min-width: 0; padding: 1vh; border-radius: 0.5vh; background: rgba(0,0,0,0.5); color: white; border: 1px solid var(--accent-color); font-family: 'Inter', sans-serif; text-transform: lowercase;" onchange="updateSettings(); pkRoomApply()"><button type="button" onclick="pkNewRoom()" style="padding: 0 1.5vh; border-radius: 0.5vh; background: rgba(255,255,255,0.12); color: white; border: 1px solid var(--accent-color); font-weight: 800; cursor: pointer;">NEW ROOM</button></div>
                     </div>
                     <div class="toggle-row"><span>Odds Slide</span> <input type="checkbox" id="set-odds" onchange="updateSettings()"></div>
                     <div class="toggle-row"><span>Futures Slide</span> <input type="checkbox" id="set-futures" onchange="updateSettings()"></div>
@@ -1363,7 +1375,7 @@
         var currentThemeIndex = 0;
 
         var defaultSettings = { 
-            nfl:true, nba:true, nhl:true, mlb:true, rankings:true, odds:true, futures:true, nflFutures:true, nflAwards:true, fantasy:true, cfbFutures:true, nhlFutures:true, tvGuide:true, news:true, pickem:true, phoneRemote:true, pickemPin:"", mySquad:true, ufc:true, command:true, leaders:true, pga:true, soccerSlide:true, trivia:true, hotProps:true,
+            nfl:true, nba:true, nhl:true, mlb:true, rankings:true, odds:true, futures:true, nflFutures:true, nflAwards:true, fantasy:true, cfbFutures:true, nhlFutures:true, tvGuide:true, news:true, pickem:true, phoneRemote:true, pickemPin:"", pickemRoom:"", mySquad:true, ufc:true, command:true, leaders:true, pga:true, soccerSlide:true, trivia:true, hotProps:true,
             showWorldCup:true, showEPL:true, showUCL:true, showATP:true, showWTA:true, showNFL:true, showNBA:true, showNHL:true, showMLB:true, showCFB:true, showCBB:true, showCLB:true,
             cbb50:true, cfb75:true, clb50:true, apiBase:"https://site.api.espn.com/apis",
             mySquadTeams: "Carolina Hurricanes, Duke, ECU, East Carolina",
@@ -1424,7 +1436,7 @@
             if(document.getElementById('speed-display')) document.getElementById('speed-display').innerText = settings.tickerSpeed;
             try { celDelayUI(); } catch (e) {}
             try { smUI(); } catch (e) {}
-            var remoteUrl = window.Pickem ? Pickem.pickUrl(settings.pickemPin) : window.location.href.split('#')[0] + '#remote'; // phone remote + pick'em page
+            var remoteUrl = window.Pickem ? (pkRoom(), Pickem.pickUrl(settings.pickemPin, pkTvKey())) : window.location.href.split('#')[0] + '#remote'; // phone remote (this TV) + pick'em room
             document.getElementById('settings-qr').src = 'https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=' + encodeURIComponent(remoteUrl) + '&color=0a0a0a&bgcolor=00ffff';
         }
         
@@ -2616,31 +2628,60 @@
         }
 
         // ===== FAMILY PICK'EM leaderboard + PHONE REMOTE (shared logic in pickem-core.js, phone page remote-pick.html) =====
-        // Picks: ntfy.sh topic "<room>-p" (12 h cache) + picks.json on the pickem-data branch (GitHub Action, every ~10 min).
-        // Commands: ntfy.sh topic "<room>-c", one EventSource while the page is open (no polling); the TV answers with an ack.
-        var pk = { slates: null, file: null, fileAt: 0, msgs: [], es: null, retry: 15000, retryT: null, seen: {}, busy: false };
+        // Rooms: each household / friend group has its own room code (Settings; default = the Ahlers room) and leaderboard.
+        // Picks + the frozen daily TOP 5: ntfy.sh topic "<room>-p" (12 h cache) + rooms/<room>.json on the pickem-data branch (GitHub Action, ~10 min).
+        // Remote: commands go to THIS TV's own topic "arcade-tv-<random key>" (key only in this TV's QR), one EventSource, the TV acks there.
+        var pk = { slates: null, file: null, fileAt: 0, msgs: [], es: null, esTopic: '', retry: 15000, retryT: null, seen: {}, busy: false, room: '' };
         var PK_SLIDE_MS = 20000;
+        function pkTvKey() {
+            var k = ''; try { k = localStorage.getItem('ahlersTvKey') || ''; } catch (e) {}
+            if (!/^[a-z0-9]{6,16}$/.test(k) && window.Pickem) { k = Pickem.newCode(10); try { localStorage.setItem('ahlersTvKey', k); } catch (e) {} }
+            return k;
+        }
+        function pkRoom() { // apply the room from Settings; a new room drops the cached picks
+            var P = window.Pickem; if (!P) return '';
+            var r = P.setRoom(settings.pickemRoom || P.DEFAULT_ROOM);
+            if (r !== pk.room) { pk.room = r; pk.file = null; pk.fileAt = 0; pk.msgs = []; pk.slates = null; }
+            return r;
+        }
+        function pkRoomApply() {
+            var P = window.Pickem, el = document.getElementById('set-pickemRoom');
+            if (P && el && el.value && !P.validRoom(String(el.value).trim().toLowerCase())) { el.value = settings.pickemRoom = ''; try { updateSettings(); } catch (e) {} }
+            if (P && settings.pickemRoom) settings.pickemRoom = String(settings.pickemRoom).trim().toLowerCase();
+            pkRoom();
+            var q = document.getElementById('settings-qr');
+            if (P && q) q.src = 'https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=' + encodeURIComponent(P.pickUrl(settings.pickemPin, pkTvKey())) + '&color=0a0a0a&bgcolor=00ffff';
+        }
+        function pkNewRoom() {
+            var P = window.Pickem, el = document.getElementById('set-pickemRoom'); if (!P || !el) return;
+            el.value = P.newRoom(); updateSettings(); pkRoomApply();
+        }
         async function pkLoad() {
-            var P = window.Pickem, now = Date.now(), jobs = [];
-            if (!pk.slates || now - pk.slates.now > 180000) jobs.push(P.loadSlates(now, arcadeFetch).then(function(s) { pk.slates = s; }, function() {}));
-            if (!pk.file || now - pk.fileAt > 300000) jobs.push(P.fetchJSON(P.DATA_URL + '?t=' + Math.floor(now / 120000), 9000, arcadeFetch).then(function(d) { if (d && d.room === P.ROOM) { pk.file = d; pk.fileAt = now; } }, function() {}));
-            jobs.push(P.readNtfy(P.ROOM + '-p', 'all', arcadeFetch).then(function(m) { pk.msgs = m; }, function() {}));
+            var P = window.Pickem, now = Date.now(), jobs = [], room = pkRoom();
+            if (!pk.file || now - pk.fileAt > 300000) jobs.push(P.fetchJSON(P.dataUrl() + '?t=' + Math.floor(now / 120000), 9000, arcadeFetch).then(function(d) { if (d && d.room === room) { pk.file = d; pk.fileAt = now; } }, function() {}));
+            jobs.push(P.readNtfy(room + '-p', 'all', arcadeFetch).then(function(m) { pk.msgs = m; }, function() {}));
             await Promise.all(jobs);
-            var d = JSON.parse(JSON.stringify(pk.file || P.emptyData())), starts = {}, sl = pk.slates, games = sl ? sl.today.games.concat(sl.tomorrow ? sl.tomorrow.games : []) : [];
+            var frozen = P.frozen(pk.file, pk.msgs);
+            if (!pk.slates || now - pk.slates.now > 180000) { try { pk.slates = await P.loadSlates(now, arcadeFetch, frozen); } catch (e) {} }
+            else P.applyFrozen(pk.slates, frozen);
+            var sl = pk.slates;
+            if (sl && (sl.today.fresh || (sl.tomorrow && sl.tomorrow.fresh))) { // first device in this room today: freeze the TOP 5
+                await P.freezeNew(sl);
+                try { pk.msgs = await P.readNtfy(room + '-p', 'all', arcadeFetch); P.applyFrozen(sl, P.frozen(pk.file, pk.msgs)); } catch (e) {}
+                P.announce(window.localStorage);
+            }
+            var d = JSON.parse(JSON.stringify(pk.file || P.emptyData())), starts = {}, games = sl ? sl.today.games.concat(sl.tomorrow ? sl.tomorrow.games : []) : [];
             games.forEach(function(g) { starts[g.id] = g.start; if (!d.events[g.id]) d.events[g.id] = P.eventMeta(g); });
             P.overlayGames(d, games);
             P.applyPicks(d, pk.msgs, starts, settings.pickemPin);
             try { await P.gradeMissing(d, now, 4, arcadeFetch); } catch (e) {}
             return d;
         }
-        function pkSideHtml(g, t, d, picks, r, fin) {
+        function pkSideHtml(g, t, picks, r, fin) {
             var P = window.Pickem, cls = fin && r !== 'tie' ? (r === t.id ? ' win' : ' lose') : '';
-            var lead = g.state === 'in' && t.score !== '' && parseFloat(t.score) > parseFloat(t.id === g.a.id ? g.h.score : g.a.score);
-            var who = Object.keys(picks).filter(function(k) { return picks[k].tm === t.id; }).map(function(k) { return d.names[k] || k; });
-            var cc = fin && r !== 'tie' ? (r === t.id ? ' ok' : ' no') : (lead ? ' up' : '');
-            var chips = who.slice(0, 4).map(function(n) { return '<span class="pk-c' + cc + '">' + escHtml(n) + '</span>'; }).join('') + (who.length > 4 ? '<span class="pk-c">+' + (who.length - 4) + '</span>' : '');
-            return '<div class="pk-side' + cls + '"><img alt="" src="' + escHtml(P.logo(t.logo, 80)) + '" onerror="this.style.visibility=\'hidden\'"><div class="ab">' + (t.rank ? '<small>#' + t.rank + '</small>' : '') + escHtml(t.ab) + '</div>' +
-                '<div class="sc">' + (g.state !== 'pre' ? escHtml(t.score) : '') + '</div><div class="pk-who">' + (chips || '<span class="pk-none">NO PICKS</span>') + '</div></div>';
+            var n = Object.keys(picks).filter(function(k) { return picks[k].tm === t.id; }).length;
+            return '<div class="pk-side' + cls + '"><img alt="" loading="lazy" src="' + escHtml(P.logo(t.logo, 80)) + '" onerror="this.style.visibility=\'hidden\'"><div class="ab">' + (t.rank ? '<small>#' + t.rank + '</small>' : '') + escHtml(t.ab) + '</div>' +
+                '<div class="n">' + (n ? n + ' PICK' + (n === 1 ? '' : 'S') : '&nbsp;') + '</div><div class="sc">' + (g.state !== 'pre' ? escHtml(t.score) : '') + '</div></div>';
         }
         async function showPickem(gen) {
             var P = window.Pickem, screen = document.getElementById('pickem-screen'), stage = document.getElementById('pk-stage');
@@ -2651,33 +2692,39 @@
             d = d || P.emptyData();
             var sl = pk.slates, slate = sl ? sl.today : null;
             if (sl && sl.tomorrow && sl.tomorrow.games.length && !sl.today.games.some(function(g) { return P.result(g) === 'in' || P.result(g) === 'pre'; })) slate = sl.tomorrow; // today's 5 are all final
-            var st = P.standings(d), games = slate ? slate.games : [];
+            var st = P.standings(d), games = slate ? slate.games : [], tp = slate ? P.slatePicks(d, slate) : {}, slots = Math.max(games.length, 1);
             var rows = st.slice(0, 7).map(function(x, i) {
-                return '<div class="pk-row' + (i === 0 && x.w > 0 ? ' lead' : '') + '"><span class="rk">' + (i + 1) + '</span><span class="nm">' + escHtml(x.name) + '</span><span class="r">' + x.w + '-' + x.l + '</span><span class="r">' + P.fmtPct(x.pct, x) +
-                    '</span><span class="r ' + x.streak.charAt(0) + '">' + escHtml(x.streak) + '</span></div>';
+                var mine = tp[x.key] || [], chips = '';
+                for (var j = 0; j < slots; j++) {
+                    var c = games[j] && mine.filter(function(z) { return z.g === games[j].id; })[0];
+                    chips += c ? '<span class="pk-p ' + c.res + '"><img alt="" loading="lazy" src="' + escHtml(P.logo(c.logo, 60)) + '" onerror="this.remove()">' + escHtml(c.ab) + '</span>' : '<span class="pk-p empty">&ndash;</span>';
+                }
+                return '<div class="pk-row' + (i === 0 && x.w > 0 ? ' lead' : '') + '"><span class="rk">' + (i + 1) + '</span><span class="nm">' + escHtml(x.name) + '</span><span class="wl">' + x.w + '-' + x.l + '</span><span class="pc">' + P.fmtPct(x.pct, x) +
+                    '</span><span class="sk ' + x.streak.charAt(0) + '">' + escHtml(x.streak) + '</span><span class="pk-ps">' + chips + '</span></div>';
             }).join('');
             var gl = games.map(function(g) {
                 var r = P.result(g), fin = r !== 'pre' && r !== 'in' && r !== 'post' && r !== '', picks = d.picks[g.id] || {};
                 var tm = g.state === 'in' ? '&#9679; ' + escHtml(g.detail) : g.state === 'post' ? escHtml(g.detail || 'FINAL') : escHtml(P.fmtTime(g.start));
-                return '<div class="pk-g' + (g.state === 'in' ? ' live' : fin ? ' fin' : '') + '"><div class="pk-gm"><span class="lg">' + escHtml(g.lg) + '</span><span class="tm">' + tm + '</span><span class="nt">' + escHtml(g.nets[0] || g.line || '') + '</span></div>' +
-                    pkSideHtml(g, g.a, d, picks, r, fin) + '<div class="pk-at">@</div>' + pkSideHtml(g, g.h, d, picks, r, fin) + '</div>';
+                return '<div class="pk-g' + (g.state === 'in' ? ' live' : fin ? ' fin' : '') + '"><div class="pk-gm"><span class="lg">' + escHtml(g.lg) + '</span><span class="tm">' + tm + '</span></div>' +
+                    pkSideHtml(g, g.a, picks, r, fin) + pkSideHtml(g, g.h, picks, r, fin) + '</div>';
             }).join('');
-            var label = slate === (sl && sl.tomorrow) ? "TOMORROW'S TOP " : "TODAY'S TOP ";
-            stage.innerHTML = '<div class="pk-left"><div class="pk-card pk-st"><div class="pk-h">SEASON STANDINGS <span>' + st.length + ' PLAYER' + (st.length === 1 ? '' : 'S') + '</span></div>' +
-                (rows ? '<div class="pk-row hd"><span>#</span><span>NAME</span><span class="r">W-L</span><span class="r">PCT</span><span class="r">STRK</span></div>' + rows : '<div class="pk-empty">NO PICKS YET<br>SCAN TO JOIN</div>') + '</div>' +
-                '<div class="pk-card pk-qr"><img alt="" src="' + escHtml(P.qrImg(P.pickUrl(settings.pickemPin), 240)) + '"><div><b>SCAN TO PLAY</b><i>Pick today\'s top 5 games<br>+ use your phone as the remote</i></div></div></div>' +
-                '<div class="pk-card pk-games"><div class="pk-h">' + label + games.length + ' <span>' + (slate ? escHtml(P.fmtDay(slate.date)) + ' · PICKS LOCK AT START' : 'SCHEDULE UNAVAILABLE') + '</span></div><div class="pk-gl">' +
-                (gl || '<div class="pk-empty">NO GAMES ON THE SCHEDULE</div>') + '</div></div>';
+            var day = slate === (sl && sl.tomorrow) ? 'TOMORROW' : 'TODAY';
+            stage.innerHTML = '<div class="pk-card pk-main"><div class="pk-h">SEASON STANDINGS <span>' + st.length + ' PLAYER' + (st.length === 1 ? '' : 'S') + ' · ' + escHtml(P.ROOM) + '</span></div>' +
+                (rows ? '<div class="pk-row hd"><span>#</span><span>NAME</span><span class="wl">W-L</span><span class="pc">PCT</span><span class="sk">STRK</span><span>' + day + '\'S PICKS</span></div>' + rows + (st.length > 7 ? '<div class="pk-more">+' + (st.length - 7) + ' MORE ON YOUR PHONE</div>' : '') : '<div class="pk-empty">NO PICKS YET<br>SCAN TO JOIN</div>') + '</div>' +
+                '<div class="pk-right"><div class="pk-card pk-games"><div class="pk-h">' + day + '\'S TOP ' + games.length + ' <span>' + (slate ? escHtml(P.fmtDay(slate.date)) + ' · LOCK AT START' : 'SCHEDULE UNAVAILABLE') + '</span></div><div class="pk-gl">' +
+                (gl || '<div class="pk-empty">NO GAMES ON THE SCHEDULE</div>') + '</div></div>' +
+                '<div class="pk-card pk-qr"><img alt="" src="' + escHtml(P.qrImg(P.pickUrl(settings.pickemPin, pkTvKey()), 240)) + '"><div><b>SCAN TO PLAY</b><i>5 picks a day + phone remote<br>ROOM <em>' + escHtml(P.ROOM) + '</em></i></div></div></div>';
             slideTimer = slideTimeout(nextSlide, PK_SLIDE_MS);
         }
-        // ---- phone remote listener
+        // ---- phone remote listener (this TV's own topic)
         function pkRemoteStart() {
             var P = window.Pickem;
             if (pk.es) { try { pk.es.close(); } catch (e) {} pk.es = null; }
             clearTimeout(pk.retryT);
             if (!P || settings.phoneRemote === false || !window.EventSource || document.body.classList.contains('remote-active')) return;
             try {
-                var es = pk.es = new EventSource(P.NTFY + '/' + P.ROOM + '-c/sse');
+                var topic = pk.esTopic = P.tvTopic(pkTvKey());
+                var es = pk.es = new EventSource(P.NTFY + '/' + topic + '/sse');
                 es.onopen = function() { pk.retry = 15000; };
                 es.onmessage = function(ev) { try { var o = JSON.parse(ev.data); if (o.event === 'message') pkCommand(JSON.parse(o.message), o.time * 1000); } catch (e) {} };
                 es.onerror = function() { if (es.readyState === 2 || !navigator.onLine) { try { es.close(); } catch (e) {} if (pk.es === es) { pk.es = null; pk.retryT = setTimeout(pkRemoteStart, pk.retry); pk.retry = Math.min(pk.retry * 2, 300000); } } };
@@ -2703,7 +2750,7 @@
             } catch (e) { what = 'ERROR'; }
             if (!(gc && gc.open) && m.c !== 'next' && m.c !== 'prev' && m.c !== 'board') navShowHud('&#128241;&nbsp; ' + escHtml(who + what));
             else if (!(gc && gc.open)) setTimeout(function() { navShowHud('&#128241;&nbsp; ' + escHtml(who + what)); }, 50);
-            P.publish(P.ROOM + '-c', { v: 1, t: 'ack', r: m.id, s: what }).catch(function() {});
+            P.publish(pk.esTopic || P.tvTopic(pkTvKey()), { v: 1, t: 'ack', r: m.id, s: what }).catch(function() {});
         }
         setTimeout(pkRemoteStart, 4000);
 

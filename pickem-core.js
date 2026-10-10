@@ -1,8 +1,10 @@
 /* Ahlers Arcade · FAMILY PICK'EM + PHONE REMOTE: shared logic (TV index.html, phone remote-pick.html, scripts/pickem-sync.mjs).
  * No build step, no keys. Backend (all free, no account):
- *   - ntfy.sh topics (public pub/sub, CORS *): "<room>-p" = picks (cached 12 h), "<room>-c" = remote commands + acks.
- *   - picks.json on the "pickem-data" branch, written by .github/workflows/pickem.yml (GITHUB_TOKEN, never in the browser):
- *     every pick ever made + graded finals, so the season survives ntfy's 12 h cache. Read via raw.githubusercontent.com.
+ *   - ntfy.sh topics (public pub/sub, CORS *): "<room>-p" = picks + the day's frozen TOP 5 (cached 12 h); "arcade-tv-<tvKey>" =
+ *     remote commands for ONE TV + its acks (the key is only in that TV's QR); "ahlers-arcade-rooms" = room registry for the Action.
+ *   - rooms/<room>.json on the "pickem-data" branch, written by .github/workflows/pickem.yml (GITHUB_TOKEN, never in the browser):
+ *     every pick ever made in that room + graded finals, so the season survives ntfy's 12 h cache. Read via raw.githubusercontent.com.
+ * Every household / friend group has its own room code (stored per device); friends can join any room by its code.
  *   - ESPN site scoreboards / summary (CORS *) for the slate and for grading.
  * Ranking of "today's TOP 5" is deterministic: see rankGame() (documented in FLYNN.md §3d). */
 (function (root, factory) {
@@ -10,18 +12,18 @@
 })(typeof self !== 'undefined' ? self : this, function () {
     'use strict';
     var P = {};
-    P.ROOM = 'ahlers-arcade-07r1ln1b6e';
+    P.DEFAULT_ROOM = 'ahlers-arcade-07r1ln1b6e'; P.ROOM = P.DEFAULT_ROOM; P.REG_TOPIC = 'ahlers-arcade-rooms';
     P.PAGES = 'https://ajersj-cmyk.github.io/arcade-challenge/';
     P.NTFY = 'https://ntfy.sh';
-    P.DATA_URL = 'https://raw.githubusercontent.com/ajersj-cmyk/arcade-challenge/pickem-data/picks.json';
+    P.DATA_BASE = 'https://raw.githubusercontent.com/ajersj-cmyk/arcade-challenge/pickem-data/';
     P.ESPN = 'https://site.api.espn.com/apis/site/v2/sports/';
     P.MAX_PLAYERS = 16; P.SLATE = 5;
     try { // test hooks only (local mock servers); never set on the real TV / phones
         var ov = typeof localStorage !== 'undefined' && JSON.parse(localStorage.getItem('ahlersPickemOverride') || 'null');
-        if (ov) { if (ov.ntfy) P.NTFY = ov.ntfy; if (ov.data) P.DATA_URL = ov.data; if (ov.espn) P.ESPN = ov.espn; if (ov.room) P.ROOM = ov.room; }
+        if (ov) { if (ov.ntfy) P.NTFY = ov.ntfy; if (ov.data) P.DATA_BASE = ov.data; if (ov.espn) P.ESPN = ov.espn; if (ov.room) P.ROOM = P.DEFAULT_ROOM = ov.room; if (ov.reg) P.REG_TOPIC = ov.reg; }
     } catch (e) {}
     if (typeof process !== 'undefined' && process.env) { // same hooks for scripts/pickem-sync.mjs under test
-        if (process.env.PICKEM_NTFY) P.NTFY = process.env.PICKEM_NTFY; if (process.env.PICKEM_ESPN) P.ESPN = process.env.PICKEM_ESPN; if (process.env.PICKEM_ROOM) P.ROOM = process.env.PICKEM_ROOM;
+        if (process.env.PICKEM_NTFY) P.NTFY = process.env.PICKEM_NTFY; if (process.env.PICKEM_ESPN) P.ESPN = process.env.PICKEM_ESPN; if (process.env.PICKEM_ROOM) P.ROOM = P.DEFAULT_ROOM = process.env.PICKEM_ROOM; if (process.env.PICKEM_REG) P.REG_TOPIC = process.env.PICKEM_REG;
     }
     // league, label, base weight, scoreboard query
     P.LEAGUES = [
@@ -46,6 +48,21 @@
     P.fmtDay = function (ymd) { var d = new Date(Date.UTC(+ymd.slice(0, 4), +ymd.slice(4, 6) - 1, +ymd.slice(6, 8), 12)); return d.toLocaleDateString('en-US', { timeZone: 'UTC', weekday: 'short', month: 'short', day: 'numeric' }).toUpperCase(); };
     P.logo = function (url, w) { var m = /^https?:\/\/a\.espncdn\.com(\/i\/[^?#]+)/.exec(url || ''); return m ? 'https://a.espncdn.com/combiner/i?img=' + m[1] + '&w=' + w + '&h=' + w : (url || ''); };
     P.fnv = function (s) { var h = 0x811c9dc5; for (var i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 0x01000193) >>> 0; } return ('0000000' + h.toString(16)).slice(-8); };
+    P.validRoom = function (r) { return /^[a-z0-9][a-z0-9-]{5,39}$/.test(String(r || '')); };
+    P.setRoom = function (r) { r = String(r || '').trim().toLowerCase(); P.ROOM = P.validRoom(r) ? r : P.DEFAULT_ROOM; return P.ROOM; };
+    P.newCode = function (n) { // random lowercase code (room codes, TV remote keys)
+        var a = 'abcdefghjkmnpqrstuvwxyz23456789', out = '', b = new Uint8Array(n || 8);
+        (typeof crypto !== 'undefined' && crypto.getRandomValues ? crypto.getRandomValues(b) : b.forEach(function (x, i) { b[i] = Math.floor(Math.random() * 256); }));
+        for (var i = 0; i < b.length; i++) out += a[b[i] % a.length]; return out;
+    };
+    P.newRoom = function () { return 'arc-' + P.newCode(8); };
+    P.dataUrl = function () { return P.DATA_BASE + 'rooms/' + P.ROOM + '.json'; };
+    P.tvTopic = function (key) { return 'arcade-tv-' + key; };
+    P.announce = function (store) { // tell the sync Action this room exists (at most once a day per device)
+        var k = 'arcadePickAnn:' + P.ROOM, day = P.etDate();
+        try { if (store && store.getItem(k) === day) return Promise.resolve(false); } catch (e) {}
+        return P.publish(P.REG_TOPIC, { v: 1, t: 'room', room: P.ROOM }).then(function () { try { store && store.setItem(k, day); } catch (e) {} return true; }, function () { return false; });
+    };
     P.pinTag = function (pin) { pin = String(pin || '').trim(); return pin ? P.fnv(P.ROOM + '|' + pin) : ''; };
     P.cleanName = function (n) { n = String(n || '').replace(/\s+/g, ' ').trim(); if (n.length < 1 || n.length > 14) return ''; return /^[\p{L}\p{N} .'\-]+$/u.test(n) ? n : ''; };
     P.nameKey = function (n) { return P.cleanName(n).toLowerCase(); };
@@ -99,16 +116,42 @@
             }, function () { return []; });
         })).then(function (lists) { return [].concat.apply([], lists); });
     };
-    // Today's TOP 5 (stable all day). tomorrow = tomorrow's TOP 5, loaded only once none of today's 5 can still be picked.
-    P.loadSlates = function (now, fetchFn) {
+    // The day's TOP 5 is FROZEN per room: the first device that ranks a day publishes {t:'slate', date, ids} on "<room>-p" and the
+    // earliest one wins for everybody (ranking inputs like spreads move during the day). Exactly these 5 games can be picked.
+    P.frozen = function (data, msgs) {
+        var f = {}; Object.keys((data && data.slates) || {}).forEach(function (d) { f[d] = data.slates[d]; });
+        (msgs || []).slice().sort(function (x, y) { return x._t - y._t; }).forEach(function (m) {
+            if (m && m.t === 'slate' && /^\d{8}$/.test(m.date) && !f[m.date] && Array.isArray(m.ids) && m.ids.length && m.ids.length <= P.SLATE && m.ids.every(function (i) { return /^\d{3,14}$/.test(String(i)); })) f[m.date] = m.ids.map(String);
+        });
+        return f;
+    };
+    function pickSlate(date, all, frozen) {
+        var ids = frozen && frozen[date];
+        if (ids) return { date: date, games: ids.map(function (i) { return all.filter(function (g) { return g.id === i; })[0]; }).filter(Boolean), fresh: false };
+        return { date: date, games: P.sortGames(all).slice(0, P.SLATE), fresh: true };
+    }
+    // Today's TOP 5. tomorrow = tomorrow's TOP 5, loaded only once none of today's 5 can still be picked.
+    P.loadSlates = function (now, fetchFn, frozen) {
         now = now || Date.now();
         var d0 = P.etDate(now), d1 = P.etDate(now, 1);
         return P.loadDay(d0, fetchFn).then(function (all0) {
-            var today = P.sortGames(all0).slice(0, P.SLATE), res = { now: now, today: { date: d0, games: today }, all: all0, tomorrow: null };
-            var open = today.filter(function (g) { return g.state === 'pre' && Date.parse(g.start) > now; }).length;
+            var res = { now: now, today: pickSlate(d0, all0, frozen), all: all0, all1: null, tomorrow: null };
+            var open = res.today.games.filter(function (g) { return g.state === 'pre' && Date.parse(g.start) > now; }).length;
             if (open) return res;
-            return P.loadDay(d1, fetchFn).then(function (all1) { res.tomorrow = { date: d1, games: P.sortGames(all1).slice(0, P.SLATE) }; return res; });
+            return P.loadDay(d1, fetchFn).then(function (all1) { res.all1 = all1; res.tomorrow = pickSlate(d1, all1, frozen); return res; });
         });
+    };
+    // another device froze a day first: switch to its 5 (no refetch)
+    P.applyFrozen = function (res, frozen) {
+        if (!res) return res;
+        if (frozen[res.today.date]) res.today = pickSlate(res.today.date, res.all, frozen);
+        if (res.tomorrow && frozen[res.tomorrow.date]) res.tomorrow = pickSlate(res.tomorrow.date, res.all1 || [], frozen);
+        return res;
+    };
+    P.slateMsg = function (sl) { return { v: 1, t: 'slate', date: sl.date, ids: sl.games.map(function (g) { return g.id; }) }; };
+    // publish the freeze for any slate this device ranked first (no-op when the room already has one)
+    P.freezeNew = function (slates, fetchFn) {
+        return Promise.all([slates.today, slates.tomorrow].filter(function (s) { return s && s.fresh && s.games.length; }).map(function (s) { s.fresh = false; return P.publish(P.ROOM + '-p', P.slateMsg(s), fetchFn).catch(function () {}); }));
     };
     P.result = function (g) { // 'pre' | 'in' | final winner team id | 'tie'
         if (!g) return '';
@@ -127,18 +170,20 @@
     P.publish = function (topic, obj, fetchFn) {
         return (fetchFn || fetch)(P.NTFY + '/' + topic, { method: 'POST', body: JSON.stringify(obj) }).then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); });
     };
-    P.emptyData = function () { return { v: 1, room: P.ROOM, season: String(new Date().getFullYear()), updated: 0, lastMsg: '', names: {}, events: {}, picks: {} }; };
+    P.emptyData = function () { return { v: 1, room: P.ROOM, season: String(new Date().getFullYear()), updated: 0, lastMsg: '', names: {}, slates: {}, events: {}, picks: {} }; };
     P.eventMeta = function (g) { return { k: g.k, lg: g.lg, d: g.start, a: { id: g.a.id, ab: g.a.ab, logo: g.a.logo }, h: { id: g.h.id, ab: g.h.ab, logo: g.h.logo }, r: P.result(g), sc: g.a.score && g.h.score ? g.a.score + '-' + g.h.score : '' }; };
     // Apply pick messages to data (mutates). Lock rule: ntfy's server timestamp must be before the game's real start.
     // starts: { eventId: ISO } from ESPN (authoritative); a message's own "d" is only used when ESPN didn't give one.
     P.applyPicks = function (data, msgs, starts, pin) {
-        var tag = P.pinTag(pin), changed = false;
+        var tag = P.pinTag(pin), changed = false, fr = P.frozen(data, msgs), onSlate = {};
+        data.slates = data.slates || {};
+        Object.keys(fr).forEach(function (d) { if (!data.slates[d]) { data.slates[d] = fr[d]; changed = true; } fr[d].forEach(function (i) { onSlate[i] = 1; }); });
         msgs.slice().sort(function (x, y) { return x._t - y._t; }).forEach(function (m) {
-            if (!m || m.t !== 'pick' || !m.e || !m.tm) return;
+            if (!m || m.t !== 'pick' || !m.e || !m.tm || !onSlate[String(m.e)]) return; // only the room's frozen TOP 5 can be picked
             if (tag && m.g !== tag) return;
             var key = P.nameKey(m.n); if (!key) return;
-            if (!data.names[key]) { if (Object.keys(data.names).length >= P.MAX_PLAYERS) return; data.names[key] = P.cleanName(m.n); changed = true; }
             var ev = data.events[m.e], start = (starts && starts[m.e]) || (ev && ev.d) || m.d; if (!start || !(m._t < Date.parse(start))) return; // locked
+            if (!data.names[key]) { if (Object.keys(data.names).length >= P.MAX_PLAYERS) return; data.names[key] = P.cleanName(m.n); changed = true; }
             if (!ev) { if (!m.a || !m.h) return; ev = data.events[m.e] = { k: String(m.k || ''), lg: String(m.lg || ''), d: start, a: m.a, h: m.h, r: 'pre', sc: '' }; changed = true; }
             if (String(m.tm) !== String(ev.a.id) && String(m.tm) !== String(ev.h.id)) return;
             var pe = data.picks[m.e] || (data.picks[m.e] = {}), cur = pe[key];
@@ -180,7 +225,21 @@
     P.overlayGames = function (data, games) {
         games.forEach(function (g) { var ev = data.events[g.id]; if (ev) { ev.r = P.result(g); ev.sc = g.a.score && g.h.score ? g.a.score + '-' + g.h.score : ''; ev.d = g.start; } });
     };
-    P.pickUrl = function (pin) { return P.PAGES + 'remote-pick.html#room=' + encodeURIComponent(P.ROOM) + (pin ? '&pin=' + encodeURIComponent(pin) : ''); };
+    P.pickUrl = function (pin, tvKey) { return P.PAGES + 'remote-pick.html#room=' + encodeURIComponent(P.ROOM) + (tvKey ? '&tv=' + encodeURIComponent(tvKey) : '') + (pin ? '&pin=' + encodeURIComponent(pin) : ''); };
+    // each player's picks on one slate: { nameKey: [{ g, tm, ab, res: 'ok'|'no'|'tie'|'live-up'|'live-down'|'' }] }
+    P.slatePicks = function (data, slate) {
+        var out = {};
+        (slate ? slate.games : []).forEach(function (g) {
+            var pe = data.picks[g.id] || {}, r = P.result(g);
+            Object.keys(pe).forEach(function (k) {
+                var tm = pe[k].tm, t = tm === g.a.id ? g.a : g.h, o = tm === g.a.id ? g.h : g.a, res = '';
+                if (r === g.a.id || r === g.h.id) res = r === tm ? 'ok' : 'no'; else if (r === 'tie') res = 'tie';
+                else if (g.state === 'in' && t.score !== '' && o.score !== '') res = parseFloat(t.score) > parseFloat(o.score) ? 'live-up' : parseFloat(t.score) < parseFloat(o.score) ? 'live-down' : '';
+                (out[k] = out[k] || []).push({ g: g.id, tm: tm, ab: t.ab, logo: t.logo, res: res });
+            });
+        });
+        return out;
+    };
     P.qrImg = function (url, px) { return 'https://api.qrserver.com/v1/create-qr-code/?size=' + (px || 300) + 'x' + (px || 300) + '&margin=8&data=' + encodeURIComponent(url); };
     return P;
 });

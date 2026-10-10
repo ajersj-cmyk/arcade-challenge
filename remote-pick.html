@@ -14,6 +14,14 @@ body { min-height: 100vh; padding-bottom: calc(76px + env(safe-area-inset-bottom
 header { position: sticky; top: 0; z-index: 5; display: flex; align-items: center; gap: 10px; padding: 12px 16px 10px; background: rgba(5,7,13,0.92); border-bottom: 1px solid var(--line); backdrop-filter: blur(6px); }
 header h1 { margin: 0; font-family: var(--disp); font-style: italic; font-weight: 800; font-size: 26px; letter-spacing: 0.02em; text-transform: uppercase; color: #fff; text-shadow: 0 0 12px rgba(0,240,255,0.6); flex: 1; }
 header h1 b { color: var(--cy); }
+#roombar { display: flex; align-items: center; gap: 8px; padding: 8px 16px; font-family: var(--disp); font-weight: 800; font-size: 14px; letter-spacing: 0.1em; color: rgba(255,255,255,0.55); border-bottom: 1px solid var(--line); background: rgba(5,7,13,0.7); }
+#roombar b { color: var(--yl); letter-spacing: 0.06em; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#roombar button { font-family: var(--disp); font-weight: 800; font-size: 13px; letter-spacing: 0.1em; background: none; border: 1px solid rgba(255,255,255,0.25); color: #fff; border-radius: 999px; padding: 4px 10px; }
+.count { font-family: var(--disp); font-weight: 800; letter-spacing: 0.1em; color: var(--yl); }
+td.tp { text-align: left; font-size: 13px; } td.tp i { font-style: normal; display: inline-block; margin: 1px 2px; padding: 1px 5px; border-radius: 4px; background: rgba(255,255,255,0.1); }
+td.tp i.ok { background: rgba(57,255,20,0.22); color: var(--gr); } td.tp i.no { background: rgba(255,59,92,0.18); color: #ff6b84; } td.tp i.live-up { color: #6ff6ff; }
+#sheet label { display: block; margin: 14px 2px 6px; font-family: var(--disp); font-weight: 800; font-size: 14px; letter-spacing: 0.12em; color: rgba(255,255,255,0.6); }
+#sheet .row2 { display: flex; gap: 8px; } #sheet .row2 input { flex: 1; } #sheet .row2 button { width: auto; margin: 0; padding: 0 14px; font-size: 16px; background: rgba(255,255,255,0.12); color: #fff; }
 #me { font-family: var(--disp); font-weight: 800; font-size: 15px; letter-spacing: 0.08em; padding: 6px 10px; border: 1px solid var(--cy); color: var(--cy); border-radius: 999px; background: none; text-transform: uppercase; }
 main { padding: 12px 14px; max-width: 560px; margin: 0 auto; }
 .tab { display: none; } .tab.on { display: block; }
@@ -80,6 +88,7 @@ nav button.on { color: var(--cy); box-shadow: 0 -3px 0 var(--cy) inset; }
 </head>
 <body>
 <header><h1>Ahlers <b>Pick'em</b></h1><button id="me" onclick="askName()">SET NAME</button></header>
+<div id="roombar"><span>ROOM</span> <b id="roomcode"></b><button onclick="askName()">CHANGE</button><button onclick="invite()">INVITE</button></div>
 <main>
   <section class="tab on" id="t-picks"><div id="picks"><div class="empty">LOADING TODAY'S BIG GAMES…</div></div></section>
   <section class="tab" id="t-board"><div class="sub">SEASON STANDINGS <span id="b-upd"></span></div><div id="board"></div>
@@ -94,40 +103,60 @@ nav button.on { color: var(--cy); box-shadow: 0 -3px 0 var(--cy) inset; }
     <div id="rstat"></div>
     <div class="sub" style="margin-top:16px">OPEN GAMECAST <span>LIVE + TODAY</span></div>
     <div class="gcl" id="gcl"><div class="empty">LOADING…</div></div>
-    <p class="note">Works while the scoreboard is open on the TV. CELEBRATE plays the silent test celebration.</p>
+    <p class="note" id="rnote">Controls the TV whose QR code you scanned, while its scoreboard is open. CELEBRATE plays the silent test celebration.</p>
   </section>
 </main>
 <nav><button class="on" data-t="picks" onclick="tab('picks')">PICKS</button><button data-t="board" onclick="tab('board')">STANDINGS</button><button data-t="remote" onclick="tab('remote')">REMOTE</button></nav>
-<div id="sheet"><div class="box"><h2>Who's picking?</h2><p>Your name shows on the TV leaderboard. It's saved on this phone.</p>
-  <input id="nm" maxlength="14" autocomplete="given-name" placeholder="NAME" onkeydown="if(event.key==='Enter')saveName()"><div class="err" id="nm-err"></div><button onclick="saveName()">LET'S GO</button></div></div>
+<div id="sheet"><div class="box"><h2>Who's picking?</h2><p>Your name and room are saved on this phone only. Everyone in a room shares one leaderboard.</p>
+  <input id="nm" maxlength="14" autocomplete="given-name" placeholder="NAME" onkeydown="if(event.key==='Enter')saveName()">
+  <label>ROOM CODE (FROM A FRIEND OR YOUR TV)</label>
+  <div class="row2"><input id="rm" maxlength="40" autocapitalize="none" autocomplete="off" spellcheck="false" placeholder="room code" style="text-transform:none"><button type="button" onclick="newRoom()">NEW ROOM</button></div>
+  <div class="err" id="nm-err"></div><button onclick="saveName()">LET'S GO</button></div></div>
 <div id="toast"></div>
 <script src="pickem-core.js"></script>
 <script>
-var P = window.Pickem, S = { name: '', pin: '', slates: null, data: null, msgs: [], tab: 'picks', pend: {}, es: null, busy: false };
+var P = window.Pickem, S = { name: '', pin: '', tv: '', slates: null, file: null, data: null, msgs: [], tab: 'picks', pend: {}, es: null, busy: false };
+function ls(k, v) { try { if (v === undefined) return localStorage.getItem(k) || ''; localStorage.setItem(k, v); } catch (e) { return ''; } }
+function applyHash() { // QR / invite link: #room=..&tv=..&pin=.. -> saved on this phone only
+    var h = new URLSearchParams(location.hash.slice(1)), was = P.ROOM;
+    if (P.validRoom((h.get('room') || '').toLowerCase())) ls('arcadePickRoom', h.get('room').toLowerCase());
+    if (/^[a-z0-9]{6,16}$/.test(h.get('tv') || '')) ls('arcadePickTv', h.get('tv'));
+    if (h.get('pin') != null) ls('arcadePickPin', h.get('pin'));
+    if (location.hash) history.replaceState(null, '', location.pathname); // keep the TV key out of shared links
+    P.setRoom(ls('arcadePickRoom') || P.DEFAULT_ROOM);
+    if (P.ROOM !== was) { S.file = null; S.msgs = []; S.slates = null; S.data = null; S.pend = {}; }
+    S.pin = ls('arcadePickPin'); S.tv = ls('arcadePickTv');
+    document.getElementById('rnote').textContent = S.tv ? 'Controls the TV whose QR code you scanned, while its scoreboard is open. CELEBRATE plays the silent test celebration.' : 'To use the remote, scan the QR code on your TV (Settings or the PICK\u2019EM slide). Picks work without it.';
+}
 (function init() {
-    var h = new URLSearchParams(location.hash.slice(1));
-    try {
-        if (h.get('room') && /^[a-z0-9-]{8,64}$/.test(h.get('room'))) localStorage.setItem('arcadePickRoom', h.get('room'));
-        if (h.get('pin') != null) localStorage.setItem('arcadePickPin', h.get('pin'));
-        var r = localStorage.getItem('arcadePickRoom'); if (r) P.ROOM = r;
-        S.pin = localStorage.getItem('arcadePickPin') || ''; S.name = P.cleanName(localStorage.getItem('arcadePickName') || '');
-    } catch (e) {}
+    applyHash();
+    S.name = P.cleanName(ls('arcadePickName'));
     showMe(); if (!S.name) askName();
+    window.addEventListener('hashchange', function () { if (location.hash.length > 1) { applyHash(); showMe(); refresh(true); } });
     refresh(true);
     setInterval(function () { if (!document.hidden) refresh(false); }, 30000);
     document.addEventListener('visibilitychange', function () { if (!document.hidden) refresh(false); });
 })();
 function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
 function toast(t, bad) { var el = document.getElementById('toast'); el.textContent = t; el.className = 'on' + (bad ? ' bad' : ''); clearTimeout(toast.t); toast.t = setTimeout(function () { el.className = ''; }, 2200); }
-function showMe() { document.getElementById('me').textContent = S.name || 'SET NAME'; }
-function askName() { var s = document.getElementById('sheet'); s.classList.add('on'); var i = document.getElementById('nm'); i.value = S.name; setTimeout(function () { i.focus(); }, 50); }
+function showMe() { document.getElementById('me').textContent = S.name || 'SET NAME'; document.getElementById('roomcode').textContent = P.ROOM; }
+function askName() { var s = document.getElementById('sheet'); s.classList.add('on'); document.getElementById('nm').value = S.name; document.getElementById('rm').value = P.ROOM; setTimeout(function () { document.getElementById('nm').focus(); }, 50); }
+function newRoom() { document.getElementById('rm').value = P.newRoom(); document.getElementById('nm-err').textContent = 'New room: share its code (INVITE) so others can join.'; }
 function saveName() {
-    var n = P.cleanName(document.getElementById('nm').value);
-    if (!n) { document.getElementById('nm-err').textContent = '1-14 letters, numbers or spaces.'; return; }
+    var n = P.cleanName(document.getElementById('nm').value), rm = String(document.getElementById('rm').value || '').trim().toLowerCase(), err = document.getElementById('nm-err');
+    if (!n) { err.textContent = 'Name: 1-14 letters, numbers or spaces.'; return; }
+    if (!P.validRoom(rm)) { err.textContent = 'Room code: 6-40 letters, numbers or dashes.'; return; }
+    if (rm !== P.ROOM) { P.setRoom(rm); ls('arcadePickRoom', rm); S.file = null; S.msgs = []; S.slates = null; S.data = null; S.pend = {}; S.pin = ''; ls('arcadePickPin', ''); }
     var known = S.data && S.data.names, k = n.toLowerCase();
-    if (known && !known[k] && Object.keys(known).length >= P.MAX_PLAYERS) { document.getElementById('nm-err').textContent = 'This room is full (' + P.MAX_PLAYERS + ' players).'; return; }
-    S.name = n; try { localStorage.setItem('arcadePickName', n); } catch (e) {}
-    document.getElementById('sheet').classList.remove('on'); document.getElementById('nm-err').textContent = ''; showMe(); render();
+    if (known && !known[k] && Object.keys(known).length >= P.MAX_PLAYERS) { err.textContent = 'This room is full (' + P.MAX_PLAYERS + ' players).'; return; }
+    S.name = n; ls('arcadePickName', n);
+    document.getElementById('sheet').classList.remove('on'); err.textContent = ''; showMe(); render(); refresh(true);
+}
+function invite() {
+    var url = P.pickUrl(S.pin), txt = "Join our pick'em room " + P.ROOM;
+    if (navigator.share) navigator.share({ title: "Ahlers Pick'em", text: txt, url: url }).catch(function () {});
+    else if (navigator.clipboard) navigator.clipboard.writeText(url).then(function () { toast('INVITE LINK COPIED'); }, function () { toast(url); });
+    else toast(P.ROOM);
 }
 function tab(t) {
     S.tab = t; document.querySelectorAll('.tab').forEach(function (x) { x.classList.toggle('on', x.id === 't-' + t); });
@@ -135,13 +164,20 @@ function tab(t) {
     if (t === 'remote') listenAcks(); else if (S.es) { S.es.close(); S.es = null; }
 }
 function slateGames() { var s = S.slates; if (!s) return []; return s.today.games.concat(s.tomorrow ? s.tomorrow.games : []); }
+function readMsgs() { return P.readNtfy(P.ROOM + '-p', 'all').then(function (m) { S.msgs = m; }, function () {}); }
 function refresh(full) {
     if (S.busy) return; S.busy = true;
-    var now = Date.now(), jobs = [
-        full || !S.slates || now - S.slates.now > 120000 ? P.loadSlates(now).then(function (s) { S.slates = s; }, function () {}) : Promise.resolve(),
-        full || !S.file ? P.fetchJSON(P.DATA_URL + '?t=' + Math.floor(now / 120000), 9000).then(function (d) { if (d && d.room === P.ROOM) S.file = d; }, function () {}) : Promise.resolve(),
-        P.readNtfy(P.ROOM + '-p', 'all').then(function (m) { S.msgs = m; }, function () {})];
-    Promise.all(jobs).then(function () { return merge(); }).then(function () { S.busy = false; render(); }, function () { S.busy = false; render(); });
+    var now = Date.now(), room = P.ROOM;
+    Promise.all([
+        full || !S.file ? P.fetchJSON(P.dataUrl() + '?t=' + Math.floor(now / 120000), 9000).then(function (d) { if (d && d.room === room) S.file = d; }, function () {}) : Promise.resolve(),
+        readMsgs()]).then(function () {
+        var frozen = P.frozen(S.file, S.msgs);
+        if (full || !S.slates || now - S.slates.now > 120000) return P.loadSlates(now, null, frozen).then(function (s) { S.slates = s; }, function () {});
+        P.applyFrozen(S.slates, frozen);
+    }).then(function () {
+        if (!S.slates || !(S.slates.today.fresh || (S.slates.tomorrow && S.slates.tomorrow.fresh))) return;
+        return P.freezeNew(S.slates).then(readMsgs).then(function () { P.applyFrozen(S.slates, P.frozen(S.file, S.msgs)); }); // first device today: freeze the TOP 5
+    }).then(function () { return merge(); }).then(function () { S.busy = false; render(); }, function () { S.busy = false; render(); });
 }
 function merge() {
     var d = JSON.parse(JSON.stringify(S.file || P.emptyData())), starts = {};
@@ -169,24 +205,27 @@ function gameCard(g) {
         '<div class="why">' + g.why.slice(0, 4).map(function (w) { return '<i>' + esc(w) + '</i>'; }).join('') + '</div>' +
         '<div class="teams">' + side(g.a, 'a') + side(g.h, 'h') + '</div><div class="who"><div>' + who(g.a) + '</div><div>' + who(g.h) + '</div></div><div class="lockline">' + esc(lockTxt) + '</div></div>';
 }
+function myCount(sl) { var me = S.name.toLowerCase(), n = 0; sl.games.forEach(function (g) { if (S.data && S.data.picks[g.id] && S.data.picks[g.id][me]) n++; }); return n; }
 function render() {
     var s = S.slates, el = document.getElementById('picks');
     if (!s) { el.innerHTML = '<div class="empty">COULDN\'T REACH ESPN. PULL TO RETRY.</div>'; }
     else {
         var h = '', first = s.tomorrow || s.today, label = s.tomorrow ? 'TOMORROW' : 'TODAY';
-        h += '<div class="sub">' + label + "'S TOP " + first.games.length + ' <span>' + P.fmtDay(first.date) + '</span></div>';
+        h += '<div class="sub">' + label + "'S TOP " + first.games.length + ' <span><b class="count" id="mycount">' + myCount(first) + '/' + first.games.length + ' PICKED</b> · ' + P.fmtDay(first.date) + '</span></div>';
         h += first.games.length ? first.games.map(gameCard).join('') : '<div class="empty">NO GAMES ON THE SCHEDULE</div>';
         if (s.tomorrow && s.today.games.length) h += '<div class="sub" style="margin-top:18px">TODAY\'S RESULTS <span>' + P.fmtDay(s.today.date) + '</span></div>' + s.today.games.map(gameCard).join('');
         el.innerHTML = h;
     }
-    var st = S.data ? P.standings(S.data) : [], me = S.name.toLowerCase();
-    document.getElementById('board').innerHTML = st.length ? '<table><tr><th>#</th><th style="text-align:left">NAME</th><th>W-L</th><th>PCT</th><th>STRK</th></tr>' + st.map(function (x, i) {
-        return '<tr class="' + (x.key === me ? 'me' : '') + '"><td>' + (i + 1) + '</td><td class="n">' + esc(x.name) + '</td><td>' + x.w + '-' + x.l + '</td><td>' + P.fmtPct(x.pct, x) + '</td><td class="stk ' + x.streak.charAt(0) + '">' + esc(x.streak) + '</td></tr>';
+    var st = S.data ? P.standings(S.data) : [], me = S.name.toLowerCase(), cur = s ? (s.tomorrow && !s.today.games.some(function (g) { var r = P.result(g); return r === 'in' || r === 'pre'; }) ? s.tomorrow : s.today) : null;
+    var tp = S.data && cur ? P.slatePicks(S.data, cur) : {};
+    document.getElementById('board').innerHTML = st.length ? '<table><tr><th>#</th><th style="text-align:left">NAME</th><th>W-L</th><th>PCT</th><th>STRK</th><th style="text-align:left">TODAY</th></tr>' + st.map(function (x, i) {
+        return '<tr class="' + (x.key === me ? 'me' : '') + '"><td>' + (i + 1) + '</td><td class="n">' + esc(x.name) + '</td><td>' + x.w + '-' + x.l + '</td><td>' + P.fmtPct(x.pct, x) + '</td><td class="stk ' + x.streak.charAt(0) + '">' + esc(x.streak) + '</td><td class="tp">' +
+            (tp[x.key] || []).map(function (p) { return '<i class="' + p.res + '">' + esc(p.ab) + '</i>'; }).join('') + '</td></tr>';
     }).join('') + '</table>' : '<div class="empty">NO PICKS YET. BE THE FIRST!</div>';
     document.getElementById('b-upd').textContent = S.file && S.file.updated ? 'SYNCED ' + new Date(S.file.updated).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) : '';
     var all = s ? s.all.slice() : [], rank = {}; slateGames().forEach(function (g, i) { rank[g.id] = i; });
     all.sort(function (x, y) { var o = { in: 0, pre: 1, post: 2 }; return (o[x.state] - o[y.state]) || ((rank[x.id] == null ? 99 : rank[x.id]) - (rank[y.id] == null ? 99 : rank[y.id])) || (Date.parse(x.start) - Date.parse(y.start)); });
-    document.getElementById('gcl').innerHTML = all.length ? all.slice(0, 14).map(function (g) {
+    document.getElementById('gcl').innerHTML = !S.tv ? '<div class="empty">SCAN YOUR TV\'S QR CODE TO USE THE REMOTE</div>' : all.length ? all.slice(0, 14).map(function (g) {
         return '<button class="gcb" onclick="openGc(\'' + g.id + '\')"><img alt="" src="' + esc(P.logo(g.a.logo, 60)) + '" onerror="this.style.visibility=\'hidden\'"><img alt="" src="' + esc(P.logo(g.h.logo, 60)) + '" onerror="this.style.visibility=\'hidden\'"><span class="t">' + esc(g.a.ab + ' @ ' + g.h.ab) +
             '</span><span class="s' + (g.state === 'in' ? ' live' : '') + '">' + esc(g.lg) + '<br>' + esc(g.state === 'pre' ? P.fmtTime(g.start) : g.detail) + '</span></button>';
     }).join('') : '<div class="empty">NO GAMES TODAY</div>';
@@ -197,21 +236,23 @@ function pick(e, tm) {
     if (locked(g)) { toast('LOCKED · GAME STARTED', 1); return; }
     var msg = { v: 1, t: 'pick', n: S.name, e: g.id, k: g.k, lg: g.lg, tm: tm, d: g.start, a: { id: g.a.id, ab: g.a.ab, logo: g.a.logo }, h: { id: g.h.id, ab: g.h.ab, logo: g.h.logo }, g: P.pinTag(S.pin) };
     var local = Object.assign({ _t: Date.now(), _id: 'local' }, msg); S.pend[e] = local; merge(); render();
+    P.announce(window.localStorage);
     P.publish(P.ROOM + '-p', msg).then(function (r) {
         local._t = r.time * 1000; toast('PICK SAVED ✓ ' + (tm === g.a.id ? g.a.ab : g.h.ab));
-        setTimeout(function () { P.readNtfy(P.ROOM + '-p', 'all').then(function (m) { S.msgs = m; delete S.pend[e]; merge(); render(); }, function () {}); }, 1200);
+        setTimeout(function () { readMsgs().then(function () { delete S.pend[e]; merge(); render(); }); }, 1200);
     }, function () { delete S.pend[e]; merge(); render(); toast('NOT SAVED · CHECK CONNECTION', 1); });
 }
-// ---- remote: commands on "<room>-c"; the TV answers with an ack on the same topic
+// ---- remote: commands go to the scanned TV's own topic ("arcade-tv-<key>"); the TV answers with an ack there
 function listenAcks() {
-    if (S.es || !window.EventSource) return;
-    try { S.es = new EventSource(P.NTFY + '/' + P.ROOM + '-c/sse'); S.es.onmessage = function (ev) { try { var m = JSON.parse(JSON.parse(ev.data).message); if (m.t === 'ack' && S.pend['c' + m.r]) { clearTimeout(S.pend['c' + m.r]); delete S.pend['c' + m.r]; rstat('TV ✓ ' + (m.s || 'DONE'), 'ok'); } } catch (e) {} }; } catch (e) {}
+    if (S.es || !window.EventSource || !S.tv) return;
+    try { S.es = new EventSource(P.NTFY + '/' + P.tvTopic(S.tv) + '/sse'); S.es.onmessage = function (ev) { try { var m = JSON.parse(JSON.parse(ev.data).message); if (m.t === 'ack' && S.pend['c' + m.r]) { clearTimeout(S.pend['c' + m.r]); delete S.pend['c' + m.r]; rstat('TV ✓ ' + (m.s || 'DONE'), 'ok'); } } catch (e) {} }; } catch (e) {}
 }
 function rstat(t, c) { var el = document.getElementById('rstat'); el.textContent = t; el.className = c || ''; }
 function cmd(c, extra) {
+    if (!S.tv) { rstat('SCAN THE QR CODE ON YOUR TV FIRST', 'bad'); return; }
     var id = Math.random().toString(36).slice(2, 10), msg = Object.assign({ v: 1, t: 'cmd', c: c, id: id, n: S.name, g: P.pinTag(S.pin) }, extra || {});
     rstat('SENDING…'); listenAcks();
-    P.publish(P.ROOM + '-c', msg).then(function () {
+    P.publish(P.tvTopic(S.tv), msg).then(function () {
         rstat('SENT · WAITING FOR TV…');
         S.pend['c' + id] = setTimeout(function () { delete S.pend['c' + id]; rstat('NO ANSWER FROM THE TV · IS THE SCOREBOARD OPEN?', 'bad'); }, 8000);
     }, function () { rstat('NOT SENT · CHECK CONNECTION', 'bad'); });

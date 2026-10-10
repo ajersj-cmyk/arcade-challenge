@@ -5,6 +5,9 @@
 //  standings W-L/PCT/streak, picks per game, live/final colouring, QR) fits above the ticker at 720p + 1080p, settings QR,
 //  remote round trip (next / board / Gamecast / close / celebration + ack back to the phone), household PIN, GitHub-Action
 //  grading (scripts/pickem-sync.mjs) from fixture finals, "tomorrow" slate when today's 5 have all started, 0 console errors.
+//  Rooms: each phone is its own browser context (own localStorage = own device); the day's TOP 5 is frozen per room (exactly 5
+//  pickable games), a pick on any other game is rejected, a second room is isolated, the remote only reaches the TV whose QR was
+//  scanned (per-TV key), the Action syncs every registered room into rooms/<room>.json + rooms.json.
 //  Screenshots in tools/out/<time>-pickem/.
 import http from 'node:http'; import fs from 'node:fs'; import path from 'node:path'; import os from 'node:os'; import { fileURLToPath } from 'node:url'; import { execFile } from 'node:child_process'; import { promisify } from 'node:util';
 import { createRequire } from 'node:module';
@@ -14,7 +17,7 @@ const FILE = process.argv.slice(2).find(a => /\.html$/.test(a)) || 'preview.html
 const OUT = process.env.PK_OUT || path.join(REPO, 'tools/out', new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19) + '-pickem');
 fs.mkdirSync(OUT, { recursive: true });
 const P = createRequire(import.meta.url)('../pickem-core.js');
-const ROOM = 'test-room-' + Math.random().toString(36).slice(2, 8);
+const ROOM = 'test-room-' + Math.random().toString(36).slice(2, 8), ROOM2 = 'other-room-' + Math.random().toString(36).slice(2, 8), REG = 'test-reg-' + Math.random().toString(36).slice(2, 8);
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 let fails = 0; const check = (n, ok, d) => { if (!ok) fails++; console.log(`${ok ? 'PASS' : 'FAIL'}  ${n}${d ? '  (' + d + ')' : ''}`); };
 const NOW = Date.now(), iso = ms => new Date(ms).toISOString().replace(/\.\d+Z$/, 'Z'), D0 = P.etDate(NOW), D1 = P.etDate(NOW, 1);
@@ -41,7 +44,7 @@ const TOMORROW = { 'football/nfl': [ev(402001, 'nfl', Date.parse(D1.slice(0, 4) 
 let allDone = false;
 const finished = () => Object.fromEntries(Object.entries(TODAY).map(([k, l]) => [k, l.map(e => ev(e.id, '', Date.parse(e.date), 'post', { ...e.competitions[0].competitors[1].team, rank: 0 }, { ...e.competitions[0].competitors[0].team, rank: 0 }, { as: 1, hs: 0, aw: true }))]));
 // ---------- picks.json (earlier in the season) + ntfy store
-const dataDir = fs.mkdtempSync(path.join(os.tmpdir(), 'pk-')), dataFile = path.join(dataDir, 'picks.json');
+const dataDir = fs.mkdtempSync(path.join(os.tmpdir(), 'pk-')), dataFile = path.join(dataDir, 'rooms', ROOM + '.json'); fs.mkdirSync(path.join(dataDir, 'rooms'));
 const old = (n, r) => ({ k: 'football/nfl', lg: 'NFL', d: iso(NOW - n * 86400000), a: { id: '2', ab: 'BUF' }, h: { id: '12', ab: 'KC' }, r, sc: '20-17', real: 1 });
 fs.writeFileSync(dataFile, JSON.stringify({ v: 1, room: ROOM, season: '2026', updated: NOW - 3600000, lastMsg: '', names: { jordan: 'Jordan', alex: 'Alex' },
   events: { 1001: old(3, '2'), 1002: old(2, '12'), 1003: old(1, '12') },
@@ -52,6 +55,11 @@ function pub(topic, body, time) {
   (topics[topic] = topics[topic] || []).push(m); (subs[topic] || []).forEach(r => r.write('data: ' + JSON.stringify(m) + '\n\n')); return m;
 }
 const pickMsg = (n, e, tm, g, extra = {}) => JSON.stringify({ v: 1, t: 'pick', n, e: String(e), k: g.k, lg: g.lg, tm: String(tm), d: g.d, a: g.a, h: g.h, g: '', ...extra });
+// the room's TOP 5 for today was frozen this morning by the first device (earliest slate message wins)
+const exp = P.sortGames(Object.entries(TODAY).flatMap(([k, l]) => l.map(e => P.parseEvent(e, P.LEAGUES.find(L => L.k === k))))).slice(0, 5).map(g => g.id);
+pub(ROOM + '-p', JSON.stringify({ v: 1, t: 'slate', date: D0, ids: exp }), NOW - 6 * 3600000);
+pub(ROOM + '-p', JSON.stringify({ v: 1, t: 'slate', date: D0, ids: ['401006', '401001'] }), NOW - 5 * 3600000); // a later (forged) freeze: ignored
+const JP = { 401001: 'KC', 401002: 'UGA', 401004: 'CAR+' }, AP = { 401001: 'KC', 401004: 'NYR-' }; // today's picks by the end of the phone part
 const G4 = { k: 'hockey/nhl', lg: 'NHL', d: iso(NOW - 150 * 60000), a: { id: '7', ab: 'CAR' }, h: { id: '13001', ab: 'NYR' } };
 pub(ROOM + '-p', pickMsg('Jordan', 401004, 7, G4), NOW - 4 * 3600000);
 pub(ROOM + '-p', pickMsg('Alex', 401004, 13001, G4), NOW - 4 * 3600000);
@@ -67,7 +75,7 @@ const srv = http.createServer((q, s) => {
   if ((m = /^\/ntfy\/([\w-]+)$/.exec(p)) && q.method === 'POST') { let b = ''; q.on('data', c => b += c); q.on('end', () => json(pub(m[1], b))); return; }
   if ((m = /^\/ntfy\/([\w-]+)\/json$/.exec(p))) { s.writeHead(200, { ...cors, 'Content-Type': 'application/x-ndjson' }); return s.end((topics[m[1]] || []).map(x => JSON.stringify(x)).join('\n') + '\n'); }
   if ((m = /^\/ntfy\/([\w-]+)\/sse$/.exec(p))) { s.writeHead(200, { ...cors, 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache' }); s.write('event: open\ndata: {"event":"open"}\n\n'); (subs[m[1]] = subs[m[1]] || []).push(s); q.on('close', () => { subs[m[1]] = subs[m[1]].filter(x => x !== s); }); return; }
-  if (p === '/data/picks.json') { s.writeHead(200, { ...cors, 'Content-Type': 'application/json' }); return s.end(fs.readFileSync(dataFile)); }
+  if ((m = /^\/data\/rooms\/([\w-]+)\.json$/.exec(p))) { const f = path.join(dataDir, 'rooms', m[1] + '.json'); if (!fs.existsSync(f)) { s.writeHead(404, cors); return s.end('404'); } s.writeHead(200, { ...cors, 'Content-Type': 'application/json' }); return s.end(fs.readFileSync(f)); }
   if ((m = /^\/espn\/apis\/site\/v2\/sports\/([\w.-]+\/[\w.-]+)\/(scoreboard|summary|news)/.exec(p))) {
     const k = m[1], dates = u.searchParams.get('dates');
     if (m[2] === 'news') return json({ articles: [] });
@@ -84,17 +92,17 @@ const srv = http.createServer((q, s) => {
 });
 await new Promise(r => srv.listen(0, '127.0.0.1', r));
 const base = `http://127.0.0.1:${srv.address().port}/`;
-const OV = { ntfy: base + 'ntfy', data: base + 'data/picks.json', espn: base + 'espn/apis/site/v2/sports/', room: ROOM };
+const OV = { ntfy: base + 'ntfy', data: base + 'data/', espn: base + 'espn/apis/site/v2/sports/', room: ROOM, reg: REG };
 const browser = await puppeteer.launch({ executablePath: process.env.CHROME_PATH || '/usr/bin/google-chrome', args: ['--no-sandbox', '--disable-dev-shm-usage', '--hide-scrollbars'] });
 const ua = (await browser.userAgent()).replace('HeadlessChrome', 'Chrome');
 const errors = [];
 const watch = (page, tag) => { page.on('console', m => { if (m.type() === 'error' && !/Failed to load resource|favicon|net::ERR/.test(m.text())) errors.push(tag + ' ' + m.text()); }); page.on('pageerror', e => errors.push(tag + ' PAGE ' + e)); };
-async function phone(name, pin) {
-  const pg = await browser.newPage(); watch(pg, 'phone-' + (name || 'new'));
+async function phone(name, pin, hash) { // every phone = its own device (separate browser context / localStorage)
+  const pg = await (await browser.createBrowserContext()).newPage(); watch(pg, 'phone-' + (name || 'new'));
   await pg.setUserAgent('Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1');
   await pg.setViewport({ width: 390, height: 844, deviceScaleFactor: 2, isMobile: true, hasTouch: true }); await pg.emulateTimezone('America/New_York');
-  await pg.evaluateOnNewDocument((ov, name) => { localStorage.setItem('ahlersPickemOverride', JSON.stringify(ov)); if (name) localStorage.setItem('arcadePickName', name); }, OV, name);
-  await pg.goto(base + 'remote-pick.html#room=' + ROOM + (pin ? '&pin=' + pin : ''), { waitUntil: 'load' });
+  await pg.evaluateOnNewDocument((ov, name) => { try { localStorage.setItem('ahlersPickemOverride', JSON.stringify(ov)); if (name && !localStorage.getItem('arcadePickName')) localStorage.setItem('arcadePickName', name); } catch (e) {} }, OV, name);
+  await pg.goto(base + 'remote-pick.html#' + (hash || 'room=' + ROOM + (pin ? '&pin=' + pin : '')), { waitUntil: 'load' });
   await pg.waitForFunction(() => document.querySelectorAll('#picks .game').length > 0, { timeout: 30000 }).catch(() => {});
   return pg;
 }
@@ -109,16 +117,18 @@ check('new phone: name sheet shows', await p1.evaluate(() => document.getElement
 await p1.evaluate(() => { document.getElementById('nm').value = 'ThisNameIsWayTooLongForUs'; saveName(); }); // (the field also stops typing at 14)
 check('name > 14 chars refused', await p1.evaluate(() => document.getElementById('sheet').classList.contains('on') && /1-14/.test(document.getElementById('nm-err').textContent)));
 await p1.evaluate(() => { document.getElementById('nm').value = ''; }); await p1.type('#nm', 'Jordan'); await p1.evaluate(() => saveName());
-check('name saved on the phone', await p1.evaluate(() => localStorage.getItem('arcadePickName') === 'Jordan' && document.getElementById('me').textContent === 'Jordan'));
+check('name + room saved on this phone', await p1.evaluate(r => localStorage.getItem('arcadePickName') === 'Jordan' && localStorage.getItem('arcadePickRoom') === r && document.getElementById('me').textContent === 'Jordan' && document.getElementById('roomcode').textContent === r, ROOM));
 let c1 = await cards(p1);
 check('TOP 5 slate: 5 games, the 6th (no national TV) left out', c1.length === 5 && !c1.some(c => c.id === '401006'), c1.map(c => c.id).join(','));
-const exp = P.sortGames(Object.entries(TODAY).flatMap(([k, l]) => l.map(e => P.parseEvent(e, P.LEAGUES.find(L => L.k === k))))).slice(0, 5).map(g => g.id);
 check('order = deterministic rank (pickem-core rankGame)', c1.map(c => c.id).join() === exp.join(), exp.join());
 check('"why" chips explain the rank', c1.find(c => c.id === '401002').why.includes('RANKED MATCHUP') && c1.find(c => c.id === '401001').why.some(w => /NATIONAL TV · CBS/.test(w)), JSON.stringify(c1.find(c => c.id === '401002').why));
 check('started/final games are locked, upcoming are open', c1.find(c => c.id === '401003').lock && c1.find(c => c.id === '401004').lock && !c1.find(c => c.id === '401001').lock);
 const p2 = await phone('Alex', '');
 await tapTeam(p1, '401001', 0); await sleep(300); await tapTeam(p1, '401002', 0); await sleep(300); await tapTeam(p2, '401001', 1); await sleep(1800);
 check('picks published to ntfy (Jordan BUF + UGA, Alex KC)', picksIn().filter(m => m.e === '401001' || m.e === '401002').length === 3, picksIn().length);
+check('room announced once to the registry for the sync Action', (topics[REG] || []).map(m => JSON.parse(m.message)).filter(m => m.room === ROOM).length === 2, JSON.stringify((topics[REG] || []).map(m => m.message)));
+check('phone shows the 5-pick count', /^3\/5 PICKED$/.test(await p1.evaluate(() => document.getElementById('mycount').textContent)), await p1.evaluate(() => document.getElementById('mycount').textContent));
+check('no new freeze when the room already has today\'s 5', (topics[ROOM + '-p'] || []).map(m => JSON.parse(m.message)).filter(m => m.t === 'slate' && m.date === D0).length === 2);
 await p2.evaluate(() => refresh(false)); await sleep(800);
 let c2 = await cards(p2);
 check("Alex's phone shows Jordan's pick + his own", JSON.stringify(c2.find(c => c.id === '401001').who) === JSON.stringify([['Jordan'], ['Alex']]) && c2.find(c => c.id === '401001').mine === 'Chiefs', JSON.stringify(c2.find(c => c.id === '401001')));
@@ -135,7 +145,11 @@ await sleep(500); await p2.evaluate(() => refresh(false)); await sleep(800); c2 
 check('late pick published anyway (fake start time) is rejected', JSON.stringify(c2.find(c => c.id === '401002').who) === JSON.stringify([['Jordan'], []]), JSON.stringify(c2.find(c => c.id === '401002').who));
 await p2.evaluate(() => tab('board')); await sleep(300);
 const board = await p2.evaluate(() => [...document.querySelectorAll('#board tr')].slice(1).map(r => [...r.children].map(td => td.textContent).join(' ')));
-check('phone standings: Jordan 3-1 (L→W streak) above Alex 2-2', board[0] === '1 Jordan 3-1 .750 W1' && board[1] === '2 Alex 2-2 .500 L1', JSON.stringify(board));
+check('phone standings: Jordan 3-1 (L→W streak) above Alex 2-2 + today\'s picks', board[0] === '1 Jordan 3-1 .750 W1 ' + exp.map(e => JP[e]).filter(Boolean).join('').replace(/\+|-/g, '') && board[1] === '2 Alex 2-2 .500 L1 ' + exp.map(e => AP[e]).filter(Boolean).join('').replace(/\+|-/g, ''), JSON.stringify(board));
+// a pick on a game that is NOT in the room's frozen TOP 5 (SJ @ ANA, upcoming) is ignored everywhere
+await p2.evaluate(() => Pickem.publish(Pickem.ROOM + '-p', { v: 1, t: 'pick', n: 'Alex', e: '401006', k: 'hockey/nhl', lg: 'NHL', tm: '25', d: new Date(Date.now() + 3600000).toISOString(), a: { id: '18', ab: 'SJ' }, h: { id: '25', ab: 'ANA' }, g: '' }));
+await p2.evaluate(() => refresh(false)); await sleep(800);
+check('pick on a non-TOP-5 game rejected (exactly 5 a day)', await p2.evaluate(() => !S.data.picks['401006']));
 await p2.screenshot({ path: path.join(OUT, 'phone-standings.png') });
 
 // ===== TV
@@ -151,24 +165,37 @@ async function tv(w, h, extra) {
   await sleep(1500); return pg;
 }
 const tvState = pg => pg.evaluate(() => { const r = s => document.querySelector(s) && document.querySelector(s).getBoundingClientRect();
-  return { rows: [...document.querySelectorAll('.pk-row:not(.hd)')].map(x => [...x.children].map(c => c.textContent).join(' ')), games: [...document.querySelectorAll('.pk-g')].map(g => ({ cls: g.className, sides: [...g.querySelectorAll('.pk-side')].map(s => s.className + ':' + [...s.querySelectorAll('.pk-c')].map(c => c.textContent + (c.classList.contains('ok') ? '+' : c.classList.contains('no') ? '-' : c.classList.contains('up') ? '^' : '')).join('|')) })),
+  return { rows: [...document.querySelectorAll('.pk-row:not(.hd)')].map(x => [...x.children].slice(0, 5).map(c => c.textContent).join(' ')),
+    chips: [...document.querySelectorAll('.pk-row:not(.hd)')].map(x => [...x.querySelectorAll('.pk-p')].map(c => c.classList.contains('empty') ? '_' : c.textContent + (c.classList.contains('ok') ? '+' : c.classList.contains('no') ? '-' : c.classList.contains('live-up') ? '^' : '')).join(' ')),
+    wlSize: parseFloat(getComputedStyle(document.querySelector('.pk-row:not(.hd) .wl') || document.body).fontSize), nmSize: parseFloat(getComputedStyle(document.querySelector('.pk-row:not(.hd) .nm') || document.body).fontSize),
+    games: [...document.querySelectorAll('.pk-g')].map(g => ({ cls: g.className, sides: [...g.querySelectorAll('.pk-side')].map(s => s.className + ':' + s.querySelector('.n').textContent.trim()) })),
     qr: (document.querySelector('.pk-qr img') || {}).src || '', stage: r('#pk-stage').bottom, ticker: r('#sports-ticker').top, glBottom: Math.max(...[...document.querySelectorAll('.pk-g, .pk-row, .pk-qr')].map(e => e.getBoundingClientRect().bottom)),
-    overflow: [...document.querySelectorAll('.pk-gl, .pk-st')].some(e => e.scrollHeight > e.clientHeight + 2), header: document.querySelector('#pickem-screen .screen-header').textContent, current: arcadeNav.current }; });
+    overflow: [...document.querySelectorAll('.pk-gl, .pk-main')].some(e => e.scrollHeight > e.clientHeight + 2), header: document.querySelector('#pickem-screen .screen-header').textContent, current: arcadeNav.current }; });
 const t1 = await tv(1280, 720);
 let ts = await tvState(t1);
 check('TV: FAMILY PICK\'EM slide shows', ts.current === 'pickem' && /PICK'EM/.test(ts.header), ts.current);
 check('TV standings: Jordan 3-1 .750 W1, Alex 2-2 .500 L1', ts.rows[0] === '1 Jordan 3-1 .750 W1' && ts.rows[1] === '2 Alex 2-2 .500 L1', JSON.stringify(ts.rows));
-check('TV: 5 games with everyone\'s picks', ts.games.length === 5 && ts.games.some(g => g.sides[1] && /Jordan\|Alex/.test(g.sides[1])), JSON.stringify(ts.games.map(g => g.sides)));
+check('TV: total running record is the big number (W-L larger than the name)', ts.wlSize > ts.nmSize * 1.2, ts.wlSize + ' vs ' + ts.nmSize);
+check('TV: each player\'s 5 pick slots in TOP-5 order (right/wrong/open)', ts.chips[0] === exp.map(e => JP[e] || '_').join(' ') && ts.chips[1] === exp.map(e => AP[e] || '_').join(' '), JSON.stringify(ts.chips));
+check('TV: TOP 5 games with the pick split', ts.games.length === 5 && ts.games.some(g => /2 PICKS/.test(g.sides[1])), JSON.stringify(ts.games.map(g => g.sides)));
 const fin = ts.games.find(g => /fin/.test(g.cls)), live = ts.games.find(g => /live/.test(g.cls));
-check('TV: final game colours right/wrong picks', fin && /win:Jordan\+/.test(fin.sides[0]) && /lose:Alex-/.test(fin.sides[1]), fin && fin.sides.join(' / '));
+check('TV: final game colours the winner', fin && /win:1 PICK/.test(fin.sides[0]) && /lose:1 PICK/.test(fin.sides[1]), fin && fin.sides.join(' / '));
 check('TV: live game row marked live', !!live, ts.games.map(g => g.cls).join(','));
-check('TV: QR opens remote-pick.html with the room code', /remote-pick\.html%23room%3D/.test(ts.qr), ts.qr.slice(0, 160));
+const qrUrl = decodeURIComponent(new URL(ts.qr).searchParams.get('data') || ''), tvKey = await t1.evaluate(() => pkTvKey());
+check('TV: QR opens remote-pick.html with the room code + this TV\'s remote key', qrUrl.includes('remote-pick.html#room=' + ROOM + '&tv=' + tvKey) && /^[a-z0-9]{10}$/.test(tvKey), qrUrl);
 check('TV: fits above the ticker at 720p, nothing clipped', ts.glBottom <= ts.ticker && ts.stage <= ts.ticker && !ts.overflow, `${ts.glBottom}/${ts.stage} vs ${ts.ticker} overflow=${ts.overflow}`);
 await sleep(3500); await t1.evaluate(() => { document.getElementById('nav-hud').classList.remove('show'); });
 await t1.screenshot({ path: path.join(OUT, 'tv-pickem-720.png') });
 await t1.evaluate(() => toggleSettings()); await sleep(400);
-check('settings QR = phone remote + pick\'em page', await t1.evaluate(() => /remote-pick\.html/.test(decodeURIComponent(document.getElementById('settings-qr').src)) && !!document.getElementById('set-pickem') && !!document.getElementById('set-phoneRemote')));
+check('settings QR = phone remote + pick\'em page (room + TV key)', await t1.evaluate(k => /remote-pick\.html#room=.*&tv=/.test(decodeURIComponent(document.getElementById('settings-qr').src)) && decodeURIComponent(document.getElementById('settings-qr').src).includes(k) && !!document.getElementById('set-pickem') && !!document.getElementById('set-phoneRemote') && !!document.getElementById('set-pickemRoom'), tvKey));
 await t1.evaluate(() => toggleSettings());
+// a friend who joined the room by code (no TV QR) can pick but has no remote
+await p2.evaluate(() => { tab('remote'); cmd('next'); }); await sleep(300);
+check('friend without the TV QR: remote says scan the TV first, nothing sent', /SCAN/.test(await p2.evaluate(() => document.getElementById('rstat').textContent)) && !(topics['arcade-tv-' + tvKey] || []).length);
+await p2.evaluate(() => tab('picks'));
+// Jordan scans the TV's QR with his phone
+await p1.goto('about:blank'); await p1.goto(base + 'remote-pick.html#' + qrUrl.split('#')[1], { waitUntil: 'load' }); await p1.waitForFunction(() => document.querySelectorAll('#picks .game').length > 0, { timeout: 30000 }).catch(() => {});
+check('QR scan: phone keeps room + TV key locally, hash removed from the address bar', await p1.evaluate((k, r) => localStorage.getItem('arcadePickTv') === k && localStorage.getItem('arcadePickRoom') === r && !location.hash, tvKey, ROOM));
 // ===== remote round trip
 await t1.waitForFunction(() => pk.es && pk.es.readyState === 1, { timeout: 15000 }).catch(() => {});
 await p1.evaluate(() => tab('remote')); await sleep(800);
@@ -190,6 +217,7 @@ await p1.evaluate(() => cmd('cel')); await sleep(1500);
 check('remote CELEBRATE: test celebration plays', await t1.evaluate(() => document.getElementById('celebrate').classList.contains('show')));
 await p1.screenshot({ path: path.join(OUT, 'phone-remote.png') });
 await sleep(6000);
+check('commands go only to this TV\'s topic', (topics['arcade-tv-' + tvKey] || []).length >= 10 && !(topics[ROOM + '-c'] || []).length);
 // PIN
 await t1.evaluate(() => { settings.pickemPin = '4321'; }); const cur0 = await t1.evaluate(() => arcadeNav.current);
 await p1.evaluate(() => cmd('next')); await sleep(2000);
@@ -201,6 +229,17 @@ await t1.evaluate(() => { settings.pickemPin = ''; });
 const cur1 = await t1.evaluate(() => arcadeNav.current);
 await t1.evaluate(() => pkCommand({ t: 'cmd', c: 'next', id: 'old1' }, Date.now() - 5 * 60000)); await sleep(500);
 check('stale command (5 min old) ignored', (await t1.evaluate(() => arcadeNav.current)) === cur1);
+// LIVE ACTION line parsing (ESPN core odds shapes): live provider -> LIVE, else the pregame book's closing line -> PREGAME
+const lv = await t1.evaluate(() => {
+  const side = (a, h) => ({ awayTeamOdds: { favorite: a, current: { pointSpread: { american: a ? '-2.5' : '+2.5' } }, close: { pointSpread: { american: a ? '+1.5' : '-1.5' } } }, homeTeamOdds: { favorite: h, current: { pointSpread: { american: h ? '-2.5' : '+2.5' } }, close: { pointSpread: { american: h ? '+1.5' : '-1.5' } } } });
+  const live = lvParse({ items: [{ provider: { id: '100', name: 'DraftKings' }, overUnder: 6.5, ...side(false, true) }, { provider: { id: '200', name: 'DraftKings - Live Odds' }, current: { total: { american: '4.5' } }, ...side(true, false) }] }, 'nhl');
+  const pre = lvParse({ items: [{ provider: { id: '100', name: 'DraftKings' }, overUnder: 222.5, ...side(true, false) }] }, 'nba');
+  const none = lvParse({ items: [] }, 'nba');
+  return { live, pre, none, html: lvLineHtml({ gcKey: 'x', away: 'Ducks', home: 'Jets', aLogo: '', hLogo: '' }, live) };
+});
+check('live line: LIVE tag, puck line, favourite team, O/U', lv.live && lv.live.live && lv.live.kind === 'PUCK LINE' && lv.live.side === 'a' && lv.live.pts === '-2.5' && lv.live.ou === '4.5' && /LIVE.*PUCK LINE.*Ducks -2\.5.*O\/U 4\.5/.test(lv.html.replace(/<[^>]+>/g, ' ')), JSON.stringify(lv.live));
+check('no live line: PREGAME closing line (home -1.5), never called LIVE', lv.pre && !lv.pre.live && lv.pre.side === 'h' && lv.pre.pts === '-1.5' && lv.pre.kind === 'SPREAD', JSON.stringify(lv.pre));
+check('no odds at all: row hidden', lv.none === null && (await t1.evaluate(() => lvLineHtml({}, null))) === '');
 await t1.close();
 // 1080p + TV app
 const t2 = await tv(1920, 1080, {}); await t2.evaluate(() => { window.ArcadeTV = window.ArcadeTV || {}; });
@@ -214,13 +253,26 @@ await t2.close();
 const t3 = await tv(1280, 720, { phoneRemote: false }); await sleep(5000);
 check('Phone Remote off: no command channel opened', await t3.evaluate(() => !pk.es));
 await t3.close();
-// ===== grading by the GitHub Action script
-const env = { ...process.env, PICKEM_NTFY: OV.ntfy, PICKEM_ESPN: OV.espn, PICKEM_ROOM: ROOM };
-const run = async () => (await promisify(execFile)('node', [path.join(REPO, 'scripts/pickem-sync.mjs'), dataFile], { env, encoding: 'utf8' })).stdout;
+// ===== a second friend group: own room (code typed on the phone), own frozen 5, own leaderboard
+const p4 = await phone('Sam', '');
+await p4.evaluate(r => { document.getElementById('rm').value = r; document.getElementById('nm').value = 'Sam'; saveName(); }, ROOM2);
+await p4.waitForFunction(() => document.querySelectorAll('#picks .game').length > 0 && Pickem.ROOM.startsWith('other-room'), { timeout: 30000 }).catch(() => {});
+await sleep(1500);
+await tapTeam(p4, '401001', 0); await sleep(1800);
+const r2 = (topics[ROOM2 + '-p'] || []).map(m => JSON.parse(m.message));
+check('room 2: first device froze its own TOP 5, Sam\'s pick lands in room 2 only', r2.filter(m => m.t === 'slate' && m.date === D0).length === 1 && r2.some(m => m.t === 'pick' && m.n === 'Sam') && !picksIn().some(m => m.n === 'Sam'), JSON.stringify(r2.map(m => m.t)));
+check('room 2 phone shows only room-2 players', await p4.evaluate(() => Object.keys(S.data.names).join() === 'sam'), await p4.evaluate(() => Object.keys(S.data.names).join()));
+check('new room button makes a valid code', await p4.evaluate(() => { newRoom(); return Pickem.validRoom(document.getElementById('rm').value) && /^arc-/.test(document.getElementById('rm').value); }));
+// ===== grading by the GitHub Action script (all registered rooms)
+const env = { ...process.env, PICKEM_NTFY: OV.ntfy, PICKEM_ESPN: OV.espn, PICKEM_ROOM: ROOM, PICKEM_REG: REG };
+const run = async () => (await promisify(execFile)('node', [path.join(REPO, 'scripts/pickem-sync.mjs'), dataDir], { env, encoding: 'utf8' })).stdout;
 const log = await run();
+const D2 = JSON.parse(fs.readFileSync(path.join(dataDir, 'rooms', ROOM2 + '.json'), 'utf8')), IDX = JSON.parse(fs.readFileSync(path.join(dataDir, 'rooms.json'), 'utf8'));
+check('sync: room 2 file written separately (Sam only) + rooms.json index', D2.room === ROOM2 && Object.keys(D2.names).join() === 'sam' && D2.picks['401001'].sam && IDX.rooms[ROOM] && IDX.rooms[ROOM2], JSON.stringify(IDX));
 const D = JSON.parse(fs.readFileSync(dataFile, 'utf8'));
 check('sync: CAR-NYR graded from the ESPN final (Jordan right, Alex wrong)', D.events['401004'] && D.events['401004'].r === '7' && D.picks['401004'].jordan.tm === '7' && D.picks['401004'].alex.tm === '13001', JSON.stringify(D.picks['401004']));
-check('sync: Alex\'s late UGA/ALA pick and the fake event are dropped', !D.picks['401002'].alex && D.picks['401002'].jordan && !D.events['999999'] && !D.names.hacker, JSON.stringify(D.picks['401002']));
+check('sync: Alex\'s late UGA/ALA pick, the non-TOP-5 pick and the fake event are dropped', !D.picks['401002'].alex && D.picks['401002'].jordan && !D.picks['401006'] && !D.events['999999'] && !D.names.hacker && !D.names.sam, JSON.stringify(D.picks['401002']));
+check('sync: the frozen TOP 5 is stored with the season', D.slates && D.slates[D0] && D.slates[D0].join() === exp.join(), JSON.stringify(D.slates));
 check('sync: season standings persist (Jordan 3-1 W1, Alex 2-2 L1)', /Jordan\s+3-1\s+\.750\s+W1/.test(log) && /Alex\s+2-2\s+\.500\s+L1/.test(log), log.trim().split('\n').join(' | '));
 const log2 = await run();
 check('sync: second run with nothing new = no change (no empty commits)', /no change/.test(log2), log2.split('\n')[0]);
