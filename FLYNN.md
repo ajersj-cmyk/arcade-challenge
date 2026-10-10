@@ -165,7 +165,7 @@ It's a single self-contained HTML page (inline CSS + JS, no build step) made for
 
 ### Slide rotation order (`nextSlide()`)
 
-`live → hotProps → mySquad → trivia → leaders → pga → ufc → command → soccerSlide → tvGuide → news → odds → futures →
+`live → hotProps → mySquad → pickem → trivia → leaders → pga → ufc → command → soccerSlide → tvGuide → news → odds → futures →
 nflFutures → nflAwards → fantasy → cfbFutures → nhlFutures → rankings → nfl → nba → nhl → mlb` → (loop). (`fantasy` is spliced in
 right after `nflAwards` on the line below `ARCADE_SCREENS`.) A **sport mode** replaces this list for 12 h (§3a). The order lives in the global
 `ARCADE_SCREENS` array. `live` always shows. The rest (including `hotProps`) can be switched off in settings.
@@ -177,6 +177,7 @@ The old `props` LIVE LEADERS slide (ESPN live stat leaders dressed up as props) 
 | `live-game-screen` | LIVE ACTION | in-progress games from the ticker fetch; MLB count/bases/outs, football down & spot, win-prob bar | scroll rule* (base 15 s), "NO LIVE GAMES" ≥16 s |
 | `hotprops-screen` | TODAY'S HOT PROPS | `props.json` (§4c): player props for today's games (ET date, started < 4 h ago), HOT (biggest moves since open) first, max 24 cards, 2 columns; headshot, league, matchup + time, line/odds, DK/FD/CZR, move. Ticker league toggles filter it; in a sport mode only that sport (skipped if none) | scroll rule (base 16 s); empty state 6 s |
 | `mysquad-screen` | MY SQUAD DASHBOARD | games matching `mySquadTeams` (default "Carolina Hurricanes, Duke, ECU, East Carolina") | scroll rule |
+| `pickem-screen` | FAMILY PICK'EM | season standings + today's TOP 5 with everyone's picks + QR (§3d) | 20 s |
 | `trivia-screen` | TRIVIA BREAK! | OpenTDB sports question; 15 s countdown bar, then 5 s answer reveal; clock hidden | 20 s |
 | `leaders-screen` | DAILY TOP PERFORMERS | first 8 leaders | scroll rule / 6 s if none |
 | `pga-screen` | (event name) | ESPN golf scoreboard leaderboard | scroll rule / 6 s |
@@ -204,8 +205,8 @@ Buttons **OFF · COLLEGE FOOTBALL · COLLEGE BASKETBALL · NFL** at the top of t
   soft reload and the TV app. **The user's settings are never changed by a mode**; `snap` is a copy of the slide + league
   toggles (`ARCADE_SCREENS` keys + `show*`) taken when the first mode starts (switching modes keeps it).
 - **Rotation:** `arcadeScreens()` returns the mode's list (`SPORT_MODES` in index.html), ignoring the slide toggles:
-  NFL `live hotProps fantasy odds nflFutures nflAwards news tvGuide nfl`; CFB `live hotProps mySquad odds cfbFutures rankings news tvGuide`;
-  CBB `live hotProps mySquad odds rankings futures news tvGuide`. `slideOn(k)` / `navEnabled` / navigator / HUD / ◀▶ all use it.
+  NFL `live hotProps pickem fantasy odds nflFutures nflAwards news tvGuide nfl`; CFB `live hotProps pickem mySquad odds cfbFutures rankings news tvGuide`;
+  CBB `live hotProps pickem mySquad odds rankings futures news tvGuide`. `slideOn(k)` / `navEnabled` / navigator / HUD / ◀▶ all use it.
   Data slides with nothing to show (hotProps for that sport, odds, TV guide, My Squad) are skipped in a mode (`smSlideEmpty`); `live` always shows,
   so the rotation is never empty.
 - **Data:** all 12 scoreboards are still fetched (the mode's league even if its ticker toggle is off), so ★ celebrations and the
@@ -233,7 +234,8 @@ toggles, and a QR code for `#remote` mode. Opens/closes with the gear or the hot
 ### Remote mode (`#remote`)
 `index.html#remote` shows one "NEXT SLIDE" button that posts `{action:'forceNext'}` on a `BroadcastChannel('cinema_channel')`.
 Settings changes are broadcast the same way. **BroadcastChannel only reaches tabs in the same browser on the same
-device**, so the QR code's phone remote can't actually control the TV.
+device**, so it can't control the TV from a phone. It is kept as-is. The settings QR now opens the real phone remote
+(`remote-pick.html`, §3d).
 
 ---
 
@@ -276,6 +278,51 @@ A broadcast-style news segment instead of the old scrolling list. Code: `showNew
   960x540 hero kept decoded (+ the next one preloaded); thumbs `loading=lazy` at 320x180; no photo → team logo art.
 - Test: `node tools/test-news.mjs [file]` (mocked feeds). Screenshots: `node tools/shoot-news.mjs [file] --modes=,nfl,cfb --frames=2 [--tv]`.
 
+### 3d. Family pick'em + phone remote (PR flynn/pickem)
+
+New files: `pickem-core.js` (shared by the TV, the phone page and the sync script), `remote-pick.html` (phone page),
+`scripts/pickem-sync.mjs` + `.github/workflows/pickem.yml` (grading/persistence), `tools/test-pickem.mjs`.
+- **QR:** on the `pickem` slide and in Settings → `https://ajersj-cmyk.github.io/arcade-challenge/remote-pick.html#room=<room>[&pin=<PIN>]`
+  (QR image from api.qrserver.com like before). Room code = `Pickem.ROOM` in pickem-core.js (`ahlers-arcade-07r1ln1b6e`).
+- **Backend (free, no account, nothing secret in the browser):**
+  - **ntfy.sh** public topics. `<room>-p` = pick messages (cached 12 h by ntfy), `<room>-c` = remote commands and the TV's acks.
+    Anonymous limits per IP: 250 messages/day, 12 h cache. CORS `*`.
+  - **picks.json on the `pickem-data` branch**, read via `raw.githubusercontent.com` (CORS `*`, ~5 min CDN cache). It holds all
+    picks and graded results of the season. It is written only by the `pickem.yml` Action (every ~10 min, `GITHUB_TOKEN`, commits only
+    when something changed, never to main). The Action reads ntfy, checks every picked event on ESPN `summary` (real start time + teams,
+    unknown ids dropped), applies the lock rule and grades finals. **The Action runs only once this workflow is on main** (cron).
+  - Clients (TV + phones) merge picks.json + the ntfy cache + live ESPN scoreboards themselves, so today's picks and results show
+    right away, even before the Action has run.
+- **Lock rule:** a pick counts only if ntfy's *server* timestamp is before the game's ESPN start time. The latest pick per
+  name + game wins. The phone disables the buttons at the start, and late messages are ignored everywhere.
+- **TOP 5 (deterministic, `rankGame`)**, over all of the ET day's games in NFL, CFB (FBS), NBA, MLB, NHL, CBB, WNBA, MLS, EPL, UCL:
+  - League base: NFL 30 · CFB 18 · NBA 18 · MLB 14 · NHL 12 · CBB 10 · UCL 10 · WNBA 8 · EPL 8 · MLS 6.
+  - National TV (best network): ABC/CBS/NBC/FOX +20; ESPN/TNT/TBS/truTV/Prime Video/Netflix/Peacock/Apple TV/Max/YouTube +15;
+    ESPN2/ESPNU/FS1/NFL Network/NBA TV/MLB Network/NHL Network/ACCN/SECN/BTN/CBSSN/USA/CW/ESPN+ +8; any other national +4.
+  - Postseason +25. Ranked: +6 per ranked team, +6 more if both are ranked, +3 per top-10 team.
+  - Rivalry note (trophy/derby/rivalry…) +8. Primetime (7-10:59 PM ET start) +6.
+  - Spread ≤3 +8, ≤6.5 +4. Both teams ≥.600 (3+ games) +4.
+  - Ties go to the earlier start, then event id. Postponed or canceled games are skipped.
+  - The phone shows the reasons as chips. The slate is today's 5 (stable all day). Once none of them can still be picked, the
+    phone shows **tomorrow's** 5 first (today's results below), and the TV switches to tomorrow when today's 5 are all final.
+- **Phone page:** name (1-14 letters/numbers, saved in localStorage `arcadePickName`; same name = same player; max 16 players
+  per room), PICKS / STANDINGS / REMOTE tabs, others' picks as chips, right/wrong after the final. It refreshes every 30 s while visible.
+- **Remote:** PREV / NEXT / SHOW PICK'EM BOARD / CLOSE (Gamecast, settings, menu, celebration) / CELEBRATE (silent
+  `arcadeCelebrate('test')`), plus OPEN GAMECAST for any of today's games (registry key by event id, else the phone's game info).
+  - The TV keeps **one EventSource** to `<room>-c` (`pkRemoteStart`, no polling) with a 15 s → 5 min backoff on errors.
+  - It ignores commands older than 60 s and repeated ids, and answers each command with an ack the phone shows ("TV ✓ …").
+  - Settings → Phone Remote (QR) turns the listener off.
+- **Household PIN (optional):** Settings → Pick'em / remote PIN. It goes into the QR. Messages carry `g = fnv(room|pin)`. The TV
+  ignores commands and picks without it. For the Action to enforce it too, add a repo secret `PICKEM_PIN`. It is simple anti-abuse,
+  not security: ntfy topics are public, and the room code is in the public repo.
+- **Slide:** `pickem` (toggle `pickem`, default on, also in all sport modes).
+  - Left: SEASON STANDINGS (W-L, PCT, streak, up to 7 rows) + a SCAN TO PLAY QR card.
+  - Right: TODAY'S TOP 5 with times/network, live scores, and everyone's picks as chips (live leader cyan, right green, wrong red).
+  - 20 s, fits above the ticker at 720p/1080p. Slate cache 3 min, picks.json 5 min.
+- **Standings:** 1 point per correct pick; ties/draws don't count. Sorted by W, then PCT, L, name.
+  The season = everything in picks.json. To start a new season, replace picks.json on `pickem-data` with an empty file.
+- Test: `node tools/test-pickem.mjs [file]` (local mock of ESPN + ntfy + picks.json, two phones, TV, sync script).
+
 ## 4. External APIs and assets
 
 None of them need an API key, and **no keys or tokens are embedded**. The code actively deletes a legacy
@@ -302,6 +349,8 @@ None of them need an API key, and **no keys or tokens are embedded**. The code a
 | ESPN Fantasy | `https://lm-api-reads.fantasy.espn.com/apis/v3/games/ffl/seasons/{yr}/segments/0/leaguedefaults/3?scoringPeriodId={wk}&view=kona_playercard` + `X-Fantasy-Filter` header (CORS echoes the origin and allows that header; no key). ~5 KB/player with the rank filters | live PPR: 2 requests per refresh, only after the week's first kickoff and only while the slide shows (60 s while an NFL game is live, else 15 min cache). Projection fallback (~9 requests) only if `fantasy.json` is missing/> 2.5 days old, cached 12 h (`ahlersFantasy1`) | fantasy slide |
 | Open-Meteo | `https://api.open-meteo.com/v1/forecast?latitude=35.6127&longitude=-77.3663&current=temperature_2m,weather_code&daily=temperature_2m_max,temperature_2m_min&temperature_unit=fahrenheit&timezone=America/New_York` | on load, then every **15 min** (only if Command Center is on) | Command Center weather |
 | Open Trivia DB | `https://opentdb.com/api.php?amount=1&category=21&type=multiple` | on load and after each trivia slide | trivia (rate limit 1 req / 5 s / IP) |
+| ntfy.sh | `https://ntfy.sh/<room>-p` (picks), `<room>-c` (remote; TV holds one `/sse` stream), `/json?poll=1&since=all` | pick'em slide, phone page, remote | pick'em + remote (§3d). Anonymous: 250 msgs/day/IP, 12 h cache |
+| picks.json | `https://raw.githubusercontent.com/ajersj-cmyk/arcade-challenge/pickem-data/picks.json` | pick'em slide / phone | season picks + results (§3d) |
 | rss2json | `https://api.rss2json.com/v1/api.json?rss_url=` + Yahoo Sports RSS / CBS Sports headlines RSS | **fallback only**: news slide when every ESPN news feed fails | headlines (free tier, rate-limited) |
 | QR Server | `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=<page>#remote...` | when the settings UI loads | QR `<img>` |
 | Google s2 favicons | `https://www.google.com/s2/favicons?domain=<network>&sz=128` | TV guide | network logos |
@@ -580,6 +629,7 @@ next slide shows right away.
 - [ ] Settings gear top-right with focus outline. `s` / ContextMenu / Menu / Settings keys toggle the modal. Enter on the focused gear works.
 - [ ] Every settings control persists to `localStorage.ahlersArcadeSettings` and takes effect (toggles, favourite teams, marquee, speed)
 - [ ] Broadcast wipe + lower third on every slide change, never over Gamecast/celebrations, no wipe on the phone remote page
+- [ ] Pick'em: slide fits above the ticker, picks lock at start, phone remote round trip (`tools/test-pickem.mjs`)
 - [ ] Headlines: photo hero rotates, fits above the ticker, no Ken Burns in the TV app (`tools/test-news.mjs`)
 - [ ] Slide rotation order and the skip-if-disabled logic. `live` always shows. No slide cut short (`tools/test-rotation.mjs`).
 - [ ] Every "advance later" uses `slideTimer = slideTimeout(fn, ms)` (cancels the previous timer, gen-guarded), never a raw `setTimeout` into `slideTimer`

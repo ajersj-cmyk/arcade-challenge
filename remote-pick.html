@@ -187,7 +187,7 @@ function render() {
     var all = s ? s.all.slice() : [], rank = {}; slateGames().forEach(function (g, i) { rank[g.id] = i; });
     all.sort(function (x, y) { var o = { in: 0, pre: 1, post: 2 }; return (o[x.state] - o[y.state]) || ((rank[x.id] == null ? 99 : rank[x.id]) - (rank[y.id] == null ? 99 : rank[y.id])) || (Date.parse(x.start) - Date.parse(y.start)); });
     document.getElementById('gcl').innerHTML = all.length ? all.slice(0, 14).map(function (g) {
-        return '<button class="gcb" onclick="openGc(\'' + g.id + '\')"><img alt="" src="' + esc(P.logo(g.a.logo, 60)) + '"><img alt="" src="' + esc(P.logo(g.h.logo, 60)) + '"><span class="t">' + esc(g.a.ab + ' @ ' + g.h.ab) +
+        return '<button class="gcb" onclick="openGc(\'' + g.id + '\')"><img alt="" src="' + esc(P.logo(g.a.logo, 60)) + '" onerror="this.style.visibility=\'hidden\'"><img alt="" src="' + esc(P.logo(g.h.logo, 60)) + '" onerror="this.style.visibility=\'hidden\'"><span class="t">' + esc(g.a.ab + ' @ ' + g.h.ab) +
             '</span><span class="s' + (g.state === 'in' ? ' live' : '') + '">' + esc(g.lg) + '<br>' + esc(g.state === 'pre' ? P.fmtTime(g.start) : g.detail) + '</span></button>';
     }).join('') : '<div class="empty">NO GAMES TODAY</div>';
 }
