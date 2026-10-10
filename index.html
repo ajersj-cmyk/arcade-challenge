@@ -200,6 +200,14 @@
         .win-prob-track { flex: 1; height: 1.5vh; background: rgba(255,255,255,0.2); border-radius: 0.75vh; overflow: hidden; display: flex; margin: 0 2vh; }
         .win-prob-away { height: 100%; background: #00ffff; }
         .win-prob-home { height: 100%; background: #ff007f; }
+        /* TOP PERFORMERS: headshot (team logo if none) + team-logo badge */
+        .ld-face { position: relative; flex: none; width: 10vh; height: 10vh; }
+        .ld-hs { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; object-position: 50% 12%; background: radial-gradient(circle at 50% 35%, #2a3b5c, #0b1220); border: 0.3vh solid var(--accent-color, #00f0ff); box-sizing: border-box; display: block; }
+        .ld-hs.logo { object-fit: contain; padding: 1.4vh; }
+        .ld-tm { position: absolute; right: -0.6vh; bottom: -0.6vh; width: 4.4vh; height: 4.4vh; border-radius: 50%; background: #fff; padding: 0.45vh; object-fit: contain; box-sizing: border-box; box-shadow: 0 0.3vh 0.8vh rgba(0,0,0,0.5); }
+        .ld-team { display: flex; align-items: center; gap: 0.8vh; font-size: 2.5vh; font-weight: 900; white-space: nowrap; }
+        .ld-team img { width: 2.8vh; height: 2.8vh; object-fit: contain; }
+        .ld-team span { opacity: 0.6; font-size: 2.1vh; }
         /* LIVE ACTION cards: live spread / puck line / run line from ESPN core odds (replaces the unlabeled win-probability bar) */
         .lv-line { display: flex; align-items: center; gap: 1.4vh; margin-top: 1.2vh; padding: 0.9vh 1.4vh; min-height: 6vh; box-sizing: border-box; background: rgba(0,0,0,0.5); border-radius: 1vh;
             border: 1px solid rgba(255,255,255,0.15); font-family: var(--ds-display, 'Inter'); font-weight: 800; text-transform: uppercase; position: relative; z-index: 2; white-space: nowrap; }
@@ -2207,14 +2215,12 @@
                                             if (topDude && topDude.athlete && isUsefulLeaderStat(cat, topDude.displayValue)) {
                                                 var headshotUrl = '';
                                                 var lId = topDude.athlete.id ? topDude.athlete.id : null;
-                                                
-                                                if (topDude.athlete.headshot && topDude.athlete.headshot.href) {
-                                                    headshotUrl = topDude.athlete.headshot.href;
-                                                } else if (lId) {
-                                                    headshotUrl = 'https://a.espncdn.com/combiner/i?img=/i/headshots/' + c.s + '/players/full/' + lId + '.png&h=150&w=150&scale=crop';
-                                                } else {
-                                                    headshotUrl = competitor.team ? competitor.team.logo : '';
-                                                }
+                                                // headshot through ESPN's combiner (~20 KB instead of a full 1 MB PNG); path uses the league, not the sport
+                                                var hsSeg = { nfl: 'nfl', nba: 'nba', nhl: 'nhl', mlb: 'mlb', cfb: 'college-football', cbb: 'mens-college-basketball', wnba: 'wnba' }[c.id];
+                                                var hsHref = (topDude.athlete.headshot && topDude.athlete.headshot.href) || '', hsM = /a\.espncdn\.com(\/i\/headshots\/[^?#]+)/.exec(hsHref);
+                                                var hsPath = hsM ? hsM[1] : (lId && hsSeg ? '/i/headshots/' + hsSeg + '/players/full/' + lId + '.png' : '');
+                                                if (hsPath) headshotUrl = 'https://a.espncdn.com/combiner/i?img=' + hsPath + '&w=160&h=116&scale=crop';
+                                                else headshotUrl = hsHref || (competitor.team ? competitor.team.logo : '');
                                                 var fallbackLogo = competitor.team ? competitor.team.logo : 'https://a.espncdn.com/combiner/i?img=/i/teamlogos/default-team-logo-500.png';
                                                 var playerName = topDude.athlete.displayName || topDude.athlete.shortName;
                                                 var statLabel = cat.displayName || cat.name || "STAT";
@@ -2457,6 +2463,7 @@
             }, 15000);
         }
 
+        function ldLogo(url, w) { var m = /^https?:\/\/a\.espncdn\.com(\/i\/[^?#]+)/.exec(url || ''); return m ? 'https://a.espncdn.com/combiner/i?img=' + m[1] + '&w=' + w + '&h=' + w : (url || ''); }
         function showLeaders() {
             if(globalLeadersData.length === 0) {
                 document.getElementById('leaders-screen').style.display = 'flex';
@@ -2467,7 +2474,11 @@
             document.getElementById('leaders-screen').style.display = 'flex';
             var track = document.getElementById('leaders-grid-track');
             track.innerHTML = globalLeadersData.slice(0, 8).map(function(l) {
-                return '<div class="info-card glass-card"><div class="card-meta neon-text-cycle"><span>' + l.statDesc + '</span><span>' + l.league + '</span></div><div style="display:flex; align-items:center; gap:2vh; padding-top:1vh;"><img src="' + l.headshot + '" onerror="this.src=\'' + l.teamLogo + '\'; this.onerror=null;" class="prop-headshot" style="width:10vh; height:10vh;"><div style="flex:1;"><div class="prop-name">' + l.name + '</div><div class="neon-text-cycle" style="font-size:2.5vh; font-weight:900;">' + l.teamCode + '</div></div><div class="card-val-lg">' + l.value + '</div></div></div>';
+                var lg = ldLogo(l.teamLogo, 96);
+                return '<div class="info-card glass-card"><div class="card-meta neon-text-cycle"><span>' + l.statDesc + '</span><span>' + l.league + '</span></div><div style="display:flex; align-items:center; gap:2vh; padding-top:1vh;">' +
+                    '<div class="ld-face"><img class="ld-hs" alt="" loading="lazy" decoding="async" src="' + escHtml(l.headshot) + '" onerror="this.onerror=null; this.classList.add(\'logo\'); this.src=\'' + escHtml(lg) + '\'">' +
+                    (lg ? '<img class="ld-tm" alt="" loading="lazy" decoding="async" src="' + escHtml(lg) + '" onerror="this.remove()">' : '') + '</div>' +
+                    '<div style="flex:1; min-width:0;"><div class="prop-name">' + l.name + '</div><div class="ld-team neon-text-cycle">' + (lg ? '<img alt="" loading="lazy" src="' + escHtml(lg) + '" onerror="this.remove()">' : '') + escHtml(l.teamCode) + (l.oppCode ? '<span> vs ' + escHtml(l.oppCode) + '</span>' : '') + '</div></div><div class="card-val-lg">' + l.value + '</div></div></div>';
             }).join('');
             applyScroll('leaders-viewport', 'leaders-grid-track', 12000);
         }
