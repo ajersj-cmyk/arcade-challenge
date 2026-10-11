@@ -523,6 +523,10 @@
         /* clickable games (Live Action cards, ticker, navigator GAMES row) */
         .gc-card { transition: transform 0.15s ease, box-shadow 0.15s ease; }
         body.mouse-active .gc-card:hover { transform: scale(1.02); box-shadow: 0 0 3vh var(--accent-color); }
+        /* remote card picker (LIVE ACTION / MY SQUAD / TODAY'S LINES): neon ring on the focused card */
+        .gc-card.lvn-focus { outline: 0.5vh solid #fff; outline-offset: -0.5vh; box-shadow: 0 0 0 0.45vh var(--accent-color), 0 0 3.2vh var(--accent-color) !important; z-index: 2; }
+        .gc-card.lvn-focus::after { content: 'OK \25B6  GAMECAST'; position: absolute; top: 0; left: 50%; transform: translateX(-50%); z-index: 3; padding: 0.15vh 1.4vh 0.25vh; border-radius: 0 0 0.8vh 0.8vh;
+            background: var(--accent-color); color: #000; font-family: var(--ds-display); font-weight: 800; font-size: 1.6vh; line-height: 1.3; letter-spacing: 0.12em; white-space: nowrap; pointer-events: none; }
         .nav-section { font-size: 2.2vh; font-weight: 900; letter-spacing: 0.25vw; color: rgba(255,255,255,0.7); margin: 0 0 1vh; }
         #nav-games { display: flex; gap: 1vw; overflow-x: auto; overflow-y: hidden; padding: 0.8vh 0.6vw 1.2vh; margin-bottom: 1.8vh; scrollbar-width: none; }
         #nav-games::-webkit-scrollbar { display: none; }
@@ -1263,7 +1267,7 @@
         function armSlideWatchdog() {
             clearTimeout(slideWatchdog); slideStartedAt = Date.now();
             slideWatchdog = setTimeout(function() {
-                if ((gc && gc.open) || (arcadeNav && arcadeNav.paused)) { armSlideWatchdog(); return; }
+                if ((gc && gc.open) || (arcadeNav && arcadeNav.paused) || lvNav.on) { armSlideWatchdog(); return; }
                 slideTimer = null; nextSlide();
             }, SLIDE_MAX_MS);
         }
@@ -1647,6 +1651,7 @@
             baseDelay = baseDelay || 18000;
             clearTimeout(slideTimer);
             function measureAndRun(tries) {
+                if (lvNav.on && lvNav.cfg.track === trackId) return; // the remote is picking a card here; lvNavOff() restarts the pass
                 var vp = document.getElementById(viewportId);
                 var track = document.getElementById(trackId);
                 if (!track || !vp) {
@@ -1985,7 +1990,7 @@
 
 
         function nextSlide() {
-            if ((arcadeNav.paused || (gc && gc.open)) && !arcadeNav.forcing) { arcadeNav.pending = true; return; } // paused or a Gamecast is open
+            if ((arcadeNav.paused || (gc && gc.open) || lvNav.on) && !arcadeNav.forcing) { arcadeNav.pending = true; return; } // paused, a Gamecast is open or the remote is picking a card
             clearSlideTimers();
             clearTimeout(triviaRevealTimer);
             ffStop(); // fantasy live-points timer only runs while that slide is up
@@ -2015,6 +2020,7 @@
             }
             
             var bxFrom = bxBegin(arcadeNav.current !== current, current); // outgoing slide stays up under the wipe for ~0.3 s
+            if (lvNav.on) lvNavOff(true); // a forced slide change ends the card picker
             arcadeNav.current = current;
             document.querySelectorAll('.slide-screen').forEach(function(el) { el.style.display = 'none'; });
             bxHold(bxFrom); bxRun(current);
@@ -2052,7 +2058,7 @@
             setTimeout(function() {
                 if (gen !== slideGen) return; // that slide is already gone
                 if (current === 'trivia' && triviaRevealTimer) return; // Trivia runs on its own 15 s + 5 s clock
-                if (!slideTimer && !(gc && gc.open) && !(arcadeNav && arcadeNav.paused)) slideTimer = slideTimeout(nextSlide, 20000);
+                if (!slideTimer && !(gc && gc.open) && !(arcadeNav && arcadeNav.paused) && !lvNav.on) slideTimer = slideTimeout(nextSlide, 20000);
             }, 1500);
         }
 
@@ -3337,7 +3343,7 @@
             document.getElementById('odds-screen').style.display = 'flex';
             document.getElementById('odds-grid-track').innerHTML = oddsGames.map(function(g) { 
                 var lines = formatCardLines(g) || (g.odds + ' (O/U ' + (g.ou||'--') + ')');
-                return bxVenueCard(g, '<div class="glass-card"><div class="card-meta neon-text-cycle"><span>' + g.league + '</span><span>' + g.tv + '</span></div><div class="card-row"><div class="card-team"><img src="' + g.aLogo + '" onerror="this.src=\'' + g.aFallback + '\'; this.onerror=null;">' + g.away + '</div></div><div class="card-row"><div class="card-team"><img src="' + g.hLogo + '" onerror="this.src=\'' + g.hFallback + '\'; this.onerror=null;">' + g.home + '</div></div><div class="card-footer neon-text-cycle" style="margin-top:1.5vh;"><span>' + g.clock + '</span><span>' + lines + '</span></div></div>');
+                return bxVenueCard(g, '<div class="glass-card gc-card"' + gcAttr(g.gcKey) + '><div class="card-meta neon-text-cycle"><span>' + g.league + '</span><span>' + g.tv + '</span></div><div class="card-row"><div class="card-team"><img src="' + g.aLogo + '" onerror="this.src=\'' + g.aFallback + '\'; this.onerror=null;">' + g.away + '</div></div><div class="card-row"><div class="card-team"><img src="' + g.hLogo + '" onerror="this.src=\'' + g.hFallback + '\'; this.onerror=null;">' + g.home + '</div></div><div class="card-footer neon-text-cycle" style="margin-top:1.5vh;"><span>' + g.clock + '</span><span>' + lines + '</span></div></div>');
             }).join('');
             applyScroll('odds-viewport', 'odds-grid-track', 12000);
         }
@@ -4242,6 +4248,7 @@
             Object.keys(gc.html).forEach(function(id) { var n = document.getElementById(id); if (n) n.innerHTML = ''; }); // free the DOM
             gc.html = {}; gcApplyViews([]); gc.view = 0;
             var ae = document.activeElement; if (ae && ae.closest && ae.closest('#gamecast')) ae.blur();
+            if (lvNav.on) lvNavTouch(); // opened from the card picker: its ring is still on that card
             if (!arcadeNav.paused && arcadeNav.pending) { arcadeNav.pending = false; nextSlide(); } // rotation resumes where it left off
         }
         function gcStep(dir) {
@@ -5177,6 +5184,77 @@
             nflFutures: 'NFL FUTURES', nflAwards: 'NFL AWARDS', fantasy: 'NFL FANTASY', cfbFutures: 'CFB FUTURES', nhlFutures: 'NHL FUTURES', rankings: 'CFB RANKINGS', nfl: 'NFL STANDINGS', nba: 'NBA STANDINGS',
             nhl: 'NHL STANDINGS', mlb: 'MLB STANDINGS' };
 
+        // ---- remote card picker: LIVE ACTION / MY SQUAD / TODAY'S LINES. DOWN starts it, arrows move a neon ring through the cards
+        // (the list scrolls to keep it in view), OK opens that game's Gamecast, BACK ends it. Rotation and the auto-scroll hold while
+        // it is on; after LVN_IDLE_MS without a key it ends by itself and rotation resumes.
+        var LVN_CFG = { live: { vp: 'live-viewport', track: 'live-grid-track', base: 15000 }, mySquad: { vp: 'mysquad-viewport', track: 'squad-games-track', base: 12000 },
+                        odds: { vp: 'odds-viewport', track: 'odds-grid-track', base: 12000 } };
+        var LVN_IDLE_MS = 25000;
+        var lvNav = { on: false, cfg: null, el: null, key: null, ty: 0, timer: null };
+        function lvNavCards(cfg) { return navItemsIn('#' + cfg.track + ' [data-gc]'); }
+        function lvNavTy(track) { // current translateY of the track (mid-animation too)
+            var m = /matrix(3d)?\(([^)]+)\)/.exec(getComputedStyle(track).transform || ''); if (!m) return 0;
+            var p = m[2].split(','); return parseFloat(m[1] ? p[13] : p[5]) || 0;
+        }
+        function lvNavTouch() { clearTimeout(lvNav.timer); lvNav.timer = setTimeout(lvNavIdle, LVN_IDLE_MS); }
+        function lvNavIdle() {
+            if (!lvNav.on) return;
+            if ((gc && gc.open) || navIsSettingsOpen() || arcadeNav.menuOpen || cel.showing) { lvNavTouch(); return; }
+            lvNavOff();
+        }
+        function lvNavStart() {
+            var cfg = LVN_CFG[arcadeNav.current], track = cfg && document.getElementById(cfg.track);
+            if (!track || (gc && gc.open)) return false;
+            var cards = lvNavCards(cfg); if (!cards.length) return false;
+            var ty = lvNavTy(track); // freeze the auto-scroll right where it is
+            track.style.animation = 'none'; track.style.transform = 'translate3d(0,' + Math.round(ty) + 'px,0)'; void track.offsetWidth;
+            track.style.transition = 'transform 0.28s ease-out';
+            lvNav.on = true; lvNav.cfg = cfg; lvNav.ty = ty; lvNav.el = null;
+            var cr = track.parentElement.getBoundingClientRect();
+            lvNavFocus(cards.filter(function(c) { return c.getBoundingClientRect().top >= cr.top - 2; })[0] || cards[0]);
+            navShowHud('&#9650;&#9660;&#9664;&#9654; PICK A GAME &nbsp;&middot;&nbsp; OK = GAMECAST &nbsp;&middot;&nbsp; BACK = DONE');
+            lvNavTouch();
+            return true;
+        }
+        function lvNavFocus(card) {
+            if (lvNav.el && lvNav.el !== card) lvNav.el.classList.remove('lvn-focus');
+            lvNav.el = card; lvNav.key = card.getAttribute('data-gc'); card.classList.add('lvn-focus');
+            var track = document.getElementById(lvNav.cfg.track), cr = track.parentElement.getBoundingClientRect(), tr = track.getBoundingClientRect(), r = card.getBoundingClientRect();
+            var base = tr.top - lvNavTy(track), top = base + (r.top - tr.top) + lvNav.ty, pad = cr.height * 0.03, ty = lvNav.ty;
+            if (top < base + (ty < 0 ? pad : 0)) ty += base + (ty < 0 ? pad : 0) - top;
+            else if (top + r.height > cr.bottom - pad) ty -= top + r.height - (cr.bottom - pad);
+            lvNav.ty = Math.min(0, Math.round(ty));
+            track.style.transform = 'translate3d(0,' + lvNav.ty + 'px,0)';
+        }
+        function lvNavMove(dir) {
+            var cards = lvNavCards(lvNav.cfg), cur = lvNav.el;
+            if (!cards.length) { lvNavOff(); return; }
+            if (cards.indexOf(cur) < 0) { lvNavFocus(cards.filter(function(c) { return c.getAttribute('data-gc') === lvNav.key; })[0] || cards[0]); return; }
+            var r = cur.getBoundingClientRect(), cx = r.left + r.width / 2, cy = r.top + r.height / 2, best = null, bestScore = Infinity;
+            cards.forEach(function(el) {
+                if (el === cur) return;
+                var b = el.getBoundingClientRect(), dx = b.left + b.width / 2 - cx, dy = b.top + b.height / 2 - cy, main, cross;
+                if (dir === 'left')  { if (dx > -2 || Math.abs(dy) > r.height / 2) return; main = -dx; cross = Math.abs(dy); }
+                if (dir === 'right') { if (dx < 2 || Math.abs(dy) > r.height / 2) return; main = dx; cross = Math.abs(dy); }
+                if (dir === 'up')    { if (dy > -2) return; main = -dy; cross = Math.abs(dx); }
+                if (dir === 'down')  { if (dy < 2) return; main = dy; cross = Math.abs(dx); }
+                var score = main + cross * 2.5;
+                if (score < bestScore) { bestScore = score; best = el; }
+            });
+            if (best) lvNavFocus(best);
+        }
+        function lvNavOff(silent) { // silent: the slide is changing anyway; otherwise resume rotation
+            if (!lvNav.on) return;
+            lvNav.on = false; clearTimeout(lvNav.timer);
+            if (lvNav.el) lvNav.el.classList.remove('lvn-focus');
+            var cfg = lvNav.cfg, track = document.getElementById(cfg.track);
+            if (track) track.style.transition = '';
+            lvNav.el = null;
+            if (silent || arcadeNav.paused || (gc && gc.open)) return;
+            if (arcadeNav.pending) { arcadeNav.pending = false; nextSlide(); } // the slide's time ran out while picking: move on
+            else applyScroll(cfg.vp, cfg.track, cfg.base); // otherwise give the slide a fresh scroll pass
+        }
+
         function navKeyOf(e) {
             var k = e.key || '', c = e.keyCode || e.which || 0;
             // Raw Android KeyEvent codes only arrive (e.g. from some WebView shells) with no usable e.key;
@@ -5250,6 +5328,7 @@
             if (navIsSettingsOpen()) { toggleSettings(); return true; }
             if (gc && gc.open) { gcClose(); return true; }
             if (arcadeNav.menuOpen) { navCloseMenu(); return true; }
+            if (lvNav.on) { lvNavOff(); return true; }
             var hud = document.getElementById('nav-hud'); if (hud) hud.classList.remove('show');
             var ae = document.activeElement; if (ae && ae.id === 'settings-gear') ae.blur();
             return false;
@@ -5398,6 +5477,15 @@
                 if (nk === 'ok') { e.preventDefault(); if (ae && ae.classList && ae.classList.contains('nav-item')) ae.click(); return; }
                 return;
             }
+            if (lvNav.on) { // card picker: arrows move the ring, OK opens the Gamecast, BACK ends
+                e.preventDefault(); lvNavTouch();
+                if (nk === 'up' || nk === 'down' || nk === 'left' || nk === 'right') { lvNavMove(nk); return; }
+                if (nk === 'ok') { if (e.repeat) return; if (lvNav.el && document.body.contains(lvNav.el)) gcOpen(lvNav.el.getAttribute('data-gc')); else lvNavMove('down'); return; }
+                if (nk === 'back') { lvNavOff(); return; }
+                if (nk === 'play') { navTogglePause(); return; }
+                if (nk === 'menu') { lvNavOff(); navOpenMenu(); return; }
+                return;
+            }
             // kiosk view
             if (ae && ae.id === 'settings-gear') {
                 if (nk === 'ok' || (nk === 'play' && e.key === ' ')) return; // native / existing behaviour opens settings
@@ -5405,6 +5493,7 @@
             }
             if (nk === 'left' || nk === 'right') { e.preventDefault(); navStep(nk === 'left' ? -1 : 1); return; }
             if (nk === 'up') { e.preventDefault(); var g = document.getElementById('settings-gear'); if (g) g.focus(); return; }
+            if (nk === 'down' && lvNavStart()) { e.preventDefault(); return; } // game-card slides: DOWN picks a card
             if (nk === 'ok' || nk === 'down' || nk === 'menu') { e.preventDefault(); navOpenMenu(); return; }
             if (nk === 'play') { e.preventDefault(); navTogglePause(); return; }
             if (nk === 'back') { e.preventDefault(); navBack(); return; }
