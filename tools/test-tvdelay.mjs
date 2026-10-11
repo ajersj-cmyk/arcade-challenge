@@ -50,6 +50,12 @@ await page.evaluateOnNewDocument(() => { window.ArcadeTV = {}; try { localStorag
 const isNoise = t => /Failed to load resource/.test(t) || /favicon/.test(t);
 const errors = []; page.on('console', m => { if (m.type() === 'error' && !isNoise(m.text())) errors.push(m.text()); }); page.on('pageerror', e => errors.push('PAGE ' + e));
 const sumAt = [];
+// a reload/crash mid-test must be reported, not show up later as 'detached Frame'
+const pageEvents = []; let booted = false;
+page.on('framenavigated', f => { if (f === page.mainFrame() && booted) { pageEvents.push('NAVIGATED ' + f.url()); console.log('      !! main frame navigated: ' + f.url()); } });
+page.on('error', e => { pageEvents.push('CRASH ' + e.message); console.log('      !! page crashed: ' + e.message); });
+page.on('close', () => console.log('      !! page closed'));
+browser.on('disconnected', () => console.log('      !! browser disconnected'));
 await page.setRequestInterception(true);
 page.on('request', req => {
   const u = req.url(); if (!/990009/.test(u)) return req.continue();
@@ -62,6 +68,7 @@ const heap = async () => { await cdp.send('HeapProfiler.collectGarbage'); await 
 const shot = async name => { const p = path.join(OUT, name + '.png'); await page.screenshot({ path: p }); console.log('      shot ' + p); return p; };
 
 await page.goto(base + FILE, { waitUntil: 'load' });
+booted = true;
 await page.waitForFunction(() => typeof arcadeNav !== 'undefined' && arcadeNav.current && typeof gcDeOn === 'function', { timeout: 90000 });
 await page.evaluate(() => { arcadeNav.paused = true; settings.celebrate = true; settings.celebrateDelay = 12; settings.tvDelayAll = true; });
 await cdp.send('Emulation.setCPUThrottlingRate', { rate: 4 });
@@ -183,6 +190,7 @@ console.log(`                                             DELAY ALL off heap ${m
 check('memory: buffer stays small (<= 40 snapshots, < 1.5 M chars of new HTML)', on.maxDq <= 40 && on.maxSz < 1500000, `max ${on.maxDq} waiting, ${(on.maxSz / 1024).toFixed(0)} KB`);
 check('memory: heap with DELAY ALL on within 3 MB of off, and released on close', on.h1 - off.h1 < 3 * 1048576 && on.h2 - on.h0 < 1.5 * 1048576, `on ${mb(on.h1)} vs off ${mb(off.h1)}; after close ${mb(on.h2)} vs before ${mb(on.h0)}`);
 check('memory run: display behind the real score (30 s delay working)', on.shown !== on.real, `shown ${on.shown}, real ${on.real}`);
+check('no page reload / renderer crash during the run', pageEvents.length === 0, pageEvents.join(' | '));
 check('0 console errors / page errors', errors.length === 0, errors.slice(0, 5).join(' | '));
 console.log(`\n${fails ? 'FAIL' : 'PASS'}: ${fails} failure(s). Screenshots in ${OUT}`);
 await browser.close(); srv.close(); process.exit(fails ? 1 : 0);
