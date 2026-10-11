@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 // Headlines slide screenshots (run from repo root):
-//   node tools/shoot-news.mjs [preview.html] [--out=DIR] [--size=1280x720] [--tv] [--modes=,nfl,cfb] [--frames=3]
+//   node tools/shoot-news.mjs [preview.html] [--out=DIR] [--size=1280x720] [--tv] [--modes=,nfl,cfb] [--frames=3] [--heroes]
+// --heroes: one shot per hero story (blurb + quote), with the story text printed for review.
 // One shot per sport mode ('' = normal rotation), plus --frames hero frames ~7 s apart. Prints image/req stats.
 import http from 'node:http'; import fs from 'node:fs'; import path from 'node:path'; import { fileURLToPath } from 'node:url';
 import puppeteer from 'puppeteer-core';
@@ -8,7 +9,7 @@ const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const args = process.argv.slice(2), opt = k => { const a = args.find(a => a.startsWith('--' + k + '=')); return a == null ? null : a.split('=').slice(1).join('='); };
 const FILE = args.find(a => /\.html$/.test(a)) || 'preview.html';
 const [W, H] = (opt('size') || '1280x720').split('x').map(Number);
-const MODES = (opt('modes') ?? ',nfl').split(','), FRAMES = +(opt('frames') || 1), TV = args.includes('--tv');
+const MODES = (opt('modes') ?? ',nfl').split(','), FRAMES = +(opt('frames') || 1), TV = args.includes('--tv'), HEROES = args.includes('--heroes');
 const OUT = path.resolve(opt('out') || path.join(REPO, 'tools', 'out', new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19) + '-news'));
 fs.mkdirSync(OUT, { recursive: true });
 const srv = http.createServer((q, s) => { const f = path.join(REPO, decodeURIComponent(q.url.split('?')[0])); if (!f.startsWith(REPO)) { s.writeHead(403); return s.end(); }
@@ -30,6 +31,16 @@ for (const mode of MODES) {
   for (let f = 0; f < FRAMES; f++) {
     await sleep(f === 0 ? 5000 : 7000);
     const file = path.join(OUT, `news-${mode || 'all'}${FRAMES > 1 ? '-' + (f + 1) : ''}${TV ? '-tv' : ''}.png`); await page.screenshot({ path: file }); console.log(file);
+  }
+  if (HEROES) {
+    await sleep(3000); // article text for all shown stories
+    const n = await page.evaluate(() => nwState.items.length);
+    for (let i = 0; i < n; i++) {
+      await page.evaluate(i => nwHero(nwState.gen, i), i); await sleep(1800);
+      const file = path.join(OUT, `news-${mode || 'all'}-hero${i + 1}${TV ? '-tv' : ''}.png`); await page.screenshot({ path: file });
+      const t = await page.evaluate(() => { const q = s => (document.querySelector(s) || {}).textContent || ''; return { title: q('#nw-copy .nw-title'), blurb: q('#nw-copy .nw-blurb'), quote: q('#nw-copy .nw-quote'), ms: getComputedStyle(document.getElementById('nw-hero')).getPropertyValue('--nw-ms').trim(), src: (nwTxt[nwState.items[nwState.i].id] || {}).src || '' }; });
+      console.log(file + '\n   ' + JSON.stringify(t));
+    }
   }
   const info = await page.evaluate(() => { const s = document.getElementById('news-screen'); return { mode: smActive(), head: (s.querySelector('.screen-header') || {}).textContent, imgs: s.querySelectorAll('img').length, stories: (window.nwState && nwState.items || []).length }; });
   console.log(JSON.stringify({ ...info, imagesLoaded: imgs.length - n0, errors }));

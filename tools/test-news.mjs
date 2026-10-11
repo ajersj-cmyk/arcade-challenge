@@ -5,6 +5,9 @@
 //  photo, combiner-resized images + lazy thumbs, hero rotation every 7 s and slide time = stories x 7 s, Ken Burns only in
 //  Full (none in the TV app), fits above the ticker at 720p + 1080p, sport mode fetches only its feed, rss2json fallback
 //  when ESPN is down, remote nav still moves on, 0 console errors.
+//  Story blurbs: ESPN article text (content.core.api.espn.com) -> 2-3 whole sentences, embeds/HTML/dateline stripped, entities
+//  decoded, a verbatim key quote, ESPN description fallback (no story / premium), one-line Up Next blurbs, 7/10/12 s per story,
+//  only the shown stories fetched (cached), copy never over the chips at 720p/1080p.
 import http from 'node:http'; import fs from 'node:fs'; import path from 'node:path'; import { fileURLToPath } from 'node:url';
 import puppeteer from 'puppeteer-core';
 const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -20,16 +23,27 @@ let fails = 0; const check = (n, ok, d) => { if (!ok) fails++; console.log(`${ok
 const ago = m => new Date(Date.now() - m * 60000).toISOString();
 const img = (id, w = 576, h = 324) => [{ type: 'header', width: w, height: h, url: `https://a.espncdn.com/photo/2026/1009/${id}_${w}x${h}_${w * 9 === h * 16 ? "16-9" : "3-2"}.jpg` }];
 const team = (id, d, sh) => ({ type: 'team', teamId: id, description: d, team: { id, description: d, shortDisplayName: sh } });
+const api = id => ({ api: { self: { href: `http://content.core.api.espn.com/v1/sports/news/${id}` } } });
+const S1 = "The Carolina Hurricanes acquired defenseman Jordan Example from the San Jose Sharks on Sunday for a 2027 second-round pick. The 26-year-old has 14 points in 20 games this season.";
+const Q1 = "\u201cHe's a big, mobile guy who can move the puck, and that's exactly what we needed,\u201d Brind'Amour said.";
+const S4 = "Bears quarterback Caleb Example said Sunday the offense is finally clicking. Chicago has scored on 9 of its last 12 drives. It was the team's best stretch since 2019.";
+const STORIES = {
+  1: '<p><video1></p>\n<p>RALEIGH, N.C. -- The <a href="https://www.espn.com/nhl/team/_/name/car">Carolina Hurricanes</a> acquired defenseman <a href="x">Jordan Example</a> from the San Jose Sharks on Sunday for a 2027 second-round pick. The 26-year-old has 14 points in 20 games this season.</p>\n<p><photo1></p>\n' +
+     '<p>Example is expected to join the team in time for Tuesday&#39;s game against the Flyers, according to coach Rod Brind&#39;Amour. He will wear No. 44.</p>\n<p>&#8220;He&#39;s a big, mobile guy who can move the puck, and that&#39;s exactly what we needed,&#8221; Brind&#39;Amour said.</p>\n<p>More later.</p>',
+  4: '<p>LAKE FOREST, Ill. -- Bears quarterback <a href="x">Caleb Example</a> said Sunday the offense is finally clicking. Chicago has scored on 9 of its last 12 drives. It was the team&#39;s best stretch since 2019. The Bears play the Packers next week at Lambeau Field in a game with big playoff stakes.</p>',
+  6: '<p>This premium story text must never be shown.</p>',
+};
+let artReqs = [];
 const FEEDS = {
   'hockey/nhl': [
-    { id: 1, type: 'HeadlineNews', headline: 'Hurricanes acquire defenseman Jordan Example from Sharks - ESPN', description: 'Carolina adds depth.', published: ago(12), images: img('r1'), categories: [team(12, 'Carolina Hurricanes', 'Hurricanes'), { type: 'athlete', athleteId: 99 }] },
-    { id: 2, type: 'Story', headline: "Sources: Senators' Eklund out for 'extended' period with ankle injury", description: '', published: ago(190), images: [], categories: [team(14, 'Ottawa Senators', 'Senators')] },
+    { id: 1, type: 'HeadlineNews', headline: 'Hurricanes acquire defenseman Jordan Example from Sharks - ESPN', description: 'Carolina adds depth.', published: ago(12), images: img('r1'), links: api(1), categories: [team(12, 'Carolina Hurricanes', 'Hurricanes'), { type: 'athlete', athleteId: 99 }] },
+    { id: 2, type: 'Story', headline: "Sources: Senators' Eklund out for 'extended' period with ankle injury", description: '', published: ago(190), images: [], links: api(2), categories: [team(14, 'Ottawa Senators', 'Senators')] },
   ],
   'football/nfl': [
     { id: 3, type: 'Story', headline: 'Fantasy football Week 6 cheat sheet: start em, sit em', published: ago(5), images: img('r3'), categories: [] },
-    { id: 4, type: 'HeadlineNews', headline: 'Bears quarterback says the offense is finally clicking after a long stretch of slow starts and stalled drives in the red zone this year', description: '', published: ago(40), images: img('r4'), categories: [team(3, 'Chicago Bears', 'Bears')] },
+    { id: 4, type: 'HeadlineNews', headline: 'Bears quarterback says the offense is finally clicking after a long stretch of slow starts and stalled drives in the red zone this year', description: '', published: ago(40), images: img('r4'), links: api(4), categories: [team(3, 'Chicago Bears', 'Bears')] },
     { id: 5, type: 'Media', headline: 'Watch the wildest catch of the season from Thursday night', published: ago(300), images: img('r5'), categories: [] },
-    { id: 6, type: 'Story', headline: 'Broncos sign veteran pass rusher to one-year deal', published: ago(2880), images: img('r6', 600, 400).concat(img('r6b')), categories: [team(7, 'Denver Broncos', 'Broncos')] },
+    { id: 6, type: 'Story', headline: 'Broncos sign veteran pass rusher to one-year deal', description: 'Denver adds a veteran edge rusher on a one-year deal worth up to $8 million.', premium: true, links: api(6), published: ago(2880), images: img('r6', 600, 400).concat(img('r6b')), categories: [team(7, 'Denver Broncos', 'Broncos')] },
   ],
 };
 let down = false, rssHits = 0;
@@ -43,6 +57,9 @@ async function open({ w = 1280, h = 720, tv = false, mode = '' } = {}) {
     if (m) { newsReqs.push(m[1] + (/team=/.test(u) ? ' team' : ''));
       if (down) return req.respond({ status: 503, headers: { 'Access-Control-Allow-Origin': '*' }, body: 'down' });
       return req.respond({ status: 200, contentType: 'application/json', headers: { 'Access-Control-Allow-Origin': '*' }, body: JSON.stringify({ articles: /team=/.test(u) ? [] : (FEEDS[m[1]] || []) }) }); }
+    const am = /(?:content|now)\.core\.api\.espn\.com\/v1\/sports\/news\/(\d+)/.exec(u);
+    if (am) { artReqs.push(+am[1]); return STORIES[am[1]] && am[1] !== '6' ? req.respond({ status: 200, contentType: 'application/json', headers: { 'Access-Control-Allow-Origin': '*' }, body: JSON.stringify({ headlines: [{ id: +am[1], story: STORIES[am[1]] }] }) })
+      : req.respond({ status: 404, headers: { 'Access-Control-Allow-Origin': '*' }, body: '{}' }); }
     if (/rss2json/.test(u)) { rssHits++; return req.respond({ status: 200, contentType: 'application/json', headers: { 'Access-Control-Allow-Origin': '*' }, body: JSON.stringify({ status: 'ok', items: [{ title: 'Fallback headline from the RSS feed works fine', pubDate: '2026-10-09 20:00:00', link: 'x' }] }) }); }
     if (/a\.espncdn\.com\/(combiner|photo|i\/)/.test(u) && req.resourceType() === 'image') return req.respond({ status: 200, contentType: 'image/svg+xml', body: '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="9"><rect width="16" height="9" fill="#357"/></svg>' });
     req.continue(); });
@@ -50,7 +67,7 @@ async function open({ w = 1280, h = 720, tv = false, mode = '' } = {}) {
   await page.goto(base + FILE, { waitUntil: 'load' });
   await page.waitForFunction(() => typeof arcadeNav !== 'undefined' && arcadeNav.current, { timeout: 90000 });
   await page.evaluate(() => { arcadeNav.paused = true; nwCache.at = 0; });
-  newsReqs.length = 0;
+  newsReqs.length = 0; artReqs = [];
   await page.evaluate(() => { arcadeNav.paused = false; navGoTo('news'); });
   await page.waitForFunction(() => document.getElementById('news-screen').style.display === 'flex' && (document.getElementById('nw-hero') || document.querySelector('.nw-empty')), { timeout: 20000 });
   await sleep(800);
@@ -63,6 +80,10 @@ const state = page => page.evaluate(() => {
     heroImg: (q('.nw-ph.on img') || {}).src || '', art: !!q('.nw-ph.on .nw-art'), kb: !!q('.nw-ph.on.kb'), kbAnim: q('.nw-ph.on img') ? getComputedStyle(q('.nw-ph.on img')).animationName : '',
     rows: document.querySelectorAll('#nw-rail .nw-row').length, lazy: [...document.querySelectorAll('#nw-rail .nw-th img')].every(i => i.loading === 'lazy' || i.classList.contains('logo')),
     thumbs: [...document.querySelectorAll('#nw-rail .nw-th img')].map(i => i.src), imgCount: document.querySelectorAll('#news-screen img').length,
+    blurb: (q('#nw-copy .nw-blurb') || {}).textContent || '', quote: (q('#nw-copy .nw-quote') || {}).textContent || '', ms: getComputedStyle(q('#nw-hero') || document.body).getPropertyValue('--nw-ms').trim(),
+    copyTop: r(q('#nw-copy')) ? r(q('#nw-copy')).top : 0, copyBottom: r(q('#nw-copy')) ? r(q('#nw-copy')).bottom : 0, chipsBottom: r(q('#nw-chips')) ? r(q('#nw-chips')).bottom : 0,
+    blurbPx: q('#nw-copy .nw-blurb') ? parseFloat(getComputedStyle(q('#nw-copy .nw-blurb')).fontSize) : 0,
+    rd: [...document.querySelectorAll('#nw-rail .nw-rd')].map(e => ({ t: e.textContent, one: e.scrollHeight <= e.clientHeight + 2 })),
     ago: (q('.nw-ago') || {}).textContent, head: q('#news-screen .screen-header').textContent,
     stageBottom: r(q('#news-stage')).bottom, tickerTop: r(q('#sports-ticker')).top, heroBottom: r(q('#nw-hero')).bottom, railBottom: r(q('#nw-rail')).bottom, current: arcadeNav.current };
 });
@@ -88,15 +109,36 @@ const state = page => page.evaluate(() => {
   check('image count capped (<= 8 in the slide)', s.imgCount <= 8, s.imgCount);
   check('Ken Burns zoom in Full', s.kb && s.kbAnim === 'nw-kb', s.kbAnim);
   check('fits above the ticker at 720p', s.stageBottom <= s.tickerTop && s.heroBottom <= s.tickerTop, `${s.stageBottom} / ${s.tickerTop}`);
+  check('blurb = the first whole sentences of the ESPN story (verbatim; dateline, links, <video1>/<photo1> stripped)', s.blurb === S1, s.blurb);
+  check('key quote = the first quote paragraph, verbatim with attribution, entities decoded', s.quote === Q1, s.quote);
+  check('blurb + quote: hero gets 12 s; blurb text >= 20 px at 720p', s.ms === '12000ms' && s.blurbPx >= 20, s.ms + ' ' + s.blurbPx + 'px');
+  check('720p: copy (title + blurb + quote) stays below the chips and inside the hero', s.copyTop >= s.chipsBottom && s.copyBottom <= s.heroBottom, `${s.copyTop} >= ${s.chipsBottom}, ${s.copyBottom} <= ${s.heroBottom}`);
+  const tx = await page.evaluate(() => nwState.items.map(i => ({ t: i.title, b: (nwTxt[i.id] || {}).blurb || '', q: (nwTxt[i.id] || {}).quote || '', src: (nwTxt[i.id] || {}).src })));
+  const b4 = tx.find(x => /Bears/.test(x.t)), b6 = tx.find(x => /Broncos/.test(x.t)), b2 = tx.find(x => /Eklund/.test(x.t));
+  check('3 short sentences, abbreviation "Ill." dateline stripped, cut before the 4th sentence', b4 && b4.b === S4, b4 && b4.b);
+  check('premium story: ESPN description instead of the article text', b6 && b6.src === 'desc' && /^Denver adds/.test(b6.b) && !/premium/.test(b6.b), JSON.stringify(b6));
+  check('no story text and no description: no blurb (7 s)', b2 && !b2.b, JSON.stringify(b2));
+  check('article text fetched only for the shown stories (<= 5, once each)', artReqs.length <= 5 && new Set(artReqs).size === artReqs.length && artReqs.every(id => s.items.length >= 1), artReqs.join(','));
+  check('Up Next: one-line ESPN description where there is one', s.rd.length >= 1 && s.rd.every(x => x.one) && s.rd.some(x => /^Denver adds/.test(x.t)), JSON.stringify(s.rd));
   await sleep(7000); s = await state(page);
-  check('hero rotates to story 2 after 7 s', s.i === 1, 'i=' + s.i);
+  check('hero 1 (blurb + quote) still up after 7 s', s.i === 0, 'i=' + s.i);
+  await sleep(5200); s = await state(page);
+  check('hero rotates to story 2 after 12 s', s.i === 1, 'i=' + s.i);
   // story without a photo → team logo art
   const ni = await page.evaluate(() => nwState.items.findIndex(i => !i.img));
   await page.evaluate(i => nwHero(nwState.gen, i), ni); s = await state(page);
   check('no photo: team logo art fallback', s.art && /INJURY UPDATE/.test(s.kick), s.kick);
-  const total = await page.evaluate(() => nwState.items.length * NW_STORY_MS);
-  await sleep(total - 7800 - 1000 + 2500); s = await state(page);
-  check('slide hands off after stories x 7 s', s.current !== 'news', 'current=' + s.current + ' total=' + total);
+  // the chain restarted at story ni: the slide ends when the last story has had its own time
+  const rest = await page.evaluate(i => nwState.items.slice(i).reduce((t, it) => t + nwMs(it), 0), ni);
+  const per = await page.evaluate(() => nwState.items.map(nwMs));
+  check('per-story time: 12 s with blurb + quote, 10 s blurb, 7 s none; 5 stories <= 60 s', per.length === 5 && per.every(x => [7000, 10000, 12000].includes(x)) && per.reduce((a, b) => a + b, 0) <= 60000, per.join(','));
+  await sleep(rest - 1500); s = await state(page);
+  check('still on the slide until the last story has had its time', s.current === 'news', 'current=' + s.current);
+  await sleep(4000); s = await state(page);
+  check('slide hands off after the last story', s.current !== 'news', 'current=' + s.current + ' rest=' + rest);
+  const n0 = artReqs.length; await page.evaluate(() => { arcadeNav.paused = true; navGoTo('news'); }); await sleep(3000);
+  check('back on the slide: article text from the cache (no new requests)', artReqs.length === n0, `${n0} -> ${artReqs.length}`);
+  await page.evaluate(() => { arcadeNav.paused = false; });
   check('0 console errors (Full)', errors.length === 0, errors.join(' | '));
   await page.close();
 }
@@ -106,6 +148,7 @@ const state = page => page.evaluate(() => {
   const s = await state(page);
   check('TV app: still photo (no Ken Burns)', !s.kb && s.kbAnim === 'none', s.kbAnim);
   check('fits above the ticker at 1080p', s.stageBottom <= s.tickerTop, `${s.stageBottom} / ${s.tickerTop}`);
+  check('1080p TV: blurb + quote shown, copy below the chips and inside the hero', s.blurb === S1 && s.quote === Q1 && s.copyTop >= s.chipsBottom && s.copyBottom <= s.heroBottom, `${s.copyTop} >= ${s.chipsBottom}`);
   check('0 console errors (TV)', errors.length === 0, errors.join(' | '));
   await page.close();
 }
