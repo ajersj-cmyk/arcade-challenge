@@ -195,7 +195,7 @@ The old `props` LIVE LEADERS slide (ESPN live stat leaders dressed up as props) 
 | `command-screen` | AHLERS COMMAND CENTER | Greenville NC weather (Open-Meteo) + top-2 "marquee" games by weight | 15 s |
 | `soccer-screen` | GLOBAL SOCCER MATCHES | World Cup/EPL/UCL scoreboards, fetched again | scroll rule / 6 s |
 | `tvguide-screen` | LIVE ON TV | live games with a broadcast; network favicons via Google s2 | scroll rule / 6 s |
-| `news-screen` | TODAY'S HEADLINES | ESPN league news with photos (see §3c); rss2json Yahoo/CBS only if every ESPN feed fails | 5 hero stories × 7 s (= 35 s) / 6 s |
+| `news-screen` | TODAY'S HEADLINES | ESPN league news with photos (see §3c); rss2json Yahoo/CBS only if every ESPN feed fails | 5 hero stories × 7 / 10 / 12 s (no text / blurb / blurb + quote; ≤ 60 s) / 6 s |
 | `odds-screen` | TODAY'S LINES | upcoming games with ESPN spread/O-U/ML | scroll rule / 6 s |
 | `futures-screen` | FUTURES | ESPN core futures: Super Bowl, CFB title, NBA title, World Series, Stanley Cup (top 8 each), cached 24 h (`ahlersFutures4`) | scroll rule (18 s) / 8 s |
 | `nflfut-screen` | NFL FUTURES | Super Bowl (8), AFC/NFC champion (6), 8 divisions (4), from `futures.json` (§4a) | scroll rule / 6 s "NO ODDS POSTED" |
@@ -283,10 +283,23 @@ A broadcast-style news segment instead of the old scrolling list. Code: `showNew
   WATCH (Media), REPORT. Relative time "23 MIN AGO".
 - **Layout:** hero 16:9 photo (left, `min(110vh, 63vw)` wide) with chips, kicker, 3-line condensed headline, team logo +
   athlete headshot, progress bar; right rail "UP NEXT" with 4 photo cards. Stage height `100vh - ticker - 15.5vh` (fits above
-  the ticker at 720p/1080p). Hero changes every 7 s (`NW_STORY_MS`, own `nwState.timer` with a slide-gen guard), slide = stories × 7 s.
+  the ticker at 720p/1080p). Each hero gets 7 s (`NW_STORY_MS`, no text), 10 s with a blurb (`NW_BLURB_MS`), 12 s with blurb +
+  quote (`NW_QUOTE_MS`) on its own `nwState.timer` (slide-gen guard); the last story hands off with `slideTimer = slideTimeout(...)`
+  (safety net: stories × 12 s + 3 s).
+- **Story blurb + key quote (hero only):** ESPN's own article text from `links.api.self.href` → the story id, fetched from
+  `now.core.api.espn.com/v1/sports/news/{id}` (falls back to `content.core…`; in a busy page Chrome can reuse another ESPN
+  connection for content.core and get a 302 without CORS) → `headlines[0].story`. Only the ≤ 5 shown stories, in parallel
+  when the slide starts (story 1 waits ≤ 2.5 s), cached per story id (`nwTxt`, max 40, strings only). `nwStoryText`: split into
+  paragraphs, ESPN embeds (`<photo1>`, `<video1>`) / HTML stripped, entities decoded, skip notes/labels/lines without an end
+  mark, dateline ("CHICAGO -- ") removed; blurb = first 2–3 whole sentences (≤ ~270 chars, abbreviations/initials/a.m. don't
+  end a sentence); quote = the first paragraph with a ≥ 5-word direct quote, ≤ 190 chars, verbatim (attribution stays if it is
+  in that paragraph). Never paraphrased; no story text (video, premium/ESPN+, error) → ESPN's `description`; nothing → none.
+  If the copy would reach the chips the whole quote is dropped (never cut). Up Next cards stay as they were: at 720p the rail's
+  text column is ~13–20 characters wide, so a description never fit whole there.
 - **TV-light:** crossfade by opacity; Ken Burns zoom only when `!bxLite()` (none in the TV app / reduced motion); at most one
   960x540 hero kept decoded (+ the next one preloaded); thumbs `loading=lazy` at 320x180; no photo → team logo art.
-- Test: `node tools/test-news.mjs [file]` (mocked feeds). Screenshots: `node tools/shoot-news.mjs [file] --modes=,nfl,cfb --frames=2 [--tv]`.
+- Test: `node tools/test-news.mjs [file]` (mocked feeds + article text). Screenshots: `node tools/shoot-news.mjs [file] --modes=,nfl,cfb --frames=2 [--tv]`;
+  `--heroes` shoots every hero story and prints its blurb/quote for review.
 
 ### 3d. Family pick'em + phone remote (PR flynn/pickem)
 
@@ -384,6 +397,7 @@ None of them need an API key, and **no keys or tokens are embedded**. The code a
 | futures.json (same origin) | `futures.json?t=<30-min bucket>`, written daily by `.github/workflows/futures.yml` | each football futures slide, re-checked every 30 min | NFL/CFB futures + awards (§4a) |
 | Action Network | `https://api.actionnetwork.com/web/v1/leagues/{1=NFL,2=NCAAF,3=NHL}/futures/available` and `.../futures/{type}?bookIds=15,68,69,75,123`. CORS echoes the page origin, no key. | **browser fallback only** (file missing or > ~2 days old), cached 3 h (`ahlersFootballFutures2`) | NFL/CFB/NHL futures |
 | ESPN news | `https://site.api.espn.com/apis/site/v2/sports/{football/nfl, football/college-football, hockey/nhl, basketball/nba, baseball/mlb, basketball/mens-college-basketball}/news?limit=8` (+ `&team={id}` for up to 2 favourite teams playing today; limit 20 in a sport mode). CORS `*`, ~10 KB gz each | news slide; cached 5 min in memory | Headlines (§3c) |
+| ESPN article text | `https://now.core.api.espn.com/v1/sports/news/{id}` (fallback `content.core.api.espn.com`), CORS `*`, ~6–20 KB each | ≤ 5 per news slide, cached per story id | Headlines hero blurb + quote (§3c) |
 | ESPN image combiner | `https://a.espncdn.com/combiner/i?img=/photo/...jpg&w=960&h=540&scale=crop&cquality=70` (hero), `w=320&h=180` (cards), team logos `img=/i/teamlogos/{nfl,nhl,nba,mlb,ncaa}/500/{id}.png&w=120&h=120`, headshots `img=/i/headshots/{league}/players/full/{id}.png&w=120&h=88` | Headlines slide | resized photos (16 KB instead of 30-200 KB) |
 | ESPN CBB rankings | `.../basketball/mens-college-basketball/rankings` (CORS `*`, ~290 KB) | rankings slide in hoops mode | AP top 25 |
 | fantasy.json (same origin) | `fantasy.json?t=<30-min bucket>`, written daily by the futures workflow (§4b) | fantasy slide | projections + pickups |
@@ -707,7 +721,7 @@ next slide shows right away.
 - [ ] Every settings control persists to `localStorage.ahlersArcadeSettings` and takes effect (toggles, favourite teams, marquee, speed)
 - [ ] Broadcast wipe + lower third on every slide change, never over Gamecast/celebrations, no wipe on the phone remote page
 - [ ] Pick'em: slide fits above the ticker, picks lock at start, phone remote round trip (`tools/test-pickem.mjs`)
-- [ ] Headlines: photo hero rotates, fits above the ticker, no Ken Burns in the TV app (`tools/test-news.mjs`)
+- [ ] Headlines: photo hero rotates, fits above the ticker, no Ken Burns in the TV app; hero blurb/quote are ESPN's verbatim text (`tools/test-news.mjs`)
 - [ ] Slide rotation order and the skip-if-disabled logic. `live` always shows. No slide cut short (`tools/test-rotation.mjs`).
 - [ ] Every "advance later" uses `slideTimer = slideTimeout(fn, ms)` (cancels the previous timer, gen-guarded), never a raw `setTimeout` into `slideTimer`
 - [ ] Each slide renders its data or its empty-state message ("NO LIVE GAMES", "NO UFC CARD", "… FEED DOWN", etc.) and advances
