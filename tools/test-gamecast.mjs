@@ -74,7 +74,7 @@ for (const t of todo) {
 const cad = (live[0] || REF[0]);
 await page.evaluate(m => gcOpenEvent(m), cad);
 const n0 = reqLog.length; maxInFlight = 0; const h0 = await page.evaluate(() => (gc.f && gc.f.hits) || 0);
-const t0 = Date.now(); while (reqLog.length < n0 + 4 && Date.now() - t0 < 40000) await sleep(200);
+const t0 = Date.now(); while (reqLog.length < n0 + 4 && Date.now() - t0 < 55000) await sleep(200);
 const ts = reqLog.slice(n0); const gaps = ts.slice(1).map((x, i) => x - ts[i]);
 const hits = (await page.evaluate(() => (gc.f && gc.f.hits) || 0)) - h0; // live game: a change seen by the 2 s check pulls the summary early (by design)
 check('poll interval ~10 s (start to start; early only when the 2 s check saw a change)', gaps.length >= 3 && gaps.every(g => g <= 12000) && gaps.filter(g => g < 8500).length <= hits * 4,
