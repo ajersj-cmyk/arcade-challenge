@@ -345,6 +345,10 @@
         .gc-chip { font-size: 2.2vh; padding: 0.4vh 1.2vh; border: 1px solid currentColor; border-radius: 0.8vh; }
         .gc-net { font-size: 2.3vh; color: #facc15; max-width: 24vw; overflow: hidden; text-overflow: ellipsis; }
         .gc-top .gc-spacer { flex: 1 1 auto; }
+        .gc-tvd { font-size: 1.9vh; font-weight: 900; letter-spacing: 0.08em; color: #000; background: #ffe600; border-radius: 0.8vh; padding: 0.3vh 1vh; white-space: nowrap; }
+        .gc-tvd.sync { background: transparent; color: #ffe600; border: 2px solid #ffe600; animation: gcTvdPulse 1.2s ease-in-out infinite; }
+        @keyframes gcTvdPulse { 50% { opacity: 0.45; } }
+        .gc-syncing { font-size: 3vh; font-weight: 900; color: #ffe600; letter-spacing: 0.06em; }
         #gc-updated { font-size: 2vh; color: rgba(255,255,255,0.75); display: flex; align-items: center; gap: 0.6vw; }
         #gc-updated.bad { color: #ff007f; }
         .gc-dot { width: 1.2vh; height: 1.2vh; border-radius: 50%; background: #39ff14; display: inline-block; box-shadow: 0 0 1vh #39ff14; }
@@ -1063,6 +1067,7 @@
                         </div>
                         <input type="range" id="set-celebrateDelay" min="0" max="60" step="1" tabindex="-1" aria-hidden="true" style="display:none;">
                     </div>
+                    <div class="toggle-row"><span>Delay Everything to Match My TV <span style="font-size:1.6vh; opacity:0.7;">(Gamecast score, clock, plays, field, strike zone and box score wait the TV delay too, so nothing spoils the broadcast)</span></span> <input type="checkbox" id="set-tvDelayAll" onchange="updateSettings()"></div>
                     <div style="margin-bottom: 2vh;">
                         <div style="font-size: 1.8vh; color: #ffe600; margin-bottom: 0.5vh; text-transform: uppercase;">Alerts for &#9733; teams (smaller banners, same delay):</div>
                         <div>
@@ -1180,6 +1185,7 @@
             <span class="gc-chip neon-text-cycle" id="gc-league"></span>
             <span class="gc-net" id="gc-net"></span>
             <span class="gc-spacer"></span>
+            <span class="gc-tvd" id="gc-tvd" hidden></span>
             <span id="gc-updated"></span>
             <span class="gc-hint">&#9664; &#9654; GAME &nbsp;&bull;&nbsp; OK &#9733; &nbsp;&bull;&nbsp; BACK CLOSE</span>
             <button type="button" class="gc-close" id="gc-close" onclick="gcClose()">&#10005; CLOSE</button>
@@ -1213,7 +1219,7 @@
             <div class="gs-sub" id="gs-sub"></div>
             <div class="gs-res" id="gs-res"></div>
             <div class="gs-row"><button type="button" class="gs-btn big" id="gs-ok" onclick="gsMark()">OK</button><button type="button" class="gs-btn" id="gs-mode" onclick="gsMode()">USE A PLAY INSTEAD</button><button type="button" class="gs-btn" id="gs-again" onclick="gsStart()" hidden>SYNC AGAIN</button></div>
-            <div class="gs-row"><button type="button" class="gs-btn" id="gs-minus" onclick="gsNudge(-1)">&minus;1s</button><span id="gs-dval"></span><button type="button" class="gs-btn" id="gs-plus" onclick="gsNudge(1)">+1s</button><button type="button" class="gs-btn" id="gs-test" onclick="gsTest()">TEST</button><button type="button" class="gs-btn" id="gs-src" onclick="gsSrc()">CABLE</button><button type="button" class="gs-btn" id="gs-done" onclick="gsClose()">DONE</button></div>
+            <div class="gs-row"><button type="button" class="gs-btn" id="gs-minus" onclick="gsNudge(-1)">&minus;1s</button><span id="gs-dval"></span><button type="button" class="gs-btn" id="gs-plus" onclick="gsNudge(1)">+1s</button><button type="button" class="gs-btn" id="gs-test" onclick="gsTest()">TEST</button><button type="button" class="gs-btn" id="gs-src" onclick="gsSrc()">CABLE</button><button type="button" class="gs-btn" id="gs-all" onclick="gcDeToggle()">DELAY ALL: ON</button><button type="button" class="gs-btn" id="gs-done" onclick="gsClose()">DONE</button></div>
             <div class="gs-hint">OK selects &nbsp;&bull;&nbsp; &#9664; &#9650; &#9660; &#9654; move &nbsp;&bull;&nbsp; BACK closes</div>
         </div></div>
     </div>
@@ -1383,7 +1389,7 @@
             showWorldCup:true, showEPL:true, showUCL:true, showATP:true, showWTA:true, showNFL:true, showNBA:true, showNHL:true, showMLB:true, showCFB:true, showCBB:true, showCLB:true,
             cbb50:true, cfb75:true, clb50:true, apiBase:"https://site.api.espn.com/apis",
             mySquadTeams: "Carolina Hurricanes, Duke, ECU, East Carolina",
-            celebrate: true, celebrateDelay: 0, celFull: false, alertRedzone: true, alertPP: true, alertStart: true, alertLead: true, alertBig: true, alertInt: true, alertFumble: true, alertDowns: true, alertBlock: true,
+            celebrate: true, celebrateDelay: 0, tvDelayAll: true, celFull: false, alertRedzone: true, alertPP: true, alertStart: true, alertLead: true, alertBig: true, alertInt: true, alertFumble: true, alertDowns: true, alertBlock: true,
             marqueeMessage: "WELCOME TO AHLERS ARCADE",
             tickerSpeed: 5
         };
@@ -3548,7 +3554,7 @@
         // and every timer/request stops on close. Only the newest response is kept, and it is dropped once rendered, so it
         // stays light in memory (planned Android TV WebView shell).
         var GC_POLL_MS = 10000, GC_TIMEOUT_MS = 8000, GC_POST_IDLE_MS = 600000, GC_PRE_IDLE_MS = 1800000;
-        var gc = { open: false, key: null, meta: null, state: null, timer: null, ctrl: null, reqId: 0, fails: 0, polls: 0,
+        var gc = { open: false, key: null, meta: null, state: null, timer: null, ctrl: null, reqId: 0, fails: 0, polls: 0, dq: [],
                    lastOk: 0, lastTry: 0, endedAt: 0, lastInput: 0, pollMs: GC_POLL_MS, scrollTimer: null, scrollHold: 0, html: {}, teams: {}, renderErr: null };
         var gcRegistry = {}, gcOrder = [];
 
@@ -3865,6 +3871,7 @@
             gsTxt('gs-dval', 'TV DELAY ' + d + 's');
             gsTxt('gs-chan', 'saved for ' + gsChanName());
             gsTxt('gs-src', tvd.src === 'stream' ? 'STREAMING' : 'CABLE');
+            gsTxt('gs-all', 'DELAY ALL: ' + (settings.tvDelayAll === false ? 'OFF' : 'ON'));
         }
         function gsOpen() {
             if (!gc.open) return;
@@ -3947,7 +3954,7 @@
             var r;
             if (raw < -0.5) r = 'SYNCED \u00b7 TV is ' + Math.round(-raw) + 's AHEAD of ESPN \u00b7 celebrations show right away';
             else if (v === 0) r = 'SYNCED \u00b7 TV matches ESPN \u00b7 celebrations show right away';
-            else r = 'SYNCED \u00b7 TV is ' + Math.round(raw) + 's behind \u00b7 celebrations wait ' + v + 's' + (raw > GS_MAX_S + 0.5 ? ' (max)' : '');
+            else r = 'SYNCED \u00b7 TV is ' + Math.round(raw) + 's behind \u00b7 ' + (settings.tvDelayAll === false ? '' : 'Gamecast + ') + 'celebrations wait ' + v + 's' + (raw > GS_MAX_S + 0.5 ? ' (max)' : '');
             gsTxt('gs-res', r);
             gsShow('gs-ok', false); gsShow('gs-again', true);
             var a = gsEl('gs-again'), ae = document.activeElement; if (document.body.classList.contains('nav-active') && (!ae || ae === gsEl('gs-ok') || ae === document.body)) gsEl('gs-test').focus();
@@ -4022,7 +4029,8 @@
             var d = mine ? gcDelay() : Math.max(0, Math.min(GS_MAX_S, parseInt(settings.celebrateDelay, 10) || 0));
             // the delay counts from when the 2 s scoreboard check first saw the change (what SYNC TO TV measures against),
             // not from when the slower summary confirmed it
-            var from = mine && gc.trigAt && now - gc.trigAt < 20000 ? gc.trigAt : now;
+            var rp = mine ? gc.replay : null; // set while a snapshot is applied (gcApply / gcDeFast): times are from when it arrived
+            var from = rp ? (rp.trig && rp.trig <= rp.at && rp.at - rp.trig < 20000 ? rp.trig : rp.at) : (mine && gc.trigAt && now - gc.trigAt < 20000 ? gc.trigAt : now);
             ev.at = from + d * 1000 + ((ev.kind && ev.kind.hold) || 0);
             cel.pending.push(ev);
             celPump();
@@ -4222,6 +4230,7 @@
             el.classList.add('open'); el.setAttribute('aria-hidden', 'false');
             document.body.classList.add('gc-open');
             ['gc-plays-body', 'gc-stats-body', 'gc-players-body', 'gc-bxs-body'].forEach(function(id) { var b = document.getElementById(id); if (b) b.scrollTop = 0; });
+            gc.dq = []; gc.dPrev = null; gc.deShown = 0; gc.got1 = false; gc.deLive = meta.state === 'in'; gc.replay = null;
             gcRenderShell(meta);
             gcPoll();
             gcFastStart();
@@ -4247,6 +4256,7 @@
             document.body.classList.remove('gc-open');
             Object.keys(gc.html).forEach(function(id) { var n = document.getElementById(id); if (n) n.innerHTML = ''; }); // free the DOM
             gc.html = {}; gcApplyViews([]); gc.view = 0;
+            gc.dq = []; gc.dPrev = null; gcDeBadge(0);
             var ae = document.activeElement; if (ae && ae.closest && ae.closest('#gamecast')) ae.blur();
             if (lvNav.on) lvNavTouch(); // opened from the card picker: its ring is still on that card
             if (!arcadeNav.paused && arcadeNav.pending) { arcadeNav.pending = false; nextSlide(); } // rotation resumes where it left off
@@ -4361,9 +4371,10 @@
             // 4-12 s behind this feed on NHL goals; its scoring play ~20 s behind). The summary then sees the same score and
             // does not fire again; scorer names only appear if the summary had them first.
             if (f.celSc == null) f.celSc = sc;
-            else if (p && p.sc === sc && sc !== f.celSc && gc.celT && !gc.celFresh) {
+            else if (p && p.sc === sc && sc !== f.celSc && gc.celT && gc.got1) {
                 f.celSc = sc;
-                try { celObserve(gc.key, fam, state, [Object.assign({}, gc.celT[0], { score: a.score }), Object.assign({}, gc.celT[1], { score: h.score })], false, lp.text || '', true, st.name || '', null); } catch (e) {}
+                var fx = { fast: true, at: now, trig: gc.trigAt, cel: { fam: fam, state: state, teams: [Object.assign({}, gc.celT[0], { score: a.score }), Object.assign({}, gc.celT[1], { score: h.score })], hint: lp.text || '', stName: st.name || '' } };
+                if (gcDeOn() || gc.dq.length) { gc.dq.push(fx); gcDeTrim(); } else gcDeFast(fx);
             }
             if (!p || p.sig === cur.sig) return false;
             if (p.sc !== sc) {
@@ -4403,6 +4414,7 @@
         }
         function gcAutoScroll() {
             try { celClockTick(); } catch (e) {}
+            try { gcDeTick(false); } catch (e) {}
             if (!gc.open || Date.now() < gc.scrollHold) return;
             GC_SCROLLERS.forEach(function(id) {
                 var el = document.getElementById(id); if (!el || !el.offsetParent) return; // hidden view: leave its scroll alone
@@ -4479,10 +4491,11 @@
         function gcRenderShell(meta) {
             gcSet('gc-league', escHtml(meta.label || '') );
             gcSet('gc-net', meta.tv && meta.tv !== 'TBD' && meta.tv !== 'TV' ? '&#128250; ' + escHtml(meta.tv) : '');
-            var A = { name: meta.away, logo: meta.aLogo, score: meta.aScore, rec: '', color: '#00f0ff' }, H = { name: meta.home, logo: meta.hLogo, score: meta.hScore, rec: '', color: '#ff007f' };
+            var hide = settings.tvDelayAll !== false && meta.state === 'in'; // TV-delayed: the registry score may be ahead of the TV
+            var A = { name: meta.away, logo: meta.aLogo, score: hide ? '' : meta.aScore, rec: '', color: '#00f0ff' }, H = { name: meta.home, logo: meta.hLogo, score: hide ? '' : meta.hScore, rec: '', color: '#ff007f' };
             gcSet('gc-away', gcTeamHtml(A, 'away', meta)); gcSet('gc-home', gcTeamHtml(H, 'home', meta));
             celSync(meta, { id: meta.aId, abbr: meta.awayAbbr, full: meta.aFull || meta.away }, { id: meta.hId, abbr: meta.homeAbbr, full: meta.hFull || meta.home });
-            gcSet('gc-mid', '<div class="gc-pill ' + (meta.state === 'in' ? 'live' : '') + '">' + (meta.state === 'in' ? '&#9679; LIVE' : (meta.state === 'post' ? 'FINAL' : 'UPCOMING')) + '</div><div class="gc-clock">' + escHtml(meta.status || '') + '</div>');
+            gcSet('gc-mid', '<div class="gc-pill ' + (meta.state === 'in' ? 'live' : '') + '">' + (meta.state === 'in' ? '&#9679; LIVE' : (meta.state === 'post' ? 'FINAL' : 'UPCOMING')) + '</div><div class="gc-clock">' + (hide ? '' : escHtml(meta.status || '')) + '</div>');
             var wait = '<div class="gc-empty">LOADING GAMECAST&hellip;</div>';
             gcApplyViews([]); gcSet('gc-bxs-body', wait);
             gcSet('gc-line', ''); gcSet('gc-wp', ''); gcSet('gc-track', ''); var strip = document.getElementById('gc-strip'); if (strip) strip.style.display = 'none'; gcSet('gc-plays-body', wait); gcSet('gc-stats-body', wait); gcSet('gc-players-body', wait);
@@ -4495,53 +4508,137 @@
             return lg + info + sc;
         }
 
-        function gcRender(meta, d) {
+        // ===== DELAY EVERYTHING TO MATCH MY TV (settings.tvDelayAll, default ON) =====
+        // Each summary is turned into a small render snapshot right away (HTML per block + celebration inputs; the ~150 KB-1 MB
+        // parsed summary is dropped at once, and blocks unchanged since the previous snapshot share its string). While a live
+        // game is open with a TV delay, snapshots wait in gc.dq and are shown when (arrival + delay) is reached, so the score,
+        // clock, plays, trackers and box score never get ahead of the TV. Celebrations / alerts run when the snapshot is shown,
+        // timed from its arrival (celQueue + gc.replay), so the delay is never applied twice. The 2 s check and SYNC TO TV keep
+        // running in real time (they measure ESPN against the TV). Memory: <= GC_DE_MAX entries, ~GC_DE_CHARS of new HTML.
+        var GC_DE_MAX = 40, GC_DE_HARD = 60, GC_DE_CHARS = 1500000;
+        function gcDeOn() { return settings.tvDelayAll !== false && !!gc.deLive && gcDelay() > 0; }
+        function gcRender(meta, d) { gcDeIn(gcBuild(meta, d)); }
+        function gcDeIn(s) {
+            if (!gc.dq) gc.dq = [];
+            if (!gcDeOn() && !gc.dq.length) { gcApply(s, false); gcDeBadge(Date.now()); return; }
+            gc.dq.push(s); gcDeTrim(); gcDeTick(true);
+        }
+        function gcDeTrim() { // memory cap: drop the HTML of the oldest waiting snapshots first (their celebrations still run)
+            var q = gc.dq, tot = 0, i;
+            for (i = 0; i < q.length; i++) tot += q[i].html ? (q[i].sz || 0) : 0;
+            for (i = 0; i < q.length - 1 && (q.length > GC_DE_MAX || tot > GC_DE_CHARS); i++) {
+                if (!q[i].html) continue;
+                var nx = null; for (var j = i + 1; j < q.length; j++) if (q[j].html) { nx = q[j]; break; }
+                if (!nx) break;
+                tot -= q[i].sz || 0; nx.sz = (nx.sz || 0) + (q[i].sz || 0); q[i].html = null; q[i].A = q[i].H = null; q[i].venue = null; // its unchanged blocks live on in nx
+            }
+            while (q.length > GC_DE_HARD) gcApply(q.shift(), true); // never more than this: oldest effects run now
+        }
+        function gcDeTick(force) {
+            if (!gc.open || !gc.dq) return;
+            var now = Date.now(); if (!force && now - (gc.deTk || 0) < 250) return; gc.deTk = now;
+            var q = gc.dq, lim = gcDeOn() ? now - gcDelay() * 1000 : Infinity, n = 0, last = -1, i;
+            while (n < q.length && q[n].at <= lim) n++;
+            if (n) {
+                var due = q.splice(0, n);
+                for (i = 0; i < due.length; i++) if (!due[i].fast && due[i].html) last = i;
+                for (i = 0; i < due.length; i++) { gcDeCap(due[i], due.slice(i + 1).concat(q)); if (due[i].fast) gcDeFast(due[i]); else gcApply(due[i], i !== last); }
+            }
+            if (!gc.deShown && q.length && gcDeOn()) { // just opened: nothing old enough yet -> say so instead of spoiling
+                var w = Math.max(0, Math.ceil((q[0].at + gcDelay() * 1000 - now) / 1000));
+                gcSet('gc-mid', '<div class="gc-pill live">&#9679; LIVE</div><div class="gc-syncing">SYNCING TO YOUR TV&hellip;</div><div class="gc-sit">CATCHING UP IN ' + w + 's &bull; TV DELAY ' + gcDelay() + 's</div>');
+                ['gc-plays-body', 'gc-stats-body', 'gc-players-body', 'gc-bxs-body'].forEach(function(id) { gcSet(id, '<div class="gc-empty">SYNCING TO YOUR TV&hellip;</div>'); });
+            }
+            gcDeBadge(now);
+        }
+        function gcDeBadge(now) {
+            var el = document.getElementById('gc-tvd'); if (!el) return;
+            var on = gc.open && gcDeOn(), t = '';
+            if (on) t = gc.deShown ? '\ud83d\udcfa TV DELAY ' + gcDelay() + 's' : '\ud83d\udcfa SYNCING TO YOUR TV\u2026';
+            if (el.textContent !== t) el.textContent = t;
+            el.hidden = !t; el.classList.toggle('sync', on && !gc.deShown);
+        }
+        function gcDeToggle() {
+            settings.tvDelayAll = settings.tvDelayAll === false;
+            var el = document.getElementById('set-tvDelayAll'); if (el) el.checked = settings.tvDelayAll;
+            try { localStorage.setItem('ahlersArcadeSettings', JSON.stringify(settings)); } catch (e) {}
+            if (gc.open) { gc.lastInput = Date.now(); gcDeTick(true); }
+            try { gsDelayUI(); } catch (e) {}
+        }
+        function gcDeCap(s, later) { // a score corrected down in data that already arrived = corrected before the TV showed it: no celebration
+            if (!s.cel || !s.cel.teams || !later.length) return;
+            var mins = {}; later.forEach(function(x) { (x.cel && x.cel.teams || []).forEach(function(T) { var v = parseInt(T.score, 10); if (!isNaN(v) && (mins[T.side] == null || v < mins[T.side])) mins[T.side] = v; }); });
+            s.cel.teams = s.cel.teams.map(function(T) { var v = parseInt(T.score, 10); return mins[T.side] != null && !isNaN(v) && mins[T.side] < v ? Object.assign({}, T, { score: String(mins[T.side]) }) : T; });
+        }
+        function gcDeFast(s) { // the 2 s check's early celebration, at TV time
+            gc.replay = s;
+            try { celObserve(gc.key, s.cel.fam, s.cel.state, s.cel.teams, false, s.cel.hint, true, s.cel.stName, null); } catch (e) {}
+            gc.replay = null;
+        }
+        function gcApply(s, celOnly) { // one snapshot: celebrations/alerts, then the DOM (skipped for older snapshots shown in the same tick)
+            if (!gc.open) return;
+            if (s.A) celSync(gc.meta, s.A, s.H);
+            if (s.cel) { gc.replay = s; try { celObserve(gc.key, s.cel.fam, s.cel.state, s.cel.teams, gc.celFresh, s.cel.hint, true, s.cel.stName, s.cel.cx); } catch (e) {} gc.replay = null; }
+            gc.celFresh = false;
+            if (celOnly || !s.html) return;
+            var h = s.html; gc.deShown = s.at;
+            try { gcVenueSet({ gameInfo: { venue: s.venue } }); } catch (e) {}
+            ['gc-league', 'gc-net', 'gc-away', 'gc-home', 'gc-mid', 'gc-line', 'gc-wp'].forEach(function(id) { gcSet(id, h[id]); });
+            var strip = document.getElementById('gc-strip'); if (strip) { strip.classList.toggle('one', !h['gc-wp'] || !h['gc-line']); strip.style.display = (h['gc-wp'] || h['gc-line']) ? '' : 'none'; }
+            gcSet('gc-track', h['gc-track']);
+            gcSet('gc-bxs-body', h['gc-bxs-body']);
+            gcApplyViews(s.views);
+            ['gc-plays-head', 'gc-plays-body', 'gc-stats-head', 'gc-stats-body', 'gc-players-head', 'gc-players-body'].forEach(function(id) { gcSet(id, h[id]); });
+        }
+        function gcBuild(meta, d) { // runs on arrival: everything that needs the full summary; returns a small snapshot
             var fam = gcFamily(meta);
             var comp = (d.header && d.header.competitions && d.header.competitions[0]) || {};
             var stt = comp.status || {}, st = stt.type || {};
             gc.state = st.state || gc.state || meta.state;
+            if (gc.state === 'in') gc.deLive = true;
             var cs = comp.competitors || [];
             var A = gcTeam(gcPick(cs, 'away'), meta, 'a'), H = gcTeam(gcPick(cs, 'home'), meta, 'h');
             var sit = d.situation || {};
             if (fam === 'football') sit = gcFootballSit(d, sit);
             if (fam === 'football' && sit.possession && gc.state === 'in') { A.poss = String(sit.possession) === A.id; H.poss = String(sit.possession) === H.id; }
             gc.teams = {}; gc.teams[A.id] = A; gc.teams[H.id] = H;
-            celSync(meta, A, H);
+            var snap = { at: Date.now(), trig: gc.trigAt, A: A, H: H, cel: null, html: {}, views: [], venue: null, sz: 0 }, h = snap.html;
             try {
                 var sp = (d.scoringPlays && d.scoringPlays.length) ? d.scoringPlays[d.scoringPlays.length - 1] : null;
                 var lp = (d.plays && d.plays.length) ? d.plays[d.plays.length - 1] : (sit.lastPlay || null);
                 var hint = (sp ? ((sp.type && sp.type.text) || '') + ' ' + (sp.text || '') : '') + ' | ' + (lp ? ((lp.type && lp.type.text) || '') + ' ' + (lp.text || '') : '');
                 var cx = null; try { cx = celExtras(meta, d, fam, A, H, sit); } catch (e2) {}
                 gc.celT = [celT('away', A, meta), celT('home', H, meta)];
-                celObserve(gc.key, fam, gc.state, gc.celT, gc.celFresh, hint, true, st.name || '', cx);
+                snap.cel = { fam: fam, state: gc.state, teams: gc.celT, hint: hint, stName: st.name || '', cx: cx };
             } catch (e) {}
-            gc.celFresh = false;
+            gc.got1 = true;
             var bcs = (comp.broadcasts || []).concat(d.broadcasts || []).map(function(b) { return (b.media && (b.media.shortName || b.media.name)) || b.station || ''; }).filter(Boolean);
             var net = bcs.filter(function(v, i) { return bcs.indexOf(v) === i; }).slice(0, 3).join(' / ') || (meta.tv !== 'TBD' && meta.tv !== 'TV' ? meta.tv : '');
             var net1 = bcs[0] || (meta.tv !== 'TBD' && meta.tv !== 'TV' ? meta.tv : '') || '';
             if (net1 !== (gc.net || '')) { gc.net = net1; celDelayUI(); }
             gc.sumSig = A.score + '-' + H.score + '|' + (stt.period || 0) + '|' + gc.state;
-            gcSet('gc-league', escHtml(meta.label || ''));
-            gcSet('gc-net', net ? '&#128250; ' + escHtml(net) : '');
-            try { gcVenueSet(d); } catch (e) {}
-            gcSet('gc-away', gcTeamHtml(A, 'away', meta));
-            gcSet('gc-home', gcTeamHtml(H, 'home', meta));
-            gcSet('gc-mid', gcMidHtml(meta, d, st, stt, fam, A, H, sit));
-            var wpHtml = gcWinProbHtml(d, A, H, st), lsHtml = gcLinescoreHtml(fam, A, H, st);
-            gcSet('gc-line', lsHtml);
-            gcSet('gc-wp', wpHtml);
-            var strip = document.getElementById('gc-strip'); if (strip) { strip.classList.toggle('one', !wpHtml || !lsHtml); strip.style.display = (wpHtml || lsHtml) ? '' : 'none'; }
+            h['gc-league'] = escHtml(meta.label || '');
+            h['gc-net'] = net ? '&#128250; ' + escHtml(net) : '';
+            var vn = d.gameInfo && d.gameInfo.venue; if (vn && vn.images) snap.venue = { images: vn.images };
+            h['gc-away'] = gcTeamHtml(A, 'away', meta);
+            h['gc-home'] = gcTeamHtml(H, 'home', meta);
+            h['gc-mid'] = gcMidHtml(meta, d, st, stt, fam, A, H, sit);
+            h['gc-wp'] = gcWinProbHtml(d, A, H, st); h['gc-line'] = gcLinescoreHtml(fam, A, H, st);
             var trk = ''; try { trk = gcTrackHtml(fam, A, H, sit, d, st); } catch (e) { trk = ''; }
-            gcSet('gc-track', trk);
+            h['gc-track'] = trk;
             var bxs = ''; try { bxs = gc.state === 'pre' ? '' : gcBoxScoreHtml(d, fam, A, H); } catch (e) { bxs = ''; }
-            gcSet('gc-bxs-body', bxs || '<div class="gc-empty">BOX SCORE NOT AVAILABLE YET</div>');
-            gcApplyViews(gcViews(fam, gc.state, trk, bxs));
-            gcSet('gc-plays-head', gc.state === 'pre' ? 'GAME INFO' : 'LAST PLAYS');
-            gcSet('gc-plays-body', gcPlaysHtml(meta, d, fam));
-            gcSet('gc-stats-head', gc.state === 'pre' ? 'SEASON TEAM STATS' : 'TEAM STATS');
-            gcSet('gc-stats-body', gcStatsHtml(d, fam, A, H));
-            gcSet('gc-players-head', gc.state === 'pre' ? 'SEASON LEADERS' : 'PLAYER STATS');
-            gcSet('gc-players-body', gcPlayersHtml(d, fam, A, H));
+            h['gc-bxs-body'] = bxs || '<div class="gc-empty">BOX SCORE NOT AVAILABLE YET</div>';
+            snap.views = gcViews(fam, gc.state, trk, bxs);
+            h['gc-plays-head'] = gc.state === 'pre' ? 'GAME INFO' : 'LAST PLAYS';
+            h['gc-plays-body'] = gcPlaysHtml(meta, d, fam);
+            h['gc-stats-head'] = gc.state === 'pre' ? 'SEASON TEAM STATS' : 'TEAM STATS';
+            h['gc-stats-body'] = gcStatsHtml(d, fam, A, H);
+            h['gc-players-head'] = gc.state === 'pre' ? 'SEASON LEADERS' : 'PLAYER STATS';
+            h['gc-players-body'] = gcPlayersHtml(d, fam, A, H);
+            var pv = gc.dPrev; // blocks unchanged since the previous snapshot share its string: a waiting copy costs only what changed
+            Object.keys(h).forEach(function(k) { if (pv && pv[k] === h[k]) h[k] = pv[k]; else snap.sz += (h[k] || '').length; });
+            gc.dPrev = h;
+            return snap;
         }
 
         function gcMidHtml(meta, d, st, stt, fam, A, H, sit) {

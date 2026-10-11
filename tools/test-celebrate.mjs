@@ -63,7 +63,7 @@ page.on('request', req => { const f = /scoreboard\/(99\d+)/.exec(req.url()); if 
 await page.evaluateOnNewDocument(() => { try { localStorage.removeItem('ahlersCelebrateTeams1'); } catch (e) {} });
 await page.goto(base + FILE, { waitUntil: 'load' });
 await page.waitForFunction(() => typeof arcadeNav !== 'undefined' && arcadeNav.current && typeof celObserve === 'function', { timeout: 90000 });
-await page.evaluate(() => { arcadeNav.paused = true; settings.celebrateDelay = 0; });
+await page.evaluate(() => { arcadeNav.paused = true; settings.celebrateDelay = 0; settings.tvDelayAll = false; }); // classic path: Gamecast live, celebrations delayed (DELAY ALL: tools/test-tvdelay.mjs)
 const al = () => page.evaluate(() => ({ showing: cel.alShowing, fired: cel.alFired, last: cel.alLast, aq: cel.aq.length, pending: cel.pending.length, shown: getComputedStyle(document.getElementById('cel-alert')).display,
   title: document.getElementById('al-title').textContent, sub: document.getElementById('al-sub').textContent }));
 const waitAl = async (ms = 3000) => page.waitForFunction(() => cel.alShowing, { timeout: ms }).then(() => true).catch(() => false);
