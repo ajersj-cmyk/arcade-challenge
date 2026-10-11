@@ -136,6 +136,9 @@ in `tools/out/*-fantasy/`.
 `node tools/test-futures-fallback.mjs [preview.html]` tests the futures data fallbacks with request interception:
 no `futures.json` → Action Network live; no file + Action Network blocked → ESPN; stale file + both blocked → last saved file.
 
+`node tools/test-livenav.mjs [preview.html]` tests the remote card picker (§5): ▼ ring, grid moves, scroll-into-view above the ticker,
+rotation held + resumed (Back, idle, forced slide change), OK → that card's Gamecast, Back → picker, navBack() bridge, My Squad + Today's Lines.
+
 Output goes to `tools/out/<timestamp>-<name>/` (gitignored). Compare mode writes `before-*`, `after-*`,
 `compare-1920x1080.png`, `compare-1280x720.png` and `compare.html` (every slide side by side).
 
@@ -475,7 +478,7 @@ auto-close after **90 s**. Pause auto-resumes after **10 min**.
 |---|---|---|---|
 | ◀ / ▶ (37/39; raw Android 21/22) | previous / next slide + HUD pill | move focus | move focus |
 | ▲ (38; raw 19) | focus the settings gear | move focus | move focus |
-| ▼ (40; raw 20) | open navigator menu | move focus | move focus |
+| ▼ (40; raw 20) | open navigator menu (on LIVE ACTION / MY SQUAD / TODAY'S LINES with game cards: start the **card picker**, below) | move focus | move focus |
 | OK / Enter (13; raw 23 DPAD_CENTER, 66) | open navigator menu (on the gear: open settings, as before) | activate item | toggle checkbox / press button |
 | Back / Esc / Backspace (27, 8, BrowserBack; raw 4) | hide HUD / un-focus gear | close menu | close settings |
 | Play-Pause / Space / P (179; raw 85) | pause / resume rotation (⏸ PAUSED badge) | pause / resume | native |
@@ -486,8 +489,29 @@ auto-close after **90 s**. Pause auto-resumes after **10 min**.
 - The menu lists every enabled slide (current one highlighted), plus PAUSE/RESUME, SETTINGS and CLOSE. Mouse clicks work too.
 - Text fields keep their arrow/backspace keys. Typing "s" in a settings field no longer closes the modal.
 - After the first remote key press, one history entry is pushed so the Android TV Back button closes overlays instead of leaving the page.
+### Card picker (LIVE ACTION / MY SQUAD / TODAY'S LINES, PR flynn/live-nav)
+`lvNav*` in index.html (config `LVN_CFG`: viewport, track, base time per slide). Any `[data-gc]` card in that slide's track counts
+(Today's Lines cards now carry `data-gc` too, so a mouse click on them also opens the Gamecast).
+
+| Key | Card picker |
+|---|---|
+| ▼ (kiosk, on one of those slides) | start: neon ring + `OK ▶ GAMECAST` tab on the first card in view, HUD hint. No cards → navigator as before |
+| ▲ ▼ ◀ ▶ | move through the grid (geometric, like the menu); edges stay put (no slide change) |
+| OK | `gcOpen()` for that card (same as a click). Gamecast BACK returns to the picker, ring on the same card |
+| Back / Esc (and the TV app's `navBack()`) | end the picker |
+| Play/Pause | pause / resume (unchanged) · M: end picker + navigator |
+
+- While it's on, the slide's auto-scroll is frozen where it was and the track is moved (`translate3d`, 0.28 s ease) so the
+  ringed card stays fully inside the viewport. `nextSlide()` only marks `arcadeNav.pending` (like pause / Gamecast); the 1.5 s
+  safety net, the watchdog and `applyScroll()` leave it alone.
+- It ends on Back, after `LVN_IDLE_MS` (25 s) with no key (the clock waits while a Gamecast, settings, the menu or a celebration
+  is up, and restarts when the Gamecast closes), or on any forced slide change (phone remote NEXT/PREV, navigator). Ending
+  resumes rotation: if the slide's time ran out meanwhile → next slide; otherwise a fresh `applyScroll` pass on the same slide.
+- Kiosk OK still opens the navigator (on LIVE ACTION it lands on the GAMES row), so both ways to reach a Gamecast work.
+- Test: `node tools/test-livenav.mjs [file]` (TV emulation, 1280x720, 10 real games forced onto LIVE ACTION; screenshots in
+  `tools/out/*-livenav/`).
 ### Gamecast (live game overlay, PR #4)
-Open it from a **Live Action card** or **My Squad card** (mouse click), a **ticker game** (click), or the navigator's
+Open it from a **Live Action**, **My Squad** or **Today's Lines card** (mouse click, or ▼ card picker + OK), a **ticker game** (click), or the navigator's
 **GAMES row** (OK, then OK again; on the Live Action slide, OK lands straight on the first game). It covers the whole
 screen and **pauses rotation**. When it closes, rotation picks up again: if the slide timer fired while it was open, the
 next slide shows right away.
@@ -685,6 +709,7 @@ next slide shows right away.
 - [ ] NFL FUTURES / NFL AWARDS / CFB FUTURES / NHL FUTURES slides populate, showing the 'UPDATED' time from futures.json, (from futures.json, or the live fallbacks) and can be toggled in settings
 - [ ] Idle kiosk shows **no** nav UI; ◀/▶, OK menu, Back, Play/Pause and auto-hide all work (harness remote checks)
 - [ ] Mouse click on the gear opens settings; SAVE & CLOSE closes it
+- [ ] Card picker: ▼ on Live Action / My Squad / Today's Lines, OK opens that game, Back/idle resume rotation (`tools/test-livenav.mjs`)
 - [ ] Sport mode: OFF/CFB/CBB/NFL in settings, only that sport for 12 h, pill with time left, survives reload, auto-reverts
       to the snapshot, never an empty rotation (`tools/test-sportmode.mjs`)
 - [ ] NFL FANTASY slide: projections + pickups from `fantasy.json` (or ESPN fallback), live PPR only while it shows (`tools/test-fantasy.mjs`)
