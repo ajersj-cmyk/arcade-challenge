@@ -6,7 +6,7 @@
 //  Full (none in the TV app), fits above the ticker at 720p + 1080p, sport mode fetches only its feed, rss2json fallback
 //  when ESPN is down, remote nav still moves on, 0 console errors.
 //  Story blurbs: ESPN article text (content.core.api.espn.com) -> 2-3 whole sentences, embeds/HTML/dateline stripped, entities
-//  decoded, a verbatim key quote, ESPN description fallback (no story / premium), one-line Up Next blurbs, 7/10/12 s per story,
+//  decoded, a verbatim key quote, ESPN description fallback (no story / premium), 7/10/12 s per story,
 //  only the shown stories fetched (cached), copy never over the chips at 720p/1080p.
 import http from 'node:http'; import fs from 'node:fs'; import path from 'node:path'; import { fileURLToPath } from 'node:url';
 import puppeteer from 'puppeteer-core';
@@ -42,8 +42,8 @@ const FEEDS = {
   'football/nfl': [
     { id: 3, type: 'Story', headline: 'Fantasy football Week 6 cheat sheet: start em, sit em', published: ago(5), images: img('r3'), categories: [] },
     { id: 4, type: 'HeadlineNews', headline: 'Bears quarterback says the offense is finally clicking after a long stretch of slow starts and stalled drives in the red zone this year', description: '', published: ago(40), images: img('r4'), links: api(4), categories: [team(3, 'Chicago Bears', 'Bears')] },
-    { id: 5, type: 'Media', headline: 'Watch the wildest catch of the season from Thursday night', published: ago(300), images: img('r5'), categories: [] },
-    { id: 6, type: 'Story', headline: 'Broncos sign veteran pass rusher to one-year deal', description: 'Denver adds a veteran edge rusher on a one-year deal worth up to $8 million.', premium: true, links: api(6), published: ago(2880), images: img('r6', 600, 400).concat(img('r6b')), categories: [team(7, 'Denver Broncos', 'Broncos')] },
+    { id: 5, type: 'Media', headline: 'Watch: Rams win in OT', description: 'Los Angeles wins it on a one-handed grab in overtime.', published: ago(300), images: img('r5'), categories: [] },
+    { id: 6, type: 'Story', headline: 'Broncos sign veteran pass rusher to one-year deal', description: 'Denver adds a veteran edge rusher for the stretch run.', premium: true, links: api(6), published: ago(2880), images: img('r6', 600, 400).concat(img('r6b')), categories: [team(7, 'Denver Broncos', 'Broncos')] },
   ],
 };
 let down = false, rssHits = 0;
@@ -119,7 +119,7 @@ const state = page => page.evaluate(() => {
   check('premium story: ESPN description instead of the article text', b6 && b6.src === 'desc' && /^Denver adds/.test(b6.b) && !/premium/.test(b6.b), JSON.stringify(b6));
   check('no story text and no description: no blurb (7 s)', b2 && !b2.b, JSON.stringify(b2));
   check('article text fetched only for the shown stories (<= 5, once each)', artReqs.length <= 5 && new Set(artReqs).size === artReqs.length && artReqs.every(id => s.items.length >= 1), artReqs.join(','));
-  check('Up Next: one-line ESPN description where there is one', s.rd.length >= 1 && s.rd.every(x => x.one) && s.rd.some(x => /^Denver adds/.test(x.t)), JSON.stringify(s.rd));
+  check('Up Next cards unchanged (no blurb there: the rail is too narrow to show one whole)', s.rd.length === 0 && s.rows === 4, s.rows + ' rows');
   await sleep(7000); s = await state(page);
   check('hero 1 (blurb + quote) still up after 7 s', s.i === 0, 'i=' + s.i);
   await sleep(5200); s = await state(page);

@@ -782,6 +782,13 @@
         .nw-meta .nw-hs { width: 5vh; height: 5vh; border-radius: 50%; background: #1d2a40; object-fit: cover; object-position: 50% 0; flex: none; border: 2px solid rgba(255,255,255,0.7); }
         .nw-meta .nw-ago { color: #fff; }
         .nw-meta .nw-dot { width: 0.7vh; height: 0.7vh; border-radius: 50%; background: rgba(255,255,255,0.6); }
+        /* story blurb + key quote (ESPN's own words): big enough to read from the couch; the hero gets a deeper shade + a smaller title */
+        .nw-hero.deep .nw-shade { background: linear-gradient(180deg, rgba(0,0,0,0.45) 0%, rgba(0,0,0,0) 16%, rgba(3,6,12,0.55) 34%, rgba(3,6,12,0.93) 52%, rgba(3,6,12,0.97) 100%); }
+        .nw-hero.deep .nw-title { font-size: 5.3vh; line-height: 1; }
+        .nw-hero.deep .nw-meta { margin-top: 1.3vh; }
+        .nw-blurb { margin-top: 1.3vh; font-family: 'Inter', sans-serif; font-weight: 600; font-size: 2.9vh; line-height: 1.32; color: #eef3fb; text-shadow: 0 0.2vh 0.8vh rgba(0,0,0,0.8); }
+        .nw-quote { margin-top: 1.3vh; padding-left: 1.8vh; border-left: 0.6vh solid var(--nw-k, #ffe600); font-family: 'Inter', sans-serif; font-style: italic; font-weight: 600;
+            font-size: 2.75vh; line-height: 1.3; color: #fff; text-shadow: 0 0.2vh 0.8vh rgba(0,0,0,0.8); }
         .nw-prog { position: absolute; left: 0; right: 0; bottom: 0; height: 0.7vh; background: rgba(255,255,255,0.12); }
         .nw-prog i { position: absolute; inset: 0; background: var(--nw-k, #ffe600); transform-origin: 0 50%; transform: scaleX(0); }
         .nw-prog i.run { animation: nw-prog var(--nw-ms, 7000ms) linear forwards; }
@@ -2773,7 +2780,7 @@
         // Normal rotation: the leagues switched on in settings (NFL, CFB, NHL, NBA, MLB) + news for favourite teams playing
         // today (?team=id); a sport mode: only that sport. Copy is ESPN's own headline, cleaned (no rewriting); the kicker /
         // chips are derived from the article's categories, type, age and keywords only.
-        var NW_STORY_MS = 7000, NW_HEROES = 5, NW_CACHE_MS = 300000, nwState = { items: [], timer: null, gen: -1, i: 0, layer: 0 }, nwCache = { key: '', at: 0, items: [] };
+        var NW_STORY_MS = 7000, NW_BLURB_MS = 10000, NW_QUOTE_MS = 12000, NW_HEROES = 5, NW_CACHE_MS = 300000, nwState = { items: [], timer: null, gen: -1, i: 0, layer: 0 }, nwCache = { key: '', at: 0, items: [] };
         var NW_LEAGUES = [ // [settings toggle, api path, logo path, headshot path, label]
             ['showNFL', 'football/nfl', 'nfl', 'nfl', 'NFL'], ['showCFB', 'football/college-football', 'ncaa', 'college-football', 'CFB'],
             ['showNHL', 'hockey/nhl', 'nhl', 'nhl', 'NHL'], ['showNBA', 'basketball/nba', 'nba', 'nba', 'NBA'], ['showMLB', 'baseball/mlb', 'mlb', 'mlb', 'MLB'],
@@ -2829,7 +2836,8 @@
             if (!topic && a.type === 'Media') topic = ['WATCH', '#ffffff'];
             if (!topic && /^(sources?|report)\s*:/i.test(raw)) topic = ['REPORT', '#d6dde8'];
             var ageMin = (Date.now() - time) / 60000, img = nwPickImg(a);
-            return { id: String(a.id || a.headline), title: title, time: time, type: a.type || '', L: L, fav: fav ? String(fav).toUpperCase() : '',
+            var api = a.links && a.links.api && a.links.api.self && a.links.api.self.href || '';
+            return { id: String(a.id || a.headline), title: title, time: time, type: a.type || '', L: L, fav: fav ? String(fav).toUpperCase() : '', api: api, premium: !!a.premium, desc: desc,
                 breaking: (ageMin >= 0 && ageMin < 60 && a.type !== 'Media' && a.type !== 'Preview') || /\bbreaking\b/i.test(raw),
                 topic: topic, img: img, teamId: focus ? String(focus.teamId) : '', team: focus ? (focus.description || '') : '', athId: ath ? String(ath.athleteId) : '',
                 ent: ath ? 'a' + ath.athleteId : focus ? 't' + focus.teamId : '' };
@@ -2875,7 +2883,7 @@
             var out = [], L = ['', '', 'nfl', 'nfl', 'SPORTS'];
             var urls = ['https%3A%2F%2Fsports.yahoo.com%2Frss%2F', 'https%3A%2F%2Fwww.cbssports.com%2Frss%2Fheadlines%2F'];
             for (var i = 0; i < urls.length; i++) { try { var r = await arcadeFetch('https://api.rss2json.com/v1/api.json?rss_url=' + urls[i]); var d = await r.json();
-                (d.items || []).forEach(function(x) { out.push([{ id: x.guid || x.link, headline: x.title, description: '', published: String(x.pubDate || '').replace(' ', 'T') + 'Z', type: 'Story',
+                (d.items || []).forEach(function(x) { out.push([{ id: x.guid || x.link, headline: x.title, description: String(x.description || '').replace(/<[^>]*>/g, ' '), published: String(x.pubDate || '').replace(' ', 'T') + 'Z', type: 'Story',
                     images: x.thumbnail || (x.enclosure && x.enclosure.link) ? [{ url: x.thumbnail || x.enclosure.link }] : [] }, L]); }); } catch (e) {} }
             return out;
         }
@@ -2890,12 +2898,76 @@
         }
         function nwKick(it) { var k = it.topic ? it.topic[0] : it.L[4] + ' NEWS'; return k + (it.team ? ' \u00b7 ' + it.team : ''); }
         function nwArt(it) { var lg = nwLogo(it, 500) || 'https://a.espncdn.com/combiner/i?img=/i/teamlogos/leagues/500/' + it.L[2] + '.png&w=500&h=500'; return '<div class="nw-art"><img alt="" src="' + escHtml(lg) + '" onerror="this.style.display=\'none\'"></div>'; }
+        // ---- story blurb + key quote: ESPN's own article text (content.core.api.espn.com/v1/sports/news/{id} -> headlines[0].story).
+        // Verbatim only: paragraphs are split, tags / ESPN embeds (<photo1>, <video1> ...) stripped, entities decoded; the blurb is the
+        // first 2-3 whole sentences (cut at a sentence end), the quote is the first short paragraph with a direct quote, as written.
+        var NW_BLURB_MAX = 270, NW_QUOTE_MAX = 190, NW_TXT_MAX = 40, nwTxt = {}, nwTxtP = {};
+        var NW_ABBR = /(^|[\s(.])(mr|mrs|ms|dr|jr|sr|st|vs|no|nos|gov|sen|rep|lt|col|gen|capt|sgt|ft|mt|inc|co|corp|ltd|jan|feb|mar|apr|aug|sept|sep|oct|nov|dec|calif|ariz|fla|ga|ill|ind|mass|mich|minn|mo|neb|nev|okla|ore|pa|tenn|tex|va|wash|wis|conn|colo|ala|ark|kan|ky|la|md|miss|mont|del|a\.m|p\.m|u\.s|[a-z])$/i;
+        function nwParas(html) {
+            var s = String(html || '').replace(/<\/p>|<br\s*\/?>|<\/h\d>|<\/li>|\r?\n\s*\r?\n/gi, '\n\u2029\n');
+            s = s.replace(/<(script|style|figure|figcaption|aside|table)[\s\S]*?<\/\1>/gi, ' ').replace(/<\/?(a|i|em|b|strong|span|u|sup|sub)\b[^>]*>/gi, '').replace(/<[^>]*>/g, ' ');
+            return s.split('\u2029').map(function(p) { return cleanHeadline(p); }).filter(Boolean); // split first: cleanHeadline folds all whitespace
+        }
+        function nwSentences(p) { // whole sentences only; abbreviations, initials and a.m./p.m. do not end a sentence
+            var out = [], st = 0, re = /[.!?]+["\u201d\u2019')]*(?=\s+["\u201c\u2018(]?[A-Z0-9])/g, m;
+            while ((m = re.exec(p))) {
+                var end = m.index + m[0].length, pre = p.slice(st, m.index + 1);
+                if (m[0].charAt(0) === '.' && NW_ABBR.test(pre.replace(/\.$/, ''))) continue;
+                out.push(p.slice(st, end).trim()); st = end;
+            }
+            var rest = p.slice(st).trim(); if (rest) out.push(rest);
+            return out.filter(function(x) { return /[.!?]["\u201d\u2019')]*$/.test(x); }); // a trailing fragment without an end mark is dropped
+        }
+        function nwHasQuote(p) { var m = /["\u201c]([^"\u201c\u201d]{3,})["\u201d]/.exec(p); return !!m && m[1].trim().split(/\s+/).length >= 5; }
+        function nwStoryText(story) {
+            var ps = nwParas(story), blurb = [], len = 0, quote = '';
+            for (var i = 0; i < ps.length && i < 14; i++) {
+                var p = ps[i];
+                if (/^(editor'?s note|odds are provided|information from|follow |watch |read more|related|more:|the associated press contributed|espn'?s .* contributed)/i.test(p)) continue;
+                var lab = /^[A-Z][A-Z \/&'-]{2,24}:\s+/.exec(p); // "BOTTOM LINE: ..." -> keep the sentence, drop the label; "LINE: -184" -> skip
+                if (lab) { p = p.slice(lab[0].length); if (p.length < 60) continue; }
+                if (p.length < 25 || /:$/.test(p) || !/[.!?]["\u201d\u2019')]*$/.test(p)) continue;
+                if (nwHasQuote(p)) { if (!quote && p.length <= NW_QUOTE_MAX) quote = p; if (blurb.length) break; continue; }
+                if (blurb.length >= 3 || (blurb.length >= 2 && len >= 150)) break;
+                if (!blurb.length) p = p.replace(/^[A-Z][A-Z.'\- ]{1,30}(, [A-Z][A-Za-z.' ]{1,20})? -- /, ''); // dateline ("CHICAGO -- ")
+                var ss = nwSentences(p), full = false;
+                for (var k = 0; k < ss.length && blurb.length < 3 && !(blurb.length >= 2 && len >= 150); k++) {
+                    if (len + ss[k].length > (blurb.length ? NW_BLURB_MAX : NW_BLURB_MAX + 60)) { full = true; break; }
+                    blurb.push(ss[k]); len += ss[k].length + 1;
+                }
+                if (full || blurb.length >= 3 || (blurb.length >= 2 && len >= 150)) break;
+            }
+            if (!quote) for (; i < ps.length && i < 14; i++) if (nwHasQuote(ps[i]) && ps[i].length <= NW_QUOTE_MAX && /[.!?]["\u201d\u2019')]*$/.test(ps[i])) { quote = ps[i]; break; }
+            return { blurb: blurb.join(' '), quote: quote };
+        }
+        function nwDesc(it) { var d = it.desc || ''; return d && d.toLowerCase() !== String(it.title).toLowerCase() && d.length >= 30 ? d : ''; }
+        function nwText(it) { // cached per story id (one request in flight per story); only small strings are kept (TV memory)
+            if (nwTxt[it.id]) return Promise.resolve(nwTxt[it.id]);
+            if (!nwTxtP[it.id]) nwTxtP[it.id] = nwTextGet(it).then(function(r) { delete nwTxtP[it.id]; return r; });
+            return nwTxtP[it.id];
+        }
+        async function nwTextGet(it) {
+            var r = { blurb: '', quote: '', src: '' }, m = /^https?:\/\/[a-z.]+\.api\.espn\.com\/v1\/sports\/news\/(\d+)/.exec(String(it.api || ''));
+            // now.core first: in a busy page Chrome can reuse another ESPN connection for content.core and get a redirect without CORS
+            var hosts = m && !it.premium ? ['now.core.api.espn.com', 'content.core.api.espn.com'] : [];
+            for (var hi = 0; hi < hosts.length && !r.src; hi++) {
+                try { var res = await arcadeFetch('https://' + hosts[hi] + '/v1/sports/news/' + m[1], { timeout: 6000, cache: 'default' }); if (!res.ok) break; // a real answer (404 ...): no second host
+                    var d = await res.json(), h = d && d.headlines && d.headlines[0];
+                    if (h && h.story) { var t = nwStoryText(h.story); r.blurb = t.blurb; r.quote = t.quote; } r.src = 'story'; } catch (e) {}
+            }
+            if (!r.blurb) { r.blurb = nwDesc(it); r.src = r.blurb ? 'desc' : ''; }
+            if (r.quote && r.blurb.indexOf(r.quote) >= 0) r.quote = '';
+            var ks = Object.keys(nwTxt); if (ks.length >= NW_TXT_MAX) delete nwTxt[ks[0]];
+            nwTxt[it.id] = r; return r;
+        }
+        function nwMs(it) { var t = nwTxt[it.id]; return t && t.blurb ? (t.quote ? NW_QUOTE_MS : NW_BLURB_MS) : NW_STORY_MS; } // more to read = more time
         function nwHero(gen, i) {
             if (!isCurrentSlide(gen) || nwState.gen !== gen) return;
             var items = nwState.items, n = items.length, it = items[i % n], lite = bxLite(); nwState.i = i % n;
             var hero = document.getElementById('nw-hero'); if (!hero) return;
             var col = it.topic ? it.topic[1] : (it.breaking ? '#ff2d48' : '#ffe600');
-            hero.style.setProperty('--nw-k', col); hero.style.setProperty('--nw-ms', NW_STORY_MS + 'ms');
+            var tx = nwTxt[it.id] || { blurb: nwDesc(it), quote: '' }, ms = tx.blurb ? (tx.quote ? NW_QUOTE_MS : NW_BLURB_MS) : NW_STORY_MS;
+            hero.style.setProperty('--nw-k', col); hero.style.setProperty('--nw-ms', ms + 'ms'); hero.classList.toggle('deep', !!tx.blurb);
             nwState.layer = 1 - nwState.layer;
             var ph = document.getElementById('nw-ph' + nwState.layer), old = document.getElementById('nw-ph' + (1 - nwState.layer));
             ph.classList.toggle('kb', !lite);
@@ -2906,9 +2978,12 @@
             document.getElementById('nw-count').textContent = (nwState.i + 1) + ' / ' + n;
             var lg = nwLogo(it, 120), hs = it.athId ? 'https://a.espncdn.com/combiner/i?img=/i/headshots/' + it.L[3] + '/players/full/' + it.athId + '.png&w=120&h=88' : '';
             var copy = document.getElementById('nw-copy');
-            copy.innerHTML = '<div class="nw-kick">' + escHtml(nwKick(it)) + '</div><div class="nw-title">' + escHtml(it.title) + '</div><div class="nw-meta">' +
+            copy.innerHTML = '<div class="nw-kick">' + escHtml(nwKick(it)) + '</div><div class="nw-title">' + escHtml(it.title) + '</div>' +
+                (tx.blurb ? '<div class="nw-blurb">' + escHtml(tx.blurb) + '</div>' : '') + (tx.quote ? '<div class="nw-quote">' + escHtml(tx.quote) + '</div>' : '') + '<div class="nw-meta">' +
                 (lg ? '<img class="nw-lg" alt="" src="' + escHtml(lg) + '" onerror="this.remove()">' : '') + (hs ? '<img class="nw-hs" alt="" src="' + escHtml(hs) + '" onerror="this.remove()">' : '') +
                 '<span>' + escHtml(it.L[4]) + '</span><span class="nw-dot"></span><span class="nw-ago">' + escHtml(nwAgo(it.time)) + '</span></div>';
+            var chB = document.getElementById('nw-chips').getBoundingClientRect().bottom, q = copy.querySelector('.nw-quote');
+            if (q && copy.getBoundingClientRect().top < chB + 8) { q.remove(); if (ms === NW_QUOTE_MS) { ms = NW_BLURB_MS; hero.style.setProperty('--nw-ms', ms + 'ms'); } } // never over the chips: drop the whole quote, never cut it
             copy.classList.remove('in'); void copy.offsetWidth; copy.classList.add('in');
             var pg = document.getElementById('nw-prog'); pg.classList.remove('run'); void pg.offsetWidth; pg.classList.add('run');
             // up next: the other stories in order after the current one
@@ -2917,10 +2992,11 @@
                 rows.push('<div class="nw-row" style="--nw-k:' + (r.fav ? '#ffd400' : r.topic ? r.topic[1] : r.breaking ? '#ff2d48' : '#ffe600') + '"><div class="nw-th">' + th + '</div><div class="nw-rt"><div class="nw-rk">' +
                     escHtml((r.fav ? '\u2605 ' + r.fav : r.topic ? r.topic[0] : r.breaking ? 'BREAKING' : r.L[4]) + ' \u00b7 ' + nwAgo(r.time, 1)) + '</div><div class="nw-rh">' + escHtml(r.title) + '</div></div></div>'); }
             document.getElementById('nw-rail').innerHTML = '<div class="nw-rail-h">UP NEXT</div>' + rows.join('');
-            if (n > 1) { // preload the next hero photo so the swap never shows a blank frame
-                var nx = items[(nwState.i + 1) % n]; if (nx.img) { var pre = new Image(); pre.src = nwImg(nx.img, 960, 540); }
-                clearTimeout(nwState.timer); nwState.timer = setTimeout(function() { nwHero(gen, i + 1); }, NW_STORY_MS);
-            }
+            clearTimeout(nwState.timer);
+            if (nwState.i + 1 < n) { // preload the next hero photo so the swap never shows a blank frame
+                var nx = items[nwState.i + 1]; if (nx.img) { var pre = new Image(); pre.src = nwImg(nx.img, 960, 540); }
+                nwState.timer = setTimeout(function() { nwHero(gen, nwState.i + 1); }, ms);
+            } else slideTimer = slideTimeout(function() { clearTimeout(nwState.timer); nextSlide(); }, ms); // last story: hand off once it has had its time
         }
         function nwImgFail(img) { var it = nwState.items[+img.getAttribute('data-i')]; var p = img.parentNode; if (p && it) p.innerHTML = nwArt(it); }
         async function showNews(gen) {
@@ -2930,6 +3006,10 @@
             document.body.classList.toggle('bx-lite-news', bxLite());
             var items = [];
             try { items = await nwLoad(smm); } catch (e) { items = []; }
+            if (items.length) { // article text for the shown stories only (<= 5 small requests, cached per story); story 1 waits briefly for its blurb
+                var txs = items.map(function(it) { return nwText(it).catch(function() { return null; }); });
+                await Promise.race([txs[0], new Promise(function(r) { setTimeout(r, 2500); })]);
+            }
             if (!isCurrentSlide(gen)) return;
             screen.style.display = 'flex';
             if (!items.length) {
@@ -2941,8 +3021,8 @@
             stage.innerHTML = '<div class="nw-hero" id="nw-hero"><div class="nw-ph" id="nw-ph0"></div><div class="nw-ph" id="nw-ph1"></div><div class="nw-shade"></div>' +
                 '<div class="nw-chips" id="nw-chips"></div><div class="nw-count" id="nw-count"></div><div class="nw-copy" id="nw-copy"></div><div class="nw-prog"><i id="nw-prog"></i></div></div>' +
                 '<div class="nw-rail" id="nw-rail"></div>';
+            slideTimer = slideTimeout(function() { clearTimeout(nwState.timer); nextSlide(); }, items.length * NW_QUOTE_MS + 3000); // safety net; the last story hands off itself
             nwHero(gen, 0);
-            slideTimer = slideTimeout(function() { clearTimeout(nwState.timer); nextSlide(); }, Math.max(1, items.length) * NW_STORY_MS);
         }
 
         function parseAmerican(v) {
