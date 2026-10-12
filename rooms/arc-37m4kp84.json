@@ -2,7 +2,7 @@
  "v": 1,
  "room": "arc-37m4kp84",
  "season": "2026",
- "updated": 1791760278122,
+ "updated": 1791771904814,
  "lastMsg": "Jwo86Afo67T8",
  "names": {
   "jordan": "Jordan"
@@ -14,6 +14,13 @@
    "401872986",
    "401872990",
    "401872992"
+  ],
+  "20261012": [
+   "401908023",
+   "401908031",
+   "401872994",
+   "401892487",
+   "401892486"
   ]
  },
  "events": {
@@ -31,8 +38,8 @@
     "ab": "ATL",
     "logo": "https://a.espncdn.com/i/teamlogos/nfl/500/atl.png"
    },
-   "r": "pre",
-   "sc": "",
+   "r": "in",
+   "sc": "15-17",
    "real": 1
   },
   "401908030": {
@@ -49,8 +56,8 @@
     "ab": "MIL",
     "logo": "https://a.espncdn.com/i/teamlogos/mlb/500/mil.png"
    },
-   "r": "pre",
-   "sc": "",
+   "r": "in",
+   "sc": "1-2",
    "real": 1
   }
  },
