@@ -1,0 +1,33 @@
+name: Refresh disc golf rankings
+# Wednesdays (PDGA updates world rankings after Elite/Major events) + daily: discgolf-rankings.json beside index.html
+# (scripts/fetch-discgolf-rankings.mjs: PDGA world-rankings pages + live-scoring player details). No CORS on those
+# pages, so the DISC GOLF slide reads this same-origin file. If PDGA fails, the last good file is kept.
+on:
+  schedule:
+    - cron: '17 12 * * *'        # 8:17 AM EDT daily
+    - cron: '17 21,23 * * 3'     # Wed 5:17 / 7:17 PM EDT (rankings posted Wed afternoon)
+  workflow_dispatch: {}
+permissions:
+  contents: write
+concurrency:
+  group: discgolf
+  cancel-in-progress: true
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Build discgolf-rankings.json
+        run: node scripts/fetch-discgolf-rankings.mjs discgolf-rankings.json
+      - name: Commit if changed
+        run: |
+          git config user.name  "discgolf-bot"
+          git config user.email "discgolf-bot@users.noreply.github.com"
+          git add discgolf-rankings.json
+          if git diff --cached --quiet; then echo "No change"; exit 0; fi
+          git commit -m "chore: refresh disc golf rankings [skip ci]"
+          git pull --rebase origin main && git push
