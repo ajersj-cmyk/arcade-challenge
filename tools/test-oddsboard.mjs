@@ -54,6 +54,22 @@ ok(syn.sharp === 1 && /SHARP/.test(syn.txt), 'SHARP on the 55% money / 30% bets 
 ok(/SPREAD PREGAME CAR \+0.5 → CAR -2.5/.test(syn.txt), 'movement row: PREGAME -> now with arrow');
 await page.evaluate(() => { ob.games = []; ob.at = Date.now(); });
 ok(await page.evaluate(() => obReady() === false), 'no games -> slide skipped');
+// Gamecast live odds pill (pick a live game ESPN + Action Network both cover)
+const gk = await page.evaluate(() => { const ks = Object.keys(gcRegistry).filter(k => gcRegistry[k].state === 'in' && GO_LG[gcRegistry[k].sport + '/' + gcRegistry[k].league]); return ks[0] || null; });
+if (!gk) console.log('SKIP gamecast live odds: no live ESPN game in an Action Network league right now');
+else {
+  await page.evaluate(k => { settings.tvDelayAll = false; gcOpenEvent(gcRegistry[k]); }, gk);
+  await page.waitForFunction(() => !document.getElementById('gc-odds').hidden, { timeout: 30000 }).catch(() => {});
+  const pill = await page.evaluate(() => ({ t: document.getElementById('gc-odds').textContent, hid: document.getElementById('gc-odds').hidden, an: go.anId }));
+  console.log('gamecast', gk, JSON.stringify(pill));
+  ok(!pill.hid && /(LIVE ODDS|PREGAME LINE)/.test(pill.t) && /[A-Z]{2,5} ([+-]\d|PK)/.test(pill.t), 'Gamecast header shows odds by team: ' + pill.t);
+  await page.screenshot({ path: path.join(OUT, 'gamecast-live-odds.png') });
+  const del = await page.evaluate(() => { settings.tvDelayAll = true; gc.deLive = true; gcDelaySet(30); goShow(); const h1 = document.getElementById('gc-odds').hidden;
+    go.buf[0].at -= 31000; goShow(); const h2 = document.getElementById('gc-odds').hidden; gcDelaySet(0); return { h1, h2 }; });
+  ok(del.h1 === true && del.h2 === false, 'odds pill waits for the TV delay (hidden until a 30 s-old quote exists)');
+  await page.evaluate(() => gcClose());
+  ok(await page.evaluate(() => go.timer === null && go.tick === null && document.getElementById('gc-odds').hidden), 'closing the Gamecast stops odds polling');
+}
 ok(!errors.length, 'no console errors ' + errors.join(' | '));
 await browser.close(); srv.close();
 console.log(fails ? fails + ' FAILED' : 'ALL PASS'); process.exit(fails ? 1 : 0);

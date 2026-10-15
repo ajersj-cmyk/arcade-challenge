@@ -345,6 +345,9 @@
         .gc-chip { font-size: 2.2vh; padding: 0.4vh 1.2vh; border: 1px solid currentColor; border-radius: 0.8vh; }
         .gc-net { font-size: 2.3vh; color: #facc15; max-width: 24vw; overflow: hidden; text-overflow: ellipsis; }
         .gc-top .gc-spacer { flex: 1 1 auto; }
+        .gc-odds { font-family: 'Share Tech Mono', monospace; font-size: 1.7vh; font-weight: 700; color: #39ff88; background: rgba(0,0,0,0.55); border: 1px solid rgba(57,255,136,0.45); border-radius: 0.8vh; padding: 0.3vh 1vh; white-space: nowrap; margin-left: 1vw; max-width: 26vw; overflow: hidden; text-overflow: ellipsis; flex-shrink: 0; }
+        body.gc-open #gamecast .gc-top:has(#gc-odds:not([hidden])) .gc-hint { display: none; } /* room for the odds pill */
+        .gc-odds b { color: #fff; font-family: 'Inter', sans-serif; font-weight: 900; letter-spacing: 0.08em; margin-right: 0.6vw; }
         .gc-tvd { font-size: 1.9vh; font-weight: 900; letter-spacing: 0.08em; color: #000; background: #ffe600; border-radius: 0.8vh; padding: 0.3vh 1vh; white-space: nowrap; }
         .gc-tvd.sync { background: transparent; color: #ffe600; border: 2px solid #ffe600; animation: gcTvdPulse 1.2s ease-in-out infinite; }
         @keyframes gcTvdPulse { 50% { opacity: 0.45; } }
@@ -1249,6 +1252,7 @@
             <span class="gc-brand neon-text-cycle">&#9673; GAMECAST</span>
             <span class="gc-chip neon-text-cycle" id="gc-league"></span>
             <span class="gc-net" id="gc-net"></span>
+            <span class="gc-odds" id="gc-odds" hidden></span>
             <span class="gc-spacer"></span>
             <span class="gc-tvd" id="gc-tvd" hidden></span>
             <span id="gc-updated"></span>
@@ -2576,6 +2580,55 @@
         }
 
         async function showCommand() { document.getElementById('command-screen').style.display = 'flex'; slideTimer = slideTimeout(nextSlide, 15000); }
+
+        // ---------- GAMECAST LIVE ODDS (header pill): Action Network consensus, polled every 20 s, shown through the TV delay ----------
+        var GO_LG = { 'football/nfl': 'nfl', 'football/college-football': 'ncaaf', 'basketball/nba': 'nba', 'hockey/nhl': 'nhl', 'baseball/mlb': 'mlb', 'basketball/mens-college-basketball': 'ncaab' };
+        var GO_MS = 20000, go = { timer: null, tick: null, buf: [], key: null, anId: null, fails: 0 };
+        function goStop() { clearTimeout(go.timer); clearInterval(go.tick); go.timer = go.tick = null; go.buf = []; go.key = null; go.anId = null; var el = document.getElementById('gc-odds'); if (el) { el.hidden = true; el.innerHTML = ''; } }
+        function goStart() {
+            goStop(); var m = gc.meta; if (!m) return;
+            var lg = GO_LG[m.sport + '/' + m.league]; if (!lg) return;
+            go.key = gc.key; go.lg = lg; go.fails = 0;
+            go.timer = setTimeout(goPoll, 1500); go.tick = setInterval(goShow, 1000);
+        }
+        function goMatch(g) {
+            var T = {}; (g.teams || []).forEach(function(t) { T[t.id] = t; }); var a = T[g.away_team_id], h = T[g.home_team_id]; if (!a || !h) return false;
+            var tm = Object.keys(gc.teams || {}).map(function(k) { return gc.teams[k]; }); if (tm.length < 2) return false;
+            function same(x, y) { return !!x && !!y && ((x.full && y.full_name && x.full.toLowerCase() === String(y.full_name).toLowerCase()) || (x.abbr && y.abbr && x.abbr.toUpperCase() === String(y.abbr).toUpperCase())); }
+            var ok = 0; tm.forEach(function(t) { if (same(t, a) || same(t, h)) ok++; }); return ok >= 2;
+        }
+        async function goPoll() {
+            var key = go.key; if (!gc.open || gc.key !== key) return;
+            if (gc.state === 'post') { goStop(); return; }
+            try {
+                var r = await arcadeFetch('https://api.actionnetwork.com/web/v2/scoreboard/' + go.lg + '?period=game&bookIds=15,' + obOriginBook() + '&date=' + obYmd(new Date().getHours() < 6 ? Date.now() - 86400000 : Date.now()));
+                var d = await r.json(); if (!gc.open || gc.key !== key) return;
+                var g = null; (d.games || []).forEach(function(x) { if (!g && (go.anId ? x.id === go.anId : goMatch(x))) g = x; });
+                if (g) {
+                    go.anId = g.id; var T = {}; (g.teams || []).forEach(function(t) { T[t.id] = t; });
+                    var ev = g.markets && g.markets['15'] && g.markets['15'].event, live = g.status === 'inprogress';
+                    var useLive = live && !!(obPick(ev, 'spread', 'home', true) || obPick(ev, 'moneyline', 'home', true) || obPick(ev, 'total', 'over', true));
+                    function pk(t, sd) { return obPick(ev, t, sd, useLive); }
+                    var sh = pk('spread', 'home'), ov = pk('total', 'over'), mla = pk('moneyline', 'away'), mlh = pk('moneyline', 'home');
+                    var ha = (T[g.home_team_id] || {}).abbr || 'HOME', aa = (T[g.away_team_id] || {}).abbr || 'AWAY', parts = [];
+                    if (sh) parts.push(escHtml(ha) + ' ' + obNum(sh.value));
+                    if (ov) parts.push('O/U ' + escHtml(ov.value));
+                    if (mla && mlh && !sh) parts.push('ML ' + escHtml(Number(mla.odds) < Number(mlh.odds) ? aa : ha) + ' ' + obOdds(Math.min(Number(mla.odds), Number(mlh.odds))));
+                    if (parts.length) { go.buf.push({ at: Date.now(), html: '<b>' + (useLive ? 'LIVE ODDS' : 'PREGAME LINE') + '</b>' + parts.join(' \u2022 ') }); if (go.buf.length > 40) go.buf.shift(); }
+                }
+                go.fails = 0;
+            } catch (e) { go.fails++; }
+            if (gc.open && gc.key === key) go.timer = setTimeout(goPoll, go.fails > 3 ? GO_MS * 3 : GO_MS);
+            goShow();
+        }
+        function goShow() { // newest odds older than the TV delay (DELAY ALL on), else newest
+            var el = document.getElementById('gc-odds'); if (!el) return;
+            var lim = (typeof gcDeOn === 'function' && gcDeOn()) ? Date.now() - gcDelay() * 1000 : Infinity, pick = null;
+            for (var i = 0; i < go.buf.length; i++) if (go.buf[i].at <= lim) pick = go.buf[i];
+            var h = pick ? pick.html : '';
+            if (el.innerHTML !== h) el.innerHTML = h;
+            el.hidden = !h;
+        }
 
         // ---------- ODDS BOARD: Action Network public scoreboard (CORS-open, no key; same API as props/futures) ----------
         // book 15 = consensus (current line + public bet %/money %), book 30 = opening line ("PREGAME"). Biggest games = most bets tracked.
@@ -4538,6 +4591,7 @@
             gcRenderShell(meta);
             gcPoll();
             gcFastStart();
+            goStart();
             gc.scrollTimer = setInterval(gcAutoScroll, 60);
             return true;
         }
@@ -4545,7 +4599,7 @@
             gc.reqId++;
             clearTimeout(gc.timer); gc.timer = null;
             if (gc.ctrl) { try { gc.ctrl.abort(); } catch (e) {} gc.ctrl = null; }
-            gcFastStop(); gc.f = null;
+            gcFastStop(); gc.f = null; goStop();
             clearInterval(gc.scrollTimer); gc.scrollTimer = null;
         }
         function gcClose() {
