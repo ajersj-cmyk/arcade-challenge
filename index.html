@@ -889,7 +889,28 @@
         #gc-venue img { width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity 0.8s ease; }
         #gc-venue img.ok { opacity: 0.5; }
         #gc-venue::after { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(5, 8, 15, 0.55) 0%, rgba(5, 8, 15, 0.72) 55%, #05080f 100%); }
-    </style>
+
+        /* CRT scanline filter (optional, Settings > Display). Static gradients only: no animation, no flicker, no filters. */
+        #crt-overlay { display: none; position: fixed; inset: 0; z-index: 24000; pointer-events: none;
+            background: repeating-linear-gradient(to bottom, rgba(0,0,0,0) 0, rgba(0,0,0,0) 2px, rgba(0,0,0,0.3) 3px, rgba(0,0,0,0) 4px); }
+        #crt-overlay::after { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse at center, rgba(0,0,0,0) 62%, rgba(0,0,0,0.45) 100%); }
+        body.crt-on #crt-overlay { display: block; }
+        body.crt-lite #crt-overlay::after { display: none; } /* Lite (TV app): scanlines only, no vignette layer */
+        /* DISC GOLF slide */
+        .dg-meta { text-align: center; font-family: 'Share Tech Mono', monospace; font-size: 2.4vh; letter-spacing: 0.2vw; opacity: 0.85; margin: -1vh 0 1.5vh; text-transform: uppercase; }
+        .dg-row { display: flex; flex-direction: row !important; align-items: center; padding: 1.1vh 2.5vh; margin-bottom: 1vh; }
+        .dg-pos { font-size: 4.2vh; font-weight: 900; width: 9vh; text-align: center; flex-shrink: 0; }
+        .dg-name { font-size: 3.8vh; font-weight: 900; flex: 1; margin-left: 1.5vw; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #fff; }
+        .dg-rds { font-family: 'Share Tech Mono', monospace; font-size: 2.6vh; opacity: 0.85; margin: 0 2vw; white-space: nowrap; }
+        .dg-thru { font-size: 2.4vh; font-weight: 900; width: 10vh; text-align: center; text-transform: uppercase; }
+        .dg-par { font-size: 4.4vh; font-weight: 900; width: 11vh; text-align: right; color: #fff; }
+        .dg-par.under { color: #ff4d6d !important; }
+        .dg-ev { display: flex; flex-direction: row !important; align-items: center; padding: 1.8vh 2.5vh; margin-bottom: 1.4vh; }
+        .dg-date { font-size: 3vh; font-weight: 900; width: 20vh; flex-shrink: 0; text-transform: uppercase; }
+        .dg-evname { flex: 1; min-width: 0; font-size: 3.4vh; font-weight: 900; color: #fff; }
+        .dg-evname small { display: block; font-size: 2.3vh; font-weight: 700; opacity: 0.75; margin-top: 0.4vh; }
+        .dg-tier { font-size: 2.2vh; font-weight: 900; padding: 0.5vh 1.2vh; border: 2px solid currentColor; border-radius: 0.8vh; margin-left: 1.5vw; white-space: nowrap; }
+            </style>
 </head>
 <body class="theme-cyan">
 
@@ -943,6 +964,11 @@
             <div class="content-viewport" id="leaders-viewport"><div class="grid-track" id="leaders-grid-track"></div></div>
         </div>
 
+        <div id="discgolf-screen" class="slide-screen">
+            <div class="screen-header neon-text-cycle" id="dg-title">DISC GOLF</div>
+            <div class="dg-meta neon-text-cycle" id="dg-meta"></div>
+            <div class="content-viewport" id="dg-viewport"><div class="list-track" id="dg-track"></div></div>
+        </div>
         <div id="pga-screen" class="slide-screen">
             <div class="screen-header neon-text-cycle" id="pga-title">PGA TOUR</div>
             <div class="content-viewport" id="pga-viewport"><div class="list-track" id="pga-track"></div></div>
@@ -1057,6 +1083,7 @@
                     </div>
                     <div class="toggle-row"><span>Score Celebrations <span style="font-size:1.6vh; opacity:0.7;">(pick teams with &#9733; in Gamecast)</span></span> <input type="checkbox" id="set-celebrate" onchange="updateSettings()"></div>
                     <div class="toggle-row"><span>Full Effects <span style="font-size:1.6vh; opacity:0.7;">(strobes, confetti, shake; off = Lite, smooth on budget TV boxes; TV app always Lite)</span></span> <input type="checkbox" id="set-celFull" onchange="updateSettings()"></div>
+                    <div class="toggle-row"><span>CRT Scanlines <span style="font-size:1.6vh; opacity:0.7;">(retro arcade-monitor look; static, no flicker; this TV only)</span></span> <input type="checkbox" id="set-crt" onchange="updateSettings()"></div>
                     <div style="margin-bottom: 2vh;">
                         <div style="font-size: 1.8vh; color: #ffe600; margin-bottom: 0.5vh; text-transform: uppercase;">Celebration Delay (match your TV's lag, &#9664; &#9654; to adjust):</div>
                         <div style="display:flex; align-items:center; gap:2vh;">
@@ -1100,6 +1127,7 @@
                     <div class="toggle-row"><span>Live Trivia Game</span> <input type="checkbox" id="set-trivia" onchange="updateSettings()"></div>
                     <div class="toggle-row"><span>Top Stats Leaders</span> <input type="checkbox" id="set-leaders" onchange="updateSettings()"></div>
                     <div class="toggle-row"><span>PGA Golf Slide</span> <input type="checkbox" id="set-pga" onchange="updateSettings()"></div>
+                    <div class="toggle-row"><span>Disc Golf Slide <span style="font-size:1.6vh; opacity:0.7;">(DGPT/PDGA live leaderboard or schedule)</span></span> <input type="checkbox" id="set-discGolf" onchange="updateSettings()"></div>
 
 
 
@@ -1293,7 +1321,7 @@
             var w = document.getElementById('main-wrapper'); if (w) w.classList.remove('bx-cover');
             if (bxT.from) { bxT.from.classList.remove('bx-old'); if (bxT.from.getAttribute('data-bx-hide') === '1') bxT.from.style.display = 'none'; bxT.from.removeAttribute('data-bx-hide'); bxT.from = null; }
         }
-        var BX_SCREEN = { live: 'live-game-screen', hotProps: 'hotprops-screen', mySquad: 'mysquad-screen', trivia: 'trivia-screen', leaders: 'leaders-screen', pga: 'pga-screen',
+        var BX_SCREEN = { live: 'live-game-screen', hotProps: 'hotprops-screen', mySquad: 'mysquad-screen', trivia: 'trivia-screen', leaders: 'leaders-screen', pga: 'pga-screen', discGolf: 'discgolf-screen',
             ufc: 'ufc-screen', command: 'command-screen', soccerSlide: 'soccer-screen', tvGuide: 'tvguide-screen', news: 'news-screen', pickem: 'pickem-screen', odds: 'odds-screen', futures: 'futures-screen',
             nflFutures: 'nflfut-screen', nflAwards: 'nflawards-screen', fantasy: 'fantasy-screen', cfbFutures: 'cfbfut-screen', nhlFutures: 'nhlfut-screen', rankings: 'rankings-screen',
             nfl: 'nfl-screen', nba: 'nba-screen', nhl: 'nhl-screen', mlb: 'mlb-screen' };
@@ -1385,7 +1413,7 @@
         var currentThemeIndex = 0;
 
         var defaultSettings = { 
-            nfl:true, nba:true, nhl:true, mlb:true, rankings:true, odds:true, futures:true, nflFutures:true, nflAwards:true, fantasy:true, cfbFutures:true, nhlFutures:true, tvGuide:true, news:true, pickem:true, phoneRemote:true, pickemPin:"", pickemRoom:"", mySquad:true, ufc:true, command:true, leaders:true, pga:true, soccerSlide:true, trivia:true, hotProps:true,
+            nfl:true, nba:true, nhl:true, mlb:true, rankings:true, odds:true, futures:true, nflFutures:true, nflAwards:true, fantasy:true, cfbFutures:true, nhlFutures:true, tvGuide:true, news:true, pickem:true, phoneRemote:true, pickemPin:"", pickemRoom:"", mySquad:true, ufc:true, command:true, leaders:true, pga:true, discGolf:true, crt:false, soccerSlide:true, trivia:true, hotProps:true,
             showWorldCup:true, showEPL:true, showUCL:true, showATP:true, showWTA:true, showNFL:true, showNBA:true, showNHL:true, showMLB:true, showCFB:true, showCBB:true, showCLB:true,
             cbb50:true, cfb75:true, clb50:true, apiBase:"https://site.api.espn.com/apis",
             mySquadTeams: "Carolina Hurricanes, Duke, ECU, East Carolina",
@@ -1444,6 +1472,7 @@
                 }
             }); 
             if(document.getElementById('speed-display')) document.getElementById('speed-display').innerText = settings.tickerSpeed;
+            try { crtApply(); } catch (e) {}
             try { celDelayUI(); } catch (e) {}
             try { smUI(); } catch (e) {}
             var remoteUrl = window.Pickem ? (pkRoom(), Pickem.pickUrl(settings.pickemPin, pkTvKey())) : window.location.href.split('#')[0] + '#remote'; // phone remote (this TV) + pick'em room
@@ -1725,7 +1754,7 @@
         function isCurrentSlide(gen) { return gen === slideGen; }
 
         var ARCADE_SCREENS = [
-            'live', 'hotProps', 'mySquad', 'pickem', 'trivia', 'leaders', 'pga', 'ufc', 'command',
+            'live', 'hotProps', 'mySquad', 'pickem', 'trivia', 'leaders', 'pga', 'discGolf', 'ufc', 'command',
             'soccerSlide', 'tvGuide', 'news', 'odds', 'futures', 'nflFutures', 'nflAwards', 'cfbFutures', 'nhlFutures',
             'rankings', 'nfl', 'nba', 'nhl', 'mlb'
         ];
@@ -2021,7 +2050,7 @@
             if (rotationStep >= screens.length) rotationStep = 0;
             var current = screens[rotationStep];
             
-            if (!slideOn(current) || smSlideEmpty(current)) {
+            if (!slideOn(current) || smSlideEmpty(current) || (current === 'discGolf' && !dgReady())) {
                 rotationStep++; nextSlide(); return;
             }
             
@@ -2037,6 +2066,7 @@
                 else if (current === 'trivia') showTrivia();
                 else if (current === 'leaders') showLeaders();
                 else if (current === 'pga') showPGA(gen);
+                else if (current === 'discGolf') showDiscGolf(gen);
 
 
                 else if (current === 'ufc') showUFC(gen);
@@ -2508,6 +2538,90 @@
         }
 
         async function showCommand() { document.getElementById('command-screen').style.display = 'flex'; slideTimer = slideTimeout(nextSlide, 15000); }
+
+        // ---------- CRT SCANLINES (Settings > Display, OFF by default, saved per device with the other settings) ----------
+        function crtApply() {
+            var on = !!settings.crt; document.body.classList.toggle('crt-on', on);
+            var lite = false; try { lite = bxLite() || celLite(); } catch (e) {}
+            document.body.classList.toggle('crt-lite', on && lite);
+        }
+
+        // ---------- DISC GOLF: PDGA live scoring (public, CORS-open JSON used by pdga.com/live) ----------
+        // Live elite event (DGPT / Majors / Elite Series) -> top 10 MPO; otherwise the next featured events. No data -> slide skipped.
+        var DG_BASE = 'https://www.pdga.com', DG_TIERS = { ES: 'ELITE SERIES', M: 'MAJOR', XM: 'MAJOR', NT: 'NATIONAL TOUR', XA: 'A-TIER+' };
+        var dg = { at: 0, busy: null, data: null };
+        function dgReady() { if (Date.now() - dg.at > 300000) dgLoad(); return !!(dg.data && (dg.data.live || (dg.data.upcoming && dg.data.upcoming.length))); }
+        function dgFeatured(e) { var n = String(e.officialName || ''); if (/amateur|\bam\b|junior/i.test(n)) return false; return !!DG_TIERS[e.tier] || /\bDGPT\b/.test(n); }
+        function dgLoad() {
+            if (dg.busy) return dg.busy;
+            dg.busy = (async function() {
+                try {
+                    var r = await arcadeFetch(DG_BASE + '/api/v1/feat/current-events/tournaments'); var list = await r.json();
+                    var now = Date.now(), ev = (Array.isArray(list) ? list : []).filter(dgFeatured).map(function(e) {
+                        return { id: e.tournId, name: e.officialName, tier: e.tier, s: Date.parse(e.startDate), e: Date.parse(e.endDate) + 86400000 + 6 * 3600000,
+                                 loc: [e.city, e.state || e.countryISO].filter(Boolean).join(', '), sd: String(e.startDate).slice(0, 10), ed: String(e.endDate).slice(0, 10) };
+                    }).filter(function(e) { return !isNaN(e.s); }).sort(function(a, b) { return a.s - b.s; });
+                    var out = { upcoming: ev.filter(function(e) { return e.s > now; }).slice(0, 6), live: null };
+                    var cur = ev.filter(function(e) { return e.s <= now && now <= e.e; });
+                    cur.sort(function(a, b) { return (/DGPT|Major|Championship/i.test(b.name) ? 1 : 0) - (/DGPT|Major|Championship/i.test(a.name) ? 1 : 0); });
+                    for (var i = 0; i < cur.length && !out.live; i++) {
+                        try {
+                            var er = await arcadeFetch(DG_BASE + '/apps/tournament/live-api/live_results_fetch_event?TournID=' + cur[i].id); var ed = (await er.json()).data;
+                            var div = (ed.Divisions || []).filter(function(d) { return d.Division === 'MPO'; })[0] || (ed.Divisions || [])[0];
+                            if (!div || !div.LatestRound) continue;
+                            var rr = await arcadeFetch(DG_BASE + '/apps/tournament/live-api/live_results_fetch_round?TournID=' + cur[i].id + '&Division=' + encodeURIComponent(div.Division) + '&Round=' + div.LatestRound);
+                            var rd = (await rr.json()).data; rd = Array.isArray(rd) ? rd[0] : rd;
+                            var sc = (rd && rd.scores || []).filter(function(p) { return p.RunningPlace; }).sort(function(a, b) { return a.RunningPlace - b.RunningPlace; });
+                            if (!sc.length) continue;
+                            var rl = ed.RoundsList && ed.RoundsList[div.LatestRound];
+                            out.live = { name: ed.Name || cur[i].name, tier: cur[i].tier, loc: ed.LocationShort || cur[i].loc, dates: ed.DateRange || '', div: div.Division,
+                                round: rl ? rl.Label : 'Round ' + div.LatestRound, final: ed.Finals === 'yes' && ed.HighestCompletedRound === ed.FinalRound,
+                                rows: sc.slice(0, 10).map(function(p) {
+                                    return { place: p.RunningPlace, tied: !!p.Tied, name: p.Name || ((p.FirstName || '') + ' ' + (p.LastName || '')), toPar: p.ToPar,
+                                             rounds: String(p.Rounds || '').split(',').filter(function(x) { return x !== ''; }),
+                                             thru: p.Completed ? 'F' : (p.Played ? String(p.Played) : (p.TeeTime ? String(p.TeeTime).slice(0, 5) : '-')) };
+                                }) };
+                        } catch (e2) {}
+                    }
+                    dg.data = out; dg.at = Date.now();
+                } catch (e) { dg.at = Date.now() - 240000; } // retry in ~1 min
+                finally { dg.busy = null; }
+            })();
+            return dg.busy;
+        }
+        function dgPar(v) { var n = Number(v); if (v == null || isNaN(n)) return '-'; return n === 0 ? 'E' : (n > 0 ? '+' + n : String(n)); }
+        function dgDate(sd, ed) {
+            var M = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'], a = sd.split('-'), b = ed.split('-');
+            return M[+a[1] - 1] + ' ' + (+a[2]) + (ed && ed !== sd ? '\u2013' + (a[1] === b[1] ? '' : M[+b[1] - 1] + ' ') + (+b[2]) : '');
+        }
+        async function showDiscGolf(gen) {
+            var screen = document.getElementById('discgolf-screen'), track = document.getElementById('dg-track'), meta = document.getElementById('dg-meta'), title = document.getElementById('dg-title');
+            if (!dg.data || Date.now() - dg.at > 300000) { try { await dgLoad(); } catch (e) {} if (!isCurrentSlide(gen)) return; }
+            var d = dg.data;
+            if (!d || (!d.live && !(d.upcoming && d.upcoming.length))) { nextSlide(); return; }
+            screen.style.display = 'flex';
+            if (d.live) {
+                var L = d.live;
+                title.textContent = String(L.name).replace(/^DGPT\s*(Playoffs\s*)?-\s*/i, '').toUpperCase();
+                meta.textContent = (L.final ? 'FINAL' : 'LIVE') + ' \u2022 ' + L.div + ' \u2022 ' + L.round + ' \u2022 ' + L.loc + (DG_TIERS[L.tier] ? ' \u2022 ' + DG_TIERS[L.tier] : '') + ' \u2022 DATA: PDGA.COM';
+                track.innerHTML = L.rows.map(function(p) {
+                    var tp = Number(p.toPar);
+                    return '<div class="dg-row glass-card"><div class="dg-pos neon-text-cycle">' + (p.tied ? 'T' : '') + escHtml(p.place) + '</div>' +
+                        '<div class="dg-name">' + escHtml(p.name) + '</div><div class="dg-rds">' + escHtml(p.rounds.join(' \u00b7 ')) + '</div>' +
+                        '<div class="dg-thru neon-text-cycle">' + (p.thru === 'F' ? 'F' : (/:/.test(p.thru) ? escHtml(p.thru) : 'THRU ' + escHtml(p.thru))) + '</div>' +
+                        '<div class="dg-par card-val-lg' + (tp < 0 ? ' under' : '') + '">' + dgPar(p.toPar) + '</div></div>';
+                }).join('');
+            } else {
+                title.textContent = 'DISC GOLF \u2022 UP NEXT';
+                meta.textContent = 'DGPT \u2022 MAJORS \u2022 ELITE SERIES \u2022 DATA: PDGA.COM';
+                track.innerHTML = d.upcoming.map(function(e) {
+                    return '<div class="dg-ev glass-card"><div class="dg-date neon-text-cycle">' + dgDate(e.sd, e.ed) + '</div>' +
+                        '<div class="dg-evname">' + escHtml(e.name) + '<small>' + escHtml(e.loc) + '</small></div>' +
+                        '<div class="dg-tier neon-text-cycle">' + escHtml(DG_TIERS[e.tier] || e.tier) + '</div></div>';
+                }).join('');
+            }
+            applyScroll('dg-viewport', 'dg-track', 12000);
+        }
 
         async function showPGA(gen) {
             try {
@@ -5276,7 +5390,7 @@
         var arcadeNav = { paused: false, pending: false, forcing: false, menuOpen: false, current: null,
                           idleMs: 10000, settingsIdleMs: 90000, pauseMaxMs: 600000,
                           idleTimer: null, settingsTimer: null, pauseTimer: null, hudTimer: null, historyArmed: false };
-        var NAV_TITLES = { live: 'LIVE ACTION', hotProps: 'HOT PROPS', mySquad: 'MY SQUAD', trivia: 'TRIVIA', leaders: 'TOP PERFORMERS', pga: 'PGA TOUR',
+        var NAV_TITLES = { live: 'LIVE ACTION', hotProps: 'HOT PROPS', mySquad: 'MY SQUAD', trivia: 'TRIVIA', leaders: 'TOP PERFORMERS', pga: 'PGA TOUR', discGolf: 'DISC GOLF',
             ufc: 'UFC', command: 'COMMAND CENTER', soccerSlide: 'SOCCER', tvGuide: 'TV GUIDE', news: 'HEADLINES', pickem: "PICK'EM", odds: "TODAY'S LINES", futures: 'FUTURES',
             nflFutures: 'NFL FUTURES', nflAwards: 'NFL AWARDS', fantasy: 'NFL FANTASY', cfbFutures: 'CFB FUTURES', nhlFutures: 'NHL FUTURES', rankings: 'CFB RANKINGS', nfl: 'NFL STANDINGS', nba: 'NBA STANDINGS',
             nhl: 'NHL STANDINGS', mlb: 'MLB STANDINGS' };
@@ -5597,7 +5711,7 @@
         });
 
         window.addEventListener('load', async function() { 
-            checkMode(); loadSettingsUI(); updateClock(); setInterval(updateClock, 1000);
+            checkMode(); loadSettingsUI(); updateClock(); setInterval(updateClock, 1000); try { if (settings.discGolf) setTimeout(dgLoad, 8000); } catch (e) {}
             renderSkeletons();
             requestWakeLock(); scheduleSoftReload();
             fetchCommandData(); fetchNextTrivia(); hpLoad().catch(function(){});
@@ -5610,5 +5724,6 @@
             window.addEventListener('offline', function() { netSet(true, true); });
         });
     </script>
+<div id="crt-overlay" aria-hidden="true"></div>
 </body>
 </html>
