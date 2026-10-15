@@ -3503,7 +3503,10 @@
             var url = String(ref || '').replace(/^http:/, 'https:');
             if (!url) return null;
             if (!espnRefCache[url]) {
-                espnRefCache[url] = fetch(url).then(function(r) { return r.ok ? r.json() : null; }).catch(function() { return null; });
+                // Prefer the CORS-open site API: sports.core team refs intermittently answer without CORS headers (console error on the TV).
+                var mm = url.match(/\/sports\/([^\/]+)\/leagues\/([^\/]+)\/.*teams\/(\d+)/);
+                espnRefCache[url] = (mm ? fetch('https://site.api.espn.com/apis/site/v2/sports/' + mm[1] + '/' + mm[2] + '/teams/' + mm[3]).then(function(r) { return r.ok ? r.json() : null; }).then(function(j) { return j && j.team; })
+                    : fetch(url).then(function(r) { return r.ok ? r.json() : null; })).catch(function() { return null; });
             }
             var t = await espnRefCache[url];
             if (!t || !(t.displayName || t.shortDisplayName)) return null;
