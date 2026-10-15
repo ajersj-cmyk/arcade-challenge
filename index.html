@@ -980,6 +980,11 @@
         .dg-evname { flex: 1; min-width: 0; font-size: 3.4vh; font-weight: 900; color: #fff; }
         .dg-evname small { display: block; font-size: 2.3vh; font-weight: 700; opacity: 0.75; margin-top: 0.4vh; }
         .dg-tier { font-size: 2.2vh; font-weight: 900; padding: 0.5vh 1.2vh; border: 2px solid currentColor; border-radius: 0.8vh; margin-left: 1.5vw; white-space: nowrap; }
+        /* Ticker welcome message only: embossed white + thick cyan neon outline (static, no animation) */
+        #ticker-track .ticker-msg { color: #fff !important; transition: none !important; letter-spacing: 0.06em !important;
+            -webkit-text-stroke: 1.3vh #00f0ff; paint-order: stroke fill; line-height: 1.25;
+            text-shadow: -0.15vh -0.15vh 0 rgba(255,255,255,0.95), 0.2vh 0.2vh 0 #b8c0cc, 0.45vh 0.45vh 0 #6b7280, 0.7vh 0.7vh 0 #374151,
+                0.9vh 1vh 0.5vh rgba(0,0,0,0.85), 0 0 0.8vh #00f0ff, 0 0 1.5vh #00f0ff, 0 0 2.8vh rgba(0,240,255,0.45) !important; }
             </style>
 </head>
 <body class="theme-cyan">
@@ -2448,7 +2453,7 @@
             else trackHtml = '<span class="ticker-section-head neon-text-cycle">' + smHead + (smHead && !allSched.length ? 'NO GAMES ON THE BOARD' : 'UPCOMING') + '</span>' + allSched.join('');
             
             if (settings.marqueeMessage && settings.marqueeMessage.trim() !== '') {
-                trackHtml += '<span class="score-item"><span class="neon-text-cycle" style="font-size:4rem; font-weight:900; letter-spacing:0.2vw; margin-left: 5vw;">••• ' + settings.marqueeMessage.toUpperCase() + ' •••</span></span>';
+                trackHtml += '<span class="score-item"><span class="neon-text-cycle ticker-msg" style="font-size:4rem; font-weight:900; margin-left: 5vw;">••• ' + settings.marqueeMessage.toUpperCase() + ' •••</span></span>';
             }
             
             document.getElementById('ticker-track').innerHTML = trackHtml + trackHtml;
