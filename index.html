@@ -897,15 +897,25 @@
         body.crt-on #crt-overlay { display: block; }
         body.crt-lite #crt-overlay::after { display: none; } /* Lite (TV app): scanlines only, no vignette layer */
         /* DISC GOLF slide */
-        .dg-meta { text-align: center; font-family: 'Share Tech Mono', monospace; font-size: 2.4vh; letter-spacing: 0.2vw; opacity: 0.85; margin: -1vh 0 1.5vh; text-transform: uppercase; }
-        .dg-row { display: flex; flex-direction: row !important; align-items: center; padding: 1.1vh 2.5vh; margin-bottom: 1vh; }
-        .dg-pos { font-size: 4.2vh; font-weight: 900; width: 9vh; text-align: center; flex-shrink: 0; }
-        .dg-name { font-size: 3.8vh; font-weight: 900; flex: 1; margin-left: 1.5vw; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #fff; }
+        .dg-meta { text-align: center; font-family: 'Share Tech Mono', monospace; font-size: 2.1vh; letter-spacing: 0.15vw; opacity: 0.85; margin: -1.5vh 0 0.8vh; text-transform: uppercase; }
+        .dg-row { display: flex; flex-direction: row !important; align-items: center; padding: 0.15vh 2.2vh; margin-bottom: 0.3vh; }
+        #dg-track { gap: 0.6vh; }
+        #dg-track .dg-row { margin-bottom: 0; padding-top: 0 !important; padding-bottom: 0 !important; height: 5.3vh; box-sizing: border-box; }
+        .dg-ph { width: 3.7vh; height: 3.7vh; border-radius: 50%; object-fit: cover; object-position: top; background: #000; flex-shrink: 0; margin-left: 1vw; border: 0.25vh solid rgba(255,255,255,0.35); }
+        .dg-ini { display: inline-flex; align-items: center; justify-content: center; font-size: 2vh; font-weight: 900; color: #fff; background: rgba(255,255,255,0.12); }
+        .dg-num { font-family: 'Share Tech Mono', monospace; font-size: 2.1vh; opacity: 0.7; margin-left: 1vw; font-weight: 400; }
+        .dg-flag { font-size: 2.6vh; margin-left: 0.8vw; }
+        .dg-rt { font-family: 'Share Tech Mono', monospace; font-size: 2.6vh; width: 13vh; text-align: center; }
+        .dg-mv { font-size: 2vh; font-weight: 900; width: 6vh; text-align: center; opacity: 0.9; }
+        .dg-mv.up { color: #39ff88; } .dg-mv.dn { color: #ff4d6d; }
+        .dg-pg { font-size: 1.9vh; letter-spacing: 0.2vw; opacity: 0.7; margin-left: 1vw; }
+        .dg-pos { font-size: 2.8vh; font-weight: 900; width: 7vh; text-align: center; flex-shrink: 0; }
+        .dg-name { font-size: 2.6vh; font-weight: 900; flex: 1; margin-left: 1.5vw; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #fff; }
         .dg-rds { font-family: 'Share Tech Mono', monospace; font-size: 2.6vh; opacity: 0.85; margin: 0 2vw; white-space: nowrap; }
         .dg-thru { font-size: 2.4vh; font-weight: 900; width: 10vh; text-align: center; text-transform: uppercase; }
-        .dg-par { font-size: 4.4vh; font-weight: 900; width: 11vh; text-align: right; color: #fff; }
+        .dg-par { font-size: 3vh; font-weight: 900; width: 11vh; text-align: right; color: #fff; }
         .dg-par.under { color: #ff4d6d !important; }
-        .dg-ev { display: flex; flex-direction: row !important; align-items: center; padding: 1.8vh 2.5vh; margin-bottom: 1.4vh; }
+        .dg-ev { display: flex; flex-direction: row !important; align-items: center; padding: 1.4vh 2.5vh; margin-bottom: 1.1vh; }
         .dg-date { font-size: 3vh; font-weight: 900; width: 20vh; flex-shrink: 0; text-transform: uppercase; }
         .dg-evname { flex: 1; min-width: 0; font-size: 3.4vh; font-weight: 900; color: #fff; }
         .dg-evname small { display: block; font-size: 2.3vh; font-weight: 700; opacity: 0.75; margin-top: 0.4vh; }
@@ -2550,7 +2560,7 @@
         // Live elite event (DGPT / Majors / Elite Series) -> top 10 MPO; otherwise the next featured events. No data -> slide skipped.
         var DG_BASE = 'https://www.pdga.com', DG_TIERS = { ES: 'ELITE SERIES', M: 'MAJOR', XM: 'MAJOR', NT: 'NATIONAL TOUR', XA: 'A-TIER+' };
         var dg = { at: 0, busy: null, data: null };
-        function dgReady() { if (Date.now() - dg.at > 300000) dgLoad(); return !!(dg.data && (dg.data.live || (dg.data.upcoming && dg.data.upcoming.length))); }
+        function dgReady() { if (Date.now() - dg.at > 300000) dgLoad(); return !!(dg.data && (dg.data.live || dg.data.rank || (dg.data.upcoming && dg.data.upcoming.length))); }
         function dgFeatured(e) { var n = String(e.officialName || ''); if (/amateur|\bam\b|junior/i.test(n)) return false; return !!DG_TIERS[e.tier] || /\bDGPT\b/.test(n); }
         function dgLoad() {
             if (dg.busy) return dg.busy;
@@ -2577,12 +2587,14 @@
                             out.live = { name: ed.Name || cur[i].name, tier: cur[i].tier, loc: ed.LocationShort || cur[i].loc, dates: ed.DateRange || '', div: div.Division,
                                 round: rl ? rl.Label : 'Round ' + div.LatestRound, final: ed.Finals === 'yes' && ed.HighestCompletedRound === ed.FinalRound,
                                 rows: sc.slice(0, 10).map(function(p) {
-                                    return { place: p.RunningPlace, tied: !!p.Tied, name: p.Name || ((p.FirstName || '') + ' ' + (p.LastName || '')), toPar: p.ToPar,
+                                    return { place: p.RunningPlace, tied: !!p.Tied, pdga: p.PDGANum || '', photo: p.AvatarURL || '', country: p.Country || '', name: p.Name || ((p.FirstName || '') + ' ' + (p.LastName || '')), toPar: p.ToPar,
                                              rounds: String(p.Rounds || '').split(',').filter(function(x) { return x !== ''; }),
                                              thru: p.Completed ? 'F' : (p.Played ? String(p.Played) : (p.TeeTime ? String(p.TeeTime).slice(0, 5) : '-')) };
                                 }) };
                         } catch (e2) {}
                     }
+                    try { var rk = await arcadeFetch('discgolf-rankings.json?t=' + Math.floor(Date.now() / 1800000)); if (rk.ok) { var rj = await rk.json(); if (rj && rj.divisions && rj.divisions.MPO) out.rank = rj; } } catch (e3) {}
+                    if (!out.rank && dg.data && dg.data.rank) out.rank = dg.data.rank;
                     dg.data = out; dg.at = Date.now();
                 } catch (e) { dg.at = Date.now() - 240000; } // retry in ~1 min
                 finally { dg.busy = null; }
@@ -2594,34 +2606,68 @@
             var M = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'], a = sd.split('-'), b = ed.split('-');
             return M[+a[1] - 1] + ' ' + (+a[2]) + (ed && ed !== sd ? '\u2013' + (a[1] === b[1] ? '' : M[+b[1] - 1] + ' ') + (+b[2]) : '');
         }
-        async function showDiscGolf(gen) {
-            var screen = document.getElementById('discgolf-screen'), track = document.getElementById('dg-track'), meta = document.getElementById('dg-meta'), title = document.getElementById('dg-title');
-            if (!dg.data || Date.now() - dg.at > 300000) { try { await dgLoad(); } catch (e) {} if (!isCurrentSlide(gen)) return; }
-            var d = dg.data;
-            if (!d || (!d.live && !(d.upcoming && d.upcoming.length))) { nextSlide(); return; }
-            screen.style.display = 'flex';
-            if (d.live) {
-                var L = d.live;
-                title.textContent = String(L.name).replace(/^DGPT\s*(Playoffs\s*)?-\s*/i, '').toUpperCase();
-                meta.textContent = (L.final ? 'FINAL' : 'LIVE') + ' \u2022 ' + L.div + ' \u2022 ' + L.round + ' \u2022 ' + L.loc + (DG_TIERS[L.tier] ? ' \u2022 ' + DG_TIERS[L.tier] : '') + ' \u2022 DATA: PDGA.COM';
-                track.innerHTML = L.rows.map(function(p) {
+        function dgFlag(cc) { cc = String(cc || '').toUpperCase(); if (!/^[A-Z]{2}$/.test(cc)) return ''; return String.fromCodePoint(0x1F1E6 + cc.charCodeAt(0) - 65, 0x1F1E6 + cc.charCodeAt(1) - 65); }
+        function dgIni(n) { return String(n || '').split(/\s+/).filter(Boolean).map(function(w) { return w.charAt(0); }).join('').slice(0, 2).toUpperCase(); }
+        function dgImgErr(img) { var sp = document.createElement('span'); sp.className = 'dg-ph dg-ini'; sp.textContent = img.getAttribute('data-ini') || '?'; if (img.parentNode) img.parentNode.replaceChild(sp, img); }
+        function dgPhoto(url, name) { // PDGA only serves ~200 KB "large" photos: a free resizer (wsrv.nl) shrinks them to ~2 KB 96px WebP for the onn boxes
+            if (!url || /default/i.test(url)) return '<span class="dg-ph dg-ini">' + escHtml(dgIni(name)) + '</span>';
+            var src = 'https://wsrv.nl/?url=' + encodeURIComponent('www.pdga.com' + (url.charAt(0) === '/' ? '' : '/') + url.replace(/^https?:\/\/(www\.)?pdga\.com\/?/, '')) + '&w=96&h=96&fit=cover&a=top&output=webp&q=70';
+            return '<img class="dg-ph" loading="lazy" decoding="async" width="48" height="48" alt="" data-ini="' + escHtml(dgIni(name)) + '" src="' + escHtml(src) + '" onerror="dgImgErr(this)">';
+        }
+        function dgPageLive(L) {
+            return { title: String(L.name).replace(/^DGPT\s*(Playoffs\s*)?-\s*/i, '').toUpperCase(),
+                meta: (L.final ? 'FINAL' : 'LIVE') + ' \u2022 ' + L.div + ' \u2022 ' + L.round + ' \u2022 ' + L.loc + (DG_TIERS[L.tier] ? ' \u2022 ' + DG_TIERS[L.tier] : '') + ' \u2022 DATA: PDGA.COM',
+                html: L.rows.map(function(p) {
                     var tp = Number(p.toPar);
-                    return '<div class="dg-row glass-card"><div class="dg-pos neon-text-cycle">' + (p.tied ? 'T' : '') + escHtml(p.place) + '</div>' +
-                        '<div class="dg-name">' + escHtml(p.name) + '</div><div class="dg-rds">' + escHtml(p.rounds.join(' \u00b7 ')) + '</div>' +
+                    return '<div class="dg-row glass-card"><div class="dg-pos neon-text-cycle">' + (p.tied ? 'T' : '') + escHtml(p.place) + '</div>' + dgPhoto(p.photo, p.name) +
+                        '<div class="dg-name">' + escHtml(p.name) + (p.country ? '<span class="dg-flag">' + dgFlag(p.country) + '</span>' : '') + '</div><div class="dg-rds">' + escHtml(p.rounds.join(' \u00b7 ')) + '</div>' +
                         '<div class="dg-thru neon-text-cycle">' + (p.thru === 'F' ? 'F' : (/:/.test(p.thru) ? escHtml(p.thru) : 'THRU ' + escHtml(p.thru))) + '</div>' +
                         '<div class="dg-par card-val-lg' + (tp < 0 ? ' under' : '') + '">' + dgPar(p.toPar) + '</div></div>';
-                }).join('');
-            } else {
-                title.textContent = 'DISC GOLF \u2022 UP NEXT';
-                meta.textContent = 'DGPT \u2022 MAJORS \u2022 ELITE SERIES \u2022 DATA: PDGA.COM';
-                track.innerHTML = d.upcoming.map(function(e) {
+                }).join('') };
+        }
+        function dgPageRank(R, div) {
+            var D = R.divisions[div]; if (!D || !D.rows || !D.rows.length) return null;
+            return { title: div + ' WORLD RANKINGS', meta: 'OFFICIAL PDGA WORLD RANKINGS \u2022 ' + String(D.date || '').toUpperCase() + ' \u2022 RATING \u2022 AVG PTS \u2022 DATA: PDGA.COM',
+                html: D.rows.map(function(r) {
+                    var mv = Number(r.move) || 0;
+                    return '<div class="dg-row glass-card"><div class="dg-pos neon-text-cycle">' + escHtml(r.rank) + '</div>' +
+                        '<div class="dg-mv' + (mv > 0 ? ' up' : mv < 0 ? ' dn' : '') + '">' + (mv > 0 ? '\u25B2' + mv : mv < 0 ? '\u25BC' + (-mv) : '\u2013') + '</div>' + dgPhoto(r.photo, r.name) +
+                        '<div class="dg-name">' + escHtml(r.name) + (r.country ? '<span class="dg-flag">' + dgFlag(r.country) + '</span>' : '') + (r.pdga ? '<span class="dg-num">#' + escHtml(r.pdga) + '</span>' : '') + '</div>' +
+                        '<div class="dg-rt neon-text-cycle">' + (r.rating ? escHtml(r.rating) + ' RTG' : '') + '</div>' +
+                        '<div class="dg-par card-val-lg">' + escHtml(r.pts) + '</div></div>';
+                }).join('') };
+        }
+        function dgPageNext(up) {
+            return { title: 'DISC GOLF \u2022 UP NEXT', meta: 'DGPT \u2022 MAJORS \u2022 ELITE SERIES \u2022 DATA: PDGA.COM',
+                html: up.map(function(e) {
                     return '<div class="dg-ev glass-card"><div class="dg-date neon-text-cycle">' + dgDate(e.sd, e.ed) + '</div>' +
                         '<div class="dg-evname">' + escHtml(e.name) + '<small>' + escHtml(e.loc) + '</small></div>' +
                         '<div class="dg-tier neon-text-cycle">' + escHtml(DG_TIERS[e.tier] || e.tier) + '</div></div>';
-                }).join('');
-            }
-            applyScroll('dg-viewport', 'dg-track', 12000);
+                }).join('') };
         }
+        function dgPages(d) { // live: leaderboard, then MPO rankings. Otherwise: MPO rankings, FPO rankings, up next
+            var pg = [], R = d.rank;
+            if (d.live) pg.push(dgPageLive(d.live));
+            if (R) { pg.push(dgPageRank(R, 'MPO')); if (!d.live) pg.push(dgPageRank(R, 'FPO')); }
+            if (!d.live && d.upcoming && d.upcoming.length) pg.push(dgPageNext(d.upcoming));
+            return pg.filter(Boolean);
+        }
+        var DG_PAGE_MS = 13000;
+        async function showDiscGolf(gen) {
+            var screen = document.getElementById('discgolf-screen'), track = document.getElementById('dg-track'), meta = document.getElementById('dg-meta'), title = document.getElementById('dg-title');
+            if (!dg.data || Date.now() - dg.at > 300000) { try { await dgLoad(); } catch (e) {} if (!isCurrentSlide(gen)) return; }
+            var pages = dg.data ? dgPages(dg.data) : [];
+            if (!pages.length) { nextSlide(); return; }
+            screen.style.display = 'flex';
+            (function show(i) {
+                if (!isCurrentSlide(gen)) return;
+                var P = pages[i]; title.textContent = P.title; meta.textContent = P.meta + (pages.length > 1 ? ' \u2022 ' + (i + 1) + '/' + pages.length : '');
+                track.innerHTML = P.html; dgShown = i;
+                if (i < pages.length - 1) slideTimer = slideTimeout(function() { show(i + 1); }, DG_PAGE_MS);
+                else slideTimer = slideTimeout(nextSlide, DG_PAGE_MS);
+            })(0);
+        }
+        var dgShown = -1;
 
         async function showPGA(gen) {
             try {
