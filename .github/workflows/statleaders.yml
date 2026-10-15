@@ -1,0 +1,32 @@
+name: Refresh stat leaders
+# Hourly 10 AM - 2 AM Eastern: season stat leaders + in-season flags -> statleaders.json beside index.html
+# (scripts/fetch-statleaders.mjs, ESPN site API leaders trimmed from ~1-2 MB per league to ~40 KB total). The STAT LEADERS
+# slides re-read it every 45 min. Commits only when a leader/stat/season flag changes; failures keep the last good file.
+on:
+  schedule:
+    - cron: '23 14-23,0-6 * * *'
+  workflow_dispatch: {}
+permissions:
+  contents: write
+concurrency:
+  group: statleaders
+  cancel-in-progress: true
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Build statleaders.json
+        run: node scripts/fetch-statleaders.mjs statleaders.json
+      - name: Commit if changed
+        run: |
+          git config user.name  "statleaders-bot"
+          git config user.email "statleaders-bot@users.noreply.github.com"
+          git add statleaders.json
+          if git diff --cached --quiet; then echo "No change"; exit 0; fi
+          git commit -m "chore: refresh stat leaders [skip ci]"
+          git pull --rebase origin main && git push

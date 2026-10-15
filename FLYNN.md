@@ -139,6 +139,13 @@ no `futures.json` → Action Network live; no file + Action Network blocked → 
 `node tools/test-livenav.mjs [preview.html]` tests the remote card picker (§5): ▼ ring, grid moves, scroll-into-view above the ticker,
 rotation held + resumed (Back, idle, forced slide change), OK → that card's Gamecast, Back → picker, navBack() bridge, My Squad + Today's Lines.
 
+`node tools/test-tvdelay.mjs [preview.html] [--mem-secs 180]` tests **Delay everything to match my TV** (§5) in TV emulation (4x CPU):
+real ESPN NHL/MLB summaries served as a live mock game, mocked 2 s scoreboard, 12 s delay. Checks the honest SYNCING state on open,
+first render at arrival + delay, a goal not shown early, one celebration at TV time (no double delay), a correction before the TV
+gets there never celebrates, the WIN at TV time, the overlay DELAY ALL toggle + fine-tune badge, OFF = live Gamecast with the
+classic delayed celebration, the Settings checkbox, close/clean-up, a pre-game Gamecast not delayed, then heap (CDP, after GC)
+and buffer size with a 30 s delay, ON vs OFF, for `--mem-secs`. `test-celebrate.mjs` runs with DELAY ALL off (classic path).
+
 Output goes to `tools/out/<timestamp>-<name>/` (gitignored). Compare mode writes `before-*`, `after-*`,
 `compare-1920x1080.png`, `compare-1280x720.png` and `compare.html` (every slide side by side).
 
@@ -665,6 +672,20 @@ next slide shows right away.
   when the TV shows it. Summary plays are not used as anchors (they lag ~30–100 s). End of period (< 20 s, < 60 s in
   basketball) asks to wait. A bare OK in the overlay presses the big OK; the overlay keeps its focus while you watch the TV
   (no 10 s nav idle); BACK closes only the overlay. The FG hold-back still adds its 5 s.
+- **Delay everything to match my TV (`settings.tvDelayAll`, default ON; DELAY ALL: ON/OFF in the sync overlay, checkbox in
+  settings):** while a **live** Gamecast is open with a delay > 0, everything it shows (score, clock, plays, field/strike
+  zone, box score, win prob, venue) is replayed `gcDelay()` seconds late, so it never spoils the TV. Fetching and analysis stay
+  real time (stale filter, change detection, chase, SYNC TO TV clock, auto-close); only rendering is deferred. `gcBuild`
+  turns each summary into a small snapshot (`{at, trig, cel:{scores,state,hint}, html:{block id → html}, views}`), strings
+  equal to the previous snapshot are shared and the parsed JSON is dropped. `gc.dq` holds them (and the fast loop's rare
+  early-celebration entries); `gcDeTick` (from the 60 ms `gcAutoScroll`, throttled to 250 ms) applies every entry whose
+  `at <= now − delay`. Caps: 40 waiting snapshots (older ones keep only their celebration data), 60 hard, ~1.5 M new chars.
+  Celebrations/alerts fire when the snapshot is applied, timed from its arrival (`gc.replay` → `celQueue` uses `at`/`trig`),
+  so the delay is not added twice; a score corrected down in data that already arrived caps the replayed score
+  (`gcDeCap`) = the old "correction cancels the queued effect". Badge **📺 TV DELAY 18s** (`#gc-tvd`); until the first
+  snapshot is due: **SYNCING TO YOUR TV… CATCHING UP IN Ns** (no live score shown). Pre-game / final at open: not delayed.
+  Turning it OFF flushes the queue (live again, celebrations use the classic delay). Not delayed: the bottom ticker and
+  the Live Action cards (covered by the Gamecast while it is open; they refresh every 5 min) and the sync overlay itself.
 - **Preview:** console `arcadeCelebrate('goal' | 'td' | 'fg' | 'run' | 'hr' | 'win' | 'half' | 'period' | 'test')`,
   `arcadeCelebrate('redzone' | 'pp' | 'start' | 'lead' | 'big' | 'alerts')` for the banners, the
   **★ PREVIEW** button in settings, or open the page with `?celebrate=td` (etc.). `test` plays GOAL → TD → WIN.
@@ -705,6 +726,8 @@ next slide shows right away.
       (`tools/test-celebrate.mjs`)
 - [ ] Gamecast fast loop: 2 s single-event scoreboard only while live + visible, one request at a time, change → summary
       at once, backoff, stops when hidden/final/closed (`tools/test-fastloop.mjs`)
+- [ ] Delay everything to match my TV: live Gamecast replayed at the TV delay, badge, SYNCING state, celebrations once at TV
+      time, toggle in the sync overlay + settings, buffer memory capped (`tools/test-tvdelay.mjs`)
 - [ ] No API keys or secrets added; every new API is free, no-key and CORS-enabled
 - [ ] NFL FUTURES / NFL AWARDS / CFB FUTURES / NHL FUTURES slides populate, showing the 'UPDATED' time from futures.json, (from futures.json, or the live fallbacks) and can be toggled in settings
 - [ ] Idle kiosk shows **no** nav UI; ◀/▶, OK menu, Back, Play/Pause and auto-hide all work (harness remote checks)

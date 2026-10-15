@@ -345,6 +345,13 @@
         .gc-chip { font-size: 2.2vh; padding: 0.4vh 1.2vh; border: 1px solid currentColor; border-radius: 0.8vh; }
         .gc-net { font-size: 2.3vh; color: #facc15; max-width: 24vw; overflow: hidden; text-overflow: ellipsis; }
         .gc-top .gc-spacer { flex: 1 1 auto; }
+        .gc-odds { font-family: 'Share Tech Mono', monospace; font-size: 1.7vh; font-weight: 700; color: #39ff88; background: rgba(0,0,0,0.55); border: 1px solid rgba(57,255,136,0.45); border-radius: 0.8vh; padding: 0.3vh 1vh; white-space: nowrap; margin-left: 1vw; max-width: 26vw; overflow: hidden; text-overflow: ellipsis; flex-shrink: 0; }
+        body.gc-open #gamecast .gc-top:has(#gc-odds:not([hidden])) .gc-hint { display: none; } /* room for the odds pill */
+        .gc-odds b { color: #fff; font-family: 'Inter', sans-serif; font-weight: 900; letter-spacing: 0.08em; margin-right: 0.6vw; }
+        .gc-tvd { font-size: 1.9vh; font-weight: 900; letter-spacing: 0.08em; color: #000; background: #ffe600; border-radius: 0.8vh; padding: 0.3vh 1vh; white-space: nowrap; }
+        .gc-tvd.sync { background: transparent; color: #ffe600; border: 2px solid #ffe600; animation: gcTvdPulse 1.2s ease-in-out infinite; }
+        @keyframes gcTvdPulse { 50% { opacity: 0.45; } }
+        .gc-syncing { font-size: 3vh; font-weight: 900; color: #ffe600; letter-spacing: 0.06em; }
         #gc-updated { font-size: 2vh; color: rgba(255,255,255,0.75); display: flex; align-items: center; gap: 0.6vw; }
         #gc-updated.bad { color: #ff007f; }
         .gc-dot { width: 1.2vh; height: 1.2vh; border-radius: 50%; background: #39ff14; display: inline-block; box-shadow: 0 0 1vh #39ff14; }
@@ -637,6 +644,19 @@
         #celebrate .cel-pmore:empty { display: none; }
         #celebrate.mini .cel-player { display: none; }
         /* smaller alert banners (red zone, power play, game start, lead change, big plays) */
+        /* UPSET WATCH banner: built on demand, transform/opacity only, removed from the DOM after exactly 5 s */
+        #up-banner { position: fixed; left: 50%; top: 11vh; z-index: 39500; width: 78vw; margin-left: -39vw; display: flex; align-items: center; gap: 1.4vw; padding: 1.4vh 2vw;
+            background: #0b0f18; border: 0.4vh solid #ffd400; border-radius: 1.6vh; box-shadow: 0 1vh 3vh rgba(0,0,0,0.6); color: #fff; pointer-events: none;
+            opacity: 0; transform: translate3d(0,-4vh,0); animation: up-in 350ms ease-out 0ms both, up-out 350ms ease-in 4650ms both; will-change: transform, opacity; }
+        #up-banner .up-tag { font-family: 'Inter', sans-serif; font-weight: 900; font-size: 3.4vh; letter-spacing: 0.12em; color: #0b0f18; background: #ffd400; border-radius: 0.8vh; padding: 0.6vh 1.2vh; white-space: nowrap; }
+        #up-banner .up-dog { font-family: 'Share Tech Mono', monospace; font-size: 3vh; color: #ffd400; white-space: nowrap; }
+        #up-banner .up-mid { flex: 1; min-width: 0; display: flex; align-items: center; gap: 0.8vw; font-size: 3.2vh; font-weight: 900; white-space: nowrap; overflow: hidden; }
+        #up-banner .up-mid img { width: 6vh; height: 6vh; object-fit: contain; flex-shrink: 0; }
+        #up-banner .up-mid i { font-style: normal; font-size: 2.4vh; opacity: 0.75; font-weight: 700; }
+        #up-banner .up-sc { font-family: 'Share Tech Mono', monospace; font-size: 3.6vh; font-weight: 700; white-space: nowrap; }
+        #up-banner .up-per { font-size: 2.4vh; font-weight: 900; color: #ffd400; white-space: nowrap; margin-left: 0.6vw; }
+        @keyframes up-in { from { opacity: 0; transform: translate3d(0,-4vh,0); } to { opacity: 1; transform: translate3d(0,0,0); } }
+        @keyframes up-out { from { opacity: 1; transform: translate3d(0,0,0); } to { opacity: 0; transform: translate3d(0,-4vh,0); } }
         #cel-alert { position: fixed; left: 0; right: 0; bottom: 7vh; height: 17vh; z-index: 39000; display: none; --al1: #ff007f; --al2: #00f0ff; --al-ms: 9000ms; --al-loop: 3000ms; }
         #cel-alert.show { display: block; animation: al-life var(--al-ms) ease forwards; }
         #cel-alert .al-bar { position: absolute; left: 4vw; right: 4vw; top: 0; bottom: 0; display: flex; align-items: center; gap: 2.4vw; padding: 0 3vw; overflow: hidden; border-radius: 2vh; border: 0.5vh solid var(--al2);
@@ -885,7 +905,87 @@
         #gc-venue img { width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity 0.8s ease; }
         #gc-venue img.ok { opacity: 0.5; }
         #gc-venue::after { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(5, 8, 15, 0.55) 0%, rgba(5, 8, 15, 0.72) 55%, #05080f 100%); }
-    </style>
+
+        /* CRT scanline filter (optional, Settings > Display). Static gradients only: no animation, no flicker, no filters. */
+        #crt-overlay { display: none; position: fixed; inset: 0; z-index: 24000; pointer-events: none;
+            background: repeating-linear-gradient(to bottom, rgba(0,0,0,0) 0, rgba(0,0,0,0) 2px, rgba(0,0,0,0.3) 3px, rgba(0,0,0,0) 4px); }
+        #crt-overlay::after { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse at center, rgba(0,0,0,0) 62%, rgba(0,0,0,0.45) 100%); }
+        body.crt-on #crt-overlay { display: block; }
+        body.crt-lite #crt-overlay::after { display: none; } /* Lite (TV app): scanlines only, no vignette layer */
+        /* STAT LEADERS slides (one per sport): static gradients only */
+        .sl-screen .dg-meta { margin: 0.2vh 0 1.2vh; }
+        .sl-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.2vw; width: 94%; margin: 0 auto; height: 57vh; }
+        .sl-cat { display: flex; flex-direction: column; min-width: 0; border-radius: 1.6vh; overflow: hidden; background: #0b111c; border: 1px solid rgba(255,255,255,0.12); }
+        .sl-top { position: relative; height: 34vh; background: linear-gradient(160deg, var(--sl1, #1b2a44) 0%, var(--sl1, #1b2a44) 38%, #070b12 100%); overflow: hidden; }
+        .sl-top::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 55%; background: linear-gradient(to bottom, rgba(7,11,18,0) 0%, rgba(7,11,18,0.92) 75%); }
+        .sl-lbl { position: absolute; z-index: 2; top: 1vh; left: 1.2vh; right: 1.2vh; font-size: 2.1vh; font-weight: 900; letter-spacing: 0.16em; color: #fff; text-shadow: 0 0.3vh 0.6vh rgba(0,0,0,0.6); }
+        .sl-head { position: absolute; z-index: 1; left: 50%; bottom: 6.5vh; width: 24vh; height: 17.5vh; margin-left: -12vh; object-fit: cover; object-position: top; }
+        .sl-head.sl-ini { display: flex; align-items: center; justify-content: center; width: 16vh; height: 16vh; margin-left: -8vh; bottom: 10vh; border-radius: 50%; background: rgba(255,255,255,0.12); font-size: 6vh; font-weight: 900; color: #fff; }
+        .sl-logo { position: absolute; z-index: 2; top: 4vh; right: 1vh; width: 6.4vh; height: 6.4vh; object-fit: contain; padding: 0.7vh; box-sizing: border-box; border-radius: 50%; background: rgba(255,255,255,0.88); }
+        .sl-one { position: absolute; z-index: 3; left: 1.2vh; right: 1.2vh; bottom: 0.9vh; display: flex; align-items: flex-end; gap: 0.6vw; }
+        .sl-one .sl-nm { flex: 1; min-width: 0; font-size: 2.5vh; font-weight: 900; color: #fff; line-height: 1.1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .sl-one .sl-nm small { display: block; font-size: 1.7vh; font-weight: 700; opacity: 0.75; letter-spacing: 0.08em; }
+        .sl-one .sl-val { font-family: 'Barlow Condensed', 'Inter', sans-serif; font-style: italic; font-size: 7.5vh; font-weight: 900; line-height: 0.9; color: #fff; text-shadow: 0 0.4vh 1vh rgba(0,0,0,0.6); }
+        .sl-rk { position: absolute; z-index: 3; left: 1.2vh; top: 4.4vh; font-size: 4vh; font-weight: 900; color: #fff; opacity: 0.9; }
+        .sl-rest { flex: 1; display: flex; flex-direction: column; justify-content: space-evenly; padding: 0.6vh 1vh; }
+        .sl-row { display: flex; align-items: center; gap: 0.6vw; font-size: 2vh; font-weight: 800; color: #fff; min-width: 0; }
+        .sl-row b { width: 2.4vh; opacity: 0.6; font-size: 1.8vh; }
+        .sl-row .sl-mh { width: 3.8vh; height: 3.8vh; border-radius: 50%; object-fit: cover; object-position: top; background: rgba(255,255,255,0.1); flex-shrink: 0; }
+        .sl-row .sl-mh.sl-ini { display: inline-flex; align-items: center; justify-content: center; font-size: 1.5vh; font-weight: 900; }
+        .sl-row span { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .sl-row i { font-style: normal; font-size: 1.6vh; opacity: 0.65; }
+        .sl-row em { font-style: normal; font-family: 'Share Tech Mono', monospace; font-size: 2.2vh; color: var(--sl2, #39ff88); }
+        /* ODDS BOARD slide (sportsbook grid) */
+        #ob-track { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.4vh 1.6vw; width: 94%; margin: 0 auto; padding-bottom: 5vh; will-change: transform; }
+        .ob-card { padding: 1vh 1.4vh 1.1vh; }
+        .ob-hd { display: flex; align-items: center; gap: 1vw; font-size: 1.9vh; font-weight: 900; letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 0.6vh; }
+        .ob-hd .ob-when { margin-left: auto; opacity: 0.85; }
+        .ob-hd .ob-live { color: #ff3b5c; }
+        .ob-grid { display: grid; grid-template-columns: 1.25fr 1fr 0.95fr 0.8fr 1.05fr; gap: 0.5vh 0.5vw; align-items: stretch; }
+        .ob-col { font-size: 1.5vh; font-weight: 900; letter-spacing: 0.14em; opacity: 0.6; text-align: center; }
+        .ob-col:first-child { text-align: left; }
+        .ob-team { display: flex; align-items: center; gap: 0.7vw; font-size: 2.7vh; font-weight: 900; color: #fff; white-space: nowrap; overflow: hidden; }
+        .ob-team img { width: 3.6vh; height: 3.6vh; object-fit: contain; flex-shrink: 0; }
+        .ob-cell { background: rgba(0,0,0,0.45); border: 1px solid rgba(255,255,255,0.12); border-radius: 0.7vh; text-align: center; padding: 0.35vh 0.3vw; line-height: 1.15; }
+        .ob-cell b { display: block; font-size: 2.3vh; color: #fff; white-space: nowrap; }
+        .ob-cell i { display: block; font-style: normal; font-family: 'Share Tech Mono', monospace; font-size: 1.8vh; color: #39ff88; }
+        .ob-cell.na b { opacity: 0.4; }
+        .ob-cell.bm b { font-size: 2vh; } .ob-cell.bm i { color: #9fd8ff; }
+        .ob-sharp { display: inline-block; font-size: 1.4vh; font-weight: 900; color: #0a0a0a; background: #ffd400; border-radius: 0.4vh; padding: 0 0.5vh; margin-left: 0.4vh; letter-spacing: 0.08em; vertical-align: middle; }
+        .ob-mv { display: flex; flex-wrap: wrap; gap: 0.4vh 1.2vw; margin-top: 0.7vh; font-family: 'Share Tech Mono', monospace; font-size: 1.85vh; color: rgba(255,255,255,0.85); }
+        .ob-mv .up { color: #39ff88; } .ob-mv .dn { color: #ff4d6d; } .ob-mv .fl { opacity: 0.6; }
+        .ob-steam { font-family: 'Inter', sans-serif; font-size: 1.6vh; font-weight: 900; color: #fff; background: linear-gradient(90deg, #ff4d00, #ff007f); border-radius: 0.5vh; padding: 0.15vh 0.8vh; letter-spacing: 0.12em; }
+        .ob-empty { grid-column: 1 / -1; text-align: center; font-size: 3.6vh; font-weight: 900; padding-top: 8vh; }
+        /* DISC GOLF slide */
+        .dg-meta { text-align: center; font-family: 'Share Tech Mono', monospace; font-size: 2.1vh; letter-spacing: 0.15vw; opacity: 0.85; margin: -1.5vh 0 0.8vh; text-transform: uppercase; }
+        .dg-row { display: flex; flex-direction: row !important; align-items: center; padding: 0.15vh 2.2vh; margin-bottom: 0.3vh; }
+        #dg-track { gap: 0.6vh; }
+        #dg-track .dg-row { margin-bottom: 0; padding-top: 0 !important; padding-bottom: 0 !important; height: 5.3vh; box-sizing: border-box; }
+        .dg-ph { width: 3.7vh; height: 3.7vh; border-radius: 50%; object-fit: cover; object-position: top; background: #000; flex-shrink: 0; margin-left: 1vw; border: 0.25vh solid rgba(255,255,255,0.35); }
+        .dg-ini { display: inline-flex; align-items: center; justify-content: center; font-size: 2vh; font-weight: 900; color: #fff; background: rgba(255,255,255,0.12); }
+        .dg-num { font-family: 'Share Tech Mono', monospace; font-size: 2.1vh; opacity: 0.7; margin-left: 1vw; font-weight: 400; }
+        .dg-flag { font-size: 2.6vh; margin-left: 0.8vw; }
+        .dg-rt { font-family: 'Share Tech Mono', monospace; font-size: 2.6vh; width: 13vh; text-align: center; }
+        .dg-mv { font-size: 2vh; font-weight: 900; width: 6vh; text-align: center; opacity: 0.9; }
+        .dg-mv.up { color: #39ff88; } .dg-mv.dn { color: #ff4d6d; }
+        .dg-pg { font-size: 1.9vh; letter-spacing: 0.2vw; opacity: 0.7; margin-left: 1vw; }
+        .dg-pos { font-size: 2.8vh; font-weight: 900; width: 7vh; text-align: center; flex-shrink: 0; }
+        .dg-name { font-size: 2.6vh; font-weight: 900; flex: 1; margin-left: 1.5vw; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #fff; }
+        .dg-rds { font-family: 'Share Tech Mono', monospace; font-size: 2.6vh; opacity: 0.85; margin: 0 2vw; white-space: nowrap; }
+        .dg-thru { font-size: 2.4vh; font-weight: 900; width: 10vh; text-align: center; text-transform: uppercase; }
+        .dg-par { font-size: 3vh; font-weight: 900; width: 11vh; text-align: right; color: #fff; }
+        .dg-par.under { color: #ff4d6d !important; }
+        .dg-ev { display: flex; flex-direction: row !important; align-items: center; padding: 1.4vh 2.5vh; margin-bottom: 1.1vh; }
+        .dg-date { font-size: 3vh; font-weight: 900; width: 20vh; flex-shrink: 0; text-transform: uppercase; }
+        .dg-evname { flex: 1; min-width: 0; font-size: 3.4vh; font-weight: 900; color: #fff; }
+        .dg-evname small { display: block; font-size: 2.3vh; font-weight: 700; opacity: 0.75; margin-top: 0.4vh; }
+        .dg-tier { font-size: 2.2vh; font-weight: 900; padding: 0.5vh 1.2vh; border: 2px solid currentColor; border-radius: 0.8vh; margin-left: 1.5vw; white-space: nowrap; }
+        /* Ticker welcome message only: embossed white + thick cyan neon outline (static, no animation) */
+        #ticker-track .ticker-msg { color: #fff !important; transition: none !important; letter-spacing: 0.06em !important;
+            -webkit-text-stroke: 1.3vh #00f0ff; paint-order: stroke fill; line-height: 1.25;
+            text-shadow: -0.15vh -0.15vh 0 rgba(255,255,255,0.95), 0.2vh 0.2vh 0 #b8c0cc, 0.45vh 0.45vh 0 #6b7280, 0.7vh 0.7vh 0 #374151,
+                0.9vh 1vh 0.5vh rgba(0,0,0,0.85), 0 0 0.8vh #00f0ff, 0 0 1.5vh #00f0ff, 0 0 2.8vh rgba(0,240,255,0.45) !important; }
+            </style>
 </head>
 <body class="theme-cyan">
 
@@ -939,6 +1039,11 @@
             <div class="content-viewport" id="leaders-viewport"><div class="grid-track" id="leaders-grid-track"></div></div>
         </div>
 
+        <div id="discgolf-screen" class="slide-screen">
+            <div class="screen-header neon-text-cycle" id="dg-title">DISC GOLF</div>
+            <div class="dg-meta neon-text-cycle" id="dg-meta"></div>
+            <div class="content-viewport" id="dg-viewport"><div class="list-track" id="dg-track"></div></div>
+        </div>
         <div id="pga-screen" class="slide-screen">
             <div class="screen-header neon-text-cycle" id="pga-title">PGA TOUR</div>
             <div class="content-viewport" id="pga-viewport"><div class="list-track" id="pga-track"></div></div>
@@ -1006,6 +1111,41 @@
         <div id="nhlfut-screen" class="slide-screen"><div class="screen-header neon-text-cycle"><img src="https://a.espncdn.com/combiner/i?img=/i/teamlogos/leagues/500/nhl.png" class="league-logo" onerror="this.style.display='none'">NHL FUTURES</div><div class="fut-meta neon-text-cycle" id="nhlfut-meta"></div><div class="content-viewport fut-viewport" id="nhlfut-viewport"><div class="fut-grid" id="nhlfut-track"></div></div></div>
         <div id="cfbfut-screen" class="slide-screen"><div class="screen-header neon-text-cycle">COLLEGE FOOTBALL FUTURES</div><div class="fut-meta neon-text-cycle" id="cfbfut-meta"></div><div class="content-viewport fut-viewport" id="cfbfut-viewport"><div class="fut-grid" id="cfbfut-track"></div></div></div>
 
+        <div id="sl-nfl-screen" class="slide-screen sl-screen">
+            <div class="screen-header neon-text-cycle" id="sl-nfl-title">NFL STAT LEADERS</div>
+            <div class="dg-meta neon-text-cycle" id="sl-nfl-meta"></div>
+            <div class="sl-grid" id="sl-nfl-grid"></div>
+        </div>
+        <div id="sl-cfb-screen" class="slide-screen sl-screen">
+            <div class="screen-header neon-text-cycle" id="sl-cfb-title">COLLEGE FOOTBALL STAT LEADERS</div>
+            <div class="dg-meta neon-text-cycle" id="sl-cfb-meta"></div>
+            <div class="sl-grid" id="sl-cfb-grid"></div>
+        </div>
+        <div id="sl-nba-screen" class="slide-screen sl-screen">
+            <div class="screen-header neon-text-cycle" id="sl-nba-title">NBA STAT LEADERS</div>
+            <div class="dg-meta neon-text-cycle" id="sl-nba-meta"></div>
+            <div class="sl-grid" id="sl-nba-grid"></div>
+        </div>
+        <div id="sl-cbb-screen" class="slide-screen sl-screen">
+            <div class="screen-header neon-text-cycle" id="sl-cbb-title">COLLEGE HOOPS STAT LEADERS</div>
+            <div class="dg-meta neon-text-cycle" id="sl-cbb-meta"></div>
+            <div class="sl-grid" id="sl-cbb-grid"></div>
+        </div>
+        <div id="sl-nhl-screen" class="slide-screen sl-screen">
+            <div class="screen-header neon-text-cycle" id="sl-nhl-title">NHL STAT LEADERS</div>
+            <div class="dg-meta neon-text-cycle" id="sl-nhl-meta"></div>
+            <div class="sl-grid" id="sl-nhl-grid"></div>
+        </div>
+        <div id="sl-mlb-screen" class="slide-screen sl-screen">
+            <div class="screen-header neon-text-cycle" id="sl-mlb-title">MLB STAT LEADERS</div>
+            <div class="dg-meta neon-text-cycle" id="sl-mlb-meta"></div>
+            <div class="sl-grid" id="sl-mlb-grid"></div>
+        </div>
+        <div id="oddsboard-screen" class="slide-screen">
+            <div class="screen-header neon-text-cycle">ODDS BOARD</div>
+            <div class="dg-meta neon-text-cycle" id="ob-meta"></div>
+            <div class="content-viewport" id="ob-viewport"><div id="ob-track"></div></div>
+        </div>
         <div id="odds-screen" class="slide-screen">
             <div class="screen-header neon-text-cycle">TODAY'S LINES</div>
             <div class="content-viewport" id="odds-viewport"><div class="grid-track" id="odds-grid-track"></div></div>
@@ -1053,6 +1193,7 @@
                     </div>
                     <div class="toggle-row"><span>Score Celebrations <span style="font-size:1.6vh; opacity:0.7;">(pick teams with &#9733; in Gamecast)</span></span> <input type="checkbox" id="set-celebrate" onchange="updateSettings()"></div>
                     <div class="toggle-row"><span>Full Effects <span style="font-size:1.6vh; opacity:0.7;">(strobes, confetti, shake; off = Lite, smooth on budget TV boxes; TV app always Lite)</span></span> <input type="checkbox" id="set-celFull" onchange="updateSettings()"></div>
+                    <div class="toggle-row"><span>CRT Scanlines <span style="font-size:1.6vh; opacity:0.7;">(retro arcade-monitor look; static, no flicker; this TV only)</span></span> <input type="checkbox" id="set-crt" onchange="updateSettings()"></div>
                     <div style="margin-bottom: 2vh;">
                         <div style="font-size: 1.8vh; color: #ffe600; margin-bottom: 0.5vh; text-transform: uppercase;">Celebration Delay (match your TV's lag, &#9664; &#9654; to adjust):</div>
                         <div style="display:flex; align-items:center; gap:2vh;">
@@ -1063,6 +1204,7 @@
                         </div>
                         <input type="range" id="set-celebrateDelay" min="0" max="60" step="1" tabindex="-1" aria-hidden="true" style="display:none;">
                     </div>
+                    <div class="toggle-row"><span>Delay Everything to Match My TV <span style="font-size:1.6vh; opacity:0.7;">(Gamecast score, clock, plays, field, strike zone and box score wait the TV delay too, so nothing spoils the broadcast)</span></span> <input type="checkbox" id="set-tvDelayAll" onchange="updateSettings()"></div>
                     <div style="margin-bottom: 2vh;">
                         <div style="font-size: 1.8vh; color: #ffe600; margin-bottom: 0.5vh; text-transform: uppercase;">Alerts for &#9733; teams (smaller banners, same delay):</div>
                         <div>
@@ -1080,6 +1222,7 @@
                             <div class="toggle-row"><span>Fumbles Recovered</span> <input type="checkbox" id="set-alertFumble" onchange="updateSettings()"></div>
                             <div class="toggle-row"><span>Turnover on Downs</span> <input type="checkbox" id="set-alertDowns" onchange="updateSettings()"></div>
                             <div class="toggle-row"><span>Blocked Punts / FGs</span> <input type="checkbox" id="set-alertBlock" onchange="updateSettings()"></div>
+                            <div class="toggle-row"><span>Upset Watch <span style="font-size:1.6vh; opacity:0.7;">(5 s banner when a +200 / +6.5 underdog leads late, any game)</span></span> <input type="checkbox" id="set-upsetWatch" onchange="updateSettings()"></div>
                         </div>
                     </div>
                     <div style="margin-bottom: 2vh;">
@@ -1095,6 +1238,7 @@
                     <div class="toggle-row"><span>Live Trivia Game</span> <input type="checkbox" id="set-trivia" onchange="updateSettings()"></div>
                     <div class="toggle-row"><span>Top Stats Leaders</span> <input type="checkbox" id="set-leaders" onchange="updateSettings()"></div>
                     <div class="toggle-row"><span>PGA Golf Slide</span> <input type="checkbox" id="set-pga" onchange="updateSettings()"></div>
+                    <div class="toggle-row"><span>Disc Golf Slide <span style="font-size:1.6vh; opacity:0.7;">(DGPT/PDGA live leaderboard or schedule)</span></span> <input type="checkbox" id="set-discGolf" onchange="updateSettings()"></div>
 
 
 
@@ -1140,6 +1284,13 @@
                         <div style="display: flex; gap: 1vh;"><input type="text" id="set-pickemRoom" maxlength="40" placeholder="ahlers-arcade-07r1ln1b6e" style="flex: 1; min-width: 0; padding: 1vh; border-radius: 0.5vh; background: rgba(0,0,0,0.5); color: white; border: 1px solid var(--accent-color); font-family: 'Inter', sans-serif; text-transform: lowercase;" onchange="updateSettings(); pkRoomApply()"><button type="button" onclick="pkNewRoom()" style="padding: 0 1.5vh; border-radius: 0.5vh; background: rgba(255,255,255,0.12); color: white; border: 1px solid var(--accent-color); font-weight: 800; cursor: pointer;">NEW ROOM</button></div>
                     </div>
                     <div class="toggle-row"><span>Odds Slide</span> <input type="checkbox" id="set-odds" onchange="updateSettings()"></div>
+                    <div class="toggle-row"><span>Odds Board <span style="font-size:1.6vh; opacity:0.7;">(sportsbook grid: spread, total, moneyline, line moves, bet splits)</span></span> <input type="checkbox" id="set-oddsBoard" onchange="updateSettings()"></div>
+                    <div class="toggle-row"><span>NFL Stat Leaders <span style="font-size:1.6vh; opacity:0.7;">(hides itself out of season)</span></span> <input type="checkbox" id="set-slNfl" onchange="updateSettings()"></div>
+                    <div class="toggle-row"><span>College Football Stat Leaders <span style="font-size:1.6vh; opacity:0.7;">(hides itself out of season)</span></span> <input type="checkbox" id="set-slCfb" onchange="updateSettings()"></div>
+                    <div class="toggle-row"><span>NBA Stat Leaders <span style="font-size:1.6vh; opacity:0.7;">(hides itself out of season)</span></span> <input type="checkbox" id="set-slNba" onchange="updateSettings()"></div>
+                    <div class="toggle-row"><span>College Hoops Stat Leaders <span style="font-size:1.6vh; opacity:0.7;">(hides itself out of season)</span></span> <input type="checkbox" id="set-slCbb" onchange="updateSettings()"></div>
+                    <div class="toggle-row"><span>NHL Stat Leaders <span style="font-size:1.6vh; opacity:0.7;">(hides itself out of season)</span></span> <input type="checkbox" id="set-slNhl" onchange="updateSettings()"></div>
+                    <div class="toggle-row"><span>MLB Stat Leaders <span style="font-size:1.6vh; opacity:0.7;">(hides itself out of season)</span></span> <input type="checkbox" id="set-slMlb" onchange="updateSettings()"></div>
                     <div class="toggle-row"><span>Futures Slide</span> <input type="checkbox" id="set-futures" onchange="updateSettings()"></div>
                     <div class="toggle-row"><span>NFL Futures Slide</span> <input type="checkbox" id="set-nflFutures" onchange="updateSettings()"></div>
                     <div class="toggle-row"><span>NFL Awards Slide</span> <input type="checkbox" id="set-nflAwards" onchange="updateSettings()"></div>
@@ -1179,7 +1330,9 @@
             <span class="gc-brand neon-text-cycle">&#9673; GAMECAST</span>
             <span class="gc-chip neon-text-cycle" id="gc-league"></span>
             <span class="gc-net" id="gc-net"></span>
+            <span class="gc-odds" id="gc-odds" hidden></span>
             <span class="gc-spacer"></span>
+            <span class="gc-tvd" id="gc-tvd" hidden></span>
             <span id="gc-updated"></span>
             <span class="gc-hint">&#9664; &#9654; GAME &nbsp;&bull;&nbsp; OK &#9733; &nbsp;&bull;&nbsp; BACK CLOSE</span>
             <button type="button" class="gc-close" id="gc-close" onclick="gcClose()">&#10005; CLOSE</button>
@@ -1213,7 +1366,7 @@
             <div class="gs-sub" id="gs-sub"></div>
             <div class="gs-res" id="gs-res"></div>
             <div class="gs-row"><button type="button" class="gs-btn big" id="gs-ok" onclick="gsMark()">OK</button><button type="button" class="gs-btn" id="gs-mode" onclick="gsMode()">USE A PLAY INSTEAD</button><button type="button" class="gs-btn" id="gs-again" onclick="gsStart()" hidden>SYNC AGAIN</button></div>
-            <div class="gs-row"><button type="button" class="gs-btn" id="gs-minus" onclick="gsNudge(-1)">&minus;1s</button><span id="gs-dval"></span><button type="button" class="gs-btn" id="gs-plus" onclick="gsNudge(1)">+1s</button><button type="button" class="gs-btn" id="gs-test" onclick="gsTest()">TEST</button><button type="button" class="gs-btn" id="gs-src" onclick="gsSrc()">CABLE</button><button type="button" class="gs-btn" id="gs-done" onclick="gsClose()">DONE</button></div>
+            <div class="gs-row"><button type="button" class="gs-btn" id="gs-minus" onclick="gsNudge(-1)">&minus;1s</button><span id="gs-dval"></span><button type="button" class="gs-btn" id="gs-plus" onclick="gsNudge(1)">+1s</button><button type="button" class="gs-btn" id="gs-test" onclick="gsTest()">TEST</button><button type="button" class="gs-btn" id="gs-src" onclick="gsSrc()">CABLE</button><button type="button" class="gs-btn" id="gs-all" onclick="gcDeToggle()">DELAY ALL: ON</button><button type="button" class="gs-btn" id="gs-done" onclick="gsClose()">DONE</button></div>
             <div class="gs-hint">OK selects &nbsp;&bull;&nbsp; &#9664; &#9650; &#9660; &#9654; move &nbsp;&bull;&nbsp; BACK closes</div>
         </div></div>
     </div>
@@ -1287,8 +1440,8 @@
             var w = document.getElementById('main-wrapper'); if (w) w.classList.remove('bx-cover');
             if (bxT.from) { bxT.from.classList.remove('bx-old'); if (bxT.from.getAttribute('data-bx-hide') === '1') bxT.from.style.display = 'none'; bxT.from.removeAttribute('data-bx-hide'); bxT.from = null; }
         }
-        var BX_SCREEN = { live: 'live-game-screen', hotProps: 'hotprops-screen', mySquad: 'mysquad-screen', trivia: 'trivia-screen', leaders: 'leaders-screen', pga: 'pga-screen',
-            ufc: 'ufc-screen', command: 'command-screen', soccerSlide: 'soccer-screen', tvGuide: 'tvguide-screen', news: 'news-screen', pickem: 'pickem-screen', odds: 'odds-screen', futures: 'futures-screen',
+        var BX_SCREEN = { live: 'live-game-screen', hotProps: 'hotprops-screen', mySquad: 'mysquad-screen', trivia: 'trivia-screen', leaders: 'leaders-screen', pga: 'pga-screen', discGolf: 'discgolf-screen',
+            ufc: 'ufc-screen', command: 'command-screen', soccerSlide: 'soccer-screen', tvGuide: 'tvguide-screen', news: 'news-screen', pickem: 'pickem-screen', oddsBoard: 'oddsboard-screen', slNfl: 'sl-nfl-screen', slCfb: 'sl-cfb-screen', slNba: 'sl-nba-screen', slCbb: 'sl-cbb-screen', slNhl: 'sl-nhl-screen', slMlb: 'sl-mlb-screen', odds: 'odds-screen', futures: 'futures-screen',
             nflFutures: 'nflfut-screen', nflAwards: 'nflawards-screen', fantasy: 'fantasy-screen', cfbFutures: 'cfbfut-screen', nhlFutures: 'nhlfut-screen', rankings: 'rankings-screen',
             nfl: 'nfl-screen', nba: 'nba-screen', nhl: 'nhl-screen', mlb: 'mlb-screen' };
         function bxBegin(changing, next) { bxFinish(); if (!changing || document.body.classList.contains('remote-active')) return null;
@@ -1379,11 +1532,11 @@
         var currentThemeIndex = 0;
 
         var defaultSettings = { 
-            nfl:true, nba:true, nhl:true, mlb:true, rankings:true, odds:true, futures:true, nflFutures:true, nflAwards:true, fantasy:true, cfbFutures:true, nhlFutures:true, tvGuide:true, news:true, pickem:true, phoneRemote:true, pickemPin:"", pickemRoom:"", mySquad:true, ufc:true, command:true, leaders:true, pga:true, soccerSlide:true, trivia:true, hotProps:true,
+            nfl:true, nba:true, nhl:true, mlb:true, rankings:true, odds:true, futures:true, nflFutures:true, nflAwards:true, fantasy:true, cfbFutures:true, nhlFutures:true, tvGuide:true, news:true, pickem:true, phoneRemote:true, pickemPin:"", pickemRoom:"", mySquad:true, ufc:true, command:true, leaders:true, pga:true, discGolf:true, oddsBoard:true, upsetWatch:true, slNfl:true, slCfb:true, slNba:true, slCbb:true, slNhl:true, slMlb:true, crt:false, soccerSlide:true, trivia:true, hotProps:true,
             showWorldCup:true, showEPL:true, showUCL:true, showATP:true, showWTA:true, showNFL:true, showNBA:true, showNHL:true, showMLB:true, showCFB:true, showCBB:true, showCLB:true,
             cbb50:true, cfb75:true, clb50:true, apiBase:"https://site.api.espn.com/apis",
             mySquadTeams: "Carolina Hurricanes, Duke, ECU, East Carolina",
-            celebrate: true, celebrateDelay: 0, celFull: false, alertRedzone: true, alertPP: true, alertStart: true, alertLead: true, alertBig: true, alertInt: true, alertFumble: true, alertDowns: true, alertBlock: true,
+            celebrate: true, celebrateDelay: 0, tvDelayAll: true, celFull: false, alertRedzone: true, alertPP: true, alertStart: true, alertLead: true, alertBig: true, alertInt: true, alertFumble: true, alertDowns: true, alertBlock: true,
             marqueeMessage: "WELCOME TO AHLERS ARCADE",
             tickerSpeed: 5
         };
@@ -1438,6 +1591,7 @@
                 }
             }); 
             if(document.getElementById('speed-display')) document.getElementById('speed-display').innerText = settings.tickerSpeed;
+            try { crtApply(); } catch (e) {}
             try { celDelayUI(); } catch (e) {}
             try { smUI(); } catch (e) {}
             var remoteUrl = window.Pickem ? (pkRoom(), Pickem.pickUrl(settings.pickemPin, pkTvKey())) : window.location.href.split('#')[0] + '#remote'; // phone remote (this TV) + pick'em room
@@ -1719,9 +1873,9 @@
         function isCurrentSlide(gen) { return gen === slideGen; }
 
         var ARCADE_SCREENS = [
-            'live', 'hotProps', 'mySquad', 'pickem', 'trivia', 'leaders', 'pga', 'ufc', 'command',
-            'soccerSlide', 'tvGuide', 'news', 'odds', 'futures', 'nflFutures', 'nflAwards', 'cfbFutures', 'nhlFutures',
-            'rankings', 'nfl', 'nba', 'nhl', 'mlb'
+            'live', 'hotProps', 'mySquad', 'pickem', 'trivia', 'leaders', 'pga', 'discGolf', 'ufc', 'command',
+            'soccerSlide', 'tvGuide', 'news', 'oddsBoard', 'odds', 'futures', 'nflFutures', 'nflAwards', 'cfbFutures', 'nhlFutures',
+            'rankings', 'slCfb', 'nfl', 'slNfl', 'nba', 'slNba', 'slCbb', 'nhl', 'slNhl', 'mlb', 'slMlb'
         ];
         ARCADE_SCREENS.splice(ARCADE_SCREENS.indexOf('nflAwards') + 1, 0, 'fantasy');
 
@@ -1730,9 +1884,9 @@
         // runs; a snapshot of the slide + league toggles is still taken at the start and restored when the mode ends.
         var SM_KEY = 'ahlersSportMode1', SM_MS = 12 * 3600000;
         var SPORT_MODES = {
-            nfl: { label: 'NFL', short: 'NFL', title: 'NFL MODE', league: 'nfl', news: 'football/nfl', screens: ['live', 'hotProps', 'pickem', 'fantasy', 'odds', 'nflFutures', 'nflAwards', 'news', 'tvGuide', 'nfl'] },
-            cfb: { label: 'COLLEGE FOOTBALL', short: 'CFB', title: 'CFB MODE', league: 'cfb', news: 'football/college-football', screens: ['live', 'hotProps', 'pickem', 'mySquad', 'odds', 'cfbFutures', 'rankings', 'news', 'tvGuide'] },
-            cbb: { label: 'COLLEGE BASKETBALL', short: 'HOOPS', title: 'HOOPS MODE', league: 'cbb', news: 'basketball/mens-college-basketball', screens: ['live', 'hotProps', 'pickem', 'mySquad', 'odds', 'rankings', 'futures', 'news', 'tvGuide'] }
+            nfl: { label: 'NFL', short: 'NFL', title: 'NFL MODE', league: 'nfl', news: 'football/nfl', screens: ['live', 'hotProps', 'pickem', 'fantasy', 'odds', 'nflFutures', 'nflAwards', 'news', 'tvGuide', 'nfl', 'slNfl'] },
+            cfb: { label: 'COLLEGE FOOTBALL', short: 'CFB', title: 'CFB MODE', league: 'cfb', news: 'football/college-football', screens: ['live', 'hotProps', 'pickem', 'mySquad', 'odds', 'cfbFutures', 'rankings', 'slCfb', 'news', 'tvGuide'] },
+            cbb: { label: 'COLLEGE BASKETBALL', short: 'HOOPS', title: 'HOOPS MODE', league: 'cbb', news: 'basketball/mens-college-basketball', screens: ['live', 'hotProps', 'pickem', 'mySquad', 'odds', 'rankings', 'slCbb', 'futures', 'news', 'tvGuide'] }
         };
         var CBB_FUT_SPECS = [
             { title: 'NATIONAL TITLE', sport: 'basketball', league: 'mens-college-basketball', want: ['ncaa(b) - winner', 'national championship'] },
@@ -2015,7 +2169,7 @@
             if (rotationStep >= screens.length) rotationStep = 0;
             var current = screens[rotationStep];
             
-            if (!slideOn(current) || smSlideEmpty(current)) {
+            if (!slideOn(current) || smSlideEmpty(current) || (current === 'discGolf' && !dgReady()) || (current === 'oddsBoard' && !obReady()) || (SL_KEYS[current] && !slReady(current))) {
                 rotationStep++; nextSlide(); return;
             }
             
@@ -2031,6 +2185,7 @@
                 else if (current === 'trivia') showTrivia();
                 else if (current === 'leaders') showLeaders();
                 else if (current === 'pga') showPGA(gen);
+                else if (current === 'discGolf') showDiscGolf(gen);
 
 
                 else if (current === 'ufc') showUFC(gen);
@@ -2039,6 +2194,8 @@
                 else if (current === 'tvGuide') showTVGuide();
                 else if (current === 'news') showNews(gen);
                 else if (current === 'pickem') showPickem(gen);
+                else if (SL_KEYS[current]) showStatLeaders(current, gen);
+                else if (current === 'oddsBoard') showOddsBoard(gen);
                 else if (current === 'odds') showOdds();
                 else if (current === 'futures') showFutures(gen);
                 else if (current === 'nflFutures' || current === 'nflAwards' || current === 'cfbFutures' || current === 'nhlFutures') showFootballFutures(current, gen);
@@ -2200,7 +2357,7 @@
                                 gameObj.gcKey = c.id + ':' + ev.id;
                                 gcList.push({ key: gameObj.gcKey, sport: c.s, league: c.l, cid: c.id, id: String(ev.id), label: displayLeague, away: aName, home: hName,
                                     awayAbbr: (a.team && a.team.abbreviation) || aName, homeAbbr: (h.team && h.team.abbreviation) || hName, aLogo: aLogo, hLogo: hLogo, aFallback: aFallback, hFallback: hFallback,
-                                    aScore: a.score || '', hScore: h.score || '', state: status.state, status: status.shortDetail, time: gameObj.time, date: gameTime, tv: tv, weight: mWeight,
+                                    aScore: a.score || '', hScore: h.score || '', per: (ev.status && ev.status.period) || (ev.competitions && ev.competitions[0] && ev.competitions[0].status && ev.competitions[0].status.period) || 0, state: status.state, status: status.shortDetail, time: gameObj.time, date: gameTime, tv: tv, weight: mWeight,
                                     sitDown: trendData.downDist || '', sitSpot: trendData.spot || '',
                                     aId: String((a.team && a.team.id) || ''), hId: String((h.team && h.team.id) || ''), aFull: (a.team && a.team.displayName) || aName, hFull: (h.team && h.team.displayName) || hName,
                                     aColor: (a.team && a.team.color) || '', aAlt: (a.team && a.team.alternateColor) || '', hColor: (h.team && h.team.color) || '', hAlt: (h.team && h.team.alternateColor) || '' });
@@ -2296,7 +2453,7 @@
             else trackHtml = '<span class="ticker-section-head neon-text-cycle">' + smHead + (smHead && !allSched.length ? 'NO GAMES ON THE BOARD' : 'UPCOMING') + '</span>' + allSched.join('');
             
             if (settings.marqueeMessage && settings.marqueeMessage.trim() !== '') {
-                trackHtml += '<span class="score-item"><span class="neon-text-cycle" style="font-size:4rem; font-weight:900; letter-spacing:0.2vw; margin-left: 5vw;">••• ' + settings.marqueeMessage.toUpperCase() + ' •••</span></span>';
+                trackHtml += '<span class="score-item"><span class="neon-text-cycle ticker-msg" style="font-size:4rem; font-weight:900; margin-left: 5vw;">••• ' + settings.marqueeMessage.toUpperCase() + ' •••</span></span>';
             }
             
             document.getElementById('ticker-track').innerHTML = trackHtml + trackHtml;
@@ -2502,6 +2659,341 @@
         }
 
         async function showCommand() { document.getElementById('command-screen').style.display = 'flex'; slideTimer = slideTimeout(nextSlide, 15000); }
+
+        // ---------- STAT LEADERS: one slide per sport from statleaders.json (GitHub Action, ESPN site leaders, trimmed) ----------
+        var SL_KEYS = { slNfl: 'nfl', slCfb: 'cfb', slNba: 'nba', slCbb: 'cbb', slNhl: 'nhl', slMlb: 'mlb' };
+        var SL_REFRESH_MS = 45 * 60000, sl = { at: 0, busy: null, data: null };
+        function slLoad() {
+            if (sl.busy) return sl.busy;
+            sl.busy = (async function() {
+                try { var r = await arcadeFetch('statleaders.json?t=' + Math.floor(Date.now() / SL_REFRESH_MS)); if (r.ok) { var d = await r.json(); if (d && d.leagues) sl.data = d; } sl.at = Date.now(); }
+                catch (e) { sl.at = Date.now() - SL_REFRESH_MS + 120000; } // retry in ~2 min
+                finally { sl.busy = null; }
+            })();
+            return sl.busy;
+        }
+        function slLeague(key) { var L = sl.data && sl.data.leagues && sl.data.leagues[SL_KEYS[key]]; return L && L.cats && L.cats.length ? L : null; }
+        function slInSeason(L) { // the Action's flag (regular season, or postseason with games this week); a stale file falls back to ESPN's season dates
+            if (!L) return false;
+            var age = Date.now() - Date.parse((sl.data && sl.data.updated) || 0), s = L.season || {};
+            if (!(age > 3 * 86400000)) return !!L.inSeason;
+            var end = Date.parse(s.end || ''); return (s.type === 2 || s.type === 3) && !isNaN(end) && Date.now() < end;
+        }
+        function slReady(key) { if (Date.now() - sl.at > SL_REFRESH_MS) slLoad(); return slInSeason(slLeague(key)); }
+        function slImg(url, w, h) { // ESPN's resizer: ~200x146 instead of the 1 MB-class originals
+            if (!url) return ''; var m = /espncdn\.com(\/i\/[^?]+)/.exec(url); return m ? 'https://a.espncdn.com/combiner/i?img=' + m[1] + '&w=' + w + '&h=' + h + '&scale=crop&cquality=60' : url;
+        }
+        function slIni(n) { return String(n || '').split(/\s+/).filter(Boolean).map(function(w) { return w.charAt(0); }).join('').slice(0, 2).toUpperCase(); }
+        function slImgErr(img, cls) { var sp = document.createElement('span'); sp.className = cls + ' sl-ini'; sp.textContent = img.getAttribute('data-ini') || '?'; if (img.parentNode) img.parentNode.replaceChild(sp, img); }
+        function slHex(c, d) { c = String(c || '').replace('#', ''); return /^[0-9a-f]{6}$/i.test(c) ? '#' + c : d; }
+        function slCat(c) {
+            var r0 = c.rows[0], col = slHex(r0.color, '#1b2a44'), alt = slHex(r0.alt, '#39ff88');
+            if (gcLum(alt) < 0.25) alt = gcLum(col) >= 0.25 ? col : '#39ff88';
+            function head(r, cls, w, h) { var u = slImg(r.head, w, h); return u ? '<img class="' + cls + '" loading="lazy" decoding="async" alt="" data-ini="' + escHtml(slIni(r.name)) + '" src="' + escHtml(u) + '" onerror="slImgErr(this, \'' + cls + '\')">' : '<span class="' + cls + ' sl-ini">' + escHtml(slIni(r.name)) + '</span>'; }
+            var rest = c.rows.slice(1, 5).map(function(r, i) {
+                return '<div class="sl-row"><b>' + (i + 2) + '</b>' + head(r, 'sl-mh', 76, 76) + '<span>' + escHtml(r.short || r.name) + ' <i>' + escHtml(r.abbr) + '</i></span><em>' + escHtml(r.val) + '</em></div>';
+            }).join('');
+            return '<div class="sl-cat" style="--sl1:' + col + ';--sl2:' + alt + '"><div class="sl-top"><div class="sl-lbl">' + escHtml(c.label) + '</div><div class="sl-rk">1</div>' +
+                (r0.logo ? '<img class="sl-logo" loading="lazy" decoding="async" alt="" src="' + escHtml(slImg(r0.logo, 96, 96)) + '" onerror="this.style.visibility=\'hidden\'">' : '') +
+                head(r0, 'sl-head', 260, 190) +
+                '<div class="sl-one"><div class="sl-nm">' + escHtml(r0.name) + '<small>' + escHtml(r0.team || r0.abbr) + '</small></div><div class="sl-val">' + escHtml(r0.val) + '</div></div></div>' +
+                '<div class="sl-rest">' + rest + '</div></div>';
+        }
+        async function showStatLeaders(key, gen) {
+            var k = SL_KEYS[key], screen = document.getElementById('sl-' + k + '-screen');
+            if (!sl.data) { try { await slLoad(); } catch (e) {} if (!isCurrentSlide(gen)) return; }
+            var L = slLeague(key);
+            if (!L || !slInSeason(L)) { nextSlide(); return; }
+            screen.style.display = 'flex';
+            document.getElementById('sl-' + k + '-meta').textContent = (L.season && L.season.name ? String(L.season.name).toUpperCase() + ' \u2022 ' : '') + (L.statsSeason ? (/^(nhl|nba|cbb)$/.test(k) ? (L.statsSeason - 1) + '-' + String(L.statsSeason).slice(2) : L.statsSeason) + ' SEASON STATS' : 'SEASON STATS') + ' \u2022 DATA: ESPN';
+            document.getElementById('sl-' + k + '-grid').innerHTML = L.cats.slice(0, 4).map(slCat).join('');
+            slideTimer = slideTimeout(nextSlide, 18000);
+        }
+
+        // ---------- GAMECAST LIVE ODDS (header pill): Action Network consensus, polled every 20 s, shown through the TV delay ----------
+        var GO_LG = { 'football/nfl': 'nfl', 'football/college-football': 'ncaaf', 'basketball/nba': 'nba', 'hockey/nhl': 'nhl', 'baseball/mlb': 'mlb', 'basketball/mens-college-basketball': 'ncaab' };
+        var GO_MS = 20000, go = { timer: null, tick: null, buf: [], key: null, anId: null, fails: 0 };
+        function goStop() { clearTimeout(go.timer); clearInterval(go.tick); go.timer = go.tick = null; go.buf = []; go.key = null; go.anId = null; var el = document.getElementById('gc-odds'); if (el) { el.hidden = true; el.innerHTML = ''; } }
+        function goStart() {
+            goStop(); var m = gc.meta; if (!m) return;
+            var lg = GO_LG[m.sport + '/' + m.league]; if (!lg) return;
+            go.key = gc.key; go.lg = lg; go.fails = 0;
+            go.timer = setTimeout(goPoll, 1500); go.tick = setInterval(goShow, 1000);
+        }
+        function goMatch(g) {
+            var T = {}; (g.teams || []).forEach(function(t) { T[t.id] = t; }); var a = T[g.away_team_id], h = T[g.home_team_id]; if (!a || !h) return false;
+            var tm = Object.keys(gc.teams || {}).map(function(k) { return gc.teams[k]; }); if (tm.length < 2) return false;
+            function same(x, y) { return !!x && !!y && ((x.full && y.full_name && x.full.toLowerCase() === String(y.full_name).toLowerCase()) || (x.abbr && y.abbr && x.abbr.toUpperCase() === String(y.abbr).toUpperCase())); }
+            var ok = 0; tm.forEach(function(t) { if (same(t, a) || same(t, h)) ok++; }); return ok >= 2;
+        }
+        async function goPoll() {
+            var key = go.key; if (!gc.open || gc.key !== key) return;
+            if (gc.state === 'post') { goStop(); return; }
+            try {
+                var r = await arcadeFetch('https://api.actionnetwork.com/web/v2/scoreboard/' + go.lg + '?period=game&bookIds=15,' + obOriginBook() + '&date=' + obYmd(new Date().getHours() < 6 ? Date.now() - 86400000 : Date.now()));
+                var d = await r.json(); if (!gc.open || gc.key !== key) return;
+                var g = null; (d.games || []).forEach(function(x) { if (!g && (go.anId ? x.id === go.anId : goMatch(x))) g = x; });
+                if (g) {
+                    go.anId = g.id; var T = {}; (g.teams || []).forEach(function(t) { T[t.id] = t; });
+                    var ev = g.markets && g.markets['15'] && g.markets['15'].event, live = g.status === 'inprogress';
+                    var useLive = live && !!(obPick(ev, 'spread', 'home', true) || obPick(ev, 'moneyline', 'home', true) || obPick(ev, 'total', 'over', true));
+                    function pk(t, sd) { return obPick(ev, t, sd, useLive); }
+                    var sh = pk('spread', 'home'), ov = pk('total', 'over'), mla = pk('moneyline', 'away'), mlh = pk('moneyline', 'home');
+                    var ha = (T[g.home_team_id] || {}).abbr || 'HOME', aa = (T[g.away_team_id] || {}).abbr || 'AWAY', parts = [];
+                    if (sh) parts.push(escHtml(ha) + ' ' + obNum(sh.value));
+                    if (ov) parts.push('O/U ' + escHtml(ov.value));
+                    if (mla && mlh && !sh) parts.push('ML ' + escHtml(Number(mla.odds) < Number(mlh.odds) ? aa : ha) + ' ' + obOdds(Math.min(Number(mla.odds), Number(mlh.odds))));
+                    if (parts.length) { go.buf.push({ at: Date.now(), html: '<b>' + (useLive ? 'LIVE ODDS' : 'PREGAME LINE') + '</b>' + parts.join(' \u2022 ') }); if (go.buf.length > 40) go.buf.shift(); }
+                }
+                go.fails = 0;
+            } catch (e) { go.fails++; }
+            if (gc.open && gc.key === key) go.timer = setTimeout(goPoll, go.fails > 3 ? GO_MS * 3 : GO_MS);
+            goShow();
+        }
+        function goShow() { // newest odds older than the TV delay (DELAY ALL on), else newest
+            var el = document.getElementById('gc-odds'); if (!el) return;
+            var lim = (typeof gcDeOn === 'function' && gcDeOn()) ? Date.now() - gcDelay() * 1000 : Infinity, pick = null;
+            for (var i = 0; i < go.buf.length; i++) if (go.buf[i].at <= lim) pick = go.buf[i];
+            var h = pick ? pick.html : '';
+            if (el.innerHTML !== h) el.innerHTML = h;
+            el.hidden = !h;
+        }
+
+        // ---------- ODDS BOARD: Action Network public scoreboard (CORS-open, no key; same API as props/futures) ----------
+        // book 15 = consensus (current line + public bet %/money %), book 30 = opening line ("PREGAME"). Biggest games = most bets tracked.
+        var OB_LG = [['nfl', 'showNFL', 'NFL'], ['ncaaf', 'showCFB', 'CFB'], ['nba', 'showNBA', 'NBA'], ['nhl', 'showNHL', 'NHL'], ['mlb', 'showMLB', 'MLB'], ['ncaab', 'showCBB', 'CBB']];
+        var OB_MAX = 12, OB_STEAM_PTS = 1.5, OB_ML_PROB = 0.10, OB_SHARP = 15;
+        var ob = { at: 0, busy: null, games: null };
+        function obReady() { if (Date.now() - ob.at > 180000) obLoad(); return !!(ob.games && ob.games.length); }
+        function obOriginBook() { var h = 0, o = String(location.origin || 'tv'); for (var i = 0; i < o.length; i++) h = (h * 31 + o.charCodeAt(i)) >>> 0; return 9000 + h % 900; }
+        function obYmd(t) { var d = new Date(t); return d.getFullYear() + ('0' + (d.getMonth() + 1)).slice(-2) + ('0' + d.getDate()).slice(-2); }
+        function obPick(ev, type, side, live) { var l = (ev && ev[type] || []).filter(function(o) { return o.side === side && !!o.is_live === !!live; }); return l[0] || null; }
+        function obProb(ml) { ml = Number(ml); if (!ml || isNaN(ml)) return null; return ml < 0 ? -ml / (-ml + 100) : 100 / (ml + 100); }
+        function obParse(g, lgLabel) {
+            var T = {}; (g.teams || []).forEach(function(t) { T[t.id] = t; });
+            var a = T[g.away_team_id], h = T[g.home_team_id]; if (!a || !h) return null;
+            var m = g.markets || {}, cons = m['15'] && m['15'].event, open = m['30'] && m['30'].event; if (!cons) return null;
+            var live = g.status === 'inprogress';
+            function line(ev, isLive) {
+                var o = { sa: obPick(ev, 'spread', 'away', isLive), sh: obPick(ev, 'spread', 'home', isLive), mla: obPick(ev, 'moneyline', 'away', isLive), mlh: obPick(ev, 'moneyline', 'home', isLive),
+                          ov: obPick(ev, 'total', 'over', isLive), un: obPick(ev, 'total', 'under', isLive) };
+                return (o.sh || o.mlh || o.ov) ? o : null;
+            }
+            var pre = line(cons, false), now = live ? (line(cons, true) || pre) : pre, op = open ? line(open, false) : null;
+            if (!now) return null;
+            var g2 = { id: g.id, lg: lgLabel, status: g.status, disp: g.status_display || '', start: Date.parse(g.start_time), bets: g.num_bets || 0, live: live && now !== pre,
+                       tv: g.broadcast && (g.broadcast.network_short || g.broadcast.network) || '',
+                       away: { abbr: a.abbr, logo: a.logo, color: a.primary_color, full: a.full_name || '' }, home: { abbr: h.abbr, logo: h.logo, color: h.primary_color, full: h.full_name || '' }, now: now, pre: pre, open: op };
+            // line movement: PREGAME (opening) -> current pregame line
+            var mv = { steam: false };
+            if (op && pre) {
+                if (op.sh && pre.sh) mv.spread = Number(pre.sh.value) - Number(op.sh.value);
+                if (op.ov && pre.ov) mv.total = Number(pre.ov.value) - Number(op.ov.value);
+                if (op.mlh && pre.mlh) { var p0 = obProb(op.mlh.odds), p1 = obProb(pre.mlh.odds); if (p0 != null && p1 != null) { mv.mlp = p1 - p0; mv.flip = (p0 - 0.5) * (p1 - 0.5) < 0; } }
+                ['spread', 'total'].forEach(function(k) { if (Math.abs(mv[k] || 0) > 9) delete mv[k]; }); // 9+ pt "moves" are stale/odd opening data (e.g. preseason), not steam
+                mv.steam = Math.abs(mv.spread || 0) >= OB_STEAM_PTS || Math.abs(mv.total || 0) >= OB_STEAM_PTS || !!mv.flip || Math.abs(mv.mlp || 0) >= OB_ML_PROB;
+            }
+            g2.mv = mv;
+            // public splits (consensus, pregame spread; moneyline when no spread)
+            function bi(o) { return o && o.bet_info ? { b: o.bet_info.tickets && o.bet_info.tickets.percent, m: o.bet_info.money && o.bet_info.money.percent } : null; }
+            var sa = bi(pre && pre.sa), sh = bi(pre && pre.sh), kind = 'ATS';
+            if (!(sa && (sa.b || sa.m))) { sa = bi(pre && pre.mla); sh = bi(pre && pre.mlh); kind = 'ML'; }
+            g2.split = (sa && sh && (sa.b || sa.m || sh.b || sh.m)) ? { kind: kind, a: sa, h: sh } : null;
+            return g2;
+        }
+        function obLoad() {
+            if (ob.busy) return ob.busy;
+            ob.busy = (async function() {
+                var now = Date.now(), eod = new Date(now); eod.setHours(23, 59, 59, 999); var out = [], days = [now];
+                async function day(t, lim) {
+                    await Promise.all(OB_LG.map(async function(L) {
+                        if (settings[L[1]] === false) return;
+                        try {
+                            var r = await arcadeFetch('https://api.actionnetwork.com/web/v2/scoreboard/' + L[0] + '?period=game&bookIds=15,30,' + obOriginBook() + '&date=' + obYmd(t)); // extra unused book id = per-origin URL (their CDN caches the CORS origin header)
+                            var d = await r.json();
+                            (d.games || []).forEach(function(g) {
+                                if (/complete|closed|final|cancel|postpon/i.test(g.status || '')) return;
+                                var st = Date.parse(g.start_time); if (isNaN(st) || (g.status !== 'inprogress' && st < now - 5 * 3600000) || st > lim) return; // live games stay in, however long they run
+                                var x = obParse(g, L[2]); if (x && !out.some(function(y) { return y.id === x.id; })) out.push(x);
+                            });
+                        } catch (e) {}
+                    }));
+                }
+                try {
+                    await day(now, eod.getTime());
+                    if (out.length < 6) await day(now + 86400000, eod.getTime() + 86400000); // late night / light day: add tomorrow
+                    out.sort(function(a, b) { return (b.live - a.live) || (b.bets - a.bets); });
+                    ob.all = out.slice(); ob.games = out.slice(0, OB_MAX); ob.at = Date.now();
+                } catch (e) { ob.at = Date.now() - 120000; }
+                finally { ob.busy = null; }
+            })();
+            return ob.busy;
+        }
+        function obOdds(o) { if (o == null || o === '' || isNaN(Number(o))) return ''; o = Number(o); return o > 0 ? '+' + o : String(o); }
+        function obNum(v) { v = Number(v); if (isNaN(v)) return ''; return v === 0 ? 'PK' : (v > 0 ? '+' + v : String(v)); }
+        function obCell(top, bot) { return '<div class="ob-cell' + (top ? '' : ' na') + '"><b>' + (top || '\u2013') + '</b><i>' + (bot || '&nbsp;') + '</i></div>'; }
+        function obWhen(g) {
+            if (g.status === 'inprogress') return '<span class="ob-live">\u25CF LIVE ' + escHtml(g.disp) + '</span>';
+            var d = new Date(g.start), h = d.getHours(), mi = d.getMinutes(), today = obYmd(d) === obYmd(Date.now());
+            return (today ? '' : ['SUN','MON','TUE','WED','THU','FRI','SAT'][d.getDay()] + ' ') + ((h % 12) || 12) + ':' + (mi < 10 ? '0' : '') + mi + (h < 12 ? ' AM' : ' PM');
+        }
+        function obMvTxt(lbl, v, from, to) {
+            if (v == null || isNaN(v)) return '';
+            var cls = v > 0 ? 'up' : v < 0 ? 'dn' : 'fl', ar = v > 0 ? '\u25B2' : v < 0 ? '\u25BC' : '\u2022';
+            return '<span>' + lbl + ' PREGAME ' + escHtml(from) + ' \u2192 ' + escHtml(to) + ' <span class="' + cls + '">' + ar + (v ? Math.abs(Math.round(v * 10) / 10) : '') + '</span></span>';
+        }
+        function obCard(g) {
+            var n = g.now, sides = [['away', 'sa', 'mla', 'ov', 'O'], ['home', 'sh', 'mlh', 'un', 'U']];
+            var rows = sides.map(function(S) {
+                var t = g[S[0]], sp = n[S[1]], ml = n[S[2]], tot = n[S[3]], sp2 = g.split && g.split[S[0] === 'away' ? 'a' : 'h'];
+                var sharp = sp2 && sp2.m != null && sp2.b != null && (sp2.m - sp2.b) >= OB_SHARP;
+                return '<div class="ob-team"><img src="' + escHtml(t.logo || '') + '" alt="" loading="lazy" onerror="this.style.visibility=\'hidden\'">' + escHtml(t.abbr) + '</div>' +
+                    obCell(sp ? escHtml(t.abbr) + ' ' + obNum(sp.value) : '', sp ? obOdds(sp.odds) : '') +
+                    obCell(tot ? S[4] + ' ' + escHtml(tot.value) : '', tot ? obOdds(tot.odds) : '') +
+                    obCell(ml ? obOdds(ml.odds) : '', '') +
+                    (g.split ? '<div class="ob-cell bm"><b>' + (sp2 && sp2.b != null ? sp2.b + '%' : '\u2013') + ' / ' + (sp2 && sp2.m != null ? sp2.m + '%' : '\u2013') + (sharp ? '<span class="ob-sharp">SHARP</span>' : '') + '</b><i>' + g.split.kind + ' BETS/$</i></div>' : obCell('', 'NO SPLITS'));
+            }).join('');
+            var mv = g.mv || {}, o = g.open, p = g.pre, mvh = '';
+            if (o && p) {
+                if (o.sh && p.sh && mv.spread != null) mvh += obMvTxt('SPREAD', mv.spread, g.home.abbr + ' ' + obNum(o.sh.value), g.home.abbr + ' ' + obNum(p.sh.value));
+                if (o.ov && p.ov && mv.total != null) mvh += obMvTxt('TOTAL', mv.total, String(o.ov.value), String(p.ov.value));
+                if (o.mlh && p.mlh && (mv.flip || Math.abs(mv.mlp || 0) >= OB_ML_PROB)) mvh += '<span>ML ' + escHtml(g.home.abbr) + ' ' + obOdds(o.mlh.odds) + ' \u2192 ' + obOdds(p.mlh.odds) + (mv.flip ? ' <span class="up">FAV FLIP</span>' : '') + '</span>';
+            }
+            return '<div class="glass-card ob-card"' + (g.home.color ? ' style="border-left:0.6vh solid #' + escHtml(String(g.home.color).replace('#', '')) + '"' : '') + '>' +
+                '<div class="ob-hd neon-text-cycle"><span>' + escHtml(g.lg) + '</span><span>' + escHtml(g.away.abbr) + ' @ ' + escHtml(g.home.abbr) + '</span>' + (mv.steam ? '<span class="ob-steam">STEAM</span>' : '') + '<span class="ob-when">' + obWhen(g) + (g.tv ? ' \u2022 ' + escHtml(g.tv) : '') + '</span></div>' +
+                '<div class="ob-grid"><div class="ob-col">TEAM</div><div class="ob-col">' + (g.live ? 'LIVE ' : '') + 'SPREAD</div><div class="ob-col">TOTAL</div><div class="ob-col">ML</div><div class="ob-col">BETS / $</div>' + rows + '</div>' +
+                (mvh ? '<div class="ob-mv">' + mvh + '</div>' : '') + '</div>';
+        }
+        async function showOddsBoard(gen) {
+            var screen = document.getElementById('oddsboard-screen'), track = document.getElementById('ob-track'), meta = document.getElementById('ob-meta');
+            if (!ob.games || Date.now() - ob.at > 180000) { try { await obLoad(); } catch (e) {} if (!isCurrentSlide(gen)) return; }
+            if (!ob.games || !ob.games.length) { nextSlide(); return; }
+            screen.style.display = 'flex';
+            var st = ob.games.filter(function(g) { return g.mv && g.mv.steam; }).length, sh = ob.games.filter(function(g) { return g.split && ['a', 'h'].some(function(k) { var x = g.split[k]; return x && x.m - x.b >= OB_SHARP; }); }).length;
+            meta.textContent = 'BIGGEST GAMES BY BETS TRACKED \u2022 CONSENSUS LINES' + (st ? ' \u2022 ' + st + ' STEAM' : '') + (sh ? ' \u2022 ' + sh + ' SHARP' : '') + ' \u2022 DATA: ACTION NETWORK';
+            track.innerHTML = ob.games.map(obCard).join('');
+            applyScroll('ob-viewport', 'ob-track', 16000);
+        }
+
+        // ---------- CRT SCANLINES (Settings > Display, OFF by default, saved per device with the other settings) ----------
+        function crtApply() {
+            var on = !!settings.crt; document.body.classList.toggle('crt-on', on);
+            var lite = false; try { lite = bxLite() || celLite(); } catch (e) {}
+            document.body.classList.toggle('crt-lite', on && lite);
+        }
+
+        // ---------- DISC GOLF: PDGA live scoring (public, CORS-open JSON used by pdga.com/live) ----------
+        // Live elite event (DGPT / Majors / Elite Series) -> top 10 MPO; otherwise the next featured events. No data -> slide skipped.
+        var DG_BASE = 'https://www.pdga.com', DG_TIERS = { ES: 'ELITE SERIES', M: 'MAJOR', XM: 'MAJOR', NT: 'NATIONAL TOUR', XA: 'A-TIER+' };
+        var dg = { at: 0, busy: null, data: null };
+        function dgReady() { if (Date.now() - dg.at > 300000) dgLoad(); return !!(dg.data && (dg.data.live || dg.data.rank || (dg.data.upcoming && dg.data.upcoming.length))); }
+        function dgFeatured(e) { var n = String(e.officialName || ''); if (/amateur|\bam\b|junior/i.test(n)) return false; return !!DG_TIERS[e.tier] || /\bDGPT\b/.test(n); }
+        function dgLoad() {
+            if (dg.busy) return dg.busy;
+            dg.busy = (async function() {
+                try {
+                    var r = await arcadeFetch(DG_BASE + '/api/v1/feat/current-events/tournaments'); var list = await r.json();
+                    var now = Date.now(), ev = (Array.isArray(list) ? list : []).filter(dgFeatured).map(function(e) {
+                        return { id: e.tournId, name: e.officialName, tier: e.tier, s: Date.parse(e.startDate), e: Date.parse(e.endDate) + 86400000 + 6 * 3600000,
+                                 loc: [e.city, e.state || e.countryISO].filter(Boolean).join(', '), sd: String(e.startDate).slice(0, 10), ed: String(e.endDate).slice(0, 10) };
+                    }).filter(function(e) { return !isNaN(e.s); }).sort(function(a, b) { return a.s - b.s; });
+                    var out = { upcoming: ev.filter(function(e) { return e.s > now; }).slice(0, 6), live: null };
+                    var cur = ev.filter(function(e) { return e.s <= now && now <= e.e; });
+                    cur.sort(function(a, b) { return (/DGPT|Major|Championship/i.test(b.name) ? 1 : 0) - (/DGPT|Major|Championship/i.test(a.name) ? 1 : 0); });
+                    for (var i = 0; i < cur.length && !out.live; i++) {
+                        try {
+                            var er = await arcadeFetch(DG_BASE + '/apps/tournament/live-api/live_results_fetch_event?TournID=' + cur[i].id); var ed = (await er.json()).data;
+                            var div = (ed.Divisions || []).filter(function(d) { return d.Division === 'MPO'; })[0] || (ed.Divisions || [])[0];
+                            if (!div || !div.LatestRound) continue;
+                            var rr = await arcadeFetch(DG_BASE + '/apps/tournament/live-api/live_results_fetch_round?TournID=' + cur[i].id + '&Division=' + encodeURIComponent(div.Division) + '&Round=' + div.LatestRound);
+                            var rd = (await rr.json()).data; rd = Array.isArray(rd) ? rd[0] : rd;
+                            var sc = (rd && rd.scores || []).filter(function(p) { return p.RunningPlace; }).sort(function(a, b) { return a.RunningPlace - b.RunningPlace; });
+                            if (!sc.length) continue;
+                            var rl = ed.RoundsList && ed.RoundsList[div.LatestRound];
+                            out.live = { name: ed.Name || cur[i].name, tier: cur[i].tier, loc: ed.LocationShort || cur[i].loc, dates: ed.DateRange || '', div: div.Division,
+                                round: rl ? rl.Label : 'Round ' + div.LatestRound, final: ed.Finals === 'yes' && ed.HighestCompletedRound === ed.FinalRound,
+                                rows: sc.slice(0, 10).map(function(p) {
+                                    return { place: p.RunningPlace, tied: !!p.Tied, pdga: p.PDGANum || '', photo: p.AvatarURL || '', country: p.Country || '', name: p.Name || ((p.FirstName || '') + ' ' + (p.LastName || '')), toPar: p.ToPar,
+                                             rounds: String(p.Rounds || '').split(',').filter(function(x) { return x !== ''; }),
+                                             thru: p.Completed ? 'F' : (p.Played ? String(p.Played) : (p.TeeTime ? String(p.TeeTime).slice(0, 5) : '-')) };
+                                }) };
+                        } catch (e2) {}
+                    }
+                    try { var rk = await arcadeFetch('discgolf-rankings.json?t=' + Math.floor(Date.now() / 1800000)); if (rk.ok) { var rj = await rk.json(); if (rj && rj.divisions && rj.divisions.MPO) out.rank = rj; } } catch (e3) {}
+                    if (!out.rank && dg.data && dg.data.rank) out.rank = dg.data.rank;
+                    dg.data = out; dg.at = Date.now();
+                } catch (e) { dg.at = Date.now() - 240000; } // retry in ~1 min
+                finally { dg.busy = null; }
+            })();
+            return dg.busy;
+        }
+        function dgPar(v) { var n = Number(v); if (v == null || isNaN(n)) return '-'; return n === 0 ? 'E' : (n > 0 ? '+' + n : String(n)); }
+        function dgDate(sd, ed) {
+            var M = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'], a = sd.split('-'), b = ed.split('-');
+            return M[+a[1] - 1] + ' ' + (+a[2]) + (ed && ed !== sd ? '\u2013' + (a[1] === b[1] ? '' : M[+b[1] - 1] + ' ') + (+b[2]) : '');
+        }
+        function dgFlag(cc) { cc = String(cc || '').toUpperCase(); if (!/^[A-Z]{2}$/.test(cc)) return ''; return String.fromCodePoint(0x1F1E6 + cc.charCodeAt(0) - 65, 0x1F1E6 + cc.charCodeAt(1) - 65); }
+        function dgIni(n) { return String(n || '').split(/\s+/).filter(Boolean).map(function(w) { return w.charAt(0); }).join('').slice(0, 2).toUpperCase(); }
+        function dgImgErr(img) { var sp = document.createElement('span'); sp.className = 'dg-ph dg-ini'; sp.textContent = img.getAttribute('data-ini') || '?'; if (img.parentNode) img.parentNode.replaceChild(sp, img); }
+        function dgPhoto(url, name) { // PDGA only serves ~200 KB "large" photos: a free resizer (wsrv.nl) shrinks them to ~2 KB 96px WebP for the onn boxes
+            if (!url || /default/i.test(url)) return '<span class="dg-ph dg-ini">' + escHtml(dgIni(name)) + '</span>';
+            var src = 'https://wsrv.nl/?url=' + encodeURIComponent('www.pdga.com' + (url.charAt(0) === '/' ? '' : '/') + url.replace(/^https?:\/\/(www\.)?pdga\.com\/?/, '')) + '&w=96&h=96&fit=cover&a=top&output=webp&q=70';
+            return '<img class="dg-ph" loading="lazy" decoding="async" width="48" height="48" alt="" data-ini="' + escHtml(dgIni(name)) + '" src="' + escHtml(src) + '" onerror="dgImgErr(this)">';
+        }
+        function dgPageLive(L) {
+            return { title: String(L.name).replace(/^DGPT\s*(Playoffs\s*)?-\s*/i, '').toUpperCase(),
+                meta: (L.final ? 'FINAL' : 'LIVE') + ' \u2022 ' + L.div + ' \u2022 ' + L.round + ' \u2022 ' + L.loc + (DG_TIERS[L.tier] ? ' \u2022 ' + DG_TIERS[L.tier] : '') + ' \u2022 DATA: PDGA.COM',
+                html: L.rows.map(function(p) {
+                    var tp = Number(p.toPar);
+                    return '<div class="dg-row glass-card"><div class="dg-pos neon-text-cycle">' + (p.tied ? 'T' : '') + escHtml(p.place) + '</div>' + dgPhoto(p.photo, p.name) +
+                        '<div class="dg-name">' + escHtml(p.name) + (p.country ? '<span class="dg-flag">' + dgFlag(p.country) + '</span>' : '') + '</div><div class="dg-rds">' + escHtml(p.rounds.join(' \u00b7 ')) + '</div>' +
+                        '<div class="dg-thru neon-text-cycle">' + (p.thru === 'F' ? 'F' : (/:/.test(p.thru) ? escHtml(p.thru) : 'THRU ' + escHtml(p.thru))) + '</div>' +
+                        '<div class="dg-par card-val-lg' + (tp < 0 ? ' under' : '') + '">' + dgPar(p.toPar) + '</div></div>';
+                }).join('') };
+        }
+        function dgPageRank(R, div) {
+            var D = R.divisions[div]; if (!D || !D.rows || !D.rows.length) return null;
+            return { title: div + ' WORLD RANKINGS', meta: 'OFFICIAL PDGA WORLD RANKINGS \u2022 ' + String(D.date || '').toUpperCase() + ' \u2022 RATING \u2022 AVG PTS \u2022 DATA: PDGA.COM',
+                html: D.rows.map(function(r) {
+                    var mv = Number(r.move) || 0;
+                    return '<div class="dg-row glass-card"><div class="dg-pos neon-text-cycle">' + escHtml(r.rank) + '</div>' +
+                        '<div class="dg-mv' + (mv > 0 ? ' up' : mv < 0 ? ' dn' : '') + '">' + (mv > 0 ? '\u25B2' + mv : mv < 0 ? '\u25BC' + (-mv) : '\u2013') + '</div>' + dgPhoto(r.photo, r.name) +
+                        '<div class="dg-name">' + escHtml(r.name) + (r.country ? '<span class="dg-flag">' + dgFlag(r.country) + '</span>' : '') + (r.pdga ? '<span class="dg-num">#' + escHtml(r.pdga) + '</span>' : '') + '</div>' +
+                        '<div class="dg-rt neon-text-cycle">' + (r.rating ? escHtml(r.rating) + ' RTG' : '') + '</div>' +
+                        '<div class="dg-par card-val-lg">' + escHtml(r.pts) + '</div></div>';
+                }).join('') };
+        }
+        function dgPageNext(up) {
+            return { title: 'DISC GOLF \u2022 UP NEXT', meta: 'DGPT \u2022 MAJORS \u2022 ELITE SERIES \u2022 DATA: PDGA.COM',
+                html: up.map(function(e) {
+                    return '<div class="dg-ev glass-card"><div class="dg-date neon-text-cycle">' + dgDate(e.sd, e.ed) + '</div>' +
+                        '<div class="dg-evname">' + escHtml(e.name) + '<small>' + escHtml(e.loc) + '</small></div>' +
+                        '<div class="dg-tier neon-text-cycle">' + escHtml(DG_TIERS[e.tier] || e.tier) + '</div></div>';
+                }).join('') };
+        }
+        function dgPages(d) { // live: leaderboard, then MPO rankings. Otherwise: MPO rankings, FPO rankings, up next
+            var pg = [], R = d.rank;
+            if (d.live) pg.push(dgPageLive(d.live));
+            if (R) { pg.push(dgPageRank(R, 'MPO')); if (!d.live) pg.push(dgPageRank(R, 'FPO')); }
+            if (!d.live && d.upcoming && d.upcoming.length) pg.push(dgPageNext(d.upcoming));
+            return pg.filter(Boolean);
+        }
+        var DG_PAGE_MS = 13000;
+        async function showDiscGolf(gen) {
+            var screen = document.getElementById('discgolf-screen'), track = document.getElementById('dg-track'), meta = document.getElementById('dg-meta'), title = document.getElementById('dg-title');
+            if (!dg.data || Date.now() - dg.at > 300000) { try { await dgLoad(); } catch (e) {} if (!isCurrentSlide(gen)) return; }
+            var pages = dg.data ? dgPages(dg.data) : [];
+            if (!pages.length) { nextSlide(); return; }
+            screen.style.display = 'flex';
+            (function show(i) {
+                if (!isCurrentSlide(gen)) return;
+                var P = pages[i]; title.textContent = P.title; meta.textContent = P.meta + (pages.length > 1 ? ' \u2022 ' + (i + 1) + '/' + pages.length : '');
+                track.innerHTML = P.html; dgShown = i;
+                if (i < pages.length - 1) slideTimer = slideTimeout(function() { show(i + 1); }, DG_PAGE_MS);
+                else slideTimer = slideTimeout(nextSlide, DG_PAGE_MS);
+            })(0);
+        }
+        var dgShown = -1;
 
         async function showPGA(gen) {
             try {
@@ -3011,7 +3503,10 @@
             var url = String(ref || '').replace(/^http:/, 'https:');
             if (!url) return null;
             if (!espnRefCache[url]) {
-                espnRefCache[url] = fetch(url).then(function(r) { return r.ok ? r.json() : null; }).catch(function() { return null; });
+                // Prefer the CORS-open site API: sports.core team refs intermittently answer without CORS headers (console error on the TV).
+                var mm = url.match(/\/sports\/([^\/]+)\/leagues\/([^\/]+)\/.*teams\/(\d+)/);
+                espnRefCache[url] = (mm ? fetch('https://site.api.espn.com/apis/site/v2/sports/' + mm[1] + '/' + mm[2] + '/teams/' + mm[3]).then(function(r) { return r.ok ? r.json() : null; }).then(function(j) { return j && j.team; })
+                    : fetch(url).then(function(r) { return r.ok ? r.json() : null; })).catch(function() { return null; });
             }
             var t = await espnRefCache[url];
             if (!t || !(t.displayName || t.shortDisplayName)) return null;
@@ -3548,7 +4043,7 @@
         // and every timer/request stops on close. Only the newest response is kept, and it is dropped once rendered, so it
         // stays light in memory (planned Android TV WebView shell).
         var GC_POLL_MS = 10000, GC_TIMEOUT_MS = 8000, GC_POST_IDLE_MS = 600000, GC_PRE_IDLE_MS = 1800000;
-        var gc = { open: false, key: null, meta: null, state: null, timer: null, ctrl: null, reqId: 0, fails: 0, polls: 0,
+        var gc = { open: false, key: null, meta: null, state: null, timer: null, ctrl: null, reqId: 0, fails: 0, polls: 0, dq: [],
                    lastOk: 0, lastTry: 0, endedAt: 0, lastInput: 0, pollMs: GC_POLL_MS, scrollTimer: null, scrollHold: 0, html: {}, teams: {}, renderErr: null };
         var gcRegistry = {}, gcOrder = [];
 
@@ -3644,7 +4139,7 @@
         }
         var CEL_NICK = { 'HURRICANES': 'CANES', 'MAPLE LEAFS': 'LEAFS', 'RED WINGS': 'WINGS', 'BLUE JACKETS': 'JACKETS', 'GOLDEN KNIGHTS': 'KNIGHTS', 'BLUE DEVILS': 'DEVILS', 'TAR HEELS': 'HEELS', 'WOLFPACK': 'PACK', 'DIAMONDBACKS': 'D-BACKS' };
         function celShort(T) { var n = String(T.short || T.full || T.abbr || '').toUpperCase(); return CEL_NICK[n] || n; }
-        function celObserve(key, fam, state, teams, rebase, hint, fromGc, stName, x) {
+        function celObserve(key, fam, state, teams, rebase, hint, fromGc, stName, x, per, league) {
             if (!key) return;
             var now = Date.now(), w = cel.watch[key];
             if (!w) {
@@ -3670,6 +4165,7 @@
                 celQueue({ key: key, side: T.side, score: cur, gc: !!fromGc, kind: kind, T: T, line: celLine(teams) });
             });
             try { celAlerts(key, fam, state, prevState, teams, rebase, live, fromGc, x, w); } catch (e) {}
+            try { upCheck(key, fam, league || (fromGc && gc.meta && gc.meta.league) || '', state, per, teams, fromGc, w); } catch (e) {}
             if (state === 'post' && prevState && prevState !== 'post' && !w.won && teams.length === 2 && !rebase) {
                 w.won = true;
                 var a = parseInt(teams[0].score, 10), h = parseInt(teams[1].score, 10);
@@ -3865,6 +4361,7 @@
             gsTxt('gs-dval', 'TV DELAY ' + d + 's');
             gsTxt('gs-chan', 'saved for ' + gsChanName());
             gsTxt('gs-src', tvd.src === 'stream' ? 'STREAMING' : 'CABLE');
+            gsTxt('gs-all', 'DELAY ALL: ' + (settings.tvDelayAll === false ? 'OFF' : 'ON'));
         }
         function gsOpen() {
             if (!gc.open) return;
@@ -3947,7 +4444,7 @@
             var r;
             if (raw < -0.5) r = 'SYNCED \u00b7 TV is ' + Math.round(-raw) + 's AHEAD of ESPN \u00b7 celebrations show right away';
             else if (v === 0) r = 'SYNCED \u00b7 TV matches ESPN \u00b7 celebrations show right away';
-            else r = 'SYNCED \u00b7 TV is ' + Math.round(raw) + 's behind \u00b7 celebrations wait ' + v + 's' + (raw > GS_MAX_S + 0.5 ? ' (max)' : '');
+            else r = 'SYNCED \u00b7 TV is ' + Math.round(raw) + 's behind \u00b7 ' + (settings.tvDelayAll === false ? '' : 'Gamecast + ') + 'celebrations wait ' + v + 's' + (raw > GS_MAX_S + 0.5 ? ' (max)' : '');
             gsTxt('gs-res', r);
             gsShow('gs-ok', false); gsShow('gs-again', true);
             var a = gsEl('gs-again'), ae = document.activeElement; if (document.body.classList.contains('nav-active') && (!ae || ae === gsEl('gs-ok') || ae === document.body)) gsEl('gs-test').focus();
@@ -4013,7 +4510,7 @@
                 if (gc.open && m.key === gc.key) return;
                 celObserve(m.key, gcFamily(m), m.state, [
                     { side: 'away', ck: m.league + ':' + m.aId, score: m.aScore, full: m.aFull || m.away, short: m.away, abbr: m.awayAbbr, logo: m.aLogo, rawColor: m.aColor, rawAlt: m.aAlt },
-                    { side: 'home', ck: m.league + ':' + m.hId, score: m.hScore, full: m.hFull || m.home, short: m.home, abbr: m.homeAbbr, logo: m.hLogo, rawColor: m.hColor, rawAlt: m.hAlt }], false, '', false);
+                    { side: 'home', ck: m.league + ':' + m.hId, score: m.hScore, full: m.hFull || m.home, short: m.home, abbr: m.homeAbbr, logo: m.hLogo, rawColor: m.hColor, rawAlt: m.hAlt }], false, '', false, '', null, m.per, m.league);
             });
         }
         // delayed queue: detection is immediate, the effect waits settings.celebrateDelay seconds
@@ -4022,7 +4519,8 @@
             var d = mine ? gcDelay() : Math.max(0, Math.min(GS_MAX_S, parseInt(settings.celebrateDelay, 10) || 0));
             // the delay counts from when the 2 s scoreboard check first saw the change (what SYNC TO TV measures against),
             // not from when the slower summary confirmed it
-            var from = mine && gc.trigAt && now - gc.trigAt < 20000 ? gc.trigAt : now;
+            var rp = mine ? gc.replay : null; // set while a snapshot is applied (gcApply / gcDeFast): times are from when it arrived
+            var from = rp ? (rp.trig && rp.trig <= rp.at && rp.at - rp.trig < 20000 ? rp.trig : rp.at) : (mine && gc.trigAt && now - gc.trigAt < 20000 ? gc.trigAt : now);
             ev.at = from + d * 1000 + ((ev.kind && ev.kind.hold) || 0);
             cel.pending.push(ev);
             celPump();
@@ -4104,9 +4602,79 @@
             if (gcLum(c2) < 0.25) c2 = gcLum(c1) >= 0.25 ? '#ffffff' : '#00f0ff'; // the glow colour must read on the wash
             return [c1, c2];
         }
+
+        // ---------- UPSET WATCH: a big pregame underdog (ML +200 or more, or spread +6.5 or more) leads late -> 5 s banner ----------
+        // Pregame lines come from the Action Network data the Odds Board already loads (consensus, non-live line). It rides the alert
+        // queue (celQueue -> alShow), so it never overlaps a celebration or another banner, and in Gamecast it waits the TV delay.
+        var UP_MS = 5000, UP_ML = 200, UP_SPREAD = 6.5, UP_COOL_MS = 600000, up = { fired: 0, el: null, timer: null, last: null };
+        function upLate(fam, league, per) {
+            per = Number(per) || 0;
+            if (fam === 'baseball') return per >= 7;
+            if (fam === 'hockey') return per >= 3;
+            if (fam === 'football') return per >= 4;
+            if (fam === 'basketball') return /college/.test(league) ? per >= 2 : per >= 4; // college hoops plays halves
+            if (fam === 'soccer') return per >= 2;
+            return false;
+        }
+        function upPer(fam, league, per) {
+            per = Number(per) || 0;
+            if (fam === 'baseball') return (per % 10 === 1 && per !== 11 ? per + 'ST' : per % 10 === 2 && per !== 12 ? per + 'ND' : per % 10 === 3 && per !== 13 ? per + 'RD' : per + 'TH') + ' INN';
+            if (fam === 'hockey') return per > 3 ? 'OT' : 'P' + per;
+            if (fam === 'basketball' && /college/.test(league)) return per > 2 ? 'OT' : '2H';
+            if (fam === 'soccer') return '2H';
+            return per > 4 ? 'OT' : 'Q' + per;
+        }
+        function upLine(teams) { // pregame line for this ESPN game from the loaded Action Network slate
+            if (!ob.all || !ob.all.length) return null;
+            function nm(x) { return String(x || '').toLowerCase(); }
+            var A = celSideT(teams, 'away'), H = celSideT(teams, 'home'); if (!A || !H) return null;
+            function same(T, t) { return (T.full && t.full && nm(T.full) === nm(t.full)) || (T.abbr && t.abbr && nm(T.abbr) === nm(t.abbr)); }
+            for (var i = 0; i < ob.all.length; i++) { var g = ob.all[i]; if (same(A, g.away) && same(H, g.home)) return g.pre || null; }
+            return null;
+        }
+        function upCheck(key, fam, league, state, per, teams, fromGc, w) {
+            if (settings.upsetWatch === false || state !== 'in' || teams.length !== 2 || !key) return;
+            try { obReady(); } catch (e) {} // keeps the pregame slate fresh (3 min cache)
+            var pre = upLine(teams); if (!pre) return;
+            var dog = null, num = '';
+            ['away', 'home'].forEach(function(sd) {
+                var ml = pre[sd === 'away' ? 'mla' : 'mlh'], sp = pre[sd === 'away' ? 'sa' : 'sh'];
+                var mlv = ml ? Number(ml.odds) : NaN, spv = sp ? Number(sp.value) : NaN;
+                if ((mlv >= UP_ML) || (spv >= UP_SPREAD)) { if (!dog) { dog = sd; num = mlv >= UP_ML ? '+' + mlv : '+' + spv; } }
+            });
+            if (!dog) return;
+            var D = celSideT(teams, dog), F = celSideT(teams, dog === 'away' ? 'home' : 'away'), ds = parseInt(D.score, 10), fs = parseInt(F.score, 10);
+            if (isNaN(ds) || isNaN(fs)) return;
+            var u = w.up || (w.up = { n: 0, at: 0, armed: true }), leads = ds > fs;
+            if (!leads) { if (u.n) u.armed = true; return; } // lost / tied the lead: a re-take may fire again (after the cooldown)
+            if (!upLate(fam, league, per)) return;
+            var now = Date.now();
+            if (!u.armed || (u.n && now - u.at < UP_COOL_MS)) return;
+            u.n++; u.at = now; u.armed = false;
+            var line = ds + '-' + fs;
+            celQueue({ key: key, side: dog, score: -1, gc: !!fromGc, kind: { alert: 'upset', upset: { dog: num, D: D, F: F, sc: line, per: upPer(fam, league, per) }, text: 'UPSET WATCH' }, T: D, line: line });
+        }
+        function upRemove() {
+            clearTimeout(up.timer); up.timer = null;
+            if (up.el) { var e = up.el; up.el = null; e.querySelectorAll('img').forEach(function(i) { i.removeAttribute('src'); }); if (e.parentNode) e.parentNode.removeChild(e); }
+        }
+        function upShow(kind, T, line) {
+            upRemove();
+            var u = kind.upset, D = u.D, F = u.F, el = document.createElement('div');
+            function logo(t) { return '<img alt="" decoding="async" src="' + escHtml(t.logo || 'https://a.espncdn.com/combiner/i?img=/i/teamlogos/default-team-logo-500.png') + '" onerror="this.style.visibility=\'hidden\'">'; }
+            el.id = 'up-banner'; el.setAttribute('role', 'status');
+            el.innerHTML = '<span class="up-tag">UPSET WATCH</span><span class="up-dog">' + escHtml(u.dog) + ' DOG</span>' +
+                '<span class="up-mid">' + logo(D) + escHtml(D.abbr || D.short || '') + ' <i>leads</i> ' + logo(F) + escHtml(F.abbr || F.short || '') + '</span>' +
+                '<span class="up-sc">' + escHtml(u.sc) + '</span><span class="up-per">' + escHtml(u.per) + '</span>';
+            document.body.appendChild(el); up.el = el;
+            cel.alShowing = true; cel.alCur = [kind, T, line, Date.now()]; cel.alFired++; up.fired++;
+            up.last = { dog: u.dog, team: D.abbr, opp: F.abbr, sc: u.sc, per: u.per, at: Date.now() };
+            up.timer = setTimeout(function() { up.timer = null; upRemove(); cel.alShowing = false; cel.alCur = null; alNext(); }, UP_MS); // exactly 5 s, then gone from the DOM
+        }
         var CEL_AL_TAG = { redzone: 'RED ZONE', pp: 'POWER PLAY', start: 'GAME ON', lead: 'LEAD CHANGE', big: 'BIG PLAY' };
         function alShow(kind, T, line) {
             if (cel.showing || cel.alShowing) { if (cel.aq.length < CEL_Q_MAX + 1) cel.aq.push([kind, T, line, Date.now()]); return; }
+            if (kind.upset) { upShow(kind, T, line); return; }
             var el = document.getElementById('cel-alert'); if (!el) return;
             var cc = celColors(T); el.style.setProperty('--al1', cc[0]); el.style.setProperty('--al2', cc[1]);
             var img = document.getElementById('al-logo');
@@ -4126,7 +4694,7 @@
             clearTimeout(cel.alTimer); cel.alTimer = setTimeout(function() { alHide(false); }, CEL_ALERT_MS);
         }
         function alHide(quiet) {
-            clearTimeout(cel.alTimer); cel.alTimer = null;
+            clearTimeout(cel.alTimer); cel.alTimer = null; upRemove();
             var el = document.getElementById('cel-alert'); if (el) { el.className = ''; el.setAttribute('aria-hidden', 'true'); }
             var img = document.getElementById('al-logo'); if (img) img.removeAttribute('src');
             var ah = document.getElementById('al-head'); if (ah) ah.removeAttribute('src');
@@ -4222,9 +4790,11 @@
             el.classList.add('open'); el.setAttribute('aria-hidden', 'false');
             document.body.classList.add('gc-open');
             ['gc-plays-body', 'gc-stats-body', 'gc-players-body', 'gc-bxs-body'].forEach(function(id) { var b = document.getElementById(id); if (b) b.scrollTop = 0; });
+            gc.dq = []; gc.dPrev = null; gc.deShown = 0; gc.got1 = false; gc.deLive = meta.state === 'in'; gc.replay = null;
             gcRenderShell(meta);
             gcPoll();
             gcFastStart();
+            goStart();
             gc.scrollTimer = setInterval(gcAutoScroll, 60);
             return true;
         }
@@ -4232,7 +4802,7 @@
             gc.reqId++;
             clearTimeout(gc.timer); gc.timer = null;
             if (gc.ctrl) { try { gc.ctrl.abort(); } catch (e) {} gc.ctrl = null; }
-            gcFastStop(); gc.f = null;
+            gcFastStop(); gc.f = null; goStop();
             clearInterval(gc.scrollTimer); gc.scrollTimer = null;
         }
         function gcClose() {
@@ -4247,6 +4817,7 @@
             document.body.classList.remove('gc-open');
             Object.keys(gc.html).forEach(function(id) { var n = document.getElementById(id); if (n) n.innerHTML = ''; }); // free the DOM
             gc.html = {}; gcApplyViews([]); gc.view = 0;
+            gc.dq = []; gc.dPrev = null; gcDeBadge(0);
             var ae = document.activeElement; if (ae && ae.closest && ae.closest('#gamecast')) ae.blur();
             if (lvNav.on) lvNavTouch(); // opened from the card picker: its ring is still on that card
             if (!arcadeNav.paused && arcadeNav.pending) { arcadeNav.pending = false; nextSlide(); } // rotation resumes where it left off
@@ -4361,9 +4932,10 @@
             // 4-12 s behind this feed on NHL goals; its scoring play ~20 s behind). The summary then sees the same score and
             // does not fire again; scorer names only appear if the summary had them first.
             if (f.celSc == null) f.celSc = sc;
-            else if (p && p.sc === sc && sc !== f.celSc && gc.celT && !gc.celFresh) {
+            else if (p && p.sc === sc && sc !== f.celSc && gc.celT && gc.got1) {
                 f.celSc = sc;
-                try { celObserve(gc.key, fam, state, [Object.assign({}, gc.celT[0], { score: a.score }), Object.assign({}, gc.celT[1], { score: h.score })], false, lp.text || '', true, st.name || '', null); } catch (e) {}
+                var fx = { fast: true, at: now, trig: gc.trigAt, cel: { fam: fam, state: state, per: stt.period || 0, teams: [Object.assign({}, gc.celT[0], { score: a.score }), Object.assign({}, gc.celT[1], { score: h.score })], hint: lp.text || '', stName: st.name || '' } };
+                if (gcDeOn() || gc.dq.length) { gc.dq.push(fx); gcDeTrim(); } else gcDeFast(fx);
             }
             if (!p || p.sig === cur.sig) return false;
             if (p.sc !== sc) {
@@ -4403,6 +4975,7 @@
         }
         function gcAutoScroll() {
             try { celClockTick(); } catch (e) {}
+            try { gcDeTick(false); } catch (e) {}
             if (!gc.open || Date.now() < gc.scrollHold) return;
             GC_SCROLLERS.forEach(function(id) {
                 var el = document.getElementById(id); if (!el || !el.offsetParent) return; // hidden view: leave its scroll alone
@@ -4479,10 +5052,11 @@
         function gcRenderShell(meta) {
             gcSet('gc-league', escHtml(meta.label || '') );
             gcSet('gc-net', meta.tv && meta.tv !== 'TBD' && meta.tv !== 'TV' ? '&#128250; ' + escHtml(meta.tv) : '');
-            var A = { name: meta.away, logo: meta.aLogo, score: meta.aScore, rec: '', color: '#00f0ff' }, H = { name: meta.home, logo: meta.hLogo, score: meta.hScore, rec: '', color: '#ff007f' };
+            var hide = settings.tvDelayAll !== false && meta.state === 'in'; // TV-delayed: the registry score may be ahead of the TV
+            var A = { name: meta.away, logo: meta.aLogo, score: hide ? '' : meta.aScore, rec: '', color: '#00f0ff' }, H = { name: meta.home, logo: meta.hLogo, score: hide ? '' : meta.hScore, rec: '', color: '#ff007f' };
             gcSet('gc-away', gcTeamHtml(A, 'away', meta)); gcSet('gc-home', gcTeamHtml(H, 'home', meta));
             celSync(meta, { id: meta.aId, abbr: meta.awayAbbr, full: meta.aFull || meta.away }, { id: meta.hId, abbr: meta.homeAbbr, full: meta.hFull || meta.home });
-            gcSet('gc-mid', '<div class="gc-pill ' + (meta.state === 'in' ? 'live' : '') + '">' + (meta.state === 'in' ? '&#9679; LIVE' : (meta.state === 'post' ? 'FINAL' : 'UPCOMING')) + '</div><div class="gc-clock">' + escHtml(meta.status || '') + '</div>');
+            gcSet('gc-mid', '<div class="gc-pill ' + (meta.state === 'in' ? 'live' : '') + '">' + (meta.state === 'in' ? '&#9679; LIVE' : (meta.state === 'post' ? 'FINAL' : 'UPCOMING')) + '</div><div class="gc-clock">' + (hide ? '' : escHtml(meta.status || '')) + '</div>');
             var wait = '<div class="gc-empty">LOADING GAMECAST&hellip;</div>';
             gcApplyViews([]); gcSet('gc-bxs-body', wait);
             gcSet('gc-line', ''); gcSet('gc-wp', ''); gcSet('gc-track', ''); var strip = document.getElementById('gc-strip'); if (strip) strip.style.display = 'none'; gcSet('gc-plays-body', wait); gcSet('gc-stats-body', wait); gcSet('gc-players-body', wait);
@@ -4495,53 +5069,137 @@
             return lg + info + sc;
         }
 
-        function gcRender(meta, d) {
+        // ===== DELAY EVERYTHING TO MATCH MY TV (settings.tvDelayAll, default ON) =====
+        // Each summary is turned into a small render snapshot right away (HTML per block + celebration inputs; the ~150 KB-1 MB
+        // parsed summary is dropped at once, and blocks unchanged since the previous snapshot share its string). While a live
+        // game is open with a TV delay, snapshots wait in gc.dq and are shown when (arrival + delay) is reached, so the score,
+        // clock, plays, trackers and box score never get ahead of the TV. Celebrations / alerts run when the snapshot is shown,
+        // timed from its arrival (celQueue + gc.replay), so the delay is never applied twice. The 2 s check and SYNC TO TV keep
+        // running in real time (they measure ESPN against the TV). Memory: <= GC_DE_MAX entries, ~GC_DE_CHARS of new HTML.
+        var GC_DE_MAX = 40, GC_DE_HARD = 60, GC_DE_CHARS = 1500000;
+        function gcDeOn() { return settings.tvDelayAll !== false && !!gc.deLive && gcDelay() > 0; }
+        function gcRender(meta, d) { gcDeIn(gcBuild(meta, d)); }
+        function gcDeIn(s) {
+            if (!gc.dq) gc.dq = [];
+            if (!gcDeOn() && !gc.dq.length) { gcApply(s, false); gcDeBadge(Date.now()); return; }
+            gc.dq.push(s); gcDeTrim(); gcDeTick(true);
+        }
+        function gcDeTrim() { // memory cap: drop the HTML of the oldest waiting snapshots first (their celebrations still run)
+            var q = gc.dq, tot = 0, i;
+            for (i = 0; i < q.length; i++) tot += q[i].html ? (q[i].sz || 0) : 0;
+            for (i = 0; i < q.length - 1 && (q.length > GC_DE_MAX || tot > GC_DE_CHARS); i++) {
+                if (!q[i].html) continue;
+                var nx = null; for (var j = i + 1; j < q.length; j++) if (q[j].html) { nx = q[j]; break; }
+                if (!nx) break;
+                tot -= q[i].sz || 0; nx.sz = (nx.sz || 0) + (q[i].sz || 0); q[i].html = null; q[i].A = q[i].H = null; q[i].venue = null; // its unchanged blocks live on in nx
+            }
+            while (q.length > GC_DE_HARD) gcApply(q.shift(), true); // never more than this: oldest effects run now
+        }
+        function gcDeTick(force) {
+            if (!gc.open || !gc.dq) return;
+            var now = Date.now(); if (!force && now - (gc.deTk || 0) < 250) return; gc.deTk = now;
+            var q = gc.dq, lim = gcDeOn() ? now - gcDelay() * 1000 : Infinity, n = 0, last = -1, i;
+            while (n < q.length && q[n].at <= lim) n++;
+            if (n) {
+                var due = q.splice(0, n);
+                for (i = 0; i < due.length; i++) if (!due[i].fast && due[i].html) last = i;
+                for (i = 0; i < due.length; i++) { gcDeCap(due[i], due.slice(i + 1).concat(q)); if (due[i].fast) gcDeFast(due[i]); else gcApply(due[i], i !== last); }
+            }
+            if (!gc.deShown && q.length && gcDeOn()) { // just opened: nothing old enough yet -> say so instead of spoiling
+                var w = Math.max(0, Math.ceil((q[0].at + gcDelay() * 1000 - now) / 1000));
+                gcSet('gc-mid', '<div class="gc-pill live">&#9679; LIVE</div><div class="gc-syncing">SYNCING TO YOUR TV&hellip;</div><div class="gc-sit">CATCHING UP IN ' + w + 's &bull; TV DELAY ' + gcDelay() + 's</div>');
+                ['gc-plays-body', 'gc-stats-body', 'gc-players-body', 'gc-bxs-body'].forEach(function(id) { gcSet(id, '<div class="gc-empty">SYNCING TO YOUR TV&hellip;</div>'); });
+            }
+            gcDeBadge(now);
+        }
+        function gcDeBadge(now) {
+            var el = document.getElementById('gc-tvd'); if (!el) return;
+            var on = gc.open && gcDeOn(), t = '';
+            if (on) t = gc.deShown ? '\ud83d\udcfa TV DELAY ' + gcDelay() + 's' : '\ud83d\udcfa SYNCING TO YOUR TV\u2026';
+            if (el.textContent !== t) el.textContent = t;
+            el.hidden = !t; el.classList.toggle('sync', on && !gc.deShown);
+        }
+        function gcDeToggle() {
+            settings.tvDelayAll = settings.tvDelayAll === false;
+            var el = document.getElementById('set-tvDelayAll'); if (el) el.checked = settings.tvDelayAll;
+            try { localStorage.setItem('ahlersArcadeSettings', JSON.stringify(settings)); } catch (e) {}
+            if (gc.open) { gc.lastInput = Date.now(); gcDeTick(true); }
+            try { gsDelayUI(); } catch (e) {}
+        }
+        function gcDeCap(s, later) { // a score corrected down in data that already arrived = corrected before the TV showed it: no celebration
+            if (!s.cel || !s.cel.teams || !later.length) return;
+            var mins = {}; later.forEach(function(x) { (x.cel && x.cel.teams || []).forEach(function(T) { var v = parseInt(T.score, 10); if (!isNaN(v) && (mins[T.side] == null || v < mins[T.side])) mins[T.side] = v; }); });
+            s.cel.teams = s.cel.teams.map(function(T) { var v = parseInt(T.score, 10); return mins[T.side] != null && !isNaN(v) && mins[T.side] < v ? Object.assign({}, T, { score: String(mins[T.side]) }) : T; });
+        }
+        function gcDeFast(s) { // the 2 s check's early celebration, at TV time
+            gc.replay = s;
+            try { celObserve(gc.key, s.cel.fam, s.cel.state, s.cel.teams, false, s.cel.hint, true, s.cel.stName, null, s.cel.per); } catch (e) {}
+            gc.replay = null;
+        }
+        function gcApply(s, celOnly) { // one snapshot: celebrations/alerts, then the DOM (skipped for older snapshots shown in the same tick)
+            if (!gc.open) return;
+            if (s.A) celSync(gc.meta, s.A, s.H);
+            if (s.cel) { gc.replay = s; try { celObserve(gc.key, s.cel.fam, s.cel.state, s.cel.teams, gc.celFresh, s.cel.hint, true, s.cel.stName, s.cel.cx, s.cel.per); } catch (e) {} gc.replay = null; }
+            gc.celFresh = false;
+            if (celOnly || !s.html) return;
+            var h = s.html; gc.deShown = s.at;
+            try { gcVenueSet({ gameInfo: { venue: s.venue } }); } catch (e) {}
+            ['gc-league', 'gc-net', 'gc-away', 'gc-home', 'gc-mid', 'gc-line', 'gc-wp'].forEach(function(id) { gcSet(id, h[id]); });
+            var strip = document.getElementById('gc-strip'); if (strip) { strip.classList.toggle('one', !h['gc-wp'] || !h['gc-line']); strip.style.display = (h['gc-wp'] || h['gc-line']) ? '' : 'none'; }
+            gcSet('gc-track', h['gc-track']);
+            gcSet('gc-bxs-body', h['gc-bxs-body']);
+            gcApplyViews(s.views);
+            ['gc-plays-head', 'gc-plays-body', 'gc-stats-head', 'gc-stats-body', 'gc-players-head', 'gc-players-body'].forEach(function(id) { gcSet(id, h[id]); });
+        }
+        function gcBuild(meta, d) { // runs on arrival: everything that needs the full summary; returns a small snapshot
             var fam = gcFamily(meta);
             var comp = (d.header && d.header.competitions && d.header.competitions[0]) || {};
             var stt = comp.status || {}, st = stt.type || {};
             gc.state = st.state || gc.state || meta.state;
+            if (gc.state === 'in') gc.deLive = true;
             var cs = comp.competitors || [];
             var A = gcTeam(gcPick(cs, 'away'), meta, 'a'), H = gcTeam(gcPick(cs, 'home'), meta, 'h');
             var sit = d.situation || {};
             if (fam === 'football') sit = gcFootballSit(d, sit);
             if (fam === 'football' && sit.possession && gc.state === 'in') { A.poss = String(sit.possession) === A.id; H.poss = String(sit.possession) === H.id; }
             gc.teams = {}; gc.teams[A.id] = A; gc.teams[H.id] = H;
-            celSync(meta, A, H);
+            var snap = { at: Date.now(), trig: gc.trigAt, A: A, H: H, cel: null, html: {}, views: [], venue: null, sz: 0 }, h = snap.html;
             try {
                 var sp = (d.scoringPlays && d.scoringPlays.length) ? d.scoringPlays[d.scoringPlays.length - 1] : null;
                 var lp = (d.plays && d.plays.length) ? d.plays[d.plays.length - 1] : (sit.lastPlay || null);
                 var hint = (sp ? ((sp.type && sp.type.text) || '') + ' ' + (sp.text || '') : '') + ' | ' + (lp ? ((lp.type && lp.type.text) || '') + ' ' + (lp.text || '') : '');
                 var cx = null; try { cx = celExtras(meta, d, fam, A, H, sit); } catch (e2) {}
                 gc.celT = [celT('away', A, meta), celT('home', H, meta)];
-                celObserve(gc.key, fam, gc.state, gc.celT, gc.celFresh, hint, true, st.name || '', cx);
+                snap.cel = { fam: fam, state: gc.state, per: stt.period || 0, teams: gc.celT, hint: hint, stName: st.name || '', cx: cx };
             } catch (e) {}
-            gc.celFresh = false;
+            gc.got1 = true;
             var bcs = (comp.broadcasts || []).concat(d.broadcasts || []).map(function(b) { return (b.media && (b.media.shortName || b.media.name)) || b.station || ''; }).filter(Boolean);
             var net = bcs.filter(function(v, i) { return bcs.indexOf(v) === i; }).slice(0, 3).join(' / ') || (meta.tv !== 'TBD' && meta.tv !== 'TV' ? meta.tv : '');
             var net1 = bcs[0] || (meta.tv !== 'TBD' && meta.tv !== 'TV' ? meta.tv : '') || '';
             if (net1 !== (gc.net || '')) { gc.net = net1; celDelayUI(); }
             gc.sumSig = A.score + '-' + H.score + '|' + (stt.period || 0) + '|' + gc.state;
-            gcSet('gc-league', escHtml(meta.label || ''));
-            gcSet('gc-net', net ? '&#128250; ' + escHtml(net) : '');
-            try { gcVenueSet(d); } catch (e) {}
-            gcSet('gc-away', gcTeamHtml(A, 'away', meta));
-            gcSet('gc-home', gcTeamHtml(H, 'home', meta));
-            gcSet('gc-mid', gcMidHtml(meta, d, st, stt, fam, A, H, sit));
-            var wpHtml = gcWinProbHtml(d, A, H, st), lsHtml = gcLinescoreHtml(fam, A, H, st);
-            gcSet('gc-line', lsHtml);
-            gcSet('gc-wp', wpHtml);
-            var strip = document.getElementById('gc-strip'); if (strip) { strip.classList.toggle('one', !wpHtml || !lsHtml); strip.style.display = (wpHtml || lsHtml) ? '' : 'none'; }
+            h['gc-league'] = escHtml(meta.label || '');
+            h['gc-net'] = net ? '&#128250; ' + escHtml(net) : '';
+            var vn = d.gameInfo && d.gameInfo.venue; if (vn && vn.images) snap.venue = { images: vn.images };
+            h['gc-away'] = gcTeamHtml(A, 'away', meta);
+            h['gc-home'] = gcTeamHtml(H, 'home', meta);
+            h['gc-mid'] = gcMidHtml(meta, d, st, stt, fam, A, H, sit);
+            h['gc-wp'] = gcWinProbHtml(d, A, H, st); h['gc-line'] = gcLinescoreHtml(fam, A, H, st);
             var trk = ''; try { trk = gcTrackHtml(fam, A, H, sit, d, st); } catch (e) { trk = ''; }
-            gcSet('gc-track', trk);
+            h['gc-track'] = trk;
             var bxs = ''; try { bxs = gc.state === 'pre' ? '' : gcBoxScoreHtml(d, fam, A, H); } catch (e) { bxs = ''; }
-            gcSet('gc-bxs-body', bxs || '<div class="gc-empty">BOX SCORE NOT AVAILABLE YET</div>');
-            gcApplyViews(gcViews(fam, gc.state, trk, bxs));
-            gcSet('gc-plays-head', gc.state === 'pre' ? 'GAME INFO' : 'LAST PLAYS');
-            gcSet('gc-plays-body', gcPlaysHtml(meta, d, fam));
-            gcSet('gc-stats-head', gc.state === 'pre' ? 'SEASON TEAM STATS' : 'TEAM STATS');
-            gcSet('gc-stats-body', gcStatsHtml(d, fam, A, H));
-            gcSet('gc-players-head', gc.state === 'pre' ? 'SEASON LEADERS' : 'PLAYER STATS');
-            gcSet('gc-players-body', gcPlayersHtml(d, fam, A, H));
+            h['gc-bxs-body'] = bxs || '<div class="gc-empty">BOX SCORE NOT AVAILABLE YET</div>';
+            snap.views = gcViews(fam, gc.state, trk, bxs);
+            h['gc-plays-head'] = gc.state === 'pre' ? 'GAME INFO' : 'LAST PLAYS';
+            h['gc-plays-body'] = gcPlaysHtml(meta, d, fam);
+            h['gc-stats-head'] = gc.state === 'pre' ? 'SEASON TEAM STATS' : 'TEAM STATS';
+            h['gc-stats-body'] = gcStatsHtml(d, fam, A, H);
+            h['gc-players-head'] = gc.state === 'pre' ? 'SEASON LEADERS' : 'PLAYER STATS';
+            h['gc-players-body'] = gcPlayersHtml(d, fam, A, H);
+            var pv = gc.dPrev; // blocks unchanged since the previous snapshot share its string: a waiting copy costs only what changed
+            Object.keys(h).forEach(function(k) { if (pv && pv[k] === h[k]) h[k] = pv[k]; else snap.sz += (h[k] || '').length; });
+            gc.dPrev = h;
+            return snap;
         }
 
         function gcMidHtml(meta, d, st, stt, fam, A, H, sit) {
@@ -5179,8 +5837,8 @@
         var arcadeNav = { paused: false, pending: false, forcing: false, menuOpen: false, current: null,
                           idleMs: 10000, settingsIdleMs: 90000, pauseMaxMs: 600000,
                           idleTimer: null, settingsTimer: null, pauseTimer: null, hudTimer: null, historyArmed: false };
-        var NAV_TITLES = { live: 'LIVE ACTION', hotProps: 'HOT PROPS', mySquad: 'MY SQUAD', trivia: 'TRIVIA', leaders: 'TOP PERFORMERS', pga: 'PGA TOUR',
-            ufc: 'UFC', command: 'COMMAND CENTER', soccerSlide: 'SOCCER', tvGuide: 'TV GUIDE', news: 'HEADLINES', pickem: "PICK'EM", odds: "TODAY'S LINES", futures: 'FUTURES',
+        var NAV_TITLES = { live: 'LIVE ACTION', hotProps: 'HOT PROPS', mySquad: 'MY SQUAD', trivia: 'TRIVIA', leaders: 'TOP PERFORMERS', pga: 'PGA TOUR', discGolf: 'DISC GOLF',
+            ufc: 'UFC', command: 'COMMAND CENTER', soccerSlide: 'SOCCER', tvGuide: 'TV GUIDE', news: 'HEADLINES', pickem: "PICK'EM", oddsBoard: 'ODDS BOARD', slNfl: 'NFL LEADERS', slCfb: 'COLLEGE FOOTBALL LEADERS', slNba: 'NBA LEADERS', slCbb: 'COLLEGE HOOPS LEADERS', slNhl: 'NHL LEADERS', slMlb: 'MLB LEADERS', odds: "TODAY'S LINES", futures: 'FUTURES',
             nflFutures: 'NFL FUTURES', nflAwards: 'NFL AWARDS', fantasy: 'NFL FANTASY', cfbFutures: 'CFB FUTURES', nhlFutures: 'NHL FUTURES', rankings: 'CFB RANKINGS', nfl: 'NFL STANDINGS', nba: 'NBA STANDINGS',
             nhl: 'NHL STANDINGS', mlb: 'MLB STANDINGS' };
 
@@ -5500,7 +6158,7 @@
         });
 
         window.addEventListener('load', async function() { 
-            checkMode(); loadSettingsUI(); updateClock(); setInterval(updateClock, 1000);
+            checkMode(); loadSettingsUI(); updateClock(); setInterval(updateClock, 1000); try { if (settings.discGolf) setTimeout(dgLoad, 8000); } catch (e) {} try { setTimeout(slLoad, 9000); } catch (e) {}
             renderSkeletons();
             requestWakeLock(); scheduleSoftReload();
             fetchCommandData(); fetchNextTrivia(); hpLoad().catch(function(){});
@@ -5513,5 +6171,6 @@
             window.addEventListener('offline', function() { netSet(true, true); });
         });
     </script>
+<div id="crt-overlay" aria-hidden="true"></div>
 </body>
 </html>
