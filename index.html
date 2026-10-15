@@ -896,6 +896,27 @@
         #crt-overlay::after { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse at center, rgba(0,0,0,0) 62%, rgba(0,0,0,0.45) 100%); }
         body.crt-on #crt-overlay { display: block; }
         body.crt-lite #crt-overlay::after { display: none; } /* Lite (TV app): scanlines only, no vignette layer */
+        /* ODDS BOARD slide (sportsbook grid) */
+        #ob-track { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.4vh 1.6vw; width: 94%; margin: 0 auto; padding-bottom: 5vh; will-change: transform; }
+        .ob-card { padding: 1vh 1.4vh 1.1vh; }
+        .ob-hd { display: flex; align-items: center; gap: 1vw; font-size: 1.9vh; font-weight: 900; letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 0.6vh; }
+        .ob-hd .ob-when { margin-left: auto; opacity: 0.85; }
+        .ob-hd .ob-live { color: #ff3b5c; }
+        .ob-grid { display: grid; grid-template-columns: 1.25fr 1fr 0.95fr 0.8fr 1.05fr; gap: 0.5vh 0.5vw; align-items: stretch; }
+        .ob-col { font-size: 1.5vh; font-weight: 900; letter-spacing: 0.14em; opacity: 0.6; text-align: center; }
+        .ob-col:first-child { text-align: left; }
+        .ob-team { display: flex; align-items: center; gap: 0.7vw; font-size: 2.7vh; font-weight: 900; color: #fff; white-space: nowrap; overflow: hidden; }
+        .ob-team img { width: 3.6vh; height: 3.6vh; object-fit: contain; flex-shrink: 0; }
+        .ob-cell { background: rgba(0,0,0,0.45); border: 1px solid rgba(255,255,255,0.12); border-radius: 0.7vh; text-align: center; padding: 0.35vh 0.3vw; line-height: 1.15; }
+        .ob-cell b { display: block; font-size: 2.3vh; color: #fff; white-space: nowrap; }
+        .ob-cell i { display: block; font-style: normal; font-family: 'Share Tech Mono', monospace; font-size: 1.8vh; color: #39ff88; }
+        .ob-cell.na b { opacity: 0.4; }
+        .ob-cell.bm b { font-size: 2vh; } .ob-cell.bm i { color: #9fd8ff; }
+        .ob-sharp { display: inline-block; font-size: 1.4vh; font-weight: 900; color: #0a0a0a; background: #ffd400; border-radius: 0.4vh; padding: 0 0.5vh; margin-left: 0.4vh; letter-spacing: 0.08em; vertical-align: middle; }
+        .ob-mv { display: flex; flex-wrap: wrap; gap: 0.4vh 1.2vw; margin-top: 0.7vh; font-family: 'Share Tech Mono', monospace; font-size: 1.85vh; color: rgba(255,255,255,0.85); }
+        .ob-mv .up { color: #39ff88; } .ob-mv .dn { color: #ff4d6d; } .ob-mv .fl { opacity: 0.6; }
+        .ob-steam { font-family: 'Inter', sans-serif; font-size: 1.6vh; font-weight: 900; color: #fff; background: linear-gradient(90deg, #ff4d00, #ff007f); border-radius: 0.5vh; padding: 0.15vh 0.8vh; letter-spacing: 0.12em; }
+        .ob-empty { grid-column: 1 / -1; text-align: center; font-size: 3.6vh; font-weight: 900; padding-top: 8vh; }
         /* DISC GOLF slide */
         .dg-meta { text-align: center; font-family: 'Share Tech Mono', monospace; font-size: 2.1vh; letter-spacing: 0.15vw; opacity: 0.85; margin: -1.5vh 0 0.8vh; text-transform: uppercase; }
         .dg-row { display: flex; flex-direction: row !important; align-items: center; padding: 0.15vh 2.2vh; margin-bottom: 0.3vh; }
@@ -1046,6 +1067,11 @@
         <div id="nhlfut-screen" class="slide-screen"><div class="screen-header neon-text-cycle"><img src="https://a.espncdn.com/combiner/i?img=/i/teamlogos/leagues/500/nhl.png" class="league-logo" onerror="this.style.display='none'">NHL FUTURES</div><div class="fut-meta neon-text-cycle" id="nhlfut-meta"></div><div class="content-viewport fut-viewport" id="nhlfut-viewport"><div class="fut-grid" id="nhlfut-track"></div></div></div>
         <div id="cfbfut-screen" class="slide-screen"><div class="screen-header neon-text-cycle">COLLEGE FOOTBALL FUTURES</div><div class="fut-meta neon-text-cycle" id="cfbfut-meta"></div><div class="content-viewport fut-viewport" id="cfbfut-viewport"><div class="fut-grid" id="cfbfut-track"></div></div></div>
 
+        <div id="oddsboard-screen" class="slide-screen">
+            <div class="screen-header neon-text-cycle">ODDS BOARD</div>
+            <div class="dg-meta neon-text-cycle" id="ob-meta"></div>
+            <div class="content-viewport" id="ob-viewport"><div id="ob-track"></div></div>
+        </div>
         <div id="odds-screen" class="slide-screen">
             <div class="screen-header neon-text-cycle">TODAY'S LINES</div>
             <div class="content-viewport" id="odds-viewport"><div class="grid-track" id="odds-grid-track"></div></div>
@@ -1183,6 +1209,7 @@
                         <div style="display: flex; gap: 1vh;"><input type="text" id="set-pickemRoom" maxlength="40" placeholder="ahlers-arcade-07r1ln1b6e" style="flex: 1; min-width: 0; padding: 1vh; border-radius: 0.5vh; background: rgba(0,0,0,0.5); color: white; border: 1px solid var(--accent-color); font-family: 'Inter', sans-serif; text-transform: lowercase;" onchange="updateSettings(); pkRoomApply()"><button type="button" onclick="pkNewRoom()" style="padding: 0 1.5vh; border-radius: 0.5vh; background: rgba(255,255,255,0.12); color: white; border: 1px solid var(--accent-color); font-weight: 800; cursor: pointer;">NEW ROOM</button></div>
                     </div>
                     <div class="toggle-row"><span>Odds Slide</span> <input type="checkbox" id="set-odds" onchange="updateSettings()"></div>
+                    <div class="toggle-row"><span>Odds Board <span style="font-size:1.6vh; opacity:0.7;">(sportsbook grid: spread, total, moneyline, line moves, bet splits)</span></span> <input type="checkbox" id="set-oddsBoard" onchange="updateSettings()"></div>
                     <div class="toggle-row"><span>Futures Slide</span> <input type="checkbox" id="set-futures" onchange="updateSettings()"></div>
                     <div class="toggle-row"><span>NFL Futures Slide</span> <input type="checkbox" id="set-nflFutures" onchange="updateSettings()"></div>
                     <div class="toggle-row"><span>NFL Awards Slide</span> <input type="checkbox" id="set-nflAwards" onchange="updateSettings()"></div>
@@ -1332,7 +1359,7 @@
             if (bxT.from) { bxT.from.classList.remove('bx-old'); if (bxT.from.getAttribute('data-bx-hide') === '1') bxT.from.style.display = 'none'; bxT.from.removeAttribute('data-bx-hide'); bxT.from = null; }
         }
         var BX_SCREEN = { live: 'live-game-screen', hotProps: 'hotprops-screen', mySquad: 'mysquad-screen', trivia: 'trivia-screen', leaders: 'leaders-screen', pga: 'pga-screen', discGolf: 'discgolf-screen',
-            ufc: 'ufc-screen', command: 'command-screen', soccerSlide: 'soccer-screen', tvGuide: 'tvguide-screen', news: 'news-screen', pickem: 'pickem-screen', odds: 'odds-screen', futures: 'futures-screen',
+            ufc: 'ufc-screen', command: 'command-screen', soccerSlide: 'soccer-screen', tvGuide: 'tvguide-screen', news: 'news-screen', pickem: 'pickem-screen', oddsBoard: 'oddsboard-screen', odds: 'odds-screen', futures: 'futures-screen',
             nflFutures: 'nflfut-screen', nflAwards: 'nflawards-screen', fantasy: 'fantasy-screen', cfbFutures: 'cfbfut-screen', nhlFutures: 'nhlfut-screen', rankings: 'rankings-screen',
             nfl: 'nfl-screen', nba: 'nba-screen', nhl: 'nhl-screen', mlb: 'mlb-screen' };
         function bxBegin(changing, next) { bxFinish(); if (!changing || document.body.classList.contains('remote-active')) return null;
@@ -1423,7 +1450,7 @@
         var currentThemeIndex = 0;
 
         var defaultSettings = { 
-            nfl:true, nba:true, nhl:true, mlb:true, rankings:true, odds:true, futures:true, nflFutures:true, nflAwards:true, fantasy:true, cfbFutures:true, nhlFutures:true, tvGuide:true, news:true, pickem:true, phoneRemote:true, pickemPin:"", pickemRoom:"", mySquad:true, ufc:true, command:true, leaders:true, pga:true, discGolf:true, crt:false, soccerSlide:true, trivia:true, hotProps:true,
+            nfl:true, nba:true, nhl:true, mlb:true, rankings:true, odds:true, futures:true, nflFutures:true, nflAwards:true, fantasy:true, cfbFutures:true, nhlFutures:true, tvGuide:true, news:true, pickem:true, phoneRemote:true, pickemPin:"", pickemRoom:"", mySquad:true, ufc:true, command:true, leaders:true, pga:true, discGolf:true, oddsBoard:true, crt:false, soccerSlide:true, trivia:true, hotProps:true,
             showWorldCup:true, showEPL:true, showUCL:true, showATP:true, showWTA:true, showNFL:true, showNBA:true, showNHL:true, showMLB:true, showCFB:true, showCBB:true, showCLB:true,
             cbb50:true, cfb75:true, clb50:true, apiBase:"https://site.api.espn.com/apis",
             mySquadTeams: "Carolina Hurricanes, Duke, ECU, East Carolina",
@@ -1765,7 +1792,7 @@
 
         var ARCADE_SCREENS = [
             'live', 'hotProps', 'mySquad', 'pickem', 'trivia', 'leaders', 'pga', 'discGolf', 'ufc', 'command',
-            'soccerSlide', 'tvGuide', 'news', 'odds', 'futures', 'nflFutures', 'nflAwards', 'cfbFutures', 'nhlFutures',
+            'soccerSlide', 'tvGuide', 'news', 'oddsBoard', 'odds', 'futures', 'nflFutures', 'nflAwards', 'cfbFutures', 'nhlFutures',
             'rankings', 'nfl', 'nba', 'nhl', 'mlb'
         ];
         ARCADE_SCREENS.splice(ARCADE_SCREENS.indexOf('nflAwards') + 1, 0, 'fantasy');
@@ -2060,7 +2087,7 @@
             if (rotationStep >= screens.length) rotationStep = 0;
             var current = screens[rotationStep];
             
-            if (!slideOn(current) || smSlideEmpty(current) || (current === 'discGolf' && !dgReady())) {
+            if (!slideOn(current) || smSlideEmpty(current) || (current === 'discGolf' && !dgReady()) || (current === 'oddsBoard' && !obReady())) {
                 rotationStep++; nextSlide(); return;
             }
             
@@ -2085,6 +2112,7 @@
                 else if (current === 'tvGuide') showTVGuide();
                 else if (current === 'news') showNews(gen);
                 else if (current === 'pickem') showPickem(gen);
+                else if (current === 'oddsBoard') showOddsBoard(gen);
                 else if (current === 'odds') showOdds();
                 else if (current === 'futures') showFutures(gen);
                 else if (current === 'nflFutures' || current === 'nflAwards' || current === 'cfbFutures' || current === 'nhlFutures') showFootballFutures(current, gen);
@@ -2548,6 +2576,122 @@
         }
 
         async function showCommand() { document.getElementById('command-screen').style.display = 'flex'; slideTimer = slideTimeout(nextSlide, 15000); }
+
+        // ---------- ODDS BOARD: Action Network public scoreboard (CORS-open, no key; same API as props/futures) ----------
+        // book 15 = consensus (current line + public bet %/money %), book 30 = opening line ("PREGAME"). Biggest games = most bets tracked.
+        var OB_LG = [['nfl', 'showNFL', 'NFL'], ['ncaaf', 'showCFB', 'CFB'], ['nba', 'showNBA', 'NBA'], ['nhl', 'showNHL', 'NHL'], ['mlb', 'showMLB', 'MLB'], ['ncaab', 'showCBB', 'CBB']];
+        var OB_MAX = 12, OB_STEAM_PTS = 1.5, OB_ML_PROB = 0.10, OB_SHARP = 15;
+        var ob = { at: 0, busy: null, games: null };
+        function obReady() { if (Date.now() - ob.at > 180000) obLoad(); return !!(ob.games && ob.games.length); }
+        function obOriginBook() { var h = 0, o = String(location.origin || 'tv'); for (var i = 0; i < o.length; i++) h = (h * 31 + o.charCodeAt(i)) >>> 0; return 9000 + h % 900; }
+        function obYmd(t) { var d = new Date(t); return d.getFullYear() + ('0' + (d.getMonth() + 1)).slice(-2) + ('0' + d.getDate()).slice(-2); }
+        function obPick(ev, type, side, live) { var l = (ev && ev[type] || []).filter(function(o) { return o.side === side && !!o.is_live === !!live; }); return l[0] || null; }
+        function obProb(ml) { ml = Number(ml); if (!ml || isNaN(ml)) return null; return ml < 0 ? -ml / (-ml + 100) : 100 / (ml + 100); }
+        function obParse(g, lgLabel) {
+            var T = {}; (g.teams || []).forEach(function(t) { T[t.id] = t; });
+            var a = T[g.away_team_id], h = T[g.home_team_id]; if (!a || !h) return null;
+            var m = g.markets || {}, cons = m['15'] && m['15'].event, open = m['30'] && m['30'].event; if (!cons) return null;
+            var live = g.status === 'inprogress';
+            function line(ev, isLive) {
+                var o = { sa: obPick(ev, 'spread', 'away', isLive), sh: obPick(ev, 'spread', 'home', isLive), mla: obPick(ev, 'moneyline', 'away', isLive), mlh: obPick(ev, 'moneyline', 'home', isLive),
+                          ov: obPick(ev, 'total', 'over', isLive), un: obPick(ev, 'total', 'under', isLive) };
+                return (o.sh || o.mlh || o.ov) ? o : null;
+            }
+            var pre = line(cons, false), now = live ? (line(cons, true) || pre) : pre, op = open ? line(open, false) : null;
+            if (!now) return null;
+            var g2 = { id: g.id, lg: lgLabel, status: g.status, disp: g.status_display || '', start: Date.parse(g.start_time), bets: g.num_bets || 0, live: live && now !== pre,
+                       tv: g.broadcast && (g.broadcast.network_short || g.broadcast.network) || '',
+                       away: { abbr: a.abbr, logo: a.logo, color: a.primary_color }, home: { abbr: h.abbr, logo: h.logo, color: h.primary_color }, now: now, pre: pre, open: op };
+            // line movement: PREGAME (opening) -> current pregame line
+            var mv = { steam: false };
+            if (op && pre) {
+                if (op.sh && pre.sh) mv.spread = Number(pre.sh.value) - Number(op.sh.value);
+                if (op.ov && pre.ov) mv.total = Number(pre.ov.value) - Number(op.ov.value);
+                if (op.mlh && pre.mlh) { var p0 = obProb(op.mlh.odds), p1 = obProb(pre.mlh.odds); if (p0 != null && p1 != null) { mv.mlp = p1 - p0; mv.flip = (p0 - 0.5) * (p1 - 0.5) < 0; } }
+                ['spread', 'total'].forEach(function(k) { if (Math.abs(mv[k] || 0) > 9) delete mv[k]; }); // 9+ pt "moves" are stale/odd opening data (e.g. preseason), not steam
+                mv.steam = Math.abs(mv.spread || 0) >= OB_STEAM_PTS || Math.abs(mv.total || 0) >= OB_STEAM_PTS || !!mv.flip || Math.abs(mv.mlp || 0) >= OB_ML_PROB;
+            }
+            g2.mv = mv;
+            // public splits (consensus, pregame spread; moneyline when no spread)
+            function bi(o) { return o && o.bet_info ? { b: o.bet_info.tickets && o.bet_info.tickets.percent, m: o.bet_info.money && o.bet_info.money.percent } : null; }
+            var sa = bi(pre && pre.sa), sh = bi(pre && pre.sh), kind = 'ATS';
+            if (!(sa && (sa.b || sa.m))) { sa = bi(pre && pre.mla); sh = bi(pre && pre.mlh); kind = 'ML'; }
+            g2.split = (sa && sh && (sa.b || sa.m || sh.b || sh.m)) ? { kind: kind, a: sa, h: sh } : null;
+            return g2;
+        }
+        function obLoad() {
+            if (ob.busy) return ob.busy;
+            ob.busy = (async function() {
+                var now = Date.now(), eod = new Date(now); eod.setHours(23, 59, 59, 999); var out = [], days = [now];
+                async function day(t, lim) {
+                    await Promise.all(OB_LG.map(async function(L) {
+                        if (settings[L[1]] === false) return;
+                        try {
+                            var r = await arcadeFetch('https://api.actionnetwork.com/web/v2/scoreboard/' + L[0] + '?period=game&bookIds=15,30,' + obOriginBook() + '&date=' + obYmd(t)); // extra unused book id = per-origin URL (their CDN caches the CORS origin header)
+                            var d = await r.json();
+                            (d.games || []).forEach(function(g) {
+                                if (/complete|closed|final|cancel|postpon/i.test(g.status || '')) return;
+                                var st = Date.parse(g.start_time); if (isNaN(st) || st < now - 5 * 3600000 || st > lim) return;
+                                var x = obParse(g, L[2]); if (x && !out.some(function(y) { return y.id === x.id; })) out.push(x);
+                            });
+                        } catch (e) {}
+                    }));
+                }
+                try {
+                    await day(now, eod.getTime());
+                    if (out.length < 6) await day(now + 86400000, eod.getTime() + 86400000); // late night / light day: add tomorrow
+                    out.sort(function(a, b) { return (b.live - a.live) || (b.bets - a.bets); });
+                    ob.games = out.slice(0, OB_MAX); ob.at = Date.now();
+                } catch (e) { ob.at = Date.now() - 120000; }
+                finally { ob.busy = null; }
+            })();
+            return ob.busy;
+        }
+        function obOdds(o) { if (o == null || o === '' || isNaN(Number(o))) return ''; o = Number(o); return o > 0 ? '+' + o : String(o); }
+        function obNum(v) { v = Number(v); if (isNaN(v)) return ''; return v === 0 ? 'PK' : (v > 0 ? '+' + v : String(v)); }
+        function obCell(top, bot) { return '<div class="ob-cell' + (top ? '' : ' na') + '"><b>' + (top || '\u2013') + '</b><i>' + (bot || '&nbsp;') + '</i></div>'; }
+        function obWhen(g) {
+            if (g.status === 'inprogress') return '<span class="ob-live">\u25CF LIVE ' + escHtml(g.disp) + '</span>';
+            var d = new Date(g.start), h = d.getHours(), mi = d.getMinutes(), today = obYmd(d) === obYmd(Date.now());
+            return (today ? '' : ['SUN','MON','TUE','WED','THU','FRI','SAT'][d.getDay()] + ' ') + ((h % 12) || 12) + ':' + (mi < 10 ? '0' : '') + mi + (h < 12 ? ' AM' : ' PM');
+        }
+        function obMvTxt(lbl, v, from, to) {
+            if (v == null || isNaN(v)) return '';
+            var cls = v > 0 ? 'up' : v < 0 ? 'dn' : 'fl', ar = v > 0 ? '\u25B2' : v < 0 ? '\u25BC' : '\u2022';
+            return '<span>' + lbl + ' PREGAME ' + escHtml(from) + ' \u2192 ' + escHtml(to) + ' <span class="' + cls + '">' + ar + (v ? Math.abs(Math.round(v * 10) / 10) : '') + '</span></span>';
+        }
+        function obCard(g) {
+            var n = g.now, sides = [['away', 'sa', 'mla', 'ov', 'O'], ['home', 'sh', 'mlh', 'un', 'U']];
+            var rows = sides.map(function(S) {
+                var t = g[S[0]], sp = n[S[1]], ml = n[S[2]], tot = n[S[3]], sp2 = g.split && g.split[S[0] === 'away' ? 'a' : 'h'];
+                var sharp = sp2 && sp2.m != null && sp2.b != null && (sp2.m - sp2.b) >= OB_SHARP;
+                return '<div class="ob-team"><img src="' + escHtml(t.logo || '') + '" alt="" loading="lazy" onerror="this.style.visibility=\'hidden\'">' + escHtml(t.abbr) + '</div>' +
+                    obCell(sp ? escHtml(t.abbr) + ' ' + obNum(sp.value) : '', sp ? obOdds(sp.odds) : '') +
+                    obCell(tot ? S[4] + ' ' + escHtml(tot.value) : '', tot ? obOdds(tot.odds) : '') +
+                    obCell(ml ? obOdds(ml.odds) : '', '') +
+                    (g.split ? '<div class="ob-cell bm"><b>' + (sp2 && sp2.b != null ? sp2.b + '%' : '\u2013') + ' / ' + (sp2 && sp2.m != null ? sp2.m + '%' : '\u2013') + (sharp ? '<span class="ob-sharp">SHARP</span>' : '') + '</b><i>' + g.split.kind + ' BETS/$</i></div>' : obCell('', 'NO SPLITS'));
+            }).join('');
+            var mv = g.mv || {}, o = g.open, p = g.pre, mvh = '';
+            if (o && p) {
+                if (o.sh && p.sh && mv.spread != null) mvh += obMvTxt('SPREAD', mv.spread, g.home.abbr + ' ' + obNum(o.sh.value), g.home.abbr + ' ' + obNum(p.sh.value));
+                if (o.ov && p.ov && mv.total != null) mvh += obMvTxt('TOTAL', mv.total, String(o.ov.value), String(p.ov.value));
+                if (o.mlh && p.mlh && (mv.flip || Math.abs(mv.mlp || 0) >= OB_ML_PROB)) mvh += '<span>ML ' + escHtml(g.home.abbr) + ' ' + obOdds(o.mlh.odds) + ' \u2192 ' + obOdds(p.mlh.odds) + (mv.flip ? ' <span class="up">FAV FLIP</span>' : '') + '</span>';
+            }
+            return '<div class="glass-card ob-card"' + (g.home.color ? ' style="border-left:0.6vh solid #' + escHtml(String(g.home.color).replace('#', '')) + '"' : '') + '>' +
+                '<div class="ob-hd neon-text-cycle"><span>' + escHtml(g.lg) + '</span><span>' + escHtml(g.away.abbr) + ' @ ' + escHtml(g.home.abbr) + '</span>' + (mv.steam ? '<span class="ob-steam">STEAM</span>' : '') + '<span class="ob-when">' + obWhen(g) + (g.tv ? ' \u2022 ' + escHtml(g.tv) : '') + '</span></div>' +
+                '<div class="ob-grid"><div class="ob-col">TEAM</div><div class="ob-col">' + (g.live ? 'LIVE ' : '') + 'SPREAD</div><div class="ob-col">TOTAL</div><div class="ob-col">ML</div><div class="ob-col">BETS / $</div>' + rows + '</div>' +
+                (mvh ? '<div class="ob-mv">' + mvh + '</div>' : '') + '</div>';
+        }
+        async function showOddsBoard(gen) {
+            var screen = document.getElementById('oddsboard-screen'), track = document.getElementById('ob-track'), meta = document.getElementById('ob-meta');
+            if (!ob.games || Date.now() - ob.at > 180000) { try { await obLoad(); } catch (e) {} if (!isCurrentSlide(gen)) return; }
+            if (!ob.games || !ob.games.length) { nextSlide(); return; }
+            screen.style.display = 'flex';
+            var st = ob.games.filter(function(g) { return g.mv && g.mv.steam; }).length, sh = ob.games.filter(function(g) { return g.split && ['a', 'h'].some(function(k) { var x = g.split[k]; return x && x.m - x.b >= OB_SHARP; }); }).length;
+            meta.textContent = 'BIGGEST GAMES BY BETS TRACKED \u2022 CONSENSUS LINES' + (st ? ' \u2022 ' + st + ' STEAM' : '') + (sh ? ' \u2022 ' + sh + ' SHARP' : '') + ' \u2022 DATA: ACTION NETWORK';
+            track.innerHTML = ob.games.map(obCard).join('');
+            applyScroll('ob-viewport', 'ob-track', 16000);
+        }
 
         // ---------- CRT SCANLINES (Settings > Display, OFF by default, saved per device with the other settings) ----------
         function crtApply() {
@@ -5437,7 +5581,7 @@
                           idleMs: 10000, settingsIdleMs: 90000, pauseMaxMs: 600000,
                           idleTimer: null, settingsTimer: null, pauseTimer: null, hudTimer: null, historyArmed: false };
         var NAV_TITLES = { live: 'LIVE ACTION', hotProps: 'HOT PROPS', mySquad: 'MY SQUAD', trivia: 'TRIVIA', leaders: 'TOP PERFORMERS', pga: 'PGA TOUR', discGolf: 'DISC GOLF',
-            ufc: 'UFC', command: 'COMMAND CENTER', soccerSlide: 'SOCCER', tvGuide: 'TV GUIDE', news: 'HEADLINES', pickem: "PICK'EM", odds: "TODAY'S LINES", futures: 'FUTURES',
+            ufc: 'UFC', command: 'COMMAND CENTER', soccerSlide: 'SOCCER', tvGuide: 'TV GUIDE', news: 'HEADLINES', pickem: "PICK'EM", oddsBoard: 'ODDS BOARD', odds: "TODAY'S LINES", futures: 'FUTURES',
             nflFutures: 'NFL FUTURES', nflAwards: 'NFL AWARDS', fantasy: 'NFL FANTASY', cfbFutures: 'CFB FUTURES', nhlFutures: 'NHL FUTURES', rankings: 'CFB RANKINGS', nfl: 'NFL STANDINGS', nba: 'NBA STANDINGS',
             nhl: 'NHL STANDINGS', mlb: 'MLB STANDINGS' };
 
