@@ -13,7 +13,7 @@ await new Promise(r => srv.listen(0, '127.0.0.1', r));
 const browser = await puppeteer.launch({ executablePath: process.env.CHROME_PATH || '/usr/bin/google-chrome', args: ['--no-sandbox', '--disable-dev-shm-usage', '--hide-scrollbars'] });
 let fails = 0; const ok = (c, m) => { console.log((c ? 'PASS ' : 'FAIL ') + m); if (!c) fails++; };
 const sleep = ms => new Promise(r => setTimeout(r, ms));
-const KEYS = ['slNfl', 'slCfb', 'slNba', 'slCbb', 'slWnba', 'slNhl', 'slMlb'];
+const KEYS = ['slNfl', 'slCfb', 'slNba', 'slCbb', 'slNhl', 'slMlb'];
 async function open() {
   const page = await browser.newPage(); await page.setUserAgent((await browser.userAgent()).replace('HeadlessChrome', 'Chrome')); await page.setViewport({ width: 1280, height: 720 });
   const errors = [], big = [];

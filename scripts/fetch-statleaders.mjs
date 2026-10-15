@@ -12,7 +12,6 @@ const LEAGUES = {
   cfb:  { p: 'football/college-football', label: 'COLLEGE FOOTBALL', cats: ['passingYards', 'rushingYards', 'receivingYards', 'sacks'] },
   nba:  { p: 'basketball/nba', label: 'NBA', cats: ['pointsPerGame', 'reboundsPerGame', 'assistsPerGame', '3PointsMadePerGame'] },
   cbb:  { p: 'basketball/mens-college-basketball', label: 'COLLEGE HOOPS', cats: ['pointsPerGame', 'reboundsPerGame', 'assistsPerGame', '3PointsMadePerGame'] },
-  wnba: { p: 'basketball/wnba', label: 'WNBA', cats: ['pointsPerGame', 'reboundsPerGame', 'assistsPerGame', '3PointsMadePerGame'] },
   nhl:  { p: 'hockey/nhl', label: 'NHL', cats: ['goals', 'assists', 'points', 'savePct|avgGoalsAgainst'] },
   mlb:  { p: 'baseball/mlb', label: 'MLB', cats: ['avg', 'homeRuns', 'RBIs', 'ERA|strikeouts'], seasontype: 2 }
 };

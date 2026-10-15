@@ -1126,11 +1126,6 @@
             <div class="dg-meta neon-text-cycle" id="sl-cbb-meta"></div>
             <div class="sl-grid" id="sl-cbb-grid"></div>
         </div>
-        <div id="sl-wnba-screen" class="slide-screen sl-screen">
-            <div class="screen-header neon-text-cycle" id="sl-wnba-title">WNBA STAT LEADERS</div>
-            <div class="dg-meta neon-text-cycle" id="sl-wnba-meta"></div>
-            <div class="sl-grid" id="sl-wnba-grid"></div>
-        </div>
         <div id="sl-nhl-screen" class="slide-screen sl-screen">
             <div class="screen-header neon-text-cycle" id="sl-nhl-title">NHL STAT LEADERS</div>
             <div class="dg-meta neon-text-cycle" id="sl-nhl-meta"></div>
@@ -1289,7 +1284,6 @@
                     <div class="toggle-row"><span>College Football Stat Leaders <span style="font-size:1.6vh; opacity:0.7;">(hides itself out of season)</span></span> <input type="checkbox" id="set-slCfb" onchange="updateSettings()"></div>
                     <div class="toggle-row"><span>NBA Stat Leaders <span style="font-size:1.6vh; opacity:0.7;">(hides itself out of season)</span></span> <input type="checkbox" id="set-slNba" onchange="updateSettings()"></div>
                     <div class="toggle-row"><span>College Hoops Stat Leaders <span style="font-size:1.6vh; opacity:0.7;">(hides itself out of season)</span></span> <input type="checkbox" id="set-slCbb" onchange="updateSettings()"></div>
-                    <div class="toggle-row"><span>WNBA Stat Leaders <span style="font-size:1.6vh; opacity:0.7;">(hides itself out of season)</span></span> <input type="checkbox" id="set-slWnba" onchange="updateSettings()"></div>
                     <div class="toggle-row"><span>NHL Stat Leaders <span style="font-size:1.6vh; opacity:0.7;">(hides itself out of season)</span></span> <input type="checkbox" id="set-slNhl" onchange="updateSettings()"></div>
                     <div class="toggle-row"><span>MLB Stat Leaders <span style="font-size:1.6vh; opacity:0.7;">(hides itself out of season)</span></span> <input type="checkbox" id="set-slMlb" onchange="updateSettings()"></div>
                     <div class="toggle-row"><span>Futures Slide</span> <input type="checkbox" id="set-futures" onchange="updateSettings()"></div>
@@ -1442,7 +1436,7 @@
             if (bxT.from) { bxT.from.classList.remove('bx-old'); if (bxT.from.getAttribute('data-bx-hide') === '1') bxT.from.style.display = 'none'; bxT.from.removeAttribute('data-bx-hide'); bxT.from = null; }
         }
         var BX_SCREEN = { live: 'live-game-screen', hotProps: 'hotprops-screen', mySquad: 'mysquad-screen', trivia: 'trivia-screen', leaders: 'leaders-screen', pga: 'pga-screen', discGolf: 'discgolf-screen',
-            ufc: 'ufc-screen', command: 'command-screen', soccerSlide: 'soccer-screen', tvGuide: 'tvguide-screen', news: 'news-screen', pickem: 'pickem-screen', oddsBoard: 'oddsboard-screen', slNfl: 'sl-nfl-screen', slCfb: 'sl-cfb-screen', slNba: 'sl-nba-screen', slCbb: 'sl-cbb-screen', slWnba: 'sl-wnba-screen', slNhl: 'sl-nhl-screen', slMlb: 'sl-mlb-screen', odds: 'odds-screen', futures: 'futures-screen',
+            ufc: 'ufc-screen', command: 'command-screen', soccerSlide: 'soccer-screen', tvGuide: 'tvguide-screen', news: 'news-screen', pickem: 'pickem-screen', oddsBoard: 'oddsboard-screen', slNfl: 'sl-nfl-screen', slCfb: 'sl-cfb-screen', slNba: 'sl-nba-screen', slCbb: 'sl-cbb-screen', slNhl: 'sl-nhl-screen', slMlb: 'sl-mlb-screen', odds: 'odds-screen', futures: 'futures-screen',
             nflFutures: 'nflfut-screen', nflAwards: 'nflawards-screen', fantasy: 'fantasy-screen', cfbFutures: 'cfbfut-screen', nhlFutures: 'nhlfut-screen', rankings: 'rankings-screen',
             nfl: 'nfl-screen', nba: 'nba-screen', nhl: 'nhl-screen', mlb: 'mlb-screen' };
         function bxBegin(changing, next) { bxFinish(); if (!changing || document.body.classList.contains('remote-active')) return null;
@@ -1533,7 +1527,7 @@
         var currentThemeIndex = 0;
 
         var defaultSettings = { 
-            nfl:true, nba:true, nhl:true, mlb:true, rankings:true, odds:true, futures:true, nflFutures:true, nflAwards:true, fantasy:true, cfbFutures:true, nhlFutures:true, tvGuide:true, news:true, pickem:true, phoneRemote:true, pickemPin:"", pickemRoom:"", mySquad:true, ufc:true, command:true, leaders:true, pga:true, discGolf:true, oddsBoard:true, upsetWatch:true, slNfl:true, slCfb:true, slNba:true, slCbb:true, slWnba:true, slNhl:true, slMlb:true, crt:false, soccerSlide:true, trivia:true, hotProps:true,
+            nfl:true, nba:true, nhl:true, mlb:true, rankings:true, odds:true, futures:true, nflFutures:true, nflAwards:true, fantasy:true, cfbFutures:true, nhlFutures:true, tvGuide:true, news:true, pickem:true, phoneRemote:true, pickemPin:"", pickemRoom:"", mySquad:true, ufc:true, command:true, leaders:true, pga:true, discGolf:true, oddsBoard:true, upsetWatch:true, slNfl:true, slCfb:true, slNba:true, slCbb:true, slNhl:true, slMlb:true, crt:false, soccerSlide:true, trivia:true, hotProps:true,
             showWorldCup:true, showEPL:true, showUCL:true, showATP:true, showWTA:true, showNFL:true, showNBA:true, showNHL:true, showMLB:true, showCFB:true, showCBB:true, showCLB:true,
             cbb50:true, cfb75:true, clb50:true, apiBase:"https://site.api.espn.com/apis",
             mySquadTeams: "Carolina Hurricanes, Duke, ECU, East Carolina",
@@ -1876,7 +1870,7 @@
         var ARCADE_SCREENS = [
             'live', 'hotProps', 'mySquad', 'pickem', 'trivia', 'leaders', 'pga', 'discGolf', 'ufc', 'command',
             'soccerSlide', 'tvGuide', 'news', 'oddsBoard', 'odds', 'futures', 'nflFutures', 'nflAwards', 'cfbFutures', 'nhlFutures',
-            'rankings', 'slCfb', 'nfl', 'slNfl', 'nba', 'slNba', 'slWnba', 'slCbb', 'nhl', 'slNhl', 'mlb', 'slMlb'
+            'rankings', 'slCfb', 'nfl', 'slNfl', 'nba', 'slNba', 'slCbb', 'nhl', 'slNhl', 'mlb', 'slMlb'
         ];
         ARCADE_SCREENS.splice(ARCADE_SCREENS.indexOf('nflAwards') + 1, 0, 'fantasy');
 
@@ -2662,7 +2656,7 @@
         async function showCommand() { document.getElementById('command-screen').style.display = 'flex'; slideTimer = slideTimeout(nextSlide, 15000); }
 
         // ---------- STAT LEADERS: one slide per sport from statleaders.json (GitHub Action, ESPN site leaders, trimmed) ----------
-        var SL_KEYS = { slNfl: 'nfl', slCfb: 'cfb', slNba: 'nba', slCbb: 'cbb', slWnba: 'wnba', slNhl: 'nhl', slMlb: 'mlb' };
+        var SL_KEYS = { slNfl: 'nfl', slCfb: 'cfb', slNba: 'nba', slCbb: 'cbb', slNhl: 'nhl', slMlb: 'mlb' };
         var SL_REFRESH_MS = 45 * 60000, sl = { at: 0, busy: null, data: null };
         function slLoad() {
             if (sl.busy) return sl.busy;
@@ -5836,7 +5830,7 @@
                           idleMs: 10000, settingsIdleMs: 90000, pauseMaxMs: 600000,
                           idleTimer: null, settingsTimer: null, pauseTimer: null, hudTimer: null, historyArmed: false };
         var NAV_TITLES = { live: 'LIVE ACTION', hotProps: 'HOT PROPS', mySquad: 'MY SQUAD', trivia: 'TRIVIA', leaders: 'TOP PERFORMERS', pga: 'PGA TOUR', discGolf: 'DISC GOLF',
-            ufc: 'UFC', command: 'COMMAND CENTER', soccerSlide: 'SOCCER', tvGuide: 'TV GUIDE', news: 'HEADLINES', pickem: "PICK'EM", oddsBoard: 'ODDS BOARD', slNfl: 'NFL LEADERS', slCfb: 'COLLEGE FOOTBALL LEADERS', slNba: 'NBA LEADERS', slCbb: 'COLLEGE HOOPS LEADERS', slWnba: 'WNBA LEADERS', slNhl: 'NHL LEADERS', slMlb: 'MLB LEADERS', odds: "TODAY'S LINES", futures: 'FUTURES',
+            ufc: 'UFC', command: 'COMMAND CENTER', soccerSlide: 'SOCCER', tvGuide: 'TV GUIDE', news: 'HEADLINES', pickem: "PICK'EM", oddsBoard: 'ODDS BOARD', slNfl: 'NFL LEADERS', slCfb: 'COLLEGE FOOTBALL LEADERS', slNba: 'NBA LEADERS', slCbb: 'COLLEGE HOOPS LEADERS', slNhl: 'NHL LEADERS', slMlb: 'MLB LEADERS', odds: "TODAY'S LINES", futures: 'FUTURES',
             nflFutures: 'NFL FUTURES', nflAwards: 'NFL AWARDS', fantasy: 'NFL FANTASY', cfbFutures: 'CFB FUTURES', nhlFutures: 'NHL FUTURES', rankings: 'CFB RANKINGS', nfl: 'NFL STANDINGS', nba: 'NBA STANDINGS',
             nhl: 'NHL STANDINGS', mlb: 'MLB STANDINGS' };
 
