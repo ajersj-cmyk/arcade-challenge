@@ -912,6 +912,29 @@
         #crt-overlay::after { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse at center, rgba(0,0,0,0) 62%, rgba(0,0,0,0.45) 100%); }
         body.crt-on #crt-overlay { display: block; }
         body.crt-lite #crt-overlay::after { display: none; } /* Lite (TV app): scanlines only, no vignette layer */
+        /* STAT LEADERS slides (one per sport): static gradients only */
+        .sl-screen .dg-meta { margin: 0.2vh 0 1.2vh; }
+        .sl-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.2vw; width: 94%; margin: 0 auto; height: 57vh; }
+        .sl-cat { display: flex; flex-direction: column; min-width: 0; border-radius: 1.6vh; overflow: hidden; background: #0b111c; border: 1px solid rgba(255,255,255,0.12); }
+        .sl-top { position: relative; height: 34vh; background: linear-gradient(160deg, var(--sl1, #1b2a44) 0%, var(--sl1, #1b2a44) 38%, #070b12 100%); overflow: hidden; }
+        .sl-top::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 55%; background: linear-gradient(to bottom, rgba(7,11,18,0) 0%, rgba(7,11,18,0.92) 75%); }
+        .sl-lbl { position: absolute; z-index: 2; top: 1vh; left: 1.2vh; right: 1.2vh; font-size: 2.1vh; font-weight: 900; letter-spacing: 0.16em; color: #fff; text-shadow: 0 0.3vh 0.6vh rgba(0,0,0,0.6); }
+        .sl-head { position: absolute; z-index: 1; left: 50%; bottom: 6.5vh; width: 24vh; height: 17.5vh; margin-left: -12vh; object-fit: cover; object-position: top; }
+        .sl-head.sl-ini { display: flex; align-items: center; justify-content: center; width: 16vh; height: 16vh; margin-left: -8vh; bottom: 10vh; border-radius: 50%; background: rgba(255,255,255,0.12); font-size: 6vh; font-weight: 900; color: #fff; }
+        .sl-logo { position: absolute; z-index: 2; top: 4vh; right: 1vh; width: 6.4vh; height: 6.4vh; object-fit: contain; padding: 0.7vh; box-sizing: border-box; border-radius: 50%; background: rgba(255,255,255,0.88); }
+        .sl-one { position: absolute; z-index: 3; left: 1.2vh; right: 1.2vh; bottom: 0.9vh; display: flex; align-items: flex-end; gap: 0.6vw; }
+        .sl-one .sl-nm { flex: 1; min-width: 0; font-size: 2.5vh; font-weight: 900; color: #fff; line-height: 1.1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .sl-one .sl-nm small { display: block; font-size: 1.7vh; font-weight: 700; opacity: 0.75; letter-spacing: 0.08em; }
+        .sl-one .sl-val { font-family: 'Barlow Condensed', 'Inter', sans-serif; font-style: italic; font-size: 7.5vh; font-weight: 900; line-height: 0.9; color: #fff; text-shadow: 0 0.4vh 1vh rgba(0,0,0,0.6); }
+        .sl-rk { position: absolute; z-index: 3; left: 1.2vh; top: 4.4vh; font-size: 4vh; font-weight: 900; color: #fff; opacity: 0.9; }
+        .sl-rest { flex: 1; display: flex; flex-direction: column; justify-content: space-evenly; padding: 0.6vh 1vh; }
+        .sl-row { display: flex; align-items: center; gap: 0.6vw; font-size: 2vh; font-weight: 800; color: #fff; min-width: 0; }
+        .sl-row b { width: 2.4vh; opacity: 0.6; font-size: 1.8vh; }
+        .sl-row .sl-mh { width: 3.8vh; height: 3.8vh; border-radius: 50%; object-fit: cover; object-position: top; background: rgba(255,255,255,0.1); flex-shrink: 0; }
+        .sl-row .sl-mh.sl-ini { display: inline-flex; align-items: center; justify-content: center; font-size: 1.5vh; font-weight: 900; }
+        .sl-row span { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .sl-row i { font-style: normal; font-size: 1.6vh; opacity: 0.65; }
+        .sl-row em { font-style: normal; font-family: 'Share Tech Mono', monospace; font-size: 2.2vh; color: var(--sl2, #39ff88); }
         /* ODDS BOARD slide (sportsbook grid) */
         #ob-track { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.4vh 1.6vw; width: 94%; margin: 0 auto; padding-bottom: 5vh; will-change: transform; }
         .ob-card { padding: 1vh 1.4vh 1.1vh; }
@@ -1083,6 +1106,41 @@
         <div id="nhlfut-screen" class="slide-screen"><div class="screen-header neon-text-cycle"><img src="https://a.espncdn.com/combiner/i?img=/i/teamlogos/leagues/500/nhl.png" class="league-logo" onerror="this.style.display='none'">NHL FUTURES</div><div class="fut-meta neon-text-cycle" id="nhlfut-meta"></div><div class="content-viewport fut-viewport" id="nhlfut-viewport"><div class="fut-grid" id="nhlfut-track"></div></div></div>
         <div id="cfbfut-screen" class="slide-screen"><div class="screen-header neon-text-cycle">COLLEGE FOOTBALL FUTURES</div><div class="fut-meta neon-text-cycle" id="cfbfut-meta"></div><div class="content-viewport fut-viewport" id="cfbfut-viewport"><div class="fut-grid" id="cfbfut-track"></div></div></div>
 
+        <div id="sl-nfl-screen" class="slide-screen sl-screen">
+            <div class="screen-header neon-text-cycle" id="sl-nfl-title">NFL STAT LEADERS</div>
+            <div class="dg-meta neon-text-cycle" id="sl-nfl-meta"></div>
+            <div class="sl-grid" id="sl-nfl-grid"></div>
+        </div>
+        <div id="sl-cfb-screen" class="slide-screen sl-screen">
+            <div class="screen-header neon-text-cycle" id="sl-cfb-title">COLLEGE FOOTBALL STAT LEADERS</div>
+            <div class="dg-meta neon-text-cycle" id="sl-cfb-meta"></div>
+            <div class="sl-grid" id="sl-cfb-grid"></div>
+        </div>
+        <div id="sl-nba-screen" class="slide-screen sl-screen">
+            <div class="screen-header neon-text-cycle" id="sl-nba-title">NBA STAT LEADERS</div>
+            <div class="dg-meta neon-text-cycle" id="sl-nba-meta"></div>
+            <div class="sl-grid" id="sl-nba-grid"></div>
+        </div>
+        <div id="sl-cbb-screen" class="slide-screen sl-screen">
+            <div class="screen-header neon-text-cycle" id="sl-cbb-title">COLLEGE HOOPS STAT LEADERS</div>
+            <div class="dg-meta neon-text-cycle" id="sl-cbb-meta"></div>
+            <div class="sl-grid" id="sl-cbb-grid"></div>
+        </div>
+        <div id="sl-wnba-screen" class="slide-screen sl-screen">
+            <div class="screen-header neon-text-cycle" id="sl-wnba-title">WNBA STAT LEADERS</div>
+            <div class="dg-meta neon-text-cycle" id="sl-wnba-meta"></div>
+            <div class="sl-grid" id="sl-wnba-grid"></div>
+        </div>
+        <div id="sl-nhl-screen" class="slide-screen sl-screen">
+            <div class="screen-header neon-text-cycle" id="sl-nhl-title">NHL STAT LEADERS</div>
+            <div class="dg-meta neon-text-cycle" id="sl-nhl-meta"></div>
+            <div class="sl-grid" id="sl-nhl-grid"></div>
+        </div>
+        <div id="sl-mlb-screen" class="slide-screen sl-screen">
+            <div class="screen-header neon-text-cycle" id="sl-mlb-title">MLB STAT LEADERS</div>
+            <div class="dg-meta neon-text-cycle" id="sl-mlb-meta"></div>
+            <div class="sl-grid" id="sl-mlb-grid"></div>
+        </div>
         <div id="oddsboard-screen" class="slide-screen">
             <div class="screen-header neon-text-cycle">ODDS BOARD</div>
             <div class="dg-meta neon-text-cycle" id="ob-meta"></div>
@@ -1227,6 +1285,13 @@
                     </div>
                     <div class="toggle-row"><span>Odds Slide</span> <input type="checkbox" id="set-odds" onchange="updateSettings()"></div>
                     <div class="toggle-row"><span>Odds Board <span style="font-size:1.6vh; opacity:0.7;">(sportsbook grid: spread, total, moneyline, line moves, bet splits)</span></span> <input type="checkbox" id="set-oddsBoard" onchange="updateSettings()"></div>
+                    <div class="toggle-row"><span>NFL Stat Leaders <span style="font-size:1.6vh; opacity:0.7;">(hides itself out of season)</span></span> <input type="checkbox" id="set-slNfl" onchange="updateSettings()"></div>
+                    <div class="toggle-row"><span>College Football Stat Leaders <span style="font-size:1.6vh; opacity:0.7;">(hides itself out of season)</span></span> <input type="checkbox" id="set-slCfb" onchange="updateSettings()"></div>
+                    <div class="toggle-row"><span>NBA Stat Leaders <span style="font-size:1.6vh; opacity:0.7;">(hides itself out of season)</span></span> <input type="checkbox" id="set-slNba" onchange="updateSettings()"></div>
+                    <div class="toggle-row"><span>College Hoops Stat Leaders <span style="font-size:1.6vh; opacity:0.7;">(hides itself out of season)</span></span> <input type="checkbox" id="set-slCbb" onchange="updateSettings()"></div>
+                    <div class="toggle-row"><span>WNBA Stat Leaders <span style="font-size:1.6vh; opacity:0.7;">(hides itself out of season)</span></span> <input type="checkbox" id="set-slWnba" onchange="updateSettings()"></div>
+                    <div class="toggle-row"><span>NHL Stat Leaders <span style="font-size:1.6vh; opacity:0.7;">(hides itself out of season)</span></span> <input type="checkbox" id="set-slNhl" onchange="updateSettings()"></div>
+                    <div class="toggle-row"><span>MLB Stat Leaders <span style="font-size:1.6vh; opacity:0.7;">(hides itself out of season)</span></span> <input type="checkbox" id="set-slMlb" onchange="updateSettings()"></div>
                     <div class="toggle-row"><span>Futures Slide</span> <input type="checkbox" id="set-futures" onchange="updateSettings()"></div>
                     <div class="toggle-row"><span>NFL Futures Slide</span> <input type="checkbox" id="set-nflFutures" onchange="updateSettings()"></div>
                     <div class="toggle-row"><span>NFL Awards Slide</span> <input type="checkbox" id="set-nflAwards" onchange="updateSettings()"></div>
@@ -1377,7 +1442,7 @@
             if (bxT.from) { bxT.from.classList.remove('bx-old'); if (bxT.from.getAttribute('data-bx-hide') === '1') bxT.from.style.display = 'none'; bxT.from.removeAttribute('data-bx-hide'); bxT.from = null; }
         }
         var BX_SCREEN = { live: 'live-game-screen', hotProps: 'hotprops-screen', mySquad: 'mysquad-screen', trivia: 'trivia-screen', leaders: 'leaders-screen', pga: 'pga-screen', discGolf: 'discgolf-screen',
-            ufc: 'ufc-screen', command: 'command-screen', soccerSlide: 'soccer-screen', tvGuide: 'tvguide-screen', news: 'news-screen', pickem: 'pickem-screen', oddsBoard: 'oddsboard-screen', odds: 'odds-screen', futures: 'futures-screen',
+            ufc: 'ufc-screen', command: 'command-screen', soccerSlide: 'soccer-screen', tvGuide: 'tvguide-screen', news: 'news-screen', pickem: 'pickem-screen', oddsBoard: 'oddsboard-screen', slNfl: 'sl-nfl-screen', slCfb: 'sl-cfb-screen', slNba: 'sl-nba-screen', slCbb: 'sl-cbb-screen', slWnba: 'sl-wnba-screen', slNhl: 'sl-nhl-screen', slMlb: 'sl-mlb-screen', odds: 'odds-screen', futures: 'futures-screen',
             nflFutures: 'nflfut-screen', nflAwards: 'nflawards-screen', fantasy: 'fantasy-screen', cfbFutures: 'cfbfut-screen', nhlFutures: 'nhlfut-screen', rankings: 'rankings-screen',
             nfl: 'nfl-screen', nba: 'nba-screen', nhl: 'nhl-screen', mlb: 'mlb-screen' };
         function bxBegin(changing, next) { bxFinish(); if (!changing || document.body.classList.contains('remote-active')) return null;
@@ -1468,7 +1533,7 @@
         var currentThemeIndex = 0;
 
         var defaultSettings = { 
-            nfl:true, nba:true, nhl:true, mlb:true, rankings:true, odds:true, futures:true, nflFutures:true, nflAwards:true, fantasy:true, cfbFutures:true, nhlFutures:true, tvGuide:true, news:true, pickem:true, phoneRemote:true, pickemPin:"", pickemRoom:"", mySquad:true, ufc:true, command:true, leaders:true, pga:true, discGolf:true, oddsBoard:true, upsetWatch:true, crt:false, soccerSlide:true, trivia:true, hotProps:true,
+            nfl:true, nba:true, nhl:true, mlb:true, rankings:true, odds:true, futures:true, nflFutures:true, nflAwards:true, fantasy:true, cfbFutures:true, nhlFutures:true, tvGuide:true, news:true, pickem:true, phoneRemote:true, pickemPin:"", pickemRoom:"", mySquad:true, ufc:true, command:true, leaders:true, pga:true, discGolf:true, oddsBoard:true, upsetWatch:true, slNfl:true, slCfb:true, slNba:true, slCbb:true, slWnba:true, slNhl:true, slMlb:true, crt:false, soccerSlide:true, trivia:true, hotProps:true,
             showWorldCup:true, showEPL:true, showUCL:true, showATP:true, showWTA:true, showNFL:true, showNBA:true, showNHL:true, showMLB:true, showCFB:true, showCBB:true, showCLB:true,
             cbb50:true, cfb75:true, clb50:true, apiBase:"https://site.api.espn.com/apis",
             mySquadTeams: "Carolina Hurricanes, Duke, ECU, East Carolina",
@@ -1811,7 +1876,7 @@
         var ARCADE_SCREENS = [
             'live', 'hotProps', 'mySquad', 'pickem', 'trivia', 'leaders', 'pga', 'discGolf', 'ufc', 'command',
             'soccerSlide', 'tvGuide', 'news', 'oddsBoard', 'odds', 'futures', 'nflFutures', 'nflAwards', 'cfbFutures', 'nhlFutures',
-            'rankings', 'nfl', 'nba', 'nhl', 'mlb'
+            'rankings', 'slCfb', 'nfl', 'slNfl', 'nba', 'slNba', 'slWnba', 'slCbb', 'nhl', 'slNhl', 'mlb', 'slMlb'
         ];
         ARCADE_SCREENS.splice(ARCADE_SCREENS.indexOf('nflAwards') + 1, 0, 'fantasy');
 
@@ -1820,9 +1885,9 @@
         // runs; a snapshot of the slide + league toggles is still taken at the start and restored when the mode ends.
         var SM_KEY = 'ahlersSportMode1', SM_MS = 12 * 3600000;
         var SPORT_MODES = {
-            nfl: { label: 'NFL', short: 'NFL', title: 'NFL MODE', league: 'nfl', news: 'football/nfl', screens: ['live', 'hotProps', 'pickem', 'fantasy', 'odds', 'nflFutures', 'nflAwards', 'news', 'tvGuide', 'nfl'] },
-            cfb: { label: 'COLLEGE FOOTBALL', short: 'CFB', title: 'CFB MODE', league: 'cfb', news: 'football/college-football', screens: ['live', 'hotProps', 'pickem', 'mySquad', 'odds', 'cfbFutures', 'rankings', 'news', 'tvGuide'] },
-            cbb: { label: 'COLLEGE BASKETBALL', short: 'HOOPS', title: 'HOOPS MODE', league: 'cbb', news: 'basketball/mens-college-basketball', screens: ['live', 'hotProps', 'pickem', 'mySquad', 'odds', 'rankings', 'futures', 'news', 'tvGuide'] }
+            nfl: { label: 'NFL', short: 'NFL', title: 'NFL MODE', league: 'nfl', news: 'football/nfl', screens: ['live', 'hotProps', 'pickem', 'fantasy', 'odds', 'nflFutures', 'nflAwards', 'news', 'tvGuide', 'nfl', 'slNfl'] },
+            cfb: { label: 'COLLEGE FOOTBALL', short: 'CFB', title: 'CFB MODE', league: 'cfb', news: 'football/college-football', screens: ['live', 'hotProps', 'pickem', 'mySquad', 'odds', 'cfbFutures', 'rankings', 'slCfb', 'news', 'tvGuide'] },
+            cbb: { label: 'COLLEGE BASKETBALL', short: 'HOOPS', title: 'HOOPS MODE', league: 'cbb', news: 'basketball/mens-college-basketball', screens: ['live', 'hotProps', 'pickem', 'mySquad', 'odds', 'rankings', 'slCbb', 'futures', 'news', 'tvGuide'] }
         };
         var CBB_FUT_SPECS = [
             { title: 'NATIONAL TITLE', sport: 'basketball', league: 'mens-college-basketball', want: ['ncaa(b) - winner', 'national championship'] },
@@ -2105,7 +2170,7 @@
             if (rotationStep >= screens.length) rotationStep = 0;
             var current = screens[rotationStep];
             
-            if (!slideOn(current) || smSlideEmpty(current) || (current === 'discGolf' && !dgReady()) || (current === 'oddsBoard' && !obReady())) {
+            if (!slideOn(current) || smSlideEmpty(current) || (current === 'discGolf' && !dgReady()) || (current === 'oddsBoard' && !obReady()) || (SL_KEYS[current] && !slReady(current))) {
                 rotationStep++; nextSlide(); return;
             }
             
@@ -2130,6 +2195,7 @@
                 else if (current === 'tvGuide') showTVGuide();
                 else if (current === 'news') showNews(gen);
                 else if (current === 'pickem') showPickem(gen);
+                else if (SL_KEYS[current]) showStatLeaders(current, gen);
                 else if (current === 'oddsBoard') showOddsBoard(gen);
                 else if (current === 'odds') showOdds();
                 else if (current === 'futures') showFutures(gen);
@@ -2594,6 +2660,56 @@
         }
 
         async function showCommand() { document.getElementById('command-screen').style.display = 'flex'; slideTimer = slideTimeout(nextSlide, 15000); }
+
+        // ---------- STAT LEADERS: one slide per sport from statleaders.json (GitHub Action, ESPN site leaders, trimmed) ----------
+        var SL_KEYS = { slNfl: 'nfl', slCfb: 'cfb', slNba: 'nba', slCbb: 'cbb', slWnba: 'wnba', slNhl: 'nhl', slMlb: 'mlb' };
+        var SL_REFRESH_MS = 45 * 60000, sl = { at: 0, busy: null, data: null };
+        function slLoad() {
+            if (sl.busy) return sl.busy;
+            sl.busy = (async function() {
+                try { var r = await arcadeFetch('statleaders.json?t=' + Math.floor(Date.now() / SL_REFRESH_MS)); if (r.ok) { var d = await r.json(); if (d && d.leagues) sl.data = d; } sl.at = Date.now(); }
+                catch (e) { sl.at = Date.now() - SL_REFRESH_MS + 120000; } // retry in ~2 min
+                finally { sl.busy = null; }
+            })();
+            return sl.busy;
+        }
+        function slLeague(key) { var L = sl.data && sl.data.leagues && sl.data.leagues[SL_KEYS[key]]; return L && L.cats && L.cats.length ? L : null; }
+        function slInSeason(L) { // the Action's flag (regular season, or postseason with games this week); a stale file falls back to ESPN's season dates
+            if (!L) return false;
+            var age = Date.now() - Date.parse((sl.data && sl.data.updated) || 0), s = L.season || {};
+            if (!(age > 3 * 86400000)) return !!L.inSeason;
+            var end = Date.parse(s.end || ''); return (s.type === 2 || s.type === 3) && !isNaN(end) && Date.now() < end;
+        }
+        function slReady(key) { if (Date.now() - sl.at > SL_REFRESH_MS) slLoad(); return slInSeason(slLeague(key)); }
+        function slImg(url, w, h) { // ESPN's resizer: ~200x146 instead of the 1 MB-class originals
+            if (!url) return ''; var m = /espncdn\.com(\/i\/[^?]+)/.exec(url); return m ? 'https://a.espncdn.com/combiner/i?img=' + m[1] + '&w=' + w + '&h=' + h + '&scale=crop&cquality=60' : url;
+        }
+        function slIni(n) { return String(n || '').split(/\s+/).filter(Boolean).map(function(w) { return w.charAt(0); }).join('').slice(0, 2).toUpperCase(); }
+        function slImgErr(img, cls) { var sp = document.createElement('span'); sp.className = cls + ' sl-ini'; sp.textContent = img.getAttribute('data-ini') || '?'; if (img.parentNode) img.parentNode.replaceChild(sp, img); }
+        function slHex(c, d) { c = String(c || '').replace('#', ''); return /^[0-9a-f]{6}$/i.test(c) ? '#' + c : d; }
+        function slCat(c) {
+            var r0 = c.rows[0], col = slHex(r0.color, '#1b2a44'), alt = slHex(r0.alt, '#39ff88');
+            if (gcLum(alt) < 0.25) alt = gcLum(col) >= 0.25 ? col : '#39ff88';
+            function head(r, cls, w, h) { var u = slImg(r.head, w, h); return u ? '<img class="' + cls + '" loading="lazy" decoding="async" alt="" data-ini="' + escHtml(slIni(r.name)) + '" src="' + escHtml(u) + '" onerror="slImgErr(this, \'' + cls + '\')">' : '<span class="' + cls + ' sl-ini">' + escHtml(slIni(r.name)) + '</span>'; }
+            var rest = c.rows.slice(1, 5).map(function(r, i) {
+                return '<div class="sl-row"><b>' + (i + 2) + '</b>' + head(r, 'sl-mh', 76, 76) + '<span>' + escHtml(r.short || r.name) + ' <i>' + escHtml(r.abbr) + '</i></span><em>' + escHtml(r.val) + '</em></div>';
+            }).join('');
+            return '<div class="sl-cat" style="--sl1:' + col + ';--sl2:' + alt + '"><div class="sl-top"><div class="sl-lbl">' + escHtml(c.label) + '</div><div class="sl-rk">1</div>' +
+                (r0.logo ? '<img class="sl-logo" loading="lazy" decoding="async" alt="" src="' + escHtml(slImg(r0.logo, 96, 96)) + '" onerror="this.style.visibility=\'hidden\'">' : '') +
+                head(r0, 'sl-head', 260, 190) +
+                '<div class="sl-one"><div class="sl-nm">' + escHtml(r0.name) + '<small>' + escHtml(r0.team || r0.abbr) + '</small></div><div class="sl-val">' + escHtml(r0.val) + '</div></div></div>' +
+                '<div class="sl-rest">' + rest + '</div></div>';
+        }
+        async function showStatLeaders(key, gen) {
+            var k = SL_KEYS[key], screen = document.getElementById('sl-' + k + '-screen');
+            if (!sl.data) { try { await slLoad(); } catch (e) {} if (!isCurrentSlide(gen)) return; }
+            var L = slLeague(key);
+            if (!L || !slInSeason(L)) { nextSlide(); return; }
+            screen.style.display = 'flex';
+            document.getElementById('sl-' + k + '-meta').textContent = (L.season && L.season.name ? String(L.season.name).toUpperCase() + ' \u2022 ' : '') + (L.statsSeason ? (/^(nhl|nba|cbb)$/.test(k) ? (L.statsSeason - 1) + '-' + String(L.statsSeason).slice(2) : L.statsSeason) + ' SEASON STATS' : 'SEASON STATS') + ' \u2022 DATA: ESPN';
+            document.getElementById('sl-' + k + '-grid').innerHTML = L.cats.slice(0, 4).map(slCat).join('');
+            slideTimer = slideTimeout(nextSlide, 18000);
+        }
 
         // ---------- GAMECAST LIVE ODDS (header pill): Action Network consensus, polled every 20 s, shown through the TV delay ----------
         var GO_LG = { 'football/nfl': 'nfl', 'football/college-football': 'ncaaf', 'basketball/nba': 'nba', 'hockey/nhl': 'nhl', 'baseball/mlb': 'mlb', 'basketball/mens-college-basketball': 'ncaab' };
@@ -5720,7 +5836,7 @@
                           idleMs: 10000, settingsIdleMs: 90000, pauseMaxMs: 600000,
                           idleTimer: null, settingsTimer: null, pauseTimer: null, hudTimer: null, historyArmed: false };
         var NAV_TITLES = { live: 'LIVE ACTION', hotProps: 'HOT PROPS', mySquad: 'MY SQUAD', trivia: 'TRIVIA', leaders: 'TOP PERFORMERS', pga: 'PGA TOUR', discGolf: 'DISC GOLF',
-            ufc: 'UFC', command: 'COMMAND CENTER', soccerSlide: 'SOCCER', tvGuide: 'TV GUIDE', news: 'HEADLINES', pickem: "PICK'EM", oddsBoard: 'ODDS BOARD', odds: "TODAY'S LINES", futures: 'FUTURES',
+            ufc: 'UFC', command: 'COMMAND CENTER', soccerSlide: 'SOCCER', tvGuide: 'TV GUIDE', news: 'HEADLINES', pickem: "PICK'EM", oddsBoard: 'ODDS BOARD', slNfl: 'NFL LEADERS', slCfb: 'COLLEGE FOOTBALL LEADERS', slNba: 'NBA LEADERS', slCbb: 'COLLEGE HOOPS LEADERS', slWnba: 'WNBA LEADERS', slNhl: 'NHL LEADERS', slMlb: 'MLB LEADERS', odds: "TODAY'S LINES", futures: 'FUTURES',
             nflFutures: 'NFL FUTURES', nflAwards: 'NFL AWARDS', fantasy: 'NFL FANTASY', cfbFutures: 'CFB FUTURES', nhlFutures: 'NHL FUTURES', rankings: 'CFB RANKINGS', nfl: 'NFL STANDINGS', nba: 'NBA STANDINGS',
             nhl: 'NHL STANDINGS', mlb: 'MLB STANDINGS' };
 
@@ -6040,7 +6156,7 @@
         });
 
         window.addEventListener('load', async function() { 
-            checkMode(); loadSettingsUI(); updateClock(); setInterval(updateClock, 1000); try { if (settings.discGolf) setTimeout(dgLoad, 8000); } catch (e) {}
+            checkMode(); loadSettingsUI(); updateClock(); setInterval(updateClock, 1000); try { if (settings.discGolf) setTimeout(dgLoad, 8000); } catch (e) {} try { setTimeout(slLoad, 9000); } catch (e) {}
             renderSkeletons();
             requestWakeLock(); scheduleSoftReload();
             fetchCommandData(); fetchNextTrivia(); hpLoad().catch(function(){});
