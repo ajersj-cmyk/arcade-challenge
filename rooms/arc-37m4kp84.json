@@ -2,8 +2,8 @@
  "v": 1,
  "room": "arc-37m4kp84",
  "season": "2026",
- "updated": 1791854548210,
- "lastMsg": "Jwo86Afo67T8",
+ "updated": 1794418549738,
+ "lastMsg": "h9v6DTdZZutf",
  "names": {
   "jordan": "Jordan"
  },
@@ -28,9 +28,34 @@
    "401871053",
    "401892498",
    "401871067"
+  ],
+  "20261111": [
+   "401909974",
+   "401909967",
+   "401892690",
+   "401892693",
+   "401866461"
   ]
  },
  "events": {
+  "401866461": {
+   "k": "football/college-football",
+   "lg": "CFB",
+   "d": "2026-11-12T00:30Z",
+   "a": {
+    "id": "2084",
+    "ab": "BUFF",
+    "logo": "https://a.espncdn.com/i/teamlogos/ncaa/500/2084.png"
+   },
+   "h": {
+    "id": "2050",
+    "ab": "BALL",
+    "logo": "https://a.espncdn.com/i/teamlogos/ncaa/500/2050.png"
+   },
+   "r": "pre",
+   "sc": "",
+   "real": 1
+  },
   "401872993": {
    "k": "football/nfl",
    "lg": "NFL",
@@ -47,6 +72,42 @@
    },
    "r": "33",
    "sc": "30-23",
+   "real": 1
+  },
+  "401892690": {
+   "k": "hockey/nhl",
+   "lg": "NHL",
+   "d": "2026-11-12T00:00Z",
+   "a": {
+    "id": "20",
+    "ab": "TB",
+    "logo": "https://a.espncdn.com/i/teamlogos/nhl/500/tb.png"
+   },
+   "h": {
+    "id": "2",
+    "ab": "BUF",
+    "logo": "https://a.espncdn.com/i/teamlogos/nhl/500/buf.png"
+   },
+   "r": "pre",
+   "sc": "",
+   "real": 1
+  },
+  "401892693": {
+   "k": "hockey/nhl",
+   "lg": "NHL",
+   "d": "2026-11-12T02:30Z",
+   "a": {
+    "id": "129764",
+    "ab": "UTA",
+    "logo": "https://a.espncdn.com/i/teamlogos/nhl/500/uta.png"
+   },
+   "h": {
+    "id": "37",
+    "ab": "VGK",
+    "logo": "https://a.espncdn.com/i/teamlogos/nhl/500/vgk.png"
+   },
+   "r": "pre",
+   "sc": "",
    "real": 1
   },
   "401908030": {
@@ -66,19 +127,85 @@
    "r": "8",
    "sc": "1-2",
    "real": 1
+  },
+  "401909967": {
+   "k": "basketball/nba",
+   "lg": "NBA",
+   "d": "2026-11-12T00:00Z",
+   "a": {
+    "id": "5",
+    "ab": "CLE",
+    "logo": "https://a.espncdn.com/i/teamlogos/nba/500/cle.png"
+   },
+   "h": {
+    "id": "18",
+    "ab": "NY",
+    "logo": "https://a.espncdn.com/i/teamlogos/nba/500/ny.png"
+   },
+   "r": "pre",
+   "sc": "",
+   "real": 1
+  },
+  "401909974": {
+   "k": "basketball/nba",
+   "lg": "NBA",
+   "d": "2026-11-12T02:30Z",
+   "a": {
+    "id": "9",
+    "ab": "GS",
+    "logo": "https://a.espncdn.com/i/teamlogos/nba/500/gs.png"
+   },
+   "h": {
+    "id": "10",
+    "ab": "HOU",
+    "logo": "https://a.espncdn.com/i/teamlogos/nba/500/hou.png"
+   },
+   "r": "pre",
+   "sc": "",
+   "real": 1
   }
  },
  "picks": {
+  "401866461": {
+   "jordan": {
+    "tm": "2084",
+    "at": 1794412246000
+   }
+  },
   "401872993": {
    "jordan": {
     "tm": "33",
     "at": 1791754810000
    }
   },
+  "401892690": {
+   "jordan": {
+    "tm": "20",
+    "at": 1794412238000
+   }
+  },
+  "401892693": {
+   "jordan": {
+    "tm": "37",
+    "at": 1794412241000
+   }
+  },
   "401908030": {
    "jordan": {
     "tm": "8",
     "at": 1791754808000
+   }
+  },
+  "401909967": {
+   "jordan": {
+    "tm": "5",
+    "at": 1794412232000
+   }
+  },
+  "401909974": {
+   "jordan": {
+    "tm": "10",
+    "at": 1794412228000
    }
   }
  }
