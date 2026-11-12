@@ -2,7 +2,7 @@
  "v": 1,
  "room": "arc-37m4kp84",
  "season": "2026",
- "updated": 1794418549738,
+ "updated": 1794457101200,
  "lastMsg": "h9v6DTdZZutf",
  "names": {
   "jordan": "Jordan"
@@ -52,8 +52,8 @@
     "ab": "BALL",
     "logo": "https://a.espncdn.com/i/teamlogos/ncaa/500/2050.png"
    },
-   "r": "pre",
-   "sc": "",
+   "r": "2084",
+   "sc": "28-7",
    "real": 1
   },
   "401872993": {
@@ -88,8 +88,8 @@
     "ab": "BUF",
     "logo": "https://a.espncdn.com/i/teamlogos/nhl/500/buf.png"
    },
-   "r": "pre",
-   "sc": "",
+   "r": "20",
+   "sc": "8-3",
    "real": 1
   },
   "401892693": {
@@ -106,8 +106,8 @@
     "ab": "VGK",
     "logo": "https://a.espncdn.com/i/teamlogos/nhl/500/vgk.png"
    },
-   "r": "pre",
-   "sc": "",
+   "r": "in",
+   "sc": "2-4",
    "real": 1
   },
   "401908030": {
@@ -142,8 +142,8 @@
     "ab": "NY",
     "logo": "https://a.espncdn.com/i/teamlogos/nba/500/ny.png"
    },
-   "r": "pre",
-   "sc": "",
+   "r": "5",
+   "sc": "115-107",
    "real": 1
   },
   "401909974": {
@@ -160,8 +160,8 @@
     "ab": "HOU",
     "logo": "https://a.espncdn.com/i/teamlogos/nba/500/hou.png"
    },
-   "r": "pre",
-   "sc": "",
+   "r": "in",
+   "sc": "70-78",
    "real": 1
   }
  },
