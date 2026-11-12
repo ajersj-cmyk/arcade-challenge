@@ -2,7 +2,7 @@
  "v": 1,
  "room": "arc-37m4kp84",
  "season": "2026",
- "updated": 1794457101200,
+ "updated": 1794487885884,
  "lastMsg": "h9v6DTdZZutf",
  "names": {
   "jordan": "Jordan"
@@ -106,8 +106,8 @@
     "ab": "VGK",
     "logo": "https://a.espncdn.com/i/teamlogos/nhl/500/vgk.png"
    },
-   "r": "in",
-   "sc": "2-4",
+   "r": "37",
+   "sc": "3-5",
    "real": 1
   },
   "401908030": {
@@ -160,8 +160,8 @@
     "ab": "HOU",
     "logo": "https://a.espncdn.com/i/teamlogos/nba/500/hou.png"
    },
-   "r": "in",
-   "sc": "70-78",
+   "r": "10",
+   "sc": "108-115",
    "real": 1
   }
  },
